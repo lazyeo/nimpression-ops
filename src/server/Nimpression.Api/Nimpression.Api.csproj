@@ -4,6 +4,15 @@
     <ProjectReference Include="..\Nimpression.Infrastructure\Nimpression.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- dotnet-ef 工具要求 Design 包在“启动项目”上，而 Infrastructure 里那份标了
+         PrivateAssets=all 不会传递过来。仅供设计时使用，不进运行时产物。 -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
