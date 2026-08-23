@@ -9,18 +9,19 @@ namespace Nimpression.Infrastructure.Persistence;
 /// </summary>
 public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
 {
+    private readonly AppDbContext _dbContext = dbContext;
     private int _transactionDepth;
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await dbContext.SaveChangesAsync(cancellationToken);
+        return await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IAsyncDisposable> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (dbContext.Database.CurrentTransaction == null)
+        if (_dbContext.Database.CurrentTransaction == null)
         {
-            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         }
 
         _transactionDepth++;
@@ -29,22 +30,22 @@ public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
 
     public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
-        if (dbContext.Database.CurrentTransaction != null)
+        if (_dbContext.Database.CurrentTransaction != null)
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             if (_transactionDepth <= 1)
             {
-                await dbContext.Database.CommitTransactionAsync(cancellationToken);
+                await _dbContext.Database.CommitTransactionAsync(cancellationToken);
             }
         }
     }
 
     public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
-        if (dbContext.Database.CurrentTransaction != null)
+        if (_dbContext.Database.CurrentTransaction != null)
         {
-            await dbContext.Database.RollbackTransactionAsync(cancellationToken);
+            await _dbContext.Database.RollbackTransactionAsync(cancellationToken);
         }
     }
 
@@ -58,9 +59,9 @@ public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
             {
                 _disposed = true;
                 uow._transactionDepth--;
-                if (uow._transactionDepth <= 0 && uow.dbContext.Database.CurrentTransaction != null)
+                if (uow._transactionDepth <= 0 && uow._dbContext.Database.CurrentTransaction != null)
                 {
-                    await uow.dbContext.Database.CurrentTransaction.DisposeAsync();
+                    await uow._dbContext.Database.CurrentTransaction.DisposeAsync();
                 }
             }
         }
