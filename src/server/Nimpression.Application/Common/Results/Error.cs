@@ -16,6 +16,8 @@ public enum ErrorKind
     /// <summary>业务规则不满足。对应 422，与 400（请求格式错误）区分开。</summary>
     UnprocessableEntity,
     TooManyRequests,
+    /// <summary>不支持的媒体类型。对应 415（F2.2）。</summary>
+    UnsupportedMediaType,
 }
 
 /// <summary>
@@ -38,4 +40,6 @@ public sealed record Error(ErrorKind Kind, string Code, string Message, IReadOnl
     public static Error Unprocessable(string code, string message) => new(ErrorKind.UnprocessableEntity, code, message);
 
     public static Error TooManyRequests(string code, string message) => new(ErrorKind.TooManyRequests, code, message);
+
+    public static Error UnsupportedMediaType(string code, string message) => new(ErrorKind.UnsupportedMediaType, code, message);
 }
