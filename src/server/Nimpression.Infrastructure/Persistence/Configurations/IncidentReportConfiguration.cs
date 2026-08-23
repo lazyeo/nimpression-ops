@@ -58,6 +58,11 @@ public class IncidentReportConfiguration : IEntityTypeConfiguration<IncidentRepo
         builder.Property(i => i.InsurerNotifiedAt)
             .HasColumnType("timestamptz");
 
+        var stringListComparer = new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<string>>(
+            (c1, c2) => c1 != null && c2 != null ? c1.SequenceEqual(c2) : c1 == c2,
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToList());
+
         builder.Property(i => i.PhotoKeys)
             .HasField("_photoKeys")
             .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -65,7 +70,8 @@ public class IncidentReportConfiguration : IEntityTypeConfiguration<IncidentRepo
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => string.IsNullOrEmpty(v)
                     ? new List<string>()
-                    : (JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()))
+                    : (JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()),
+                stringListComparer)
             .HasColumnType("text");
 
         builder.Ignore(i => i.ShouldNotifyInsurer);

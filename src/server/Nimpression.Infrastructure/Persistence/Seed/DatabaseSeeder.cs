@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Nimpression.Domain.ValueObjects;
 
 namespace Nimpression.Infrastructure.Persistence.Seed;
 
@@ -10,13 +11,15 @@ public static class DatabaseSeeder
         bool cleanExisting = false,
         CancellationToken cancellationToken = default)
     {
+        var seedAdminEmail = new EmailAddress("admin@nimpression.co.nz");
+
         if (cleanExisting)
         {
             await CleanAsync(context, cancellationToken);
         }
-        else if (await context.Users.AnyAsync(cancellationToken))
+        else if (await context.Users.AnyAsync(u => u.Email == seedAdminEmail, cancellationToken))
         {
-            // 数据已存在，直接返回现有数量统计
+            // 演示种子数据已存在，直接返回现有数量统计
             return await GetSummaryAsync(context, cancellationToken);
         }
 
