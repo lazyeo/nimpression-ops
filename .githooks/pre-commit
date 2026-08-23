@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# 硬拦截：_design/ 是过程文档目录，任何情况下都不得进入版本库。
+# .gitignore 已忽略它，但 `git add -f` 能绕过 —— 这个钩子是第二道锁。
+set -euo pipefail
+
+leaked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^_design/' || true)
+if [ -n "$leaked" ]; then
+  echo "" >&2
+  echo "✗ 提交被拒绝：_design/ 下的文件不允许进入版本库。" >&2
+  echo "" >&2
+  echo "$leaked" | sed 's/^/    /' >&2
+  echo "" >&2
+  echo "  取消暂存： git restore --staged _design/" >&2
+  echo "" >&2
+  exit 1
+fi

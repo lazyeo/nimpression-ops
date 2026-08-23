@@ -1,0 +1,41 @@
+# ── 过程文档：永不入库 ─────────────────────────────
+_design/
+
+# ── .NET ──────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+artifacts/
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# ── Node / Angular ────────────────────────────────
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+.pnpm-store/
+playwright-report/
+test-results/
+blob-report/
+
+# ── 环境与密钥 ────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+secrets.json
+
+# ── 本地数据卷 ────────────────────────────────────
+.data/
+.tmp/
+
+# ── OS / IDE ──────────────────────────────────────
+.DS_Store
+.idea/
+.vs/
+*.swp
