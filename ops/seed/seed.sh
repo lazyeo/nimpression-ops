@@ -8,5 +8,6 @@ echo "==> Applying database migrations..."
 dotnet ef database update --project "${REPO_ROOT}/src/server/Nimpression.Infrastructure" --startup-project "${REPO_ROOT}/src/server/Nimpression.Infrastructure"
 
 echo "==> Running deterministic database seeder..."
-# Seed data is deterministically populated through DatabaseSeeder
+dotnet run --project "${REPO_ROOT}/src/server/Nimpression.Api" -- seed
+
 echo "==> Database seeding complete."
