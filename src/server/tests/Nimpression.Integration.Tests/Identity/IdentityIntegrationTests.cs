@@ -1,0 +1,436 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Nimpression.Api.Endpoints;
+using Nimpression.Application.Features.Identity.DTOs;
+using Nimpression.Domain.Entities.Identity;
+using Nimpression.Domain.Enums;
+using Nimpression.Domain.ValueObjects;
+using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Security;
+using Nimpression.Integration.Tests.Fixtures;
+using Xunit;
+
+namespace Nimpression.Integration.Tests.Identity;
+
+[Collection("PostgreSqlCollection")]
+public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
+{
+    private readonly PostgreSqlContainerFixture _fixture;
+    private readonly PasswordHasher _passwordHasher = new();
+    private IdentityTestWebApplicationFactory _factory = null!;
+    private HttpClient _client = null!;
+
+    public static readonly Guid AdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    public static readonly Guid DispatcherId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+    public static readonly Guid Driver1Id = Guid.Parse("33333333-3333-3333-3333-333333333333");
+    public static readonly Guid Driver2Id = Guid.Parse("44444444-4444-4444-4444-444444444444");
+
+    public const string DefaultPassword = "SecurePassword123!";
+
+    public IdentityIntegrationTests(PostgreSqlContainerFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
+    public async Task InitializeAsync()
+    {
+        _factory = new IdentityTestWebApplicationFactory(_fixture.ConnectionString);
+        _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            HandleCookies = true,
+            BaseAddress = new Uri("http://localhost")
+        });
+
+        await using var context = _fixture.CreateDbContext();
+        await context.Database.MigrateAsync();
+
+        // 清理测试用户的旧刷新令牌并更新/重置状态
+        var testUserIds = new[] { AdminId, DispatcherId, Driver1Id, Driver2Id };
+        var existingTokens = await context.RefreshTokens
+            .Where(rt => testUserIds.Contains(rt.UserId))
+            .ToListAsync();
+        context.RefreshTokens.RemoveRange(existingTokens);
+
+        async Task UpsertTestUserAsync(Guid id, string emailStr, UserRole role, string displayName)
+        {
+            var email = new EmailAddress(emailStr);
+            var user = await context.Users.FindAsync(id);
+            if (user is null)
+            {
+                user = new User(id, email, _passwordHasher.HashPassword(DefaultPassword), role, displayName);
+                await context.Users.AddAsync(user);
+            }
+            else
+            {
+                user.SetStatus(UserStatus.Active);
+                user.Unlock();
+                user.SetPasswordHash(_passwordHasher.HashPassword(DefaultPassword));
+                user.ChangeRole(role);
+            }
+        }
+
+        await UpsertTestUserAsync(AdminId, "admin@nimpression.co.nz", UserRole.Admin, "Admin Boss");
+        await UpsertTestUserAsync(DispatcherId, "dispatcher@nimpression.co.nz", UserRole.Dispatcher, "Dispatcher Dan");
+        await UpsertTestUserAsync(Driver1Id, "driver1@nimpression.co.nz", UserRole.Driver, "Driver Dave");
+        await UpsertTestUserAsync(Driver2Id, "driver2@nimpression.co.nz", UserRole.Driver, "Driver Bob");
+
+        await context.SaveChangesAsync();
+
+        LoginRateLimiter.Reset();
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client?.Dispose();
+        if (_factory != null)
+        {
+            await _factory.DisposeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        _client?.Dispose();
+        _factory?.Dispose();
+    }
+
+    [Fact]
+    public async Task F1_1_Login_WithValidCredentials_Returns200_AccessToken_AndHttpOnlyCookie()
+    {
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("admin@nimpression.co.nz", DefaultPassword));
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+        body.Should().NotBeNull();
+        body!.AccessToken.Should().NotBeNullOrWhiteSpace();
+        body.ExpiresIn.Should().Be(900);
+        body.User.Email.Should().Be("admin@nimpression.co.nz");
+        body.User.Role.Should().Be(UserRole.Admin);
+
+        response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        var cookieHeader = string.Join(";", cookies!);
+        cookieHeader.Should().Contain("refreshToken=");
+        cookieHeader.Should().Contain("httponly");
+        cookieHeader.Should().Contain("path=/api/auth");
+    }
+
+    [Fact]
+    public async Task F1_1_Login_WithNonExistentUser_Returns401_WithUnifiedResponseBody()
+    {
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("ghost@nimpression.co.nz", "WrongPass123!"));
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var json = await response.Content.ReadAsStringAsync();
+        json.Should().Contain("AUTH_INVALID_CREDENTIALS");
+        json.Should().Contain("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task F1_1_Login_WithWrongPassword_Returns401_WithIdenticalResponseBody()
+    {
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("admin@nimpression.co.nz", "WrongPass123!"));
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var json = await response.Content.ReadAsStringAsync();
+        json.Should().Contain("AUTH_INVALID_CREDENTIALS");
+        json.Should().Contain("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task F1_2_RefreshToken_Rotation_ReturnsNewTokens_AndRevokesOldToken()
+    {
+        // 1. 登录拿 token
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("driver1@nimpression.co.nz", DefaultPassword));
+        loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var loginBody = await loginResp.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+
+        // 2. 刷新（通过 Cookie 或 Body 轮转）
+        var refreshResp = await _client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(null));
+        refreshResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var refreshBody = await refreshResp.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+
+        refreshBody!.AccessToken.Should().NotBeNullOrWhiteSpace();
+        refreshBody.AccessToken.Should().NotBe(loginBody!.AccessToken);
+
+        // 验证数据库中旧 token 已被撤销，新 token 处于活跃态
+        await using var context = _fixture.CreateDbContext();
+        var tokens = await context.RefreshTokens.Where(rt => rt.UserId == Driver1Id).ToListAsync();
+        tokens.Should().HaveCount(2);
+        tokens.Count(t => t.IsRevoked).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task F1_2_RefreshToken_ReplayAttack_RevokesAllActiveTokensForUser_AndRecordsAuditEvent()
+    {
+        // 1. 登录拿原始 raw token
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("driver1@nimpression.co.nz", DefaultPassword));
+        loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cookies = loginResp.Headers.GetValues("Set-Cookie").ToList();
+        var rawCookie = cookies.First(c => c.StartsWith("refreshToken=", StringComparison.Ordinal));
+        var originalRefreshToken = rawCookie.Split(';')[0].Replace("refreshToken=", "");
+
+        // 2. 正常刷新一次（旧 token 被轮转并作废）
+        var refreshResp1 = await _client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(originalRefreshToken));
+        refreshResp1.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 3. 模拟攻击者重放第一次已作废的旧 token
+        using var attackerClient = _factory.CreateClient();
+        var replayResp = await attackerClient.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(originalRefreshToken));
+
+        // Assert: 拒绝访问
+        replayResp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        // 验证该用户的所有刷新令牌均被彻底撤销（防重放级联保护）
+        await using var context = _fixture.CreateDbContext();
+        var activeTokens = await context.RefreshTokens.Where(rt => rt.UserId == Driver1Id && rt.RevokedAt == null).ToListAsync();
+        activeTokens.Should().BeEmpty();
+
+        // 验证记录了安全审计日志
+        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "Security.RefreshTokenReplayDetected" && a.EntityId == Driver1Id.ToString());
+        audit.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task F1_3_Logout_RevokesToken_AndClearsCookie_SubsequentRefreshReturns401()
+    {
+        // 1. 登录
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("driver1@nimpression.co.nz", DefaultPassword));
+        loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cookies = loginResp.Headers.GetValues("Set-Cookie").ToList();
+        var rawCookie = cookies.First(c => c.StartsWith("refreshToken=", StringComparison.Ordinal));
+        var rawRefreshToken = rawCookie.Split(';')[0].Replace("refreshToken=", "");
+
+        // 2. 登出
+        var logoutResp = await _client.PostAsJsonAsync("/api/auth/logout", new RefreshRequest(rawRefreshToken));
+        logoutResp.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // 3. 再次尝试刷新
+        var refreshResp = await _client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(rawRefreshToken));
+        refreshResp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task F1_4_RoleAuthorizationMatrix_3Roles_5Endpoints_15Assertions()
+    {
+        // 获取三个角色的 Access Token
+        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
+        var dispatcherToken = await GetAccessTokenAsync("dispatcher@nimpression.co.nz", DefaultPassword);
+        var driverToken = await GetAccessTokenAsync("driver1@nimpression.co.nz", DefaultPassword);
+
+        // 端点列表定义：
+        // 1. POST /api/users/{id}/deactivate (Admin only)
+        // 2. GET /api/audit-logs (Admin only)
+        // 3. GET /api/audit-logs/export (Admin only)
+        // 4. GET /api/users/{Driver2Id} (Driver1 accessing Driver2 -> 403; Admin/Dispatcher -> 200)
+        // 5. POST /api/users/{Driver2Id}/change-password (Driver1 modifying Driver2 -> 403; Dispatcher modifying Driver2 -> 403; Admin modifying Driver2 -> 204)
+
+        // Matrix 断言 1~5: Admin 角色（5个端点均能访问）
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{Driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs/export")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Get, $"/api/users/{Driver2Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{Driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "NewAdminSetPass123!"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // Matrix 断言 6~10: Dispatcher 角色
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Post, $"/api/users/{Driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, "/api/audit-logs")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, "/api/audit-logs/export")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, $"/api/users/{DispatcherId}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Post, $"/api/users/{Driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "FailPass123!"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // Matrix 断言 11~15: Driver 角色（全部管理端点及越权端点均返回 403）
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Post, $"/api/users/{Driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Get, "/api/audit-logs")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Get, "/api/audit-logs/export")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{Driver2Id}")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Post, $"/api/users/{Driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "FailPass123!"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task F1_5_AccountDeactivation_DeactivatedUserTokenFailsAuthenticationImmediately()
+    {
+        // 1. 司机登录拿到 Token
+        var driverToken = await GetAccessTokenAsync("driver1@nimpression.co.nz", DefaultPassword);
+
+        // 验证司机当前可以正常调用自我资料接口
+        var respBefore = await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{Driver1Id}");
+        respBefore.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 2. 管理员停用司机
+        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
+        var deactResp = await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{Driver1Id}/deactivate");
+        deactResp.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // 3. 司机再次使用现有的 access token 请求，立即失效返回 401
+        var respAfter = await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{Driver1Id}");
+        respAfter.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task F1_6_PasswordPolicy_5FailedAttempts_LocksAccountFor15MinutesAndRecordsAudit()
+    {
+        for (var i = 0; i < 5; i++)
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest("driver2@nimpression.co.nz", "WrongPass!"))
+            };
+            req.Headers.Add("X-Forwarded-For", $"10.50.1.{i + 1}");
+            var failResp = await _client.SendAsync(req);
+            failResp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        // 第 6 次即便输入正确密码，由于被锁定依然返回 401 AUTH_LOCKED_OUT
+        var checkReq = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+        {
+            Content = JsonContent.Create(new LoginRequest("driver2@nimpression.co.nz", DefaultPassword))
+        };
+        checkReq.Headers.Add("X-Forwarded-For", "10.50.1.99");
+        var lockedResp = await _client.SendAsync(checkReq);
+        lockedResp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var lockedJson = await lockedResp.Content.ReadAsStringAsync();
+        lockedJson.Should().Contain("AUTH_LOCKED_OUT");
+
+        // 验证记录了锁定审计
+        await using var context = _fixture.CreateDbContext();
+        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "User.Lockout" && a.EntityId == Driver2Id.ToString());
+        audit.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task N1_1_AuditBehavior_RecordsAuditEventOnCommand()
+    {
+        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
+
+        // 执行修改密码命令（实现 IAuditableCommand）
+        var resp = await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{AdminId}/change-password",
+            new ChangePasswordRequestBody(DefaultPassword, "NewAdminSuperPass123!"));
+        resp.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using var context = _fixture.CreateDbContext();
+        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "ChangePassword" && a.EntityId == AdminId.ToString());
+        audit.Should().NotBeNull();
+        audit!.ActorRole.Should().Be(UserRole.Admin);
+    }
+
+    [Fact]
+    public async Task N1_2_AuditEndpoints_GetAndExport_ReturnsLogs()
+    {
+        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
+
+        // 查询
+        var getResp = await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs?page=1&pageSize=10");
+        getResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var paged = await getResp.Content.ReadFromJsonAsync<PagedResult<AuditEventDto>>();
+        paged.Should().NotBeNull();
+
+        // 导出 CSV
+        var exportResp = await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs/export");
+        exportResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        exportResp.Content.Headers.ContentType!.MediaType.Should().Be("text/csv");
+        var csv = await exportResp.Content.ReadAsStringAsync();
+        csv.Should().StartWith("Id,OccurredAt,ActorUserId,ActorRole,Action,EntityType,EntityId,IpAddress,UserAgent,BeforeJson,AfterJson");
+    }
+
+    [Fact]
+    public async Task N1_3_IDOR_Protection_DriverAccessingOtherDriverProfile_Returns403()
+    {
+        var driver1Token = await GetAccessTokenAsync("driver1@nimpression.co.nz", DefaultPassword);
+
+        // 司机1访问司机2的资料 -> 403 Forbidden
+        var resp = await SendAuthorizedAsync(driver1Token, HttpMethod.Get, $"/api/users/{Driver2Id}");
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task N1_6_RateLimiting_MoreThan5RequestsPerMinute_Returns429WithRetryAfter()
+    {
+        const string testIp = "192.168.99.99";
+
+        for (var i = 0; i < 5; i++)
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", DefaultPassword))
+            };
+            req.Headers.Add("X-Forwarded-For", testIp);
+            var r = await _client.SendAsync(req);
+            r.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        // 第 6 次超限
+        var limitReq = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+        {
+            Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", DefaultPassword))
+        };
+        limitReq.Headers.Add("X-Forwarded-For", testIp);
+        var rateLimitResp = await _client.SendAsync(limitReq);
+        rateLimitResp.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
+        rateLimitResp.Headers.Contains("Retry-After").Should().BeTrue();
+    }
+
+    private async Task<string> GetAccessTokenAsync(string email, string password)
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password));
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+        return body!.AccessToken;
+    }
+
+    private async Task<HttpResponseMessage> SendAuthorizedAsync(string token, HttpMethod method, string url, object? body = null)
+    {
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
+
+        return await _client.SendAsync(request);
+    }
+}
+
+public class IdentityTestWebApplicationFactory : WebApplicationFactory<Program>
+{
+    private readonly string _connectionString;
+
+    public IdentityTestWebApplicationFactory(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+        builder.ConfigureServices(services =>
+        {
+            var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            if (dbContextDescriptor != null)
+            {
+                services.Remove(dbContextDescriptor);
+            }
+
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(_connectionString, npgsql =>
+                {
+                    npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                    npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                });
+            });
+        });
+    }
+}

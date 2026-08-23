@@ -7,6 +7,7 @@ namespace Nimpression.Integration.Tests.Fixtures;
 
 public class PostgreSqlContainerFixture : IAsyncLifetime
 {
+#pragma warning disable CS0618
     public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
         .WithDatabase("nimpression_test")
@@ -14,6 +15,7 @@ public class PostgreSqlContainerFixture : IAsyncLifetime
         .WithPassword("devonly_change_me")
         .WithCleanUp(true)
         .Build();
+#pragma warning restore CS0618
 
     public string ConnectionString => Container.GetConnectionString();
 
