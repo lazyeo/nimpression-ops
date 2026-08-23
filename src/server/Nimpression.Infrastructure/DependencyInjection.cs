@@ -33,6 +33,76 @@ public static class DependencyInjection
         services.AddScoped<Nimpression.Application.Common.Abstractions.IUnitOfWork, Nimpression.Infrastructure.Persistence.UnitOfWork>();
         services.AddScoped<Nimpression.Application.Common.Abstractions.IAuditSink, Nimpression.Infrastructure.Persistence.Auditing.AuditSink>();
 
+        // 认证与授权基础设施（F1 认证授权）
+        services.Configure<Nimpression.Infrastructure.Security.JwtSettings>(configuration.GetSection(Nimpression.Infrastructure.Security.JwtSettings.SectionName));
+        services.AddSingleton<Nimpression.Application.Common.Security.IPasswordHasher, Nimpression.Infrastructure.Security.PasswordHasher>();
+        services.AddSingleton<Nimpression.Application.Common.Security.IJwtTokenGenerator, Nimpression.Infrastructure.Security.JwtTokenGenerator>();
+        services.AddScoped<Nimpression.Application.Features.Identity.Abstractions.IIdentityRepository, Nimpression.Infrastructure.Security.IdentityRepository>();
+
+        var jwtSettings = configuration.GetSection(Nimpression.Infrastructure.Security.JwtSettings.SectionName).Get<Nimpression.Infrastructure.Security.JwtSettings>()
+            ?? new Nimpression.Infrastructure.Security.JwtSettings();
+        var key = System.Text.Encoding.UTF8.GetBytes(jwtSettings.Secret);
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.SaveToken = true;
+            options.RequireHttpsMetadata = false;
+            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwtSettings.Audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+                NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
+            };
+
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    // F1.5: 账号停用后 access token 在 <=60s 内失效
+                    var userIdClaim = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                        ?? context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+
+                    if (Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                        var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+                        if (user is null || user.Status != Nimpression.Domain.Enums.UserStatus.Active)
+                        {
+                            context.Fail("User is inactive or no longer exists.");
+                        }
+                    }
+                }
+            };
+        });
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(Nimpression.Application.Common.Security.AuthorizationPolicies.AdminOnly, policy =>
+                policy.RequireRole(Nimpression.Domain.Enums.UserRole.Admin.ToString()));
+
+            options.AddPolicy(Nimpression.Application.Common.Security.AuthorizationPolicies.Dispatcher, policy =>
+                policy.RequireRole(Nimpression.Domain.Enums.UserRole.Admin.ToString(), Nimpression.Domain.Enums.UserRole.Dispatcher.ToString()));
+
+            options.AddPolicy(Nimpression.Application.Common.Security.AuthorizationPolicies.AuthenticatedUser, policy =>
+                policy.RequireAuthenticatedUser());
+
+            options.AddPolicy(Nimpression.Application.Common.Security.AuthorizationPolicies.DriverOnly, policy =>
+                policy.RequireRole(Nimpression.Domain.Enums.UserRole.Driver.ToString()));
+        });
+
         return services;
     }
 
