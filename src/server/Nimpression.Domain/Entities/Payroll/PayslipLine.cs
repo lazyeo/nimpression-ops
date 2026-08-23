@@ -36,11 +36,6 @@ public sealed class PayslipLine : Entity
         Kilometres? distance = null,
         int? qty = null) : base(id)
     {
-        if (payslipId == Guid.Empty)
-        {
-            throw new DomainValidationException("PayslipId cannot be empty.");
-        }
-
         if (string.IsNullOrWhiteSpace(kind))
         {
             throw new DomainValidationException("PayslipLine kind cannot be empty.");
@@ -60,5 +55,15 @@ public sealed class PayslipLine : Entity
         Hours = hours;
         Distance = distance;
         Qty = qty;
+    }
+
+    public void AssignToPayslip(Guid payslipId)
+    {
+        if (payslipId == Guid.Empty)
+        {
+            throw new DomainValidationException("PayslipId cannot be empty.");
+        }
+
+        PayslipId = payslipId;
     }
 }

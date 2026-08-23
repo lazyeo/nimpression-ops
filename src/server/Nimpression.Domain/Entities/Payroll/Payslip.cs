@@ -103,6 +103,11 @@ public sealed class Payslip : AggregateRoot
             throw new DomainValidationException("Cannot add lines to a finalised payslip.");
         }
 
+        if (line.PayslipId == Guid.Empty && Id != Guid.Empty)
+        {
+            line.AssignToPayslip(Id);
+        }
+
         _lines.Add(line);
     }
 
