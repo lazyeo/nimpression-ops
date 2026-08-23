@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Storage;
 
 namespace Nimpression.Infrastructure;
 
@@ -32,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<Nimpression.Application.Common.Abstractions.ICurrentUser, Nimpression.Infrastructure.Security.CurrentUser>();
         services.AddScoped<Nimpression.Application.Common.Abstractions.IUnitOfWork, Nimpression.Infrastructure.Persistence.UnitOfWork>();
         services.AddScoped<Nimpression.Application.Common.Abstractions.IAuditSink, Nimpression.Infrastructure.Persistence.Auditing.AuditSink>();
+
+        services.AddStorage(configuration);
 
         return services;
     }
