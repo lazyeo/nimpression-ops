@@ -1,0 +1,77 @@
+name: nimpression-ops
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nimpression-postgres
+    environment:
+      POSTGRES_DB: nimpression
+      POSTGRES_USER: nimpression
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devonly_change_me}
+      # 时区固定为 NZ：工时与薪期计算依赖 Pacific/Auckland 的 DST 行为
+      TZ: Pacific/Auckland
+      PGTZ: Pacific/Auckland
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nimpression -d nimpression"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 本地 SMTP 捕获器。F11 的邮件验收标准（"Mailpit 中断言仅 1 封"）依赖它，
+  # 且能避免开发期把测试邮件真的发到伙伴公司邮箱。
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: nimpression-mailpit
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"   # SMTP
+      - "${MAILPIT_UI_PORT:-8025}:8025"     # Web UI + REST API（测试断言走这个）
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 对象存储：罚单照片、里程表照片、事故现场照片、数据导出 zip。
+  # 选 MinIO 而非直接落盘，是为了让 F8.4 的"短时效签名 URL"能用真实的 S3 预签名机制实现，
+  # 而不是自己造一套 token —— 生产换成 AWS S3 只改 endpoint。
+  minio:
+    image: minio/minio:latest
+    container_name: nimpression-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nimpression}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-devonly_change_me}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ./.data/minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 一次性任务：建桶并设为私有（F8.4 要求照片不可公开直连）
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-nimpression} ${MINIO_ROOT_PASSWORD:-devonly_change_me} &&
+      mc mb --ignore-existing local/nimpression-media &&
+      mc mb --ignore-existing local/nimpression-exports &&
+      mc anonymous set none local/nimpression-media &&
+      mc anonymous set none local/nimpression-exports &&
+      echo 'buckets ready (private)'
+      "
