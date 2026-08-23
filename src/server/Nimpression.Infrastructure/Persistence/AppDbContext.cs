@@ -11,6 +11,7 @@ using Nimpression.Domain.Entities.Payroll;
 using Nimpression.Domain.Entities.Standalone;
 using Nimpression.Domain.Entities.Timesheet;
 using Nimpression.Domain.Entities.Vehicle;
+using Nimpression.Infrastructure.Persistence.Configurations;
 
 namespace Nimpression.Infrastructure.Persistence;
 
@@ -51,6 +52,17 @@ public class AppDbContext : DbContext
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder.Properties<DateTimeOffset>()
+            .HaveConversion<DateTimeOffsetUtcConverter>();
+
+        configurationBuilder.Properties<DateTimeOffset?>()
+            .HaveConversion<NullableDateTimeOffsetUtcConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
