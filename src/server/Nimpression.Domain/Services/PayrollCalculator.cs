@@ -63,7 +63,7 @@ public sealed record PayrollCalculationResult(
 
 /// <summary>
 /// 混合制薪资计算领域服务（纯逻辑，无 IO）。
-/// 核心：工时保底 vs 趟次提成取高者结算，强制校验新西兰最低时薪保底，全量保留双口径明细。
+/// 核心：工时保底 vs 趟次提成取高者结算，强制校验新西兰最低时薪保底（三者取高），全量保留双口径明细。
 /// </summary>
 public static class PayrollCalculator
 {
@@ -226,44 +226,40 @@ public static class PayrollCalculator
         }
 
         // ─────────────────────────────────────────────────────────────
-        // 3. 取高结算与最低工资保底校验
+        // 3. 取高结算与最低工资保底校验（三者取高）
         // ─────────────────────────────────────────────────────────────
         var totalHoursValue = ordinaryHours.Value + overtimeHours.Value + holidayHours.Value;
-        PayBasis basisUsed;
-        Money grossPay;
-        var minimumWageTopUp = false;
+        var basisUsed = tripBasedGross > hoursBasedGross ? PayBasis.Trip : PayBasis.Hourly;
+        var highestOperationalGross = basisUsed == PayBasis.Trip ? tripBasedGross : hoursBasedGross;
 
-        // 趟次金额 > 工时金额时，趟次胜出；相等或工时高时，工时胜出
-        if (tripBasedGross > hoursBasedGross)
+        var minimumWageFloor = totalHoursValue > 0m
+            ? minWage * totalHoursValue
+            : Money.Zero(minWage.Currency);
+
+        Money grossPay;
+        bool minimumWageTopUp;
+
+        if (minimumWageFloor > highestOperationalGross)
         {
-            // 校验最低工资折算保底：TripBasedGross / TotalHours >= NZ 最低时薪
-            if (totalHoursValue > 0m)
-            {
-                var effectiveHourlyRate = tripBasedGross.Amount / totalHoursValue;
-                if (effectiveHourlyRate < minWage.Amount)
-                {
-                    // 强制回退到工时口径并标记 MinimumWageTopUp
-                    basisUsed = PayBasis.Hourly;
-                    grossPay = hoursBasedGross;
-                    minimumWageTopUp = true;
-                }
-                else
-                {
-                    basisUsed = PayBasis.Trip;
-                    grossPay = tripBasedGross;
-                }
-            }
-            else
-            {
-                basisUsed = PayBasis.Trip;
-                grossPay = tripBasedGross;
-            }
+            // 最低工资下限胜出，进行保底补足
+            grossPay = minimumWageFloor;
+            minimumWageTopUp = true;
+            var topUpAmount = minimumWageFloor - highestOperationalGross;
+
+            lines.Add(new PayslipLine(
+                Guid.NewGuid(),
+                Guid.Empty,
+                basisUsed,
+                "MinimumWageTopUp",
+                $"Minimum Wage Top-Up: ${minWage.Amount}/h x {totalHoursValue}h statutory floor (top up +{topUpAmount.Amount})",
+                minWage,
+                topUpAmount,
+                hours: new WorkHours(totalHoursValue)));
         }
         else
         {
-            // 工时胜出或两者相等（相等时记 Hourly）
-            basisUsed = PayBasis.Hourly;
-            grossPay = hoursBasedGross;
+            grossPay = highestOperationalGross;
+            minimumWageTopUp = false;
         }
 
         return new PayrollCalculationResult(
