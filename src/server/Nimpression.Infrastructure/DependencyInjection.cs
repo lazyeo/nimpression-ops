@@ -28,6 +28,11 @@ public static class DependencyInjection
             });
         });
 
+        services.AddHttpContextAccessor();
+        services.AddScoped<Nimpression.Application.Common.Abstractions.ICurrentUser, Nimpression.Infrastructure.Security.CurrentUser>();
+        services.AddScoped<Nimpression.Application.Common.Abstractions.IUnitOfWork, Nimpression.Infrastructure.Persistence.UnitOfWork>();
+        services.AddScoped<Nimpression.Application.Common.Abstractions.IAuditSink, Nimpression.Infrastructure.Persistence.Auditing.AuditSink>();
+
         return services;
     }
 
