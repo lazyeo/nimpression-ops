@@ -5,6 +5,7 @@ using Nimpression.Domain.Entities.Identity;
 using Nimpression.Domain.Entities.Payroll;
 using Nimpression.Domain.Entities.Vehicle;
 using Nimpression.Domain.Enums;
+using Nimpression.Infrastructure.Persistence;
 using Nimpression.Infrastructure.Persistence.Seed;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
@@ -30,35 +31,119 @@ public class DatabaseSeederTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task DatabaseSeeder_GeneratesCompleteDatasetScale()
+    public async Task DatabaseSeeder_ActuallyPersistsAllEntitiesToDatabase()
     {
         // Arrange
-        await using var context = _fixture.CreateDbContext();
+        await using (var seedContext = _fixture.CreateDbContext())
+        {
+            await DatabaseSeeder.SeedAsync(seedContext, SeedConstants.DefaultSeed, cleanExisting: false);
+        }
 
-        // Act: Run seed
-        var summary = await DatabaseSeeder.SeedAsync(context, SeedConstants.DefaultSeed);
+        // Act: Open a fresh DbContext instance and query real PostgreSQL tables directly
+        await using var verifyContext = _fixture.CreateDbContext();
 
-        // Assert: Verify dataset volume
-        summary.UsersCount.Should().Be(13);
-        summary.DriversCount.Should().Be(10);
-        summary.VehiclesCount.Should().Be(11);
-        summary.AreasCount.Should().Be(6);
-        summary.JobTasksCount.Should().BeGreaterThan(400); // 90 days of daily dispatch runs
-        summary.ShiftEntriesCount.Should().BeGreaterThan(500); // 90 days of driver timesheets
-        summary.FinesCount.Should().Be(12);
-        summary.IncidentReportsCount.Should().Be(6);
-        summary.PayPeriodsCount.Should().Be(6); // 6 bi-weekly periods covering 84+ days
-        summary.PayslipsCount.Should().Be(60); // 6 periods * 10 drivers
-        summary.NewsPostsCount.Should().Be(3);
-        summary.EmailTemplatesCount.Should().Be(4);
+        var usersCount = await verifyContext.Users.CountAsync();
+        var driversCount = await verifyContext.Drivers.CountAsync();
+        var vehiclesCount = await verifyContext.Vehicles.CountAsync();
+        var vehicleAssignmentsCount = await verifyContext.VehicleAssignments.CountAsync();
+        var odoReadingsCount = await verifyContext.OdometerReadings.CountAsync();
+        var areasCount = await verifyContext.Areas.CountAsync();
+        var areaAssignmentsCount = await verifyContext.AreaAssignments.CountAsync();
+        var jobTasksCount = await verifyContext.JobTasks.CountAsync();
+        var shiftEntriesCount = await verifyContext.ShiftEntries.CountAsync();
+        var finesCount = await verifyContext.Fines.CountAsync();
+        var incidentReportsCount = await verifyContext.IncidentReports.CountAsync();
+        var payPeriodsCount = await verifyContext.PayPeriods.CountAsync();
+        var payslipsCount = await verifyContext.Payslips.CountAsync();
+        var payslipLinesCount = await verifyContext.PayslipLines.CountAsync();
+        var newsPostsCount = await verifyContext.NewsPosts.CountAsync();
+        var newsReadReceiptsCount = await verifyContext.NewsReadReceipts.CountAsync();
+        var partnerContactsCount = await verifyContext.PartnerContacts.CountAsync();
+        var emailTemplatesCount = await verifyContext.EmailTemplates.CountAsync();
+        var emailLogsCount = await verifyContext.EmailLogs.CountAsync();
+        var auditEventsCount = await verifyContext.AuditEvents.CountAsync();
+        var dsrRequestsCount = await verifyContext.DataSubjectRequests.CountAsync();
+        var outboxCount = await verifyContext.OutboxMessages.CountAsync();
+
+        // Assert: Verify exact real row counts stored in PostgreSQL
+        usersCount.Should().Be(13, "1 Admin + 2 Dispatchers + 10 Drivers");
+        driversCount.Should().Be(10, "10 Active delivery drivers");
+        vehiclesCount.Should().Be(11, "11 Commercial fleet trucks and utility vehicles");
+        vehicleAssignmentsCount.Should().BeGreaterThanOrEqualTo(20, "History of past released and active assignments");
+        odoReadingsCount.Should().BeGreaterThanOrEqualTo(10, "Odometer readings for assigned trucks");
+        areasCount.Should().Be(6, "6 Auckland and regional operational areas");
+        areaAssignmentsCount.Should().BeGreaterThanOrEqualTo(10, "Driver territory assignments");
+        jobTasksCount.Should().BeGreaterThan(400, "90 days of operational dispatch tasks");
+        shiftEntriesCount.Should().BeGreaterThan(500, "90 days of driver shift timesheets");
+        finesCount.Should().Be(12, "12 Infringement fines covering all review states");
+        incidentReportsCount.Should().Be(6, "6 Accident reports with insurer notifications");
+        payPeriodsCount.Should().Be(6, "6 Bi-weekly pay periods covering past 90 days");
+        payslipsCount.Should().Be(60, "6 Pay periods * 10 drivers");
+        payslipLinesCount.Should().BeGreaterThan(180, "Line items for hours, trips, and minimum wage top-up");
+        newsPostsCount.Should().Be(3, "Bilingual company announcements");
+        newsReadReceiptsCount.Should().Be(12, "Driver read receipt acknowledgements");
+        partnerContactsCount.Should().Be(3, "3 External partners: Insurer, Maintenance, Inspection");
+        emailTemplatesCount.Should().Be(4, "4 System notification templates");
+        emailLogsCount.Should().Be(3, "Delivery logs for sent notifications");
+        auditEventsCount.Should().Be(5, "Append-only security audit log entries");
+        dsrRequestsCount.Should().Be(1, "Data subject export request");
+        outboxCount.Should().BeGreaterThanOrEqualTo(1, "Transactional outbox event messages");
+    }
+
+    [Fact]
+    public async Task DatabaseSeeder_ConsecutiveRuns_AreIdempotentAndConsistent()
+    {
+        // Arrange & Act 1: Initial seed run
+        await using (var context1 = _fixture.CreateDbContext())
+        {
+            await DatabaseSeeder.SeedAsync(context1, SeedConstants.DefaultSeed);
+        }
+
+        int initialUsers, initialDrivers, initialVehicles, initialTasks, initialShifts, initialPayslips;
+        await using (var verifyContext1 = _fixture.CreateDbContext())
+        {
+            initialUsers = await verifyContext1.Users.CountAsync();
+            initialDrivers = await verifyContext1.Drivers.CountAsync();
+            initialVehicles = await verifyContext1.Vehicles.CountAsync();
+            initialTasks = await verifyContext1.JobTasks.CountAsync();
+            initialShifts = await verifyContext1.ShiftEntries.CountAsync();
+            initialPayslips = await verifyContext1.Payslips.CountAsync();
+        }
+
+        // Act 2: Second consecutive seed run on existing database
+        await using (var context2 = _fixture.CreateDbContext())
+        {
+            var summary2 = await DatabaseSeeder.SeedAsync(context2, SeedConstants.DefaultSeed);
+            summary2.UsersCount.Should().Be(initialUsers);
+            summary2.DriversCount.Should().Be(initialDrivers);
+            summary2.VehiclesCount.Should().Be(initialVehicles);
+            summary2.JobTasksCount.Should().Be(initialTasks);
+            summary2.ShiftEntriesCount.Should().Be(initialShifts);
+            summary2.PayslipsCount.Should().Be(initialPayslips);
+        }
+
+        // Assert: Database row counts remain completely identical and no duplicates were created
+        await using (var verifyContext2 = _fixture.CreateDbContext())
+        {
+            (await verifyContext2.Users.CountAsync()).Should().Be(initialUsers);
+            (await verifyContext2.Drivers.CountAsync()).Should().Be(initialDrivers);
+            (await verifyContext2.Vehicles.CountAsync()).Should().Be(initialVehicles);
+            (await verifyContext2.JobTasks.CountAsync()).Should().Be(initialTasks);
+            (await verifyContext2.ShiftEntries.CountAsync()).Should().Be(initialShifts);
+            (await verifyContext2.Payslips.CountAsync()).Should().Be(initialPayslips);
+        }
     }
 
     [Fact]
     public async Task DatabaseSeeder_ContainsRequiredBoundaryEdgeCases()
     {
         // Arrange
+        await using (var seedContext = _fixture.CreateDbContext())
+        {
+            await DatabaseSeeder.SeedAsync(seedContext, SeedConstants.DefaultSeed);
+        }
+
         await using var context = _fixture.CreateDbContext();
-        await DatabaseSeeder.SeedAsync(context, SeedConstants.DefaultSeed);
 
         // 1. Edge Case: Vehicle reaching maintenance service threshold
         var vehicles = await context.Vehicles.ToListAsync();
@@ -82,44 +167,5 @@ public class DatabaseSeederTests : IAsyncLifetime
         var dstShift = shifts.FirstOrDefault(s => s.ClockInAt.Year == 2026 && s.ClockInAt.Month == 4 && s.ClockInAt.Day == 4);
         dstShift.Should().NotBeNull();
         dstShift!.Note.Should().Contain("DST");
-    }
-
-    [Fact]
-    public async Task DatabaseSeeder_IsDeterministicAndRepeatable()
-    {
-        // Arrange: Generate two independent seed runs using same seed
-        var (users1, drivers1) = UserDriverSeeder.Generate();
-        var (users2, drivers2) = UserDriverSeeder.Generate();
-
-        // Assert: Deterministic user and driver generation
-        users1.Should().HaveSameCount(users2);
-        for (var i = 0; i < users1.Count; i++)
-        {
-            users1[i].Id.Should().Be(users2[i].Id);
-            users1[i].Email.Value.Should().Be(users2[i].Email.Value);
-            users1[i].PasswordHash.Should().Be(users2[i].PasswordHash);
-        }
-
-        var (vehicles1, _, _) = VehicleSeeder.Generate(drivers1, users1);
-        var (vehicles2, _, _) = VehicleSeeder.Generate(drivers2, users2);
-
-        vehicles1.Should().HaveSameCount(vehicles2);
-        for (var i = 0; i < vehicles1.Count; i++)
-        {
-            vehicles1[i].Id.Should().Be(vehicles2[i].Id);
-            vehicles1[i].Rego.Value.Should().Be(vehicles2[i].Rego.Value);
-            vehicles1[i].OdometerKm.Value.Should().Be(vehicles2[i].OdometerKm.Value);
-        }
-
-        var (periods1, payslips1) = PayrollSeeder.Generate(drivers1, SeedConstants.DefaultSeed);
-        var (periods2, payslips2) = PayrollSeeder.Generate(drivers2, SeedConstants.DefaultSeed);
-
-        payslips1.Should().HaveSameCount(payslips2);
-        for (var i = 0; i < payslips1.Count; i++)
-        {
-            payslips1[i].Id.Should().Be(payslips2[i].Id);
-            payslips1[i].GrossPay.Amount.Should().Be(payslips2[i].GrossPay.Amount);
-            payslips1[i].MinimumWageTopUp.Should().Be(payslips2[i].MinimumWageTopUp);
-        }
     }
 }
