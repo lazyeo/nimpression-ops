@@ -1,0 +1,11 @@
+{
+  "name": "nimpression-ops",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Internal management system for a small NZ transport operator",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@11.20.0"
+}

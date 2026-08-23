@@ -1,0 +1,12 @@
+packages:
+  - "src/web/apps/*"
+  - "src/web/libs/*"
+
+# pnpm 默认阻止依赖执行 postinstall 脚本（供应链安全默认值）。
+# 这几个包的原生二进制必须靠 postinstall 落地，逐个显式放行并说明原因，
+# 而不是一把 `approve-builds --all` 全开 —— 将来新增依赖要走同样的审阅。
+allowBuilds:
+  esbuild: true            # Angular 构建器底层打包器，需平台原生二进制
+  "@parcel/watcher": true  # ng serve 的文件监听
+  lmdb: true               # Angular 构建缓存后端
+  msgpackr-extract: true   # lmdb 的序列化加速
