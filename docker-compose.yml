@@ -63,6 +63,9 @@ services:
   # 一次性任务：建桶并设为私有（F8.4 要求照片不可公开直连）
   minio-init:
     image: minio/mc:latest
+    # 放进 profile，好让 `docker compose up --wait` 不把这个"跑完就退出"的
+    # 一次性容器判成不健康。由 Taskfile 在 up 之后显式 run 一次。
+    profiles: ["init"]
     depends_on:
       minio:
         condition: service_healthy
