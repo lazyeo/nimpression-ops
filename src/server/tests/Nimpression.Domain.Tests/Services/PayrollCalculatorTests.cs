@@ -174,9 +174,9 @@ public sealed class PayrollCalculatorTests
     }
 
     [Fact]
-    public void Payroll_minimum_wage_top_up_fallbacks_to_hourly()
+    public void Payroll_minimum_wage_top_up_scenario_1_trip_higher_than_hours_but_subminimum()
     {
-        // Hourly rate: $15/h (low test rate), Trip rate: $50, Km rate: $0
+        // Hourly rate: $15/h, Trip rate: $50, Km rate: $0
         var driver = CreateDriver(hourlyRate: 15m, tripRate: 50m, kmRate: 0m);
         var period = CreatePayPeriod();
 
@@ -191,8 +191,8 @@ public sealed class PayrollCalculatorTests
         }
 
         // 14 completed tasks @ $50 = $700
-        // Initial Trip gross ($700) > Hours gross ($600)
-        // BUT: $700 / 40h = $17.50/h < NZ minimum wage ($23.15/h)
+        // Trip gross ($700) > Hours gross ($600) -> BasisUsed = Trip
+        // Minimum wage floor = 40h * $23.15/h = $926.00 > $700.00
         var tasks = new List<JobTask>();
         for (var i = 0; i < 14; i++)
         {
@@ -207,10 +207,69 @@ public sealed class PayrollCalculatorTests
 
         Assert.Equal(new Money(600m), result.HoursBasedGross);
         Assert.Equal(new Money(700m), result.TripBasedGross);
-        // Force fallback to Hourly and flag MinimumWageTopUp
-        Assert.Equal(PayBasis.Hourly, result.BasisUsed);
-        Assert.Equal(new Money(600m), result.GrossPay);
+        // BasisUsed records winning operational basis (Trip)
+        Assert.Equal(PayBasis.Trip, result.BasisUsed);
+        // GrossPay is topped up to statutory floor (40 * 23.15 = $926.00)
+        Assert.Equal(new Money(926.00m), result.GrossPay);
         Assert.True(result.MinimumWageTopUp);
+
+        // Contains MinimumWageTopUp line with difference $926 - $700 = $226
+        var topUpLine = Assert.Single(result.Lines, l => l.Kind == "MinimumWageTopUp");
+        Assert.Equal(new Money(226.00m), topUpLine.Amount);
+    }
+
+    [Fact]
+    public void Payroll_minimum_wage_top_up_scenario_2_hourly_rate_itself_subminimum()
+    {
+        // Driver hourly rate: $20/h (below NZ min wage $23.15/h), 0 trips
+        var driver = CreateDriver(hourlyRate: 20m, tripRate: 0m, kmRate: 0m);
+        var period = CreatePayPeriod();
+
+        // 40 hours worked in period
+        // HoursBasedGross = 40 * $20 = $800
+        var shifts = new List<ShiftEntry>();
+        for (var d = 3; d <= 7; d++) // 5 days * 8h = 40h
+        {
+            var shift = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, d, 8, 0, 0, NzOffset));
+            shift.ClockOut(new DateTimeOffset(2026, 8, d, 16, 0, 0, NzOffset));
+            shifts.Add(shift);
+        }
+
+        var result = PayrollCalculator.Calculate(driver, period, shifts, tasks: []);
+
+        Assert.Equal(new Money(800m), result.HoursBasedGross);
+        Assert.Equal(Money.Zero(), result.TripBasedGross);
+        Assert.Equal(PayBasis.Hourly, result.BasisUsed);
+        // GrossPay topped up to $926.00 (40 * 23.15)
+        Assert.Equal(new Money(926.00m), result.GrossPay);
+        Assert.True(result.MinimumWageTopUp);
+
+        // Top up line amount = $926 - $800 = $126
+        var topUpLine = Assert.Single(result.Lines, l => l.Kind == "MinimumWageTopUp");
+        Assert.Equal(new Money(126.00m), topUpLine.Amount);
+    }
+
+    [Fact]
+    public void Payroll_minimum_wage_top_up_scenario_3_exact_equality_with_statutory_floor()
+    {
+        var minWage = new Money(23.15m);
+        var driver = CreateDriver(hourlyRate: 10m, tripRate: 0m, kmRate: 0m);
+        var period = CreatePayPeriod();
+
+        var shift = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, 3, 8, 0, 0, NzOffset));
+        shift.ClockOut(new DateTimeOffset(2026, 8, 3, 16, 0, 0, NzOffset)); // 8h
+
+        var result = PayrollCalculator.Calculate(driver, period, [shift], tasks: [], minimumHourlyWage: minWage);
+
+        var totalHours = result.OrdinaryHours.Value + result.OvertimeHours.Value + result.HolidayHours.Value;
+        var expectedFloor = minWage * totalHours; // 8 * 23.15 = $185.20
+
+        Assert.Equal(expectedFloor, result.GrossPay);
+        Assert.Equal(new Money(185.20m), result.GrossPay);
+        Assert.True(result.MinimumWageTopUp);
+
+        var topUpLine = Assert.Single(result.Lines, l => l.Kind == "MinimumWageTopUp");
+        Assert.Equal(new Money(105.20m), topUpLine.Amount); // $185.20 - $80.00 = $105.20
     }
 
     [Fact]
