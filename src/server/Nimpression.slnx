@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Nimpression.Application.Tests/Nimpression.Application.Tests.csproj" />
+    <Project Path="tests/Nimpression.Domain.Tests/Nimpression.Domain.Tests.csproj" />
+    <Project Path="tests/Nimpression.Integration.Tests/Nimpression.Integration.Tests.csproj" />
+  </Folder>
+  <Project Path="Nimpression.Api/Nimpression.Api.csproj" />
+  <Project Path="Nimpression.Application/Nimpression.Application.csproj" />
+  <Project Path="Nimpression.Domain/Nimpression.Domain.csproj" />
+  <Project Path="Nimpression.Infrastructure/Nimpression.Infrastructure.csproj" />
+</Solution>
