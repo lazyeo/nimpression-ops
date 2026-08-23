@@ -1,0 +1,132 @@
+version: "3"
+
+# 全仓统一入口。目标是让"全新克隆 → 跑起来"只需要读这一个文件（AC N3.4）。
+# 命名约定：<动词> 是聚合任务，<动词>:<范围> 是单侧任务。
+
+vars:
+  SERVER: src/server
+  SLN: src/server/Nimpression.slnx
+  WEB_APP: console
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+tasks:
+  default:
+    desc: 列出所有可用任务
+    cmds:
+      - task --list
+    silent: true
+
+  # ── 本地环境 ───────────────────────────────────────
+  up:
+    desc: 起全套依赖（postgres / mailpit / minio）并等待健康
+    cmds:
+      - docker compose up -d --wait
+      - docker compose run --rm minio-init
+      - echo "  postgres  localhost:5432  (db/user nimpression)"
+      - echo "  mailpit   http://localhost:8025"
+      - echo "  minio     http://localhost:9001"
+
+  down:
+    desc: 停掉依赖容器（保留数据卷）
+    cmds:
+      - docker compose down
+
+  nuke:
+    desc: 停容器并删除本地数据卷（不可逆）
+    prompt: 这会删除 .data/ 下的全部本地数据，确定吗？
+    cmds:
+      - docker compose down -v
+      - rm -rf .data
+
+  # ── 构建 ──────────────────────────────────────────
+  build:
+    desc: 构建前后端
+    deps: [build:server, build:web]
+
+  build:server:
+    desc: 构建 .NET 解决方案
+    cmds:
+      - dotnet build {{.SLN}} --nologo
+
+  build:web:
+    desc: 构建 Angular 应用
+    cmds:
+      - pnpm -F {{.WEB_APP}} exec ng build
+
+  # ── 测试 ──────────────────────────────────────────
+  test:
+    desc: 跑全部测试（单元 + 集成 + 前端）
+    deps: [test:server, test:web]
+
+  test:server:
+    desc: 跑 .NET 全部测试
+    cmds:
+      - dotnet test {{.SLN}} --nologo
+
+  test:unit:
+    desc: 只跑 .NET 单元测试（跳过需要容器的集成测试）
+    cmds:
+      - dotnet test {{.SLN}} --nologo --filter "FullyQualifiedName!~Integration"
+
+  test:integration:
+    desc: 跑集成测试（Testcontainers 会自行拉起 postgres）
+    cmds:
+      - dotnet test {{.SERVER}}/tests/Nimpression.Integration.Tests --nologo
+
+  test:web:
+    desc: 跑 Angular 单元测试
+    cmds:
+      - pnpm -F {{.WEB_APP}} exec ng test --watch=false
+
+  test:e2e:
+    desc: 跑 Playwright 端到端测试
+    cmds:
+      - pnpm -F {{.WEB_APP}} exec playwright test
+
+  coverage:
+    desc: 产出合并覆盖率报告
+    cmds:
+      - dotnet test {{.SLN}} --nologo --collect:"XPlat Code Coverage" --results-directory ./artifacts/coverage
+
+  # ── 数据库 ────────────────────────────────────────
+  migrate:
+    desc: 把迁移应用到本地数据库
+    cmds:
+      - dotnet ef database update --project {{.SERVER}}/Nimpression.Infrastructure --startup-project {{.SERVER}}/Nimpression.Api
+
+  migrate:add:
+    desc: 新增迁移（task migrate:add -- AddDriversTable）
+    cmds:
+      - dotnet ef migrations add {{.CLI_ARGS}} --project {{.SERVER}}/Nimpression.Infrastructure --startup-project {{.SERVER}}/Nimpression.Api
+
+  migrate:down:
+    desc: 回滚到指定迁移（task migrate:down -- PreviousMigrationName）
+    cmds:
+      - dotnet ef database update {{.CLI_ARGS}} --project {{.SERVER}}/Nimpression.Infrastructure --startup-project {{.SERVER}}/Nimpression.Api
+
+  seed:
+    desc: 灌入演示数据（10 司机 / 11 卡车 / 90 天历史）
+    cmds:
+      - dotnet run --project {{.SERVER}}/Nimpression.Api -- seed
+
+  # ── 质量闸 ────────────────────────────────────────
+  verify:
+    desc: 提交前自检：构建 + 全部测试
+    cmds:
+      - task: build
+      - task: test
+
+  fmt:
+    desc: 格式化前后端代码
+    cmds:
+      - dotnet format {{.SLN}}
+      - pnpm -F {{.WEB_APP}} exec prettier --write "src/**/*.{ts,html,scss,json}"
+
+  fmt:check:
+    desc: 只检查格式，不改文件（CI 用）
+    cmds:
+      - dotnet format {{.SLN}} --verify-no-changes
+      - pnpm -F {{.WEB_APP}} exec prettier --check "src/**/*.{ts,html,scss,json}"
