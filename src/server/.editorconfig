@@ -1,0 +1,15 @@
+# 分析器豁免。每条都写明为什么这条规则在本项目不适用 ——
+# 无理由的 NoWarn 等于把 TreatWarningsAsErrors 悄悄架空。
+root = false
+
+[*.cs]
+
+# CA1716：类型名与 VB.NET 保留字冲突（Error）。
+# 本解决方案不存在 VB.NET 消费方，而 Error / Result 是 Result 模式的既定词汇，
+# 改名（ErrorInfo / OperationError）只会让代码偏离领域内通用叫法。
+dotnet_diagnostic.CA1716.severity = none
+
+# CA1000：泛型类型上不应有静态成员（Result<T>.Success / .Failure）。
+# 该规则针对的是"静态成员与类型参数无关"的情形；这里两个工厂方法的
+# 返回类型正是 Result<T>，写成非泛型辅助类反而丢失类型推断。
+dotnet_diagnostic.CA1000.severity = none

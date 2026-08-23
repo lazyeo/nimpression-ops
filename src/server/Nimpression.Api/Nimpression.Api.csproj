@@ -5,6 +5,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- dotnet-ef 工具要求 Design 包在“启动项目”上，而 Infrastructure 里那份标了
          PrivateAssets=all 不会传递过来。仅供设计时使用，不进运行时产物。 -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
