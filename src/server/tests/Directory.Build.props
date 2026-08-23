@@ -1,0 +1,16 @@
+<Project>
+
+  <!-- 先继承 src/server/Directory.Build.props：MSBuild 只会自动取最近的一层，
+       不显式 Import 的话上层的 TreatWarningsAsErrors 等约定会整个丢失。 -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+
+    <!-- CA1707（成员名不得含下划线）与 xUnit 的 Method_scenario_expectation 命名惯例冲突。
+         测试名的可读性优先于该规则，仅在测试项目豁免，生产代码仍然强制。 -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+</Project>

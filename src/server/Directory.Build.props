@@ -1,0 +1,28 @@
+<Project>
+
+  <!-- 全解决方案共享的编译约定。放在 src/server/ 根，自动被所有子项目继承。 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- 警告即错误：不允许把"能跑就行"的代码留进仓库。
+         CI 与本地行为一致，避免"我这儿是好的"。 -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+
+    <!-- 确定性构建：同样的源码产出同样的二进制，便于 CI 缓存与产物比对 -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591：公开成员缺 XML 注释。开了文档生成但不强制每个成员都写注释，
+         否则会逼出大量"/// <summary>Gets the Id.</summary>"这种噪音注释。 -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>
