@@ -167,5 +167,27 @@ public class DatabaseSeederTests : IAsyncLifetime
         var dstShift = shifts.FirstOrDefault(s => s.ClockInAt.Year == 2026 && s.ClockInAt.Month == 4 && s.ClockInAt.Day == 4);
         dstShift.Should().NotBeNull();
         dstShift!.Note.Should().Contain("DST");
+
+        // 4. Edge Case: WOF, COF and Insurance expiry distribution (Expired, 30-day window, Normal)
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // WOF: expired (< today), <= 30 days, normal (> 30 days)
+        vehicles.Count(v => v.WofExpiry.HasValue && v.WofExpiry.Value < today).Should().BeGreaterThanOrEqualTo(1);
+        vehicles.Count(v => v.WofExpiry.HasValue && v.WofExpiry.Value >= today && v.WofExpiry.Value <= today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
+        vehicles.Count(v => v.WofExpiry.HasValue && v.WofExpiry.Value > today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
+
+        // COF: expired (< today), <= 30 days, normal (> 30 days)
+        vehicles.Count(v => v.CofExpiry.HasValue && v.CofExpiry.Value < today).Should().BeGreaterThanOrEqualTo(1);
+        vehicles.Count(v => v.CofExpiry.HasValue && v.CofExpiry.Value >= today && v.CofExpiry.Value <= today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
+        vehicles.Count(v => v.CofExpiry.HasValue && v.CofExpiry.Value > today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
+
+        // Insurance: expired (< today), <= 30 days, normal (> 30 days)
+        vehicles.Count(v => v.InsuranceExpiry.HasValue && v.InsuranceExpiry.Value < today).Should().BeGreaterThanOrEqualTo(1);
+        vehicles.Count(v => v.InsuranceExpiry.HasValue && v.InsuranceExpiry.Value >= today && v.InsuranceExpiry.Value <= today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
+        vehicles.Count(v => v.InsuranceExpiry.HasValue && v.InsuranceExpiry.Value > today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
+
+        // 5. Edge Case: Driver licence 30-day expiry warning
+        var drivers = await context.Drivers.ToListAsync();
+        drivers.Count(d => d.LicenceExpiry >= today && d.LicenceExpiry <= today.AddDays(30)).Should().BeGreaterThanOrEqualTo(1);
     }
 }

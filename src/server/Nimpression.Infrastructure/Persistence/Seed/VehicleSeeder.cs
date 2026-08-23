@@ -10,38 +10,43 @@ public static class VehicleSeeder
 {
     public static (List<Vehicle> Vehicles, List<VehicleAssignment> Assignments, List<OdometerReading> Readings) Generate(
         List<Driver> drivers,
-        List<User> users)
+        List<User> users,
+        DateOnly? baseDate = null)
     {
+        var today = baseDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
         var vehicles = new List<Vehicle>();
         var assignments = new List<VehicleAssignment>();
         var readings = new List<OdometerReading>();
         var dispatcherUser = users.First(u => u.Role == UserRole.Dispatcher);
 
-        // 11 Vehicles
+        // 11 Vehicles with comprehensive, dynamic WOF, COF and Insurance expiry samples:
+        // - WOF: Expired (NIM008: today-12d), 30d window (NIM005: 7d, NIM006: 14d, NIM007: 28d), Normal (NIM001-NIM004, NIM009-NIM011: >30d)
+        // - COF: Expired (NIM004: today-10d), 30d window (NIM002: 28d, NIM003: 14d, NIM005: 7d), Normal (NIM001, NIM006-NIM010: >30d)
+        // - Insurance: Expired (NIM009: today-15d), 30d window (NIM006: 14d, NIM007: 7d, NIM008: 28d), Normal (NIM001-NIM005, NIM010-NIM011: >30d)
         var vehicleConfigs = new (string Rego, string Make, string Model, int Year, decimal Odo, decimal SvcInterval, decimal LastSvc, DateOnly? Wof, DateOnly? Cof, DateOnly? Ins, VehicleStatus Status)[]
         {
-            // 1. 正常车 (COF 正常, 保险正常)
-            ("NIM001", "Isuzu", "NPR 450", 2021, 85400m, 10000m, 80000m, null, new DateOnly(2027, 2, 15), new DateOnly(2027, 3, 1), VehicleStatus.Active),
-            // 2. 正常车
-            ("NIM002", "Isuzu", "FTR 850", 2020, 125000m, 15000m, 120000m, null, new DateOnly(2027, 4, 10), new DateOnly(2027, 5, 1), VehicleStatus.Active),
-            // 3. 达到保养阈值 (DistanceSinceLastService 10500 >= 10000, 触发 F3.4 / ServiceThresholdReached)
-            ("NIM003", "Hino", "500 Series", 2019, 160500m, 10000m, 150000m, null, new DateOnly(2027, 1, 20), new DateOnly(2027, 2, 15), VehicleStatus.Active),
-            // 4. COF 已到期 (到期日 2026-08-10 < 2026-08-23, 用于合规拦截测试)
-            ("NIM004", "Fuso", "Canter 515", 2018, 192000m, 10000m, 190000m, null, new DateOnly(2026, 8, 10), new DateOnly(2026, 12, 31), VehicleStatus.Maintenance),
-            // 5. 30天内到期 (COF 到期日 2026-09-08, 触发 F3.5 预警)
-            ("NIM005", "Isuzu", "NQR 500", 2022, 62000m, 10000m, 60000m, null, new DateOnly(2026, 9, 8), new DateOnly(2027, 1, 15), VehicleStatus.Active),
-            // 6. 保险 30 天内到期 (2026-09-12)
-            ("NIM006", "Hino", "300 Series", 2023, 38000m, 10000m, 30000m, null, new DateOnly(2027, 6, 30), new DateOnly(2026, 9, 12), VehicleStatus.Active),
-            // 7. 正常车
-            ("NIM007", "Fuso", "Fighter 1024", 2021, 98000m, 15000m, 90000m, null, new DateOnly(2027, 7, 14), new DateOnly(2027, 8, 1), VehicleStatus.Active),
-            // 8. 正常车
-            ("NIM008", "Isuzu", "NPR 450", 2022, 54000m, 10000m, 50000m, null, new DateOnly(2027, 5, 25), new DateOnly(2027, 6, 1), VehicleStatus.Active),
-            // 9. 正常车
-            ("NIM009", "Mercedes-Benz", "Actros 2653", 2020, 210000m, 20000m, 200000m, null, new DateOnly(2027, 8, 30), new DateOnly(2027, 9, 1), VehicleStatus.Active),
-            // 10. 正常车
-            ("NIM010", "Scania", "R500", 2019, 280000m, 20000m, 270000m, null, new DateOnly(2027, 3, 10), new DateOnly(2027, 4, 1), VehicleStatus.Active),
-            // 11. 备用/闲置车
-            ("NIM011", "Isuzu", "D-Max", 2023, 22000m, 10000m, 20000m, new DateOnly(2027, 9, 1), null, new DateOnly(2027, 10, 1), VehicleStatus.Inactive)
+            // 1. 正常车 (WOF 正常, COF 正常, 保险正常)
+            ("NIM001", "Isuzu", "NPR 450", 2021, 85400m, 10000m, 80000m, today.AddDays(180), today.AddDays(180), today.AddDays(180), VehicleStatus.Active),
+            // 2. COF 30天窗口到期 (28天) (WOF 正常, 保险正常)
+            ("NIM002", "Isuzu", "FTR 850", 2020, 125000m, 15000m, 120000m, today.AddDays(200), today.AddDays(28), today.AddDays(200), VehicleStatus.Active),
+            // 3. 达到保养阈值 (DistanceSinceLastService 10500 >= 10000 -> F3.4) + COF 14天窗口 (WOF 正常, 保险正常)
+            ("NIM003", "Hino", "500 Series", 2019, 160500m, 10000m, 150000m, today.AddDays(150), today.AddDays(14), today.AddDays(150), VehicleStatus.Active),
+            // 4. COF 已过期 (10天前) (WOF 正常, 保险正常)
+            ("NIM004", "Fuso", "Canter 515", 2018, 192000m, 10000m, 190000m, today.AddDays(120), today.AddDays(-10), today.AddDays(120), VehicleStatus.Maintenance),
+            // 5. WOF 7天窗口 + COF 7天窗口 (保险正常)
+            ("NIM005", "Isuzu", "NQR 500", 2022, 62000m, 10000m, 60000m, today.AddDays(7), today.AddDays(7), today.AddDays(220), VehicleStatus.Active),
+            // 6. WOF 14天窗口 + 保险 14天窗口 (COF 正常)
+            ("NIM006", "Hino", "300 Series", 2023, 38000m, 10000m, 30000m, today.AddDays(14), today.AddDays(240), today.AddDays(14), VehicleStatus.Active),
+            // 7. WOF 30天窗口 (28天) + 保险 7天窗口 (COF 正常)
+            ("NIM007", "Fuso", "Fighter 1024", 2021, 98000m, 15000m, 90000m, today.AddDays(28), today.AddDays(210), today.AddDays(7), VehicleStatus.Active),
+            // 8. WOF 已过期 (12天前) + 保险 30天窗口 (28天) (COF 正常)
+            ("NIM008", "Isuzu", "NPR 450", 2022, 54000m, 10000m, 50000m, today.AddDays(-12), today.AddDays(190), today.AddDays(28), VehicleStatus.Maintenance),
+            // 9. 保险已过期 (15天前) (WOF 正常, COF 正常)
+            ("NIM009", "Mercedes-Benz", "Actros 2653", 2020, 210000m, 20000m, 200000m, today.AddDays(250), today.AddDays(250), today.AddDays(-15), VehicleStatus.Maintenance),
+            // 10. 全项正常车 (WOF 正常, COF 正常, 保险正常)
+            ("NIM010", "Scania", "R500", 2019, 280000m, 20000m, 270000m, today.AddDays(300), today.AddDays(300), today.AddDays(300), VehicleStatus.Active),
+            // 11. 备用轻型皮卡 (WOF 正常, 无 COF, 保险正常)
+            ("NIM011", "Isuzu", "D-Max", 2023, 22000m, 10000m, 20000m, today.AddDays(180), null, today.AddDays(180), VehicleStatus.Inactive)
         };
 
         for (var i = 0; i < vehicleConfigs.Length; i++)
