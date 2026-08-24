@@ -49,6 +49,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<DataSubjectRequest> DataSubjectRequests => Set<DataSubjectRequest>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<Nimpression.Infrastructure.Idempotency.IdempotencyRecord> IdempotencyRecords => Set<Nimpression.Infrastructure.Idempotency.IdempotencyRecord>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
