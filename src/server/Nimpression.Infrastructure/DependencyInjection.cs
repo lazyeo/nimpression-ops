@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Realtime;
 using Nimpression.Infrastructure.Storage;
 
 namespace Nimpression.Infrastructure;
@@ -106,6 +107,9 @@ public static class DependencyInjection
 
         // 对象存储（F2.2 头像 / F8.4 罚单照片）
         services.AddStorage(configuration);
+
+        // 实时通信基础设施（F12 实时通信）
+        services.AddRealtimeInfrastructure();
 
         return services;
     }
