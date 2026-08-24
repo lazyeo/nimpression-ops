@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -52,7 +53,7 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
 
     public async Task InitializeAsync()
     {
-        // 显式禁用后台轮询 worker，以在测试中做确定性的批处理步进验证
+        // 显式禁用后台自动轮询 worker，以在测试中做确定性的批处理步进验证
         _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString, enableBackgroundProcessor: false);
 
         await using var context = _fixture.CreateDbContext();
@@ -116,10 +117,12 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
         await connection.StartAsync();
         connection.State.Should().Be(HubConnectionState.Connected);
 
-        // 2. 写入一条未处理的 Outbox 消息
+        await Task.Delay(100);
+
+        // 2. 写入一条未处理的 Outbox 消息（设置较早的 OccurredAt 确保排在批处理首位）
         var taskId = Guid.NewGuid();
         var outboxId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = DateTimeOffset.UtcNow.AddHours(-1);
         var payload = JsonSerializer.Serialize(new { JobTaskId = taskId, DriverId = _driverId, VehicleId = Guid.NewGuid() });
 
         await using (var db = _fixture.CreateDbContext())
@@ -137,7 +140,11 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
         var processedCount = await processor.ProcessBatchAsync(CancellationToken.None);
         processedCount.Should().BeGreaterThanOrEqualTo(1);
 
-        await Task.Delay(200);
+        var sw = Stopwatch.StartNew();
+        while (receivedSignals.IsEmpty && sw.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            await Task.Delay(50);
+        }
 
         // 4. Assert: 客户端接收到推送失效信号
         receivedSignals.Should().Contain(s => s.Kind == RealtimeEventKinds.TaskAssigned && s.EntityId == taskId);
@@ -166,11 +173,12 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
     {
         var outboxId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
+        var occurredAt = DateTimeOffset.UtcNow.AddHours(-2);
         var payload = JsonSerializer.Serialize(new { JobTaskId = taskId, DriverId = _driverId, VehicleId = Guid.NewGuid() });
 
         await using (var db = _fixture.CreateDbContext())
         {
-            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, DateTimeOffset.UtcNow);
+            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, occurredAt);
             db.OutboxMessages.Add(msg);
             await db.SaveChangesAsync();
         }
