@@ -34,6 +34,7 @@ public static class ResultExtensions
             ErrorKind.Conflict => StatusCodes.Status409Conflict,
             ErrorKind.UnprocessableEntity => StatusCodes.Status422UnprocessableEntity,
             ErrorKind.TooManyRequests => StatusCodes.Status429TooManyRequests,
+            ErrorKind.UnsupportedMediaType => StatusCodes.Status415UnsupportedMediaType,
             _ => StatusCodes.Status500InternalServerError,
         };
 

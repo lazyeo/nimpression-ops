@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Storage;
 
 namespace Nimpression.Infrastructure;
 
@@ -102,6 +103,9 @@ public static class DependencyInjection
             options.AddPolicy(Nimpression.Application.Common.Security.AuthorizationPolicies.DriverOnly, policy =>
                 policy.RequireRole(Nimpression.Domain.Enums.UserRole.Driver.ToString()));
         });
+
+        // 对象存储（F2.2 头像 / F8.4 罚单照片）
+        services.AddStorage(configuration);
 
         return services;
     }
