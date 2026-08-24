@@ -28,10 +28,15 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     private IdentityTestWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
 
-    public static readonly Guid AdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-    public static readonly Guid DispatcherId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-    public static readonly Guid Driver1Id = Guid.Parse("33333333-3333-3333-3333-333333333333");
-    public static readonly Guid Driver2Id = Guid.Parse("44444444-4444-4444-4444-444444444444");
+    private readonly Guid _adminId = Guid.NewGuid();
+    private readonly Guid _dispatcherId = Guid.NewGuid();
+    private readonly Guid _driver1Id = Guid.NewGuid();
+    private readonly Guid _driver2Id = Guid.NewGuid();
+
+    private readonly string _adminEmail = TestDataFactory.CreateEmail("id_admin");
+    private readonly string _dispatcherEmail = TestDataFactory.CreateEmail("id_dispatch");
+    private readonly string _driver1Email = TestDataFactory.CreateEmail("id_driver1");
+    private readonly string _driver2Email = TestDataFactory.CreateEmail("id_driver2");
 
     public const string DefaultPassword = "SecurePassword123!";
 
@@ -52,36 +57,12 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         await using var context = _fixture.CreateDbContext();
         await context.Database.MigrateAsync();
 
-        // 清理测试用户的旧刷新令牌并更新/重置状态
-        var testUserIds = new[] { AdminId, DispatcherId, Driver1Id, Driver2Id };
-        var existingTokens = await context.RefreshTokens
-            .Where(rt => testUserIds.Contains(rt.UserId))
-            .ToListAsync();
-        context.RefreshTokens.RemoveRange(existingTokens);
+        var admin = new User(_adminId, new EmailAddress(_adminEmail), _passwordHasher.HashPassword(DefaultPassword), UserRole.Admin, "Admin Boss");
+        var dispatcher = new User(_dispatcherId, new EmailAddress(_dispatcherEmail), _passwordHasher.HashPassword(DefaultPassword), UserRole.Dispatcher, "Dispatcher Dan");
+        var driver1 = new User(_driver1Id, new EmailAddress(_driver1Email), _passwordHasher.HashPassword(DefaultPassword), UserRole.Driver, "Driver Dave");
+        var driver2 = new User(_driver2Id, new EmailAddress(_driver2Email), _passwordHasher.HashPassword(DefaultPassword), UserRole.Driver, "Driver Bob");
 
-        async Task UpsertTestUserAsync(Guid id, string emailStr, UserRole role, string displayName)
-        {
-            var email = new EmailAddress(emailStr);
-            var user = await context.Users.FindAsync(id);
-            if (user is null)
-            {
-                user = new User(id, email, _passwordHasher.HashPassword(DefaultPassword), role, displayName);
-                await context.Users.AddAsync(user);
-            }
-            else
-            {
-                user.SetStatus(UserStatus.Active);
-                user.Unlock();
-                user.SetPasswordHash(_passwordHasher.HashPassword(DefaultPassword));
-                user.ChangeRole(role);
-            }
-        }
-
-        await UpsertTestUserAsync(AdminId, "admin@nimpression.co.nz", UserRole.Admin, "Admin Boss");
-        await UpsertTestUserAsync(DispatcherId, "dispatcher@nimpression.co.nz", UserRole.Dispatcher, "Dispatcher Dan");
-        await UpsertTestUserAsync(Driver1Id, "driver1@nimpression.co.nz", UserRole.Driver, "Driver Dave");
-        await UpsertTestUserAsync(Driver2Id, "driver2@nimpression.co.nz", UserRole.Driver, "Driver Bob");
-
+        context.Users.AddRange(admin, dispatcher, driver1, driver2);
         await context.SaveChangesAsync();
 
         LoginRateLimiter.Reset();
@@ -93,6 +74,27 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         if (_factory != null)
         {
             await _factory.DisposeAsync();
+        }
+
+        try
+        {
+            await using var context = _fixture.CreateDbContext();
+            var testUserIds = new[] { _adminId, _dispatcherId, _driver1Id, _driver2Id };
+            var existingTokens = await context.RefreshTokens
+                .Where(rt => testUserIds.Contains(rt.UserId))
+                .ToListAsync();
+            context.RefreshTokens.RemoveRange(existingTokens);
+
+            var existingUsers = await context.Users
+                .Where(u => testUserIds.Contains(u.Id))
+                .ToListAsync();
+            context.Users.RemoveRange(existingUsers);
+
+            await context.SaveChangesAsync();
+        }
+        catch
+        {
+            // 忽略清理异常，避免掩盖断言错误
         }
     }
 
@@ -106,7 +108,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_1_Login_WithValidCredentials_Returns200_AccessToken_AndHttpOnlyCookie()
     {
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("admin@nimpression.co.nz", DefaultPassword));
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(_adminEmail, DefaultPassword));
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -114,7 +116,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         body.Should().NotBeNull();
         body!.AccessToken.Should().NotBeNullOrWhiteSpace();
         body.ExpiresIn.Should().Be(900);
-        body.User.Email.Should().Be("admin@nimpression.co.nz");
+        body.User.Email.Should().Be(_adminEmail);
         body.User.Role.Should().Be(UserRole.Admin);
 
         response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
@@ -128,7 +130,8 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_1_Login_WithNonExistentUser_Returns401_WithUnifiedResponseBody()
     {
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("ghost@nimpression.co.nz", "WrongPass123!"));
+        var nonExistentEmail = TestDataFactory.CreateEmail("ghost");
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(nonExistentEmail, "WrongPass123!"));
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -141,7 +144,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_1_Login_WithWrongPassword_Returns401_WithIdenticalResponseBody()
     {
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("admin@nimpression.co.nz", "WrongPass123!"));
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(_adminEmail, "WrongPass123!"));
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -158,14 +161,14 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         {
             var warmupReq1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
             {
-                Content = JsonContent.Create(new LoginRequest($"warmup_nonexistent_{w}@nimpression.co.nz", "WrongPass123!"))
+                Content = JsonContent.Create(new LoginRequest(TestDataFactory.CreateEmail($"warmup_{w}"), "WrongPass123!"))
             };
             warmupReq1.Headers.Add("X-Forwarded-For", $"10.0.0.{w + 1}");
             await _client.SendAsync(warmupReq1);
 
             var warmupReq2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
             {
-                Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", "WrongPass123!"))
+                Content = JsonContent.Create(new LoginRequest(_adminEmail, "WrongPass123!"))
             };
             warmupReq2.Headers.Add("X-Forwarded-For", $"10.0.1.{w + 1}");
             await _client.SendAsync(warmupReq2);
@@ -181,7 +184,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
             // 1. 不存在邮箱请求
             var req1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
             {
-                Content = JsonContent.Create(new LoginRequest($"ghost_{i}@nimpression.co.nz", "WrongPass123!"))
+                Content = JsonContent.Create(new LoginRequest(TestDataFactory.CreateEmail($"ghost_{i}"), "WrongPass123!"))
             };
             req1.Headers.Add("X-Forwarded-For", $"10.100.{i / 250}.{i % 250 + 1}");
 
@@ -195,7 +198,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
             // 2. 存在用户但密码错误请求
             var req2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
             {
-                Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", $"WrongPassword_{i}!"))
+                Content = JsonContent.Create(new LoginRequest(_adminEmail, $"WrongPassword_{i}!"))
             };
             req2.Headers.Add("X-Forwarded-For", $"10.200.{i / 250}.{i % 250 + 1}");
 
@@ -226,7 +229,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_2_RefreshToken_Rotation_ReturnsNewTokens_AndRevokesOldToken()
     {
         // 1. 登录拿 token
-        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("driver1@nimpression.co.nz", DefaultPassword));
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(_driver1Email, DefaultPassword));
         loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var loginBody = await loginResp.Content.ReadFromJsonAsync<AuthSuccessResponse>();
 
@@ -240,7 +243,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
 
         // 验证数据库中旧 token 已被撤销，新 token 处于活跃态
         await using var context = _fixture.CreateDbContext();
-        var tokens = await context.RefreshTokens.Where(rt => rt.UserId == Driver1Id).ToListAsync();
+        var tokens = await context.RefreshTokens.Where(rt => rt.UserId == _driver1Id).ToListAsync();
         tokens.Should().HaveCount(2);
         tokens.Count(t => t.IsRevoked).Should().Be(1);
     }
@@ -249,7 +252,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_2_RefreshToken_ReplayAttack_RevokesAllActiveTokensForUser_AndRecordsAuditEvent()
     {
         // 1. 登录拿原始 raw token
-        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("driver1@nimpression.co.nz", DefaultPassword));
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(_driver1Email, DefaultPassword));
         loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var cookies = loginResp.Headers.GetValues("Set-Cookie").ToList();
         var rawCookie = cookies.First(c => c.StartsWith("refreshToken=", StringComparison.Ordinal));
@@ -268,11 +271,11 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
 
         // 验证该用户的所有刷新令牌均被彻底撤销（防重放级联保护）
         await using var context = _fixture.CreateDbContext();
-        var activeTokens = await context.RefreshTokens.Where(rt => rt.UserId == Driver1Id && rt.RevokedAt == null).ToListAsync();
+        var activeTokens = await context.RefreshTokens.Where(rt => rt.UserId == _driver1Id && rt.RevokedAt == null).ToListAsync();
         activeTokens.Should().BeEmpty();
 
         // 验证记录了安全审计日志
-        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "Security.RefreshTokenReplayDetected" && a.EntityId == Driver1Id.ToString());
+        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "Security.RefreshTokenReplayDetected" && a.EntityId == _driver1Id.ToString());
         audit.Should().NotBeNull();
     }
 
@@ -280,7 +283,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_3_Logout_RevokesToken_AndClearsCookie_SubsequentRefreshReturns401()
     {
         // 1. 登录
-        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest("driver1@nimpression.co.nz", DefaultPassword));
+        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(_driver1Email, DefaultPassword));
         loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var cookies = loginResp.Headers.GetValues("Set-Cookie").ToList();
         var rawCookie = cookies.First(c => c.StartsWith("refreshToken=", StringComparison.Ordinal));
@@ -299,9 +302,9 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     public async Task F1_4_RoleAuthorizationMatrix_3Roles_5Endpoints_15Assertions()
     {
         // 获取三个角色的 Access Token
-        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
-        var dispatcherToken = await GetAccessTokenAsync("dispatcher@nimpression.co.nz", DefaultPassword);
-        var driverToken = await GetAccessTokenAsync("driver1@nimpression.co.nz", DefaultPassword);
+        var adminToken = await GetAccessTokenAsync(_adminEmail, DefaultPassword);
+        var dispatcherToken = await GetAccessTokenAsync(_dispatcherEmail, DefaultPassword);
+        var driverToken = await GetAccessTokenAsync(_driver1Email, DefaultPassword);
 
         // 端点列表定义：
         // 1. POST /api/users/{id}/deactivate (Admin only)
@@ -311,44 +314,44 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         // 5. POST /api/users/{Driver2Id}/change-password (Driver1 modifying Driver2 -> 403; Dispatcher modifying Driver2 -> 403; Admin modifying Driver2 -> 204)
 
         // Matrix 断言 1~5: Admin 角色（5个端点均能访问）
-        (await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{Driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{_driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs")).StatusCode.Should().Be(HttpStatusCode.OK);
         (await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs/export")).StatusCode.Should().Be(HttpStatusCode.OK);
-        (await SendAuthorizedAsync(adminToken, HttpMethod.Get, $"/api/users/{Driver2Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
-        (await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{Driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "NewAdminSetPass123!"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Get, $"/api/users/{_driver2Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{_driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "NewAdminSetPass123!"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // Matrix 断言 6~10: Dispatcher 角色
-        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Post, $"/api/users/{Driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Post, $"/api/users/{_driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, "/api/audit-logs")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, "/api/audit-logs/export")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, $"/api/users/{DispatcherId}")).StatusCode.Should().Be(HttpStatusCode.OK);
-        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Post, $"/api/users/{Driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "FailPass123!"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Get, $"/api/users/{_dispatcherId}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAuthorizedAsync(dispatcherToken, HttpMethod.Post, $"/api/users/{_driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "FailPass123!"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         // Matrix 断言 11~15: Driver 角色（全部管理端点及越权端点均返回 403）
-        (await SendAuthorizedAsync(driverToken, HttpMethod.Post, $"/api/users/{Driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Post, $"/api/users/{_driver2Id}/deactivate")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await SendAuthorizedAsync(driverToken, HttpMethod.Get, "/api/audit-logs")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await SendAuthorizedAsync(driverToken, HttpMethod.Get, "/api/audit-logs/export")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        (await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{Driver2Id}")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        (await SendAuthorizedAsync(driverToken, HttpMethod.Post, $"/api/users/{Driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "FailPass123!"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{_driver2Id}")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await SendAuthorizedAsync(driverToken, HttpMethod.Post, $"/api/users/{_driver2Id}/change-password", new ChangePasswordRequestBody(DefaultPassword, "FailPass123!"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
     public async Task F1_5_AccountDeactivation_DeactivatedUserTokenFailsAuthenticationImmediately()
     {
         // 1. 司机登录拿到 Token
-        var driverToken = await GetAccessTokenAsync("driver1@nimpression.co.nz", DefaultPassword);
+        var driverToken = await GetAccessTokenAsync(_driver1Email, DefaultPassword);
 
         // 验证司机当前可以正常调用自我资料接口
-        var respBefore = await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{Driver1Id}");
+        var respBefore = await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{_driver1Id}");
         respBefore.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 2. 管理员停用司机
-        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
-        var deactResp = await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{Driver1Id}/deactivate");
+        var adminToken = await GetAccessTokenAsync(_adminEmail, DefaultPassword);
+        var deactResp = await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{_driver1Id}/deactivate");
         deactResp.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // 3. 司机再次使用现有的 access token 请求，立即失效返回 401
-        var respAfter = await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{Driver1Id}");
+        var respAfter = await SendAuthorizedAsync(driverToken, HttpMethod.Get, $"/api/users/{_driver1Id}");
         respAfter.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -359,7 +362,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         {
             var req = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
             {
-                Content = JsonContent.Create(new LoginRequest("driver2@nimpression.co.nz", "WrongPass!"))
+                Content = JsonContent.Create(new LoginRequest(_driver2Email, "WrongPass!"))
             };
             req.Headers.Add("X-Forwarded-For", $"10.50.1.{i + 1}");
             var failResp = await _client.SendAsync(req);
@@ -369,7 +372,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         // 第 6 次即便输入正确密码，由于被锁定依然返回 401 AUTH_LOCKED_OUT
         var checkReq = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
         {
-            Content = JsonContent.Create(new LoginRequest("driver2@nimpression.co.nz", DefaultPassword))
+            Content = JsonContent.Create(new LoginRequest(_driver2Email, DefaultPassword))
         };
         checkReq.Headers.Add("X-Forwarded-For", "10.50.1.99");
         var lockedResp = await _client.SendAsync(checkReq);
@@ -379,22 +382,22 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
 
         // 验证记录了锁定审计
         await using var context = _fixture.CreateDbContext();
-        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "User.Lockout" && a.EntityId == Driver2Id.ToString());
+        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "User.Lockout" && a.EntityId == _driver2Id.ToString());
         audit.Should().NotBeNull();
     }
 
     [Fact]
     public async Task N1_1_AuditBehavior_RecordsAuditEventOnCommand()
     {
-        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
+        var adminToken = await GetAccessTokenAsync(_adminEmail, DefaultPassword);
 
         // 执行修改密码命令（实现 IAuditableCommand）
-        var resp = await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{AdminId}/change-password",
+        var resp = await SendAuthorizedAsync(adminToken, HttpMethod.Post, $"/api/users/{_adminId}/change-password",
             new ChangePasswordRequestBody(DefaultPassword, "NewAdminSuperPass123!"));
         resp.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         await using var context = _fixture.CreateDbContext();
-        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "ChangePassword" && a.EntityId == AdminId.ToString());
+        var audit = await context.AuditEvents.FirstOrDefaultAsync(a => a.Action == "ChangePassword" && a.EntityId == _adminId.ToString());
         audit.Should().NotBeNull();
         audit!.ActorRole.Should().Be(UserRole.Admin);
     }
@@ -402,7 +405,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task N1_2_AuditEndpoints_GetAndExport_ReturnsLogs()
     {
-        var adminToken = await GetAccessTokenAsync("admin@nimpression.co.nz", DefaultPassword);
+        var adminToken = await GetAccessTokenAsync(_adminEmail, DefaultPassword);
 
         // 查询
         var getResp = await SendAuthorizedAsync(adminToken, HttpMethod.Get, "/api/audit-logs?page=1&pageSize=10");
@@ -421,10 +424,10 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task N1_3_IDOR_Protection_DriverAccessingOtherDriverProfile_Returns403()
     {
-        var driver1Token = await GetAccessTokenAsync("driver1@nimpression.co.nz", DefaultPassword);
+        var driver1Token = await GetAccessTokenAsync(_driver1Email, DefaultPassword);
 
         // 司机1访问司机2的资料 -> 403 Forbidden
-        var resp = await SendAuthorizedAsync(driver1Token, HttpMethod.Get, $"/api/users/{Driver2Id}");
+        var resp = await SendAuthorizedAsync(driver1Token, HttpMethod.Get, $"/api/users/{_driver2Id}");
         resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -437,7 +440,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         {
             var req = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
             {
-                Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", DefaultPassword))
+                Content = JsonContent.Create(new LoginRequest(_adminEmail, DefaultPassword))
             };
             req.Headers.Add("X-Forwarded-For", testIp);
             var r = await _client.SendAsync(req);
@@ -447,7 +450,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         // 第 6 次超限
         var limitReq = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
         {
-            Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", DefaultPassword))
+            Content = JsonContent.Create(new LoginRequest(_adminEmail, DefaultPassword))
         };
         limitReq.Headers.Add("X-Forwarded-For", testIp);
         var rateLimitResp = await _client.SendAsync(limitReq);

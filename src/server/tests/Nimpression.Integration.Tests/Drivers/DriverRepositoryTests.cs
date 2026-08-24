@@ -110,10 +110,11 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
         var userId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var employeeNo = TestDataFactory.CreateEmployeeNo("DRV");
 
         var user = new User(
             userId,
-            new EmailAddress("test.integration@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("test.integration"),
             "hash",
             UserRole.Driver,
             "Integration Test Driver",
@@ -122,7 +123,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
         var driver = new Driver(
             driverId,
             userId,
-            "DRV-999",
+            employeeNo,
             "Class 5",
             today.AddYears(2),
             new Money(40.00m),
@@ -139,7 +140,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
 
         var persistedDriver = await sut.GetByIdAsync(driverId);
         persistedDriver.Should().NotBeNull();
-        persistedDriver!.EmployeeNo.Should().Be("DRV-999");
+        persistedDriver!.EmployeeNo.Should().Be(employeeNo);
         persistedDriver.HourlyRate.Amount.Should().Be(40.00m);
 
         var persistedUser = await sut.GetUserByIdAsync(userId);
