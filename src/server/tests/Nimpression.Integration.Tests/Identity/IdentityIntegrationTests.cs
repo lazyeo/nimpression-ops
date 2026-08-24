@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -147,6 +148,78 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         var json = await response.Content.ReadAsStringAsync();
         json.Should().Contain("AUTH_INVALID_CREDENTIALS");
         json.Should().Contain("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task F1_1_Login_TimingSideChannel_NonExistentVsWrongPassword_MedianLatencyDifferenceWithinThreshold()
+    {
+        // 预热请求（确保 JIT 编译及连接池建立）
+        for (var w = 0; w < 3; w++)
+        {
+            var warmupReq1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest($"warmup_nonexistent_{w}@nimpression.co.nz", "WrongPass123!"))
+            };
+            warmupReq1.Headers.Add("X-Forwarded-For", $"10.0.0.{w + 1}");
+            await _client.SendAsync(warmupReq1);
+
+            var warmupReq2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", "WrongPass123!"))
+            };
+            warmupReq2.Headers.Add("X-Forwarded-For", $"10.0.1.{w + 1}");
+            await _client.SendAsync(warmupReq2);
+        }
+
+        const int iterations = 20;
+        var nonExistentLatencies = new List<double>(iterations);
+        var wrongPasswordLatencies = new List<double>(iterations);
+
+        // 交替发起请求测量耗时（消除执行先后顺序带来的系统 CPU/连接负载差异）
+        for (var i = 0; i < iterations; i++)
+        {
+            // 1. 不存在邮箱请求
+            var req1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest($"ghost_{i}@nimpression.co.nz", "WrongPass123!"))
+            };
+            req1.Headers.Add("X-Forwarded-For", $"10.100.{i / 250}.{i % 250 + 1}");
+
+            var sw1 = Stopwatch.StartNew();
+            var resp1 = await _client.SendAsync(req1);
+            sw1.Stop();
+
+            resp1.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            nonExistentLatencies.Add(sw1.Elapsed.TotalMilliseconds);
+
+            // 2. 存在用户但密码错误请求
+            var req2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest("admin@nimpression.co.nz", $"WrongPassword_{i}!"))
+            };
+            req2.Headers.Add("X-Forwarded-For", $"10.200.{i / 250}.{i % 250 + 1}");
+
+            var sw2 = Stopwatch.StartNew();
+            var resp2 = await _client.SendAsync(req2);
+            sw2.Stop();
+
+            resp2.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            wrongPasswordLatencies.Add(sw2.Elapsed.TotalMilliseconds);
+        }
+
+        // 计算中位数（Median）
+        nonExistentLatencies.Sort();
+        wrongPasswordLatencies.Sort();
+
+        var nonExistentMedian = (nonExistentLatencies[9] + nonExistentLatencies[10]) / 2.0;
+        var wrongPasswordMedian = (wrongPasswordLatencies[9] + wrongPasswordLatencies[10]) / 2.0;
+
+        var diff = Math.Abs(nonExistentMedian - wrongPasswordMedian);
+
+        // 断言：两条路径均执行了完整的 BCrypt workFactor=12 哈希校验（耗时合理），且中位耗时差异在 50ms 以内
+        nonExistentMedian.Should().BeGreaterThan(50.0);
+        wrongPasswordMedian.Should().BeGreaterThan(50.0);
+        diff.Should().BeLessThanOrEqualTo(50.0, $"中位耗时差异 {diff:F2}ms 应当在 50ms 阈值内 (不存在={nonExistentMedian:F2}ms, 密码错={wrongPasswordMedian:F2}ms)");
     }
 
     [Fact]

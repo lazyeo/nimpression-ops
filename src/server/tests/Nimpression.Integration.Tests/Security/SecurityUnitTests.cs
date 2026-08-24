@@ -21,6 +21,10 @@ public class SecurityUnitTests
         hash.Should().StartWith("$2"); // BCrypt prefix
         hasher.VerifyPassword(rawPassword, hash).Should().BeTrue();
         hasher.VerifyPassword("WrongPassword123!", hash).Should().BeFalse();
+
+        // 验证假哈希用于时序侧信道对齐时可正常解析执行且返回 false
+        const string dummyHash = "$2a$12$XZCHWVyJw9OQb10ZeqYcyeOQcZJ6bY5xH7Wl.c6kR4V1mQZ4m1aCe";
+        hasher.VerifyPassword(rawPassword, dummyHash).Should().BeFalse();
     }
 
     [Fact]
