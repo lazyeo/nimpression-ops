@@ -7,10 +7,12 @@ namespace Nimpression.Integration.Tests.Fixtures;
 
 public class TestDataIsolationGuardTests
 {
+    private static readonly Regex NzPlateRegex = new("^[A-Z0-9]{1,6}$", RegexOptions.Compiled);
+
     [Fact]
     public void TestDataFactory_GeneratesUniqueAndValidEmailAddresses()
     {
-        const int count = 500;
+        const int count = 5000;
         var emails = new HashSet<string>(count);
 
         for (var i = 0; i < count; i++)
@@ -24,6 +26,51 @@ public class TestDataIsolationGuardTests
         }
 
         emails.Should().HaveCount(count);
+    }
+
+    [Fact]
+    public void TestDataFactory_GeneratesUniqueEmployeeNumbers_Exceeding4096CollisionLimit()
+    {
+        // 验证数量（15,000）远超原先截断 3 个 Hex 字符导致的 4,096 上限，且必须 100% 唯一
+        const int count = 15000;
+        var employeeNos = new HashSet<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            var empNo = TestDataFactory.CreateEmployeeNo("DRV");
+            var added = employeeNos.Add(empNo);
+            added.Should().BeTrue($"Each generated employee number must be deterministic and unique, but duplicate was found at iteration {i}: {empNo}");
+
+            empNo.Should().NotBeNullOrWhiteSpace();
+            empNo.Length.Should().BeLessThanOrEqualTo(30, "Employee number must adhere to database column max length of 30.");
+            empNo.Should().StartWith("DRV-");
+        }
+
+        employeeNos.Should().HaveCount(count);
+    }
+
+    [Fact]
+    public void TestDataFactory_GeneratesUniqueRegos_Exceeding9000CollisionLimit()
+    {
+        // 验证数量（15,000）远超原先 4 位随机数导致的 9,000 上限，且必须 100% 唯一并严格符合新西兰车牌规范
+        const int count = 15000;
+        var regos = new HashSet<string>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            var rego = TestDataFactory.CreateRego("T");
+            var added = regos.Add(rego);
+            added.Should().BeTrue($"Each generated vehicle Rego must be deterministic and unique, but duplicate was found at iteration {i}: {rego}");
+
+            rego.Length.Should().BeInRange(1, 6, "NZ vehicle registration must be between 1 and 6 characters.");
+            NzPlateRegex.IsMatch(rego).Should().BeTrue($"Rego '{rego}' must be alphanumeric uppercase matching NZ format.");
+
+            // 验证可以无异常构造 Domain Value Object
+            var act = () => new Rego(rego);
+            act.Should().NotThrow<Exception>($"'{rego}' must be a valid Rego domain value object.");
+        }
+
+        regos.Should().HaveCount(count);
     }
 
     [Fact]

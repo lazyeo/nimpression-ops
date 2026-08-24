@@ -38,7 +38,7 @@ public class TimeZoneRoundtripTests : IAsyncLifetime
 
         var user = new User(
             Guid.NewGuid(),
-            new EmailAddress($"dst_user_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("dst_user"),
             "hash",
             UserRole.Driver,
             "DST Driver",
@@ -49,7 +49,7 @@ public class TimeZoneRoundtripTests : IAsyncLifetime
         var driver = new Driver(
             Guid.NewGuid(),
             user.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(30m),
@@ -64,7 +64,7 @@ public class TimeZoneRoundtripTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"D{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("D"),
             "Isuzu",
             "NPR",
             2022,

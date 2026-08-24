@@ -37,7 +37,7 @@ public class OutboxTransactionTests : IAsyncLifetime
 
         var user = new User(
             Guid.NewGuid(),
-            new EmailAddress($"outbox_user_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("outbox_user"),
             "hash",
             UserRole.Driver,
             "Outbox Driver",
@@ -48,7 +48,7 @@ public class OutboxTransactionTests : IAsyncLifetime
         var driver = new Driver(
             Guid.NewGuid(),
             user.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(32m),
@@ -92,7 +92,7 @@ public class OutboxTransactionTests : IAsyncLifetime
 
         var user = new User(
             Guid.NewGuid(),
-            new EmailAddress($"rollback_user_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("rollback_user"),
             "hash",
             UserRole.Driver,
             "Rollback Driver",
@@ -103,7 +103,7 @@ public class OutboxTransactionTests : IAsyncLifetime
         var driver = new Driver(
             Guid.NewGuid(),
             user.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(32m),
