@@ -51,7 +51,7 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
             UserRole.Driver,
             "Integration Driver",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero));
 
         var driver = new Driver(
             Guid.NewGuid(),

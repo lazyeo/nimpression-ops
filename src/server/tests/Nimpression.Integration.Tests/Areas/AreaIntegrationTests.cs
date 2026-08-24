@@ -58,7 +58,7 @@ public class AreaIntegrationTests : IAsyncLifetime
             UserRole.Driver,
             "Integration Driver",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero));
 
         var driver = new Driver(
             Guid.NewGuid(),
@@ -286,7 +286,7 @@ public class AreaIntegrationTests : IAsyncLifetime
 
     private sealed class TestDateTimeProvider : IDateTimeProvider
     {
-        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+        public DateTimeOffset UtcNow => new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         public DateTimeOffset NzNow => UtcNow.ToOffset(TimeSpan.FromHours(12));
         public DateOnly NzToday => DateOnly.FromDateTime(NzNow.DateTime);
     }
