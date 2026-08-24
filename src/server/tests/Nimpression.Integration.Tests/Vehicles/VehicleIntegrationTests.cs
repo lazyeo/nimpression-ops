@@ -50,7 +50,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var dispatcher = new User(
             Guid.NewGuid(),
-            new EmailAddress($"dispatcher_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("dispatcher"),
             "hash",
             UserRole.Dispatcher,
             "Fleet Dispatcher",
@@ -59,7 +59,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var driverUser1 = new User(
             Guid.NewGuid(),
-            new EmailAddress($"driver1_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("driver1"),
             "hash",
             UserRole.Driver,
             "Driver One",
@@ -68,7 +68,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var driverUser2 = new User(
             Guid.NewGuid(),
-            new EmailAddress($"driver2_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("driver2"),
             "hash",
             UserRole.Driver,
             "Driver Two",
@@ -80,7 +80,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
         var driver1 = new Driver(
             Guid.NewGuid(),
             driverUser1.Id,
-            $"D{Random.Shared.Next(10000, 99999)}",
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(32m),
@@ -95,7 +95,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
         var driver2 = new Driver(
             Guid.NewGuid(),
             driverUser2.Id,
-            $"D{Random.Shared.Next(10000, 99999)}",
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(32m),
@@ -124,7 +124,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
         var uow = new EfUnitOfWork(context);
         var handler = new CreateVehicleCommandHandler(repo, uow);
 
-        var regoStr = $"V{Random.Shared.Next(10000, 99999)}";
+        var regoStr = TestDataFactory.CreateRego("V");
         var command = new CreateVehicleCommand(
             regoStr,
             "Isuzu",
@@ -163,7 +163,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
         var uow = new EfUnitOfWork(context);
         var handler = new CreateVehicleCommandHandler(repo, uow);
 
-        var duplicateRego = $"DUP{Random.Shared.Next(100, 999)}";
+        var duplicateRego = TestDataFactory.CreateRego("DUP");
 
         var command1 = new CreateVehicleCommand(
             duplicateRego,
@@ -207,7 +207,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"U{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("U"),
             "Hino",
             "300",
             2021,
@@ -254,7 +254,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"S{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("S"),
             "Fuso",
             "Canter",
             2022,
@@ -299,7 +299,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
         await using var setupContext = _fixture.CreateDbContext();
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"C{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("C"),
             "Isuzu",
             "Giga",
             2023,
@@ -370,7 +370,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"R{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("R"),
             "Hino",
             "500",
             2022,
@@ -420,7 +420,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"O{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("O"),
             "Toyota",
             "Hilux",
             2023,
@@ -468,7 +468,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"D{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("D"),
             "Toyota",
             "Hilux",
             2023,
@@ -511,7 +511,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
         await using var context = _fixture.CreateDbContext();
         var repo = new EfVehicleRepository(context);
 
-        var rego = new Rego($"P{Random.Shared.Next(10000, 99999)}");
+        var rego = TestDataFactory.CreateRegoObject("P");
         var vehicle = new Vehicle(
             Guid.NewGuid(),
             rego,

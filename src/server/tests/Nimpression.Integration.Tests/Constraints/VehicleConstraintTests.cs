@@ -33,7 +33,7 @@ public class VehicleConstraintTests : IAsyncLifetime
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
-        var uniqueRego = $"TST{Random.Shared.Next(100, 999)}";
+        var uniqueRego = TestDataFactory.CreateRego("TST");
 
         var v1 = new Vehicle(
             Guid.NewGuid(),
@@ -85,7 +85,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         // Create prerequisites: 2 Driver Users, 1 Dispatcher User, 2 Drivers, 1 Vehicle
         var dispatcher = new User(
             Guid.NewGuid(),
-            new EmailAddress($"dispatcher_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("dispatcher"),
             "hash",
             UserRole.Dispatcher,
             "Dispatcher Test",
@@ -94,7 +94,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var driverUser1 = new User(
             Guid.NewGuid(),
-            new EmailAddress($"driver1_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("driver1"),
             "hash",
             UserRole.Driver,
             "Driver 1 Test",
@@ -103,7 +103,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var driverUser2 = new User(
             Guid.NewGuid(),
-            new EmailAddress($"driver2_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("driver2"),
             "hash",
             UserRole.Driver,
             "Driver 2 Test",
@@ -115,7 +115,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         var d1 = new Driver(
             Guid.NewGuid(),
             driverUser1.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(30m),
@@ -130,7 +130,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         var d2 = new Driver(
             Guid.NewGuid(),
             driverUser2.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(30m),
@@ -146,7 +146,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"U{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("U"),
             "Fuso",
             "Canter",
             2021,
@@ -193,7 +193,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var dispatcher = new User(
             Guid.NewGuid(),
-            new EmailAddress($"dispatcher_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("dispatcher"),
             "hash",
             UserRole.Dispatcher,
             "Dispatcher Test 2",
@@ -202,7 +202,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var driverUser1 = new User(
             Guid.NewGuid(),
-            new EmailAddress($"driver1_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("driver1"),
             "hash",
             UserRole.Driver,
             "Driver 1 Test 2",
@@ -211,7 +211,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var driverUser2 = new User(
             Guid.NewGuid(),
-            new EmailAddress($"driver2_{Guid.NewGuid():N}@nimpression.co.nz"),
+            TestDataFactory.CreateEmailAddress("driver2"),
             "hash",
             UserRole.Driver,
             "Driver 2 Test 2",
@@ -223,7 +223,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         var d1 = new Driver(
             Guid.NewGuid(),
             driverUser1.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(30m),
@@ -238,7 +238,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         var d2 = new Driver(
             Guid.NewGuid(),
             driverUser2.Id,
-            $"DRV-{Guid.NewGuid():N}"[..7],
+            TestDataFactory.CreateEmployeeNo("DRV"),
             "Class 4",
             new DateOnly(2028, 1, 1),
             new Money(30m),
@@ -254,7 +254,7 @@ public class VehicleConstraintTests : IAsyncLifetime
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
-            new Rego($"R{Random.Shared.Next(10000, 99999)}"),
+            TestDataFactory.CreateRegoObject("R"),
             "Fuso",
             "Canter",
             2021,
