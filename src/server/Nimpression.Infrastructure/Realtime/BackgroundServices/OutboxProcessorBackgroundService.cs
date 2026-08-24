@@ -56,7 +56,7 @@ public sealed partial class OutboxProcessorBackgroundService(
     }
 
     /// <summary>
-    /// 处理单批次 Outbox 消息。供后台循环及集成测试直接调用以做确定性验证。
+    /// 处理单批次 Outbox 消息。供后台循环调用。
     /// </summary>
     public async Task<int> ProcessBatchAsync(CancellationToken cancellationToken = default)
     {
@@ -105,6 +105,52 @@ public sealed partial class OutboxProcessorBackgroundService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return messages.Count;
+    }
+
+    /// <summary>
+    /// 处理指定 ID 的单条 Outbox 消息。供测试或显式重试精确驱动单条消息处理，消除并行测试下的批处理时序竞态。
+    /// </summary>
+    public async Task<bool> ProcessMessageAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var mapper = scope.ServiceProvider.GetRequiredService<IOutboxToRealtimeMapper>();
+        var realtimeNotifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
+        var dateTimeProvider = scope.ServiceProvider.GetService<IDateTimeProvider>();
+
+        var message = await dbContext.OutboxMessages
+            .FirstOrDefaultAsync(m => m.Id == messageId, cancellationToken);
+
+        if (message is null || message.ProcessedAt != null)
+        {
+            return false;
+        }
+
+        var now = dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
+
+        try
+        {
+            var mapping = mapper.Map(message);
+
+            foreach (var group in mapping.TargetGroups)
+            {
+                await realtimeNotifier.PublishToGroupAsync(group, mapping.Message, cancellationToken);
+            }
+
+            message.MarkProcessed(now);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LogDeliveryFailed(logger, ex, message.Id, message.Type, message.Attempts + 1);
+            message.RecordAttempt(ex.Message);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     [LoggerMessage(

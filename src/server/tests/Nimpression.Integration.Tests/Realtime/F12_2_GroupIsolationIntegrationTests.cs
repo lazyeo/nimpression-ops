@@ -22,6 +22,7 @@ namespace Nimpression.Integration.Tests.Realtime;
 /// F12.2 分组隔离验收测试：
 /// 按角色与司机 Id 实施强分组隔离；司机 A 绝对收不到发给司机 B 的私有消息。
 /// 本测试使用两个独立的 SignalR 客户端连接在真实运行环境中实证隔离性。
+/// 采用 TaskCompletionSource 确定性信号捕获，消除任何时序竞态。
 /// </summary>
 [Collection("PostgreSqlCollection")]
 public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisposable
@@ -57,7 +58,7 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
 
     public async Task InitializeAsync()
     {
-        _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString);
+        _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString, enableBackgroundProcessor: false);
 
         await using var context = _fixture.CreateDbContext();
         await context.Database.MigrateAsync();
@@ -144,11 +145,35 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
         var receivedMessagesA = new ConcurrentBag<RealtimeMessage>();
         var receivedMessagesB = new ConcurrentBag<RealtimeMessage>();
 
-        connectionA.On<RealtimeMessage>("ReceiveInvalidation", msg => receivedMessagesA.Add(msg));
-        connectionB.On<RealtimeMessage>("ReceiveInvalidation", msg => receivedMessagesB.Add(msg));
+        var taskAId = Guid.NewGuid();
+        var taskBId = Guid.NewGuid();
+
+        var tcsA = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tcsB = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        connectionA.On<RealtimeMessage>("ReceiveInvalidation", msg =>
+        {
+            receivedMessagesA.Add(msg);
+            if (msg.EntityId == taskAId)
+            {
+                tcsA.TrySetResult(msg);
+            }
+        });
+
+        connectionB.On<RealtimeMessage>("ReceiveInvalidation", msg =>
+        {
+            receivedMessagesB.Add(msg);
+            if (msg.EntityId == taskBId)
+            {
+                tcsB.TrySetResult(msg);
+            }
+        });
 
         await connectionA.StartAsync();
+        await connectionA.InvokeAsync("Ping");
+
         await connectionB.StartAsync();
+        await connectionB.InvokeAsync("Ping");
 
         // 验证连接已正常建立
         connectionA.State.Should().Be(HubConnectionState.Connected);
@@ -157,15 +182,15 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
         using var scope = _factory.Services.CreateScope();
         var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
 
-        var taskAId = Guid.NewGuid();
-        var taskBId = Guid.NewGuid();
-
         var messageForDriverA = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskAId, DateTimeOffset.UtcNow);
         var messageForDriverB = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskBId, DateTimeOffset.UtcNow);
 
         // Act 1: 向司机 A 专属群组推送消息
         await notifier.PublishToDriverAsync(_driverAId, messageForDriverA);
-        await Task.Delay(300);
+
+        using var ctsA = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var msgA = await tcsA.Task.WaitAsync(ctsA.Token);
+        msgA.EntityId.Should().Be(taskAId);
 
         // Assert 1: 司机 A 收到消息，司机 B 绝对收不到发给司机 A 的消息
         receivedMessagesA.Should().ContainSingle(m => m.EntityId == taskAId && m.Kind == RealtimeEventKinds.TaskAssigned);
@@ -173,7 +198,10 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
 
         // Act 2: 向司机 B 专属群组推送消息
         await notifier.PublishToDriverAsync(_driverBId, messageForDriverB);
-        await Task.Delay(300);
+
+        using var ctsB = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var msgB = await tcsB.Task.WaitAsync(ctsB.Token);
+        msgB.EntityId.Should().Be(taskBId);
 
         // Assert 2: 司机 B 收到属于自己的消息，司机 A 消息列表无变动（仍仅有此前的一条）
         receivedMessagesB.Should().ContainSingle(m => m.EntityId == taskBId && m.Kind == RealtimeEventKinds.TaskAssigned);
@@ -193,21 +221,36 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
         var driverMessages = new ConcurrentBag<RealtimeMessage>();
         var dispatcherMessages = new ConcurrentBag<RealtimeMessage>();
 
+        var vehicleId = Guid.NewGuid();
+        var tcsDispatcher = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         driverConnection.On<RealtimeMessage>("ReceiveInvalidation", msg => driverMessages.Add(msg));
-        dispatcherConnection.On<RealtimeMessage>("ReceiveInvalidation", msg => dispatcherMessages.Add(msg));
+        dispatcherConnection.On<RealtimeMessage>("ReceiveInvalidation", msg =>
+        {
+            dispatcherMessages.Add(msg);
+            if (msg.EntityId == vehicleId)
+            {
+                tcsDispatcher.TrySetResult(msg);
+            }
+        });
 
         await driverConnection.StartAsync();
+        await driverConnection.InvokeAsync("Ping");
+
         await dispatcherConnection.StartAsync();
+        await dispatcherConnection.InvokeAsync("Ping");
 
         using var scope = _factory.Services.CreateScope();
         var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
 
-        var vehicleId = Guid.NewGuid();
         var alertMessage = new RealtimeMessage(RealtimeEventKinds.VehicleServiceThresholdReached, vehicleId, DateTimeOffset.UtcNow);
 
         // Act: 向 Dispatcher 角色组广播车辆保养报警
         await notifier.PublishToRoleAsync(UserRole.Dispatcher.ToString(), alertMessage);
-        await Task.Delay(300);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var alertReceived = await tcsDispatcher.Task.WaitAsync(cts.Token);
+        alertReceived.EntityId.Should().Be(vehicleId);
 
         // Assert: 调度员成功接收失效信号，司机端未接收到任何该角色消息
         dispatcherMessages.Should().ContainSingle(m => m.EntityId == vehicleId && m.Kind == RealtimeEventKinds.VehicleServiceThresholdReached);

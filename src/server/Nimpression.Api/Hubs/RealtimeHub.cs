@@ -75,6 +75,11 @@ public sealed partial class RealtimeHub(
         await base.OnDisconnectedAsync(exception);
     }
 
+    /// <summary>
+    /// Ping 端点，供客户端确认连接已就绪且已完成组分配。
+    /// </summary>
+    public Task Ping() => Task.CompletedTask;
+
     [LoggerMessage(
         EventId = 3001,
         Level = LogLevel.Information,

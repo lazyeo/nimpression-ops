@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -24,6 +22,7 @@ namespace Nimpression.Integration.Tests.Realtime;
 /// F12.4 传输协议降级验收测试：
 /// 显式配置并验证 SignalR 传输协议降级（WebSocket 不可用时回落至 Long Polling），
 /// 在受限网络或降级场景下均能稳定建立连接并实时接收失效信号，业务功能无任何降级。
+/// 采用 TaskCompletionSource 确定性信号捕获，消除任何时序竞态。
 /// </summary>
 [Collection("PostgreSqlCollection")]
 public sealed class F12_4_TransportFallbackIntegrationTests : IAsyncLifetime, IDisposable
@@ -48,7 +47,7 @@ public sealed class F12_4_TransportFallbackIntegrationTests : IAsyncLifetime, ID
 
     public async Task InitializeAsync()
     {
-        _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString);
+        _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString, enableBackgroundProcessor: false);
 
         await using var context = _fixture.CreateDbContext();
         await context.Database.MigrateAsync();
@@ -103,34 +102,39 @@ public sealed class F12_4_TransportFallbackIntegrationTests : IAsyncLifetime, ID
     [Fact]
     public async Task F12_4_LongPollingFallback_DeliversInvalidationSignal_WithoutFunctionalDegradation()
     {
+        var taskId = Guid.NewGuid();
+        var expectedMessage = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskId, DateTimeOffset.UtcNow);
+
+        var tcs = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         // Arrange: 显式模拟 WebSocket 不可用场景，强制回落至 LongPolling 传输协议
         await using var connection = _factory.CreateHubConnection(_token, HttpTransportType.LongPolling);
 
-        var receivedMessages = new ConcurrentBag<RealtimeMessage>();
-        connection.On<RealtimeMessage>("ReceiveInvalidation", msg => receivedMessages.Add(msg));
+        connection.On<RealtimeMessage>("ReceiveInvalidation", msg =>
+        {
+            if (msg.EntityId == taskId)
+            {
+                tcs.TrySetResult(msg);
+            }
+        });
 
         await connection.StartAsync();
+        await connection.InvokeAsync("Ping");
         connection.State.Should().Be(HubConnectionState.Connected);
-
-        await Task.Delay(100);
 
         using var scope = _factory.Services.CreateScope();
         var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
 
-        var taskId = Guid.NewGuid();
-        var expectedMessage = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskId, DateTimeOffset.UtcNow);
-
         // Act: 向客户端广播失效信号
         await notifier.PublishToDriverAsync(_driverId, expectedMessage);
 
-        var sw = Stopwatch.StartNew();
-        while (receivedMessages.IsEmpty && sw.Elapsed < TimeSpan.FromSeconds(5))
-        {
-            await Task.Delay(50);
-        }
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var receivedMessage = await tcs.Task.WaitAsync(cts.Token);
 
         // Assert: 降级传输模式下完整接收纯失效信号，功能与实时性无损
-        receivedMessages.Should().ContainSingle(m => m.EntityId == taskId && m.Kind == RealtimeEventKinds.TaskAssigned);
+        receivedMessage.Should().NotBeNull();
+        receivedMessage.EntityId.Should().Be(taskId);
+        receivedMessage.Kind.Should().Be(RealtimeEventKinds.TaskAssigned);
 
         await connection.StopAsync();
     }

@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -32,6 +30,7 @@ namespace Nimpression.Integration.Tests.Realtime;
 /// <b>核心设计灵魂验证：推送通道不可信，推送仅作失效信号，不作数据通道。</b><br/>
 /// 构造一条内容被恶意篡改的推送消息（伪造实体 ID、伪造字段载荷），<br/>
 /// 断言客户端在收到推送后遵循架构约束走权威 HTTP 接口拉取真实数据，业务状态与数据完全不受推送篡改的影响。
+/// 采用 TaskCompletionSource 确定性信号捕获，消除任何时序竞态。
 /// </para>
 /// </summary>
 [Collection("PostgreSqlCollection")]
@@ -63,7 +62,7 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
 
     public async Task InitializeAsync()
     {
-        _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString);
+        _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString, enableBackgroundProcessor: false);
         _httpClient = _factory.CreateClient();
 
         await using var context = _fixture.CreateDbContext();
@@ -156,36 +155,49 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
     [Fact]
     public async Task F12_5_UntrustedChannel_TamperedPushMessage_DoesNotAffectBusinessCorrectness()
     {
-        // 1. 建立 SignalR 连接
-        await using var connection = _factory.CreateHubConnection(_token);
-
-        var receivedSignals = new ConcurrentBag<RealtimeMessage>();
-        connection.On<RealtimeMessage>("ReceiveInvalidation", signal => receivedSignals.Add(signal));
-
-        await connection.StartAsync();
-        connection.State.Should().Be(HubConnectionState.Connected);
-
-        await Task.Delay(100);
-
-        using var scope = _factory.Services.CreateScope();
-        var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
-
-        // 2. 模拟攻击者向推送通道注入恶意篡改的消息（如伪造的已完成状态、虚假实体 ID、钓鱼指令等）
         var bogusEntityId = Guid.NewGuid();
         var tamperedSignal = new RealtimeMessage(
             Kind: "malicious.tampered.kind",
             EntityId: bogusEntityId,
             OccurredAt: DateTimeOffset.UtcNow);
 
+        var legitimateSignal = new RealtimeMessage(
+            Kind: RealtimeEventKinds.TaskAssigned,
+            EntityId: _taskId,
+            OccurredAt: DateTimeOffset.UtcNow);
+
+        var tcsTampered = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tcsLegitimate = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // 1. 建立 SignalR 连接
+        await using var connection = _factory.CreateHubConnection(_token);
+
+        connection.On<RealtimeMessage>("ReceiveInvalidation", signal =>
+        {
+            if (signal.EntityId == bogusEntityId)
+            {
+                tcsTampered.TrySetResult(signal);
+            }
+            else if (signal.EntityId == _taskId)
+            {
+                tcsLegitimate.TrySetResult(signal);
+            }
+        });
+
+        await connection.StartAsync();
+        await connection.InvokeAsync("Ping");
+        connection.State.Should().Be(HubConnectionState.Connected);
+
+        using var scope = _factory.Services.CreateScope();
+        var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
+
+        // 2. 模拟攻击者向推送通道注入恶意篡改的消息（如伪造的已完成状态、虚假实体 ID、钓鱼指令等）
         await notifier.PublishToDriverAsync(_driverId, tamperedSignal);
 
-        var sw1 = Stopwatch.StartNew();
-        while (receivedSignals.IsEmpty && sw1.Elapsed < TimeSpan.FromSeconds(5))
-        {
-            await Task.Delay(50);
-        }
-
-        receivedSignals.Should().ContainSingle(s => s.EntityId == bogusEntityId);
+        using var cts1 = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var receivedTampered = await tcsTampered.Task.WaitAsync(cts1.Token);
+        receivedTampered.Should().NotBeNull();
+        receivedTampered.EntityId.Should().Be(bogusEntityId);
 
         // 3. 客户端处理机制（架构约束）：客户端绝不信任推送载荷，收到失效信号后仅使用 HTTP API 重新拉取权威数据
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
@@ -195,21 +207,12 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
         bogusResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
         // 3.2 模拟发送真实任务的合法失效信号
-        var legitimateSignal = new RealtimeMessage(
-            Kind: RealtimeEventKinds.TaskAssigned,
-            EntityId: _taskId,
-            OccurredAt: DateTimeOffset.UtcNow);
-
         await notifier.PublishToDriverAsync(_driverId, legitimateSignal);
 
-        var sw2 = Stopwatch.StartNew();
-        while (receivedSignals.Count < 2 && sw2.Elapsed < TimeSpan.FromSeconds(5))
-        {
-            await Task.Delay(50);
-        }
-
-        receivedSignals.Should().Contain(s => s.EntityId == bogusEntityId);
-        receivedSignals.Should().Contain(s => s.EntityId == _taskId);
+        using var cts2 = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var receivedLegitimate = await tcsLegitimate.Task.WaitAsync(cts2.Token);
+        receivedLegitimate.Should().NotBeNull();
+        receivedLegitimate.EntityId.Should().Be(_taskId);
 
         // 3.3 用合法失效信号中的实体 ID 重新拉取司机的权威数据 -> 200 OK
         var legitimateResp = await _httpClient.GetAsync($"/api/drivers/{_driverId}");

@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -29,6 +27,7 @@ namespace Nimpression.Integration.Tests.Realtime;
 /// <summary>
 /// Outbox 消费后台服务集成测试：
 /// 验证至少一次投递、失败重试、标记 ProcessedAt 及避免重复投递的幂等性。
+/// 采用完全确定性的测试驱动机制（测试宿主关闭后台自动轮询，由测试显式触发单条消息处理，并用 TaskCompletionSource 捕获 SignalR 事件）。
 /// </summary>
 [Collection("PostgreSqlCollection")]
 public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposable
@@ -53,7 +52,7 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
 
     public async Task InitializeAsync()
     {
-        // 显式禁用后台自动轮询 worker，以在测试中做确定性的批处理步进验证
+        // 显式禁用后台自动轮询 worker，以在测试中做确定性的测试驱动验证
         _factory = new RealtimeTestWebApplicationFactory(_fixture.ConnectionString, enableBackgroundProcessor: false);
 
         await using var context = _fixture.CreateDbContext();
@@ -109,45 +108,48 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
     [Fact]
     public async Task OutboxProcessor_ProcessesUnprocessedMessages_DeliversToSignalR_AndMarksProcessedAt()
     {
-        // 1. 连接 SignalR 客户端
+        // 1. 连接 SignalR 客户端，使用 TaskCompletionSource 等待确定性消息到达
+        var tcs = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         await using var connection = _factory.CreateHubConnection(_token);
-        var receivedSignals = new ConcurrentBag<RealtimeMessage>();
-        connection.On<RealtimeMessage>("ReceiveInvalidation", signal => receivedSignals.Add(signal));
+        connection.On<RealtimeMessage>("ReceiveInvalidation", signal =>
+        {
+            if (signal.Kind == RealtimeEventKinds.TaskAssigned)
+            {
+                tcs.TrySetResult(signal);
+            }
+        });
 
         await connection.StartAsync();
+        await connection.InvokeAsync("Ping");
         connection.State.Should().Be(HubConnectionState.Connected);
 
-        await Task.Delay(100);
-
-        // 2. 写入一条未处理的 Outbox 消息（设置较早的 OccurredAt 确保排在批处理首位）
+        // 2. 写入一条未处理的 Outbox 消息
         var taskId = Guid.NewGuid();
         var outboxId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow.AddHours(-1);
         var payload = JsonSerializer.Serialize(new { JobTaskId = taskId, DriverId = _driverId, VehicleId = Guid.NewGuid() });
 
         await using (var db = _fixture.CreateDbContext())
         {
-            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, occurredAt);
+            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, DateTimeOffset.UtcNow);
             db.OutboxMessages.Add(msg);
             await db.SaveChangesAsync();
         }
 
-        // 3. 执行单批次处理
+        // 3. 由测试直接触发对该条消息的处理（测试驱动，无定时器/无轮询竞态）
         var processor = new OutboxProcessorBackgroundService(
             _factory.Services.GetRequiredService<IServiceScopeFactory>(),
             _factory.Services.GetRequiredService<ILogger<OutboxProcessorBackgroundService>>());
 
-        var processedCount = await processor.ProcessBatchAsync(CancellationToken.None);
-        processedCount.Should().BeGreaterThanOrEqualTo(1);
+        var processed = await processor.ProcessMessageAsync(outboxId);
+        processed.Should().BeTrue();
 
-        var sw = Stopwatch.StartNew();
-        while (receivedSignals.IsEmpty && sw.Elapsed < TimeSpan.FromSeconds(5))
-        {
-            await Task.Delay(50);
-        }
-
-        // 4. Assert: 客户端接收到推送失效信号
-        receivedSignals.Should().Contain(s => s.Kind == RealtimeEventKinds.TaskAssigned && s.EntityId == taskId);
+        // 4. Assert: 确定性等待 SignalR 客户端收到推送失效信号（非 Task.Delay）
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var receivedSignal = await tcs.Task.WaitAsync(cts.Token);
+        receivedSignal.Should().NotBeNull();
+        receivedSignal.EntityId.Should().Be(taskId);
+        receivedSignal.Kind.Should().Be(RealtimeEventKinds.TaskAssigned);
 
         // 5. Assert: 数据库中的 OutboxMessage 被标记 ProcessedAt
         await using (var db = _fixture.CreateDbContext())
@@ -158,12 +160,9 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
             dbMsg.Error.Should().BeNull();
         }
 
-        // 6. Assert: 再次运行批处理，不会重复处理该条记录（已处理记录被过滤）
-        await using (var db = _fixture.CreateDbContext())
-        {
-            var unprocessed = await db.OutboxMessages.Where(m => m.Id == outboxId && m.ProcessedAt == null).ToListAsync();
-            unprocessed.Should().BeEmpty();
-        }
+        // 6. Assert: 再次运行，该已处理消息不会被重复处理
+        var processedAgain = await processor.ProcessMessageAsync(outboxId);
+        processedAgain.Should().BeFalse();
 
         await connection.StopAsync();
     }
@@ -173,12 +172,11 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
     {
         var outboxId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow.AddHours(-2);
         var payload = JsonSerializer.Serialize(new { JobTaskId = taskId, DriverId = _driverId, VehicleId = Guid.NewGuid() });
 
         await using (var db = _fixture.CreateDbContext())
         {
-            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, occurredAt);
+            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, DateTimeOffset.UtcNow);
             db.OutboxMessages.Add(msg);
             await db.SaveChangesAsync();
         }
@@ -199,9 +197,9 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
 
         var processor = new OutboxProcessorBackgroundService(scopeFactory, logger);
 
-        // Act: 执行批处理
-        var processed = await processor.ProcessBatchAsync(CancellationToken.None);
-        processed.Should().BeGreaterThanOrEqualTo(1);
+        // Act: 显式触发该条消息的处理
+        var processed = await processor.ProcessMessageAsync(outboxId);
+        processed.Should().BeTrue();
 
         // Assert: 消息未被标记 ProcessedAt，而是记录了 Attempts 和 Error 信息，等待重试
         await using (var db = _fixture.CreateDbContext())
@@ -209,7 +207,7 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
             var dbMsg = await db.OutboxMessages.FirstOrDefaultAsync(m => m.Id == outboxId);
             dbMsg.Should().NotBeNull();
             dbMsg!.ProcessedAt.Should().BeNull();
-            dbMsg.Attempts.Should().BeGreaterThanOrEqualTo(1);
+            dbMsg.Attempts.Should().Be(1);
             dbMsg.Error.Should().Contain("SignalR Hub connection lost");
         }
     }
