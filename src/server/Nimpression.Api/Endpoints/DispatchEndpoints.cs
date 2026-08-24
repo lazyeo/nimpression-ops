@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
 using Nimpression.Application.Common.Security;
+using Nimpression.Application.Features.Dispatch.Abstractions;
 using Nimpression.Application.Features.Dispatch.Commands.AcknowledgeJobTask;
 using Nimpression.Application.Features.Dispatch.Commands.AssignJobTask;
 using Nimpression.Application.Features.Dispatch.Commands.CancelJobTask;
@@ -103,10 +104,16 @@ public sealed class DispatchEndpoints : IEndpointModule
 
         // F5.1: 创建任务（Admin / Dispatcher）
         group.MapPost("/tasks", async (
+            [FromHeader(Name = "X-Client-Request-Id")] string? headerClientRequestId,
             [FromBody] CreateJobTaskRequest request,
+            IIdempotencyService idempotencyService,
             ISender sender,
             CancellationToken ct) =>
         {
+            var clientRequestId = !string.IsNullOrWhiteSpace(headerClientRequestId)
+                ? headerClientRequestId
+                : request.ClientRequestId?.ToString();
+
             var command = new CreateJobTaskCommand(
                 request.Ref,
                 request.Title,
@@ -119,7 +126,12 @@ public sealed class DispatchEndpoints : IEndpointModule
                 request.VehicleId,
                 request.OverrideAreaWarning ?? false);
 
-            var result = await sender.Send(command, ct);
+            var result = await idempotencyService.ExecuteAsync(
+                clientRequestId ?? string.Empty,
+                request,
+                () => sender.Send(command, ct),
+                ct);
+
             return result.ToHttpResult(StatusCodes.Status201Created);
         })
         .RequireAuthorization(AuthorizationPolicies.Dispatcher)
@@ -147,55 +159,93 @@ public sealed class DispatchEndpoints : IEndpointModule
         .WithName("AssignJobTask")
         .WithSummary("指派任务给指定司机与车辆（跨区域指派需明确确认越过警告）");
 
-        // F5.2: 司机确认任务（Draft -> Assigned -> Acknowledged）
+        // F5.2 & F5.4: 司机确认任务（Draft -> Assigned -> Acknowledged），支持离线幂等重放
         group.MapPost("/tasks/{id:guid}/acknowledge", async (
             Guid id,
+            [FromHeader(Name = "X-Client-Request-Id")] string? headerClientRequestId,
             [FromBody] AcknowledgeJobTaskRequest? request,
+            IIdempotencyService idempotencyService,
             ISender sender,
             CancellationToken ct) =>
         {
+            var clientRequestId = !string.IsNullOrWhiteSpace(headerClientRequestId)
+                ? headerClientRequestId
+                : request?.ClientRequestId?.ToString();
+
             var command = new AcknowledgeJobTaskCommand(id, request?.AcknowledgedAt);
-            var result = await sender.Send(command, ct);
+            var payload = new { TaskId = id, AcknowledgedAt = request?.AcknowledgedAt };
+
+            var result = await idempotencyService.ExecuteAsync(
+                clientRequestId ?? string.Empty,
+                payload,
+                () => sender.Send(command, ct),
+                ct);
+
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
         .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
         .WithName("AcknowledgeJobTask")
-        .WithSummary("司机确认已接收任务（非法状态跃迁返回 422，越权返回 403）");
+        .WithSummary("司机确认已接收任务（支持幂等重放，非法跃迁返回 422，越权返回 403）");
 
-        // F5.2: 司机开始执行任务（Acknowledged -> InProgress）
+        // F5.2 & F5.4: 司机开始执行任务（Acknowledged -> InProgress），支持离线幂等重放
         group.MapPost("/tasks/{id:guid}/start", async (
             Guid id,
+            [FromHeader(Name = "X-Client-Request-Id")] string? headerClientRequestId,
             [FromBody] StartJobTaskRequest? request,
+            IIdempotencyService idempotencyService,
             ISender sender,
             CancellationToken ct) =>
         {
+            var clientRequestId = !string.IsNullOrWhiteSpace(headerClientRequestId)
+                ? headerClientRequestId
+                : request?.ClientRequestId?.ToString();
+
             var command = new StartJobTaskCommand(id, request?.StartedAt, request?.StartOdometerKm);
-            var result = await sender.Send(command, ct);
+            var payload = new { TaskId = id, StartedAt = request?.StartedAt, StartOdometerKm = request?.StartOdometerKm };
+
+            var result = await idempotencyService.ExecuteAsync(
+                clientRequestId ?? string.Empty,
+                payload,
+                () => sender.Send(command, ct),
+                ct);
+
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
         .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
         .WithName("StartJobTask")
-        .WithSummary("司机开始执行任务并记录起始里程表读数");
+        .WithSummary("司机开始执行任务并记录起始里程表读数（支持幂等重放）");
 
-        // F5.2: 司机完成任务（InProgress -> Completed）
+        // F5.2 & F5.4: 司机完成任务（InProgress -> Completed），支持离线幂等重放
         group.MapPost("/tasks/{id:guid}/complete", async (
             Guid id,
+            [FromHeader(Name = "X-Client-Request-Id")] string? headerClientRequestId,
             [FromBody] CompleteJobTaskRequest? request,
+            IIdempotencyService idempotencyService,
             ISender sender,
             CancellationToken ct) =>
         {
+            var clientRequestId = !string.IsNullOrWhiteSpace(headerClientRequestId)
+                ? headerClientRequestId
+                : request?.ClientRequestId?.ToString();
+
             var command = new CompleteJobTaskCommand(
                 id,
                 request?.CompletedAt,
                 request?.ActualDistanceKm,
                 request?.EndOdometerKm);
+            var payload = new { TaskId = id, CompletedAt = request?.CompletedAt, ActualDistanceKm = request?.ActualDistanceKm, EndOdometerKm = request?.EndOdometerKm };
 
-            var result = await sender.Send(command, ct);
+            var result = await idempotencyService.ExecuteAsync(
+                clientRequestId ?? string.Empty,
+                payload,
+                () => sender.Send(command, ct),
+                ct);
+
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
         .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
         .WithName("CompleteJobTask")
-        .WithSummary("完成任务并上报实际行驶距离或终点里程");
+        .WithSummary("完成任务并上报实际行驶距离或终点里程（支持幂等重放）");
 
         // F5.3: 取消任务
         group.MapPost("/tasks/{id:guid}/cancel", async (
@@ -224,7 +274,8 @@ public sealed record CreateJobTaskRequest(
     decimal? PlannedDistanceKm = null,
     Guid? DriverId = null,
     Guid? VehicleId = null,
-    bool? OverrideAreaWarning = false);
+    bool? OverrideAreaWarning = false,
+    Guid? ClientRequestId = null);
 
 public sealed record AssignJobTaskRequest(
     Guid DriverId,
