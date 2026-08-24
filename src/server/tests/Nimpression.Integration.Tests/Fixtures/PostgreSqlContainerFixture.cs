@@ -7,8 +7,7 @@ namespace Nimpression.Integration.Tests.Fixtures;
 
 public class PostgreSqlContainerFixture : IAsyncLifetime
 {
-    public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
+    public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder("postgres:16-alpine")
         .WithDatabase("nimpression_test")
         .WithUsername("nimpression")
         .WithPassword("devonly_change_me")
