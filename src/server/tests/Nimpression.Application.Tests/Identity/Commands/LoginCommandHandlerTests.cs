@@ -82,7 +82,7 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithNonExistentEmail_ReturnsUnauthorizedWithUnifiedMessage()
+    public async Task Handle_WithNonExistentEmail_ReturnsUnauthorizedAndExecutesDummyPasswordVerification()
     {
         // Arrange
         _identityRepository.GetUserByEmailAsync(Arg.Any<EmailAddress>(), Arg.Any<CancellationToken>())
@@ -98,6 +98,11 @@ public class LoginCommandHandlerTests
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be("AUTH_INVALID_CREDENTIALS");
         result.Error.Message.Should().Be("Invalid email or password.");
+
+        // 验证对预置的假 BCrypt 哈希执行了密码比对，消除时序侧信道
+        _passwordHasher.Received(1).VerifyPassword(
+            "Password123!",
+            Arg.Is<string>(s => s.StartsWith("$2a$12$", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -167,7 +172,7 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenAccountIsLockedOut_ReturnsUnauthorizedWithLockedOutError()
+    public async Task Handle_WhenAccountIsLockedOut_WithCorrectPassword_ReturnsUnauthorizedWithLockedOutError()
     {
         // Arrange
         var email = new EmailAddress("locked@example.com");
@@ -180,16 +185,47 @@ public class LoginCommandHandlerTests
         _identityRepository.GetUserByEmailAsync(Arg.Any<EmailAddress>(), Arg.Any<CancellationToken>())
             .Returns(user);
 
-        var command = new LoginCommand("locked@example.com", "AnyPassword123!", "127.0.0.1");
+        _passwordHasher.VerifyPassword("CorrectPassword123!", "hashed_password")
+            .Returns(true);
+
+        var command = new LoginCommand("locked@example.com", "CorrectPassword123!", "127.0.0.1");
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
+        // Assert: 密码正确但处于锁定状态，返回明确的锁定提示
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be("AUTH_LOCKED_OUT");
-        _passwordHasher.DidNotReceiveWithAnyArgs().VerifyPassword(default!, default!);
+        _passwordHasher.Received(1).VerifyPassword("CorrectPassword123!", "hashed_password");
+    }
+
+    [Fact]
+    public async Task Handle_WhenAccountIsLockedOut_WithWrongPassword_ReturnsInvalidCredentials_WithoutLeakingLockout()
+    {
+        // Arrange
+        var email = new EmailAddress("locked@example.com");
+        var user = new User(Guid.NewGuid(), email, "hashed_password", UserRole.Driver, "Locked Driver");
+        for (var i = 0; i < 5; i++)
+        {
+            user.RecordLoginFailure(_now);
+        }
+
+        _identityRepository.GetUserByEmailAsync(Arg.Any<EmailAddress>(), Arg.Any<CancellationToken>())
+            .Returns(user);
+
+        _passwordHasher.VerifyPassword("WrongPassword123!", "hashed_password")
+            .Returns(false);
+
+        var command = new LoginCommand("locked@example.com", "WrongPassword123!", "127.0.0.1");
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert: 密码错误时不透露锁定状态，统一返回 AUTH_INVALID_CREDENTIALS
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be("AUTH_INVALID_CREDENTIALS");
     }
 
     [Fact]
