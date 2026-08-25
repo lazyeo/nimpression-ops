@@ -93,10 +93,13 @@ public sealed class AdminCorrectShiftCommandHandlerTests
 
         _currentUser.Role.Returns(UserRole.Admin);
 
+        var baseIn = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.FromHours(12));
+        var baseOut = new DateTimeOffset(2026, 8, 24, 16, 0, 0, TimeSpan.FromHours(12));
+
         var command = new AdminCorrectShiftCommand(
             ShiftId: shiftId,
-            NewClockInAt: DateTimeOffset.UtcNow,
-            NewClockOutAt: DateTimeOffset.UtcNow.AddHours(8),
+            NewClockInAt: baseIn,
+            NewClockOutAt: baseOut,
             NewBreakMinutes: 30,
             Reason: "   "); // Empty or whitespace
 
@@ -120,10 +123,13 @@ public sealed class AdminCorrectShiftCommandHandlerTests
 
         _currentUser.Role.Returns(UserRole.Driver);
 
+        var baseIn = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.FromHours(12));
+        var baseOut = new DateTimeOffset(2026, 8, 24, 16, 0, 0, TimeSpan.FromHours(12));
+
         var command = new AdminCorrectShiftCommand(
             ShiftId: shiftId,
-            NewClockInAt: DateTimeOffset.UtcNow,
-            NewClockOutAt: DateTimeOffset.UtcNow.AddHours(8),
+            NewClockInAt: baseIn,
+            NewClockOutAt: baseOut,
             NewBreakMinutes: 30,
             Reason: "Some reason");
 
@@ -147,10 +153,13 @@ public sealed class AdminCorrectShiftCommandHandlerTests
         _shiftEntryRepository.GetByIdAsync(shiftId, Arg.Any<CancellationToken>())
             .Returns((ShiftEntry?)null);
 
+        var baseIn = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.FromHours(12));
+        var baseOut = new DateTimeOffset(2026, 8, 24, 16, 0, 0, TimeSpan.FromHours(12));
+
         var command = new AdminCorrectShiftCommand(
             ShiftId: shiftId,
-            NewClockInAt: DateTimeOffset.UtcNow,
-            NewClockOutAt: DateTimeOffset.UtcNow.AddHours(8),
+            NewClockInAt: baseIn,
+            NewClockOutAt: baseOut,
             NewBreakMinutes: 30,
             Reason: "Legitimate reason");
 

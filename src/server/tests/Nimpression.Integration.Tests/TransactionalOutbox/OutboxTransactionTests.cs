@@ -35,6 +35,7 @@ public class OutboxTransactionTests : IAsyncLifetime
         // Arrange
         await using var context = _fixture.CreateDbContext();
 
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var user = new User(
             Guid.NewGuid(),
             TestDataFactory.CreateEmailAddress("outbox_user"),
@@ -42,7 +43,7 @@ public class OutboxTransactionTests : IAsyncLifetime
             UserRole.Driver,
             "Outbox Driver",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
         await context.Users.AddAsync(user);
 
         var driver = new Driver(
@@ -66,7 +67,7 @@ public class OutboxTransactionTests : IAsyncLifetime
         var initialOutboxCount = await context.OutboxMessages.CountAsync();
 
         // Act: Trigger a domain event on aggregate root
-        driver.Deactivate(DateTimeOffset.UtcNow);
+        driver.Deactivate(baseNow);
         driver.DomainEvents.Should().ContainSingle(e => e is DriverDeactivated);
 
         var savedCount = await context.SaveChangesAsync();
@@ -90,6 +91,7 @@ public class OutboxTransactionTests : IAsyncLifetime
         // Arrange
         await using var context = _fixture.CreateDbContext();
 
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var user = new User(
             Guid.NewGuid(),
             TestDataFactory.CreateEmailAddress("rollback_user"),
@@ -97,7 +99,7 @@ public class OutboxTransactionTests : IAsyncLifetime
             UserRole.Driver,
             "Rollback Driver",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
         await context.Users.AddAsync(user);
 
         var driver = new Driver(
@@ -120,7 +122,7 @@ public class OutboxTransactionTests : IAsyncLifetime
         // Act: Open explicit transaction, deactivate driver, save changes, then ROLLBACK
         await using (var transaction = await context.Database.BeginTransactionAsync())
         {
-            driver.Deactivate(DateTimeOffset.UtcNow);
+            driver.Deactivate(baseNow);
             await context.SaveChangesAsync();
 
             // Rollback transaction

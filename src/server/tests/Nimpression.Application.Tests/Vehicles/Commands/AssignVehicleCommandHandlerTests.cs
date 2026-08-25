@@ -196,7 +196,7 @@ public class AssignVehicleCommandHandlerTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            DateTimeOffset.UtcNow.AddDays(-1),
+            _dateTimeProvider.UtcNow.AddDays(-1),
             Guid.NewGuid());
         _repository.Assignments[assignment.Id] = assignment;
 
@@ -220,9 +220,9 @@ public class AssignVehicleCommandHandlerTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            DateTimeOffset.UtcNow.AddDays(-2),
+            _dateTimeProvider.UtcNow.AddDays(-2),
             Guid.NewGuid());
-        assignment.Release(DateTimeOffset.UtcNow.AddDays(-1));
+        assignment.Release(_dateTimeProvider.UtcNow.AddDays(-1));
         _repository.Assignments[assignment.Id] = assignment;
 
         var command = new ReleaseVehicleAssignmentCommand(assignment.Id);

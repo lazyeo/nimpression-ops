@@ -61,7 +61,8 @@ public sealed class TimesheetQueriesHandlerTests
         var driver2Id = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        var shift = new ShiftEntry(shiftId, driver2Id, DateTimeOffset.UtcNow);
+        var baseTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.FromHours(12));
+        var shift = new ShiftEntry(shiftId, driver2Id, baseTime);
 
         _currentUser.Role.Returns(UserRole.Driver);
         _currentUser.UserId.Returns(userId);
@@ -84,7 +85,8 @@ public sealed class TimesheetQueriesHandlerTests
         // Arrange
         var driverId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var shift = new ShiftEntry(Guid.NewGuid(), driverId, DateTimeOffset.UtcNow);
+        var baseTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.FromHours(12));
+        var shift = new ShiftEntry(Guid.NewGuid(), driverId, baseTime);
 
         _currentUser.Role.Returns(UserRole.Driver);
         _currentUser.UserId.Returns(userId);

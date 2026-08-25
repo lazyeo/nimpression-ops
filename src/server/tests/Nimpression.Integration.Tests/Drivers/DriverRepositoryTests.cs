@@ -38,7 +38,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
         var sut = new DriverRepository(context);
 
         var filter = new DriverFilter(Page: 1, PageSize: 20);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = SeedConstants.ReferenceDate;
 
         var result = await sut.GetDriversPagedAsync(filter, today);
 
@@ -60,7 +60,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
         var sut = new DriverRepository(context);
 
         var filter = new DriverFilter(Name: "Liam", Page: 1, PageSize: 20);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = SeedConstants.ReferenceDate;
 
         var result = await sut.GetDriversPagedAsync(filter, today);
 
@@ -73,7 +73,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
     {
         await using var context = _fixture.CreateDbContext();
         var sut = new DriverRepository(context);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = SeedConstants.ReferenceDate;
 
         var alerts = await sut.GetExpiringLicencesAsync(today, daysThreshold: 30);
 
@@ -89,7 +89,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
     {
         await using var context = _fixture.CreateDbContext();
         var sut = new DriverRepository(context);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = SeedConstants.ReferenceDate;
 
         var driver = await context.Drivers.FirstAsync(d => d.EmployeeNo == "DRV-001");
         var detail = await sut.GetDriverDetailByIdAsync(driver.Id, today);
@@ -109,7 +109,7 @@ public sealed class DriverRepositoryTests : IAsyncLifetime
 
         var userId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = SeedConstants.ReferenceDate;
         var employeeNo = TestDataFactory.CreateEmployeeNo("DRV");
 
         var user = new User(

@@ -83,6 +83,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         await using var context = _fixture.CreateDbContext();
 
         // Create prerequisites: 2 Driver Users, 1 Dispatcher User, 2 Drivers, 1 Vehicle
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var dispatcher = new User(
             Guid.NewGuid(),
             TestDataFactory.CreateEmailAddress("dispatcher"),
@@ -90,7 +91,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             UserRole.Dispatcher,
             "Dispatcher Test",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         var driverUser1 = new User(
             Guid.NewGuid(),
@@ -99,7 +100,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             UserRole.Driver,
             "Driver 1 Test",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         var driverUser2 = new User(
             Guid.NewGuid(),
@@ -108,7 +109,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             UserRole.Driver,
             "Driver 2 Test",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         await context.Users.AddRangeAsync(dispatcher, driverUser1, driverUser2);
 
@@ -166,7 +167,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             Guid.NewGuid(),
             vehicle.Id,
             d1.Id,
-            DateTimeOffset.UtcNow.AddDays(-1),
+            baseNow.AddDays(-1),
             dispatcher.Id);
         await context.VehicleAssignments.AddAsync(assignment1);
         await context.SaveChangesAsync();
@@ -176,7 +177,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             Guid.NewGuid(),
             vehicle.Id,
             d2.Id,
-            DateTimeOffset.UtcNow,
+            baseNow,
             dispatcher.Id);
         await context.VehicleAssignments.AddAsync(assignment2);
         var act = () => context.SaveChangesAsync();
@@ -191,6 +192,7 @@ public class VehicleConstraintTests : IAsyncLifetime
         // Arrange
         await using var context = _fixture.CreateDbContext();
 
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var dispatcher = new User(
             Guid.NewGuid(),
             TestDataFactory.CreateEmailAddress("dispatcher"),
@@ -198,7 +200,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             UserRole.Dispatcher,
             "Dispatcher Test 2",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         var driverUser1 = new User(
             Guid.NewGuid(),
@@ -207,7 +209,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             UserRole.Driver,
             "Driver 1 Test 2",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         var driverUser2 = new User(
             Guid.NewGuid(),
@@ -216,7 +218,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             UserRole.Driver,
             "Driver 2 Test 2",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         await context.Users.AddRangeAsync(dispatcher, driverUser1, driverUser2);
 
@@ -274,9 +276,9 @@ public class VehicleConstraintTests : IAsyncLifetime
             Guid.NewGuid(),
             vehicle.Id,
             d1.Id,
-            DateTimeOffset.UtcNow.AddDays(-10),
+            baseNow.AddDays(-10),
             dispatcher.Id);
-        pastAssignment.Release(DateTimeOffset.UtcNow.AddDays(-2));
+        pastAssignment.Release(baseNow.AddDays(-2));
         await context.VehicleAssignments.AddAsync(pastAssignment);
         await context.SaveChangesAsync();
 
@@ -285,7 +287,7 @@ public class VehicleConstraintTests : IAsyncLifetime
             Guid.NewGuid(),
             vehicle.Id,
             d2.Id,
-            DateTimeOffset.UtcNow,
+            baseNow,
             dispatcher.Id);
         await context.VehicleAssignments.AddAsync(currentAssignment);
         var act = () => context.SaveChangesAsync();
