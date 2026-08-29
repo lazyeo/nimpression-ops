@@ -299,6 +299,7 @@ public sealed class IncidentIntegrationTests : IAsyncLifetime, IDisposable
             var rawValue = (string?)(await cmd.ExecuteScalarAsync());
 
             rawValue.Should().NotBeNullOrWhiteSpace("数据库中 ThirdPartyInfoEnc 列必须已落库");
+            rawValue.Should().StartWith("enc:v1:", "加密字段在数据库中必须带有显式版本前缀 enc:v1:");
             rawValue.Should().NotBe(plainThirdPartyInfo, "数据库中绝不能存储明文信息");
             rawValue.Should().NotContain("John Doe", "psql 直查绝对不包含对方姓名明文");
             rawValue.Should().NotContain("ABC123", "psql 直查绝对不包含对方车牌明文");
