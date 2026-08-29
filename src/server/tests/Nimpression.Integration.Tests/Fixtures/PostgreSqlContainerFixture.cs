@@ -18,6 +18,10 @@ public class PostgreSqlContainerFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ENCRYPTION_KEY")))
+        {
+            Environment.SetEnvironmentVariable("ENCRYPTION_KEY", "k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s=");
+        }
         await Container.StartAsync();
     }
 

@@ -8,12 +8,11 @@ namespace Nimpression.Infrastructure.Persistence.Configurations;
 /// 可复用的 AES-256-GCM EF Core 属性值转换器（ValueConverter）。
 /// 符合 N2.1 隐私合规与 F9.3 第三方信息/PII 落库加密要求。
 /// 数据库中落库为 Base64 编码的密文 [12字节 Nonce + 16字节 Tag + 密文]，在 psql 中直查无法看到明文。
-/// 密钥优先从环境变量（ENCRYPTION_KEY / COMPLIANCE_ENCRYPTION_KEY）或用户机密中读取，禁止明文硬编码入库。
+/// 密钥必须从环境变量（ENCRYPTION_KEY / COMPLIANCE_ENCRYPTION_KEY / AES_256_KEY）或用户机密中读取，
+/// 禁止硬编码回退密钥或隐式弱密钥派生；若密钥缺失或格式不合法，直接抛出异常快速失败（Fail-fast）。
 /// </summary>
 public class AesGcmEncryptionConverter : ValueConverter<string?, string?>
 {
-    private static readonly byte[] FallbackDevKey = Convert.FromBase64String("k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s=");
-
     public AesGcmEncryptionConverter()
         : base(
             v => Encrypt(v),
@@ -29,29 +28,28 @@ public class AesGcmEncryptionConverter : ValueConverter<string?, string?>
 
         if (string.IsNullOrWhiteSpace(keyEnv))
         {
-            return FallbackDevKey;
+            throw new InvalidOperationException(
+                "AES-256-GCM encryption key is missing. Please configure the 'ENCRYPTION_KEY' environment variable or user-secrets with a valid Base64-encoded 32-byte key.");
         }
 
+        byte[] raw;
         try
         {
-            var raw = Convert.FromBase64String(keyEnv);
-            if (raw.Length == 32)
-            {
-                return raw;
-            }
+            raw = Convert.FromBase64String(keyEnv.Trim());
         }
-        catch (FormatException)
+        catch (FormatException ex)
         {
-            // 非 Base64 时尝试直接 UTF8 或 SHA-256 派生
+            throw new InvalidOperationException(
+                "AES-256-GCM encryption key is invalid. Key must be a valid Base64-encoded string.", ex);
         }
 
-        var utf8Bytes = Encoding.UTF8.GetBytes(keyEnv);
-        if (utf8Bytes.Length == 32)
+        if (raw.Length != 32)
         {
-            return utf8Bytes;
+            throw new InvalidOperationException(
+                $"AES-256-GCM encryption key must be exactly 32 bytes (256 bits), but got {raw.Length} bytes.");
         }
 
-        return SHA256.HashData(utf8Bytes);
+        return raw;
     }
 
     public static string? Encrypt(string? plainText)
