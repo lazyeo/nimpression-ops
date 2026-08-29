@@ -49,6 +49,7 @@ public class IncidentReportConfiguration : IEntityTypeConfiguration<IncidentRepo
             .IsRequired();
 
         builder.Property(i => i.ThirdPartyInfoEnc)
+            .HasConversion<AesGcmEncryptionConverter>()
             .HasColumnType("text");
 
         builder.Property(i => i.Status)
