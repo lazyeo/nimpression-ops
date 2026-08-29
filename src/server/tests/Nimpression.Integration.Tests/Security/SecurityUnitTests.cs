@@ -55,7 +55,11 @@ public class SecurityUnitTests
     public void JwtTokenGenerator_GenerateRefreshToken_GeneratesUniqueRandomTokenAndHash()
     {
         var options = Options.Create(new JwtSettings());
-        var generator = new JwtTokenGenerator(options);
+        var dateTimeProvider = Substitute.For<IDateTimeProvider>();
+        var now = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
+        dateTimeProvider.UtcNow.Returns(now);
+
+        var generator = new JwtTokenGenerator(options, dateTimeProvider);
 
         var (rawToken1, hash1, expiresAt1) = generator.GenerateRefreshToken("127.0.0.1");
         var (rawToken2, hash2, _) = generator.GenerateRefreshToken("127.0.0.1");
@@ -64,6 +68,6 @@ public class SecurityUnitTests
         hash1.Should().NotBeNullOrWhiteSpace();
         rawToken1.Should().NotBe(rawToken2);
         hash1.Should().NotBe(hash2);
-        expiresAt1.Should().BeAfter(DateTimeOffset.UtcNow.AddDays(6));
+        expiresAt1.Should().Be(now.AddDays(7));
     }
 }

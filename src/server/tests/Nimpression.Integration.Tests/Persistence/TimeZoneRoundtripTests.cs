@@ -43,7 +43,7 @@ public class TimeZoneRoundtripTests : IAsyncLifetime
             UserRole.Driver,
             "DST Driver",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero));
         await context.Users.AddAsync(user);
 
         var driver = new Driver(

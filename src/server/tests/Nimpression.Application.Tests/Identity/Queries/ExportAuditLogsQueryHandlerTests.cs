@@ -60,7 +60,7 @@ public class ExportAuditLogsQueryHandlerTests
         // Arrange
         var logs = new List<AuditEventDto>
         {
-            new(Guid.NewGuid(), "Action,With,Commas", "Entity", "1", DateTimeOffset.UtcNow, null, null, "{\"name\":\"John, Doe\"}", "{\"quote\":\"hello \\\"world\\\"\"}", "127.0.0.1", "Agent")
+            new(Guid.NewGuid(), "Action,With,Commas", "Entity", "1", new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero), null, null, "{\"name\":\"John, Doe\"}", "{\"quote\":\"hello \\\"world\\\"\"}", "127.0.0.1", "Agent")
         };
 
         _identityRepository.QueryAllAuditLogsAsync(

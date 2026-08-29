@@ -48,6 +48,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
     {
         await using var context = _fixture.CreateDbContext();
 
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var dispatcher = new User(
             Guid.NewGuid(),
             TestDataFactory.CreateEmailAddress("dispatcher"),
@@ -55,7 +56,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
             UserRole.Dispatcher,
             "Fleet Dispatcher",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         var driverUser1 = new User(
             Guid.NewGuid(),
@@ -64,7 +65,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
             UserRole.Driver,
             "Driver One",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         var driverUser2 = new User(
             Guid.NewGuid(),
@@ -73,7 +74,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
             UserRole.Driver,
             "Driver Two",
             "en-NZ",
-            DateTimeOffset.UtcNow);
+            baseNow);
 
         await context.Users.AddRangeAsync(dispatcher, driverUser1, driverUser2);
 
@@ -430,12 +431,13 @@ public class VehicleIntegrationTests : IAsyncLifetime
         await context.Vehicles.AddAsync(vehicle);
         await context.SaveChangesAsync();
 
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var command = new RecordOdometerReadingCommand(
             vehicle.Id,
             driver1.Id,
             12500m,
             "media/odometer/photo_123.jpg",
-            DateTimeOffset.UtcNow,
+            baseNow,
             "DriverApp");
 
         // Act
@@ -528,11 +530,12 @@ public class VehicleIntegrationTests : IAsyncLifetime
             VehicleStatus.Active);
         await context.Vehicles.AddAsync(vehicle);
 
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         var assignment = new VehicleAssignment(
             Guid.NewGuid(),
             vehicle.Id,
             driver1.Id,
-            DateTimeOffset.UtcNow,
+            baseNow,
             dispatcher.Id);
         await context.VehicleAssignments.AddAsync(assignment);
 
@@ -542,7 +545,7 @@ public class VehicleIntegrationTests : IAsyncLifetime
             driver1.Id,
             new Kilometres(15000),
             "photo.jpg",
-            DateTimeOffset.UtcNow,
+            baseNow,
             "DriverApp");
         await context.OdometerReadings.AddAsync(reading);
         await context.SaveChangesAsync();
@@ -588,9 +591,9 @@ public class VehicleIntegrationTests : IAsyncLifetime
         public bool IsAuthenticated => true;
     }
 
-    private sealed class TestDateTimeProvider : IDateTimeProvider
+    private sealed class TestDateTimeProvider(DateTimeOffset? fixedUtcNow = null) : IDateTimeProvider
     {
-        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+        public DateTimeOffset UtcNow { get; set; } = fixedUtcNow ?? new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         public DateTimeOffset NzNow => UtcNow.ToOffset(TimeSpan.FromHours(12));
         public DateOnly NzToday => DateOnly.FromDateTime(NzNow.DateTime);
     }

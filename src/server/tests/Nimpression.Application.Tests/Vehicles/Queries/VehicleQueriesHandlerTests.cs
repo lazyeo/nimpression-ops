@@ -106,7 +106,8 @@ public class VehicleQueriesHandlerTests
         // Arrange
         var vehicleId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var assignment = new VehicleAssignment(Guid.NewGuid(), vehicleId, driverId, DateTimeOffset.UtcNow, Guid.NewGuid());
+        var assignmentTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+        var assignment = new VehicleAssignment(Guid.NewGuid(), vehicleId, driverId, assignmentTime, Guid.NewGuid());
         _repository.Assignments[assignment.Id] = assignment;
 
         var handler = new GetActiveVehicleAssignmentQueryHandler(_repository);
@@ -142,8 +143,9 @@ public class VehicleQueriesHandlerTests
     {
         // Arrange
         var vehicleId = Guid.NewGuid();
-        var a1 = new VehicleAssignment(Guid.NewGuid(), vehicleId, Guid.NewGuid(), DateTimeOffset.UtcNow.AddDays(-5), Guid.NewGuid());
-        var a2 = new VehicleAssignment(Guid.NewGuid(), vehicleId, Guid.NewGuid(), DateTimeOffset.UtcNow, Guid.NewGuid());
+        var baseTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+        var a1 = new VehicleAssignment(Guid.NewGuid(), vehicleId, Guid.NewGuid(), baseTime.AddDays(-5), Guid.NewGuid());
+        var a2 = new VehicleAssignment(Guid.NewGuid(), vehicleId, Guid.NewGuid(), baseTime, Guid.NewGuid());
         _repository.Assignments[a1.Id] = a1;
         _repository.Assignments[a2.Id] = a2;
 
@@ -163,8 +165,9 @@ public class VehicleQueriesHandlerTests
     {
         // Arrange
         var vehicleId = Guid.NewGuid();
-        var r1 = new OdometerReading(Guid.NewGuid(), vehicleId, Guid.NewGuid(), new Kilometres(10000), "photo1.jpg", DateTimeOffset.UtcNow.AddDays(-1), "DriverApp");
-        var r2 = new OdometerReading(Guid.NewGuid(), vehicleId, Guid.NewGuid(), new Kilometres(12000), "photo2.jpg", DateTimeOffset.UtcNow, "DriverApp");
+        var baseTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+        var r1 = new OdometerReading(Guid.NewGuid(), vehicleId, Guid.NewGuid(), new Kilometres(10000), "photo1.jpg", baseTime.AddDays(-1), "DriverApp");
+        var r2 = new OdometerReading(Guid.NewGuid(), vehicleId, Guid.NewGuid(), new Kilometres(12000), "photo2.jpg", baseTime, "DriverApp");
         _repository.OdometerReadings.Add(r1);
         _repository.OdometerReadings.Add(r2);
 

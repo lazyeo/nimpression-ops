@@ -23,12 +23,13 @@ public class GetAuditLogsQueryHandlerTests
     {
         // Arrange
         var actorId = Guid.NewGuid();
-        var fromUtc = DateTimeOffset.UtcNow.AddDays(-7);
-        var toUtc = DateTimeOffset.UtcNow;
+        var baseNow = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
+        var fromUtc = baseNow.AddDays(-7);
+        var toUtc = baseNow;
 
         var items = new List<AuditEventDto>
         {
-            new(Guid.NewGuid(), "User.Lockout", "User", actorId.ToString(), DateTimeOffset.UtcNow, actorId, UserRole.Admin, null, "{}", "127.0.0.1", "Agent")
+            new(Guid.NewGuid(), "User.Lockout", "User", actorId.ToString(), baseNow, actorId, UserRole.Admin, null, "{}", "127.0.0.1", "Agent")
         };
         var pagedResult = new PagedResult<AuditEventDto>(items, 1, 1, 20);
 

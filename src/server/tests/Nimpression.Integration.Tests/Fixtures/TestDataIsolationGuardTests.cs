@@ -117,6 +117,60 @@ public class TestDataIsolationGuardTests
         violations.Should().BeEmpty("Integration tests must not hardcode seeded user emails, as they share the same Testcontainers database instance and will violate unique constraints.");
     }
 
+    [Fact]
+    public void StaticCodeAnalysis_GuardsAgainstRealClockUsageInIntegrationTests()
+    {
+        // 定位 Integration.Tests 源码目录
+        var currentDir = AppDomain.CurrentDomain.BaseDirectory;
+        var testsDirectory = FindTestsDirectory(currentDir);
+        testsDirectory.Should().NotBeNull("Integration.Tests source directory must be locateable");
+
+        var csFiles = Directory.GetFiles(testsDirectory!, "*.cs", SearchOption.AllDirectories);
+
+        // 排除防回归测试自身与编译输出文件
+        var filesToScan = csFiles
+            .Where(f => !Path.GetFileName(f).Equals("TestDataIsolationGuardTests.cs", StringComparison.OrdinalIgnoreCase))
+            .Where(f => !f.Contains(Path.Combine("obj", "Debug")))
+            .Where(f => !f.Contains(Path.Combine("bin", "Debug")))
+            .ToList();
+
+        var forbiddenPatterns = new[]
+        {
+            "DateTimeOffset.UtcNow",
+            "DateTime.UtcNow",
+            "DateTime.Now",
+            "DateTimeOffset.Now"
+        };
+
+        var violations = new List<string>();
+
+        foreach (var file in filesToScan)
+        {
+            var lines = File.ReadAllLines(file);
+            for (var lineIdx = 0; lineIdx < lines.Length; lineIdx++)
+            {
+                var line = lines[lineIdx];
+                var trimmed = line.Trim();
+                if (trimmed.StartsWith("//", StringComparison.Ordinal) ||
+                    trimmed.StartsWith("/*", StringComparison.Ordinal) ||
+                    trimmed.StartsWith('*'))
+                {
+                    continue;
+                }
+
+                foreach (var pattern in forbiddenPatterns)
+                {
+                    if (line.Contains(pattern, StringComparison.Ordinal))
+                    {
+                        violations.Add($"File '{Path.GetFileName(file)}' line {lineIdx + 1} contains real clock usage '{pattern}'. Please use controlled/deterministic timestamps (e.g. IDateTimeProvider, SeedConstants.ReferenceDate, or fixed DateTimeOffset) to guarantee deterministic test execution.");
+                    }
+                }
+            }
+        }
+
+        violations.Should().BeEmpty("Integration tests must avoid non-deterministic real clock dependencies.");
+    }
+
     private static string? FindTestsDirectory(string startingPath)
     {
         var dir = new DirectoryInfo(startingPath);

@@ -169,7 +169,7 @@ public class DatabaseSeederTests : IAsyncLifetime
         dstShift!.Note.Should().Contain("DST");
 
         // 4. Edge Case: WOF, COF and Insurance expiry distribution (Expired, 30-day window, Normal)
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = SeedConstants.ReferenceDate;
 
         // WOF: expired (< today), <= 30 days, normal (> 30 days)
         vehicles.Count(v => v.WofExpiry.HasValue && v.WofExpiry.Value < today).Should().BeGreaterThanOrEqualTo(1);
