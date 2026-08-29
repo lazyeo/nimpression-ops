@@ -44,7 +44,9 @@ herdr agent wait <name> --timeout 1800000   # 后台跑；返回后必须【立�
 **代价**：两个 agent 各自停下来等授权（一个还附了完整设计方案），被晾着不动。
 
 **规矩**：
-1. 每拿到一次 `wait` 结果，**立即重新挂一个**
+1. 每拿到一次 `wait` 结果，**立即重新挂一个**——但**必须在 agent 转为 `working` 之后挂**。
+   对已 `idle` 的 agent 挂 `wait` 会**瞬间返回**，等于没挂。
+   正确顺序：**发 prompt → 确认返回 `timeout`（已送达）→ 再挂 `wait`**
 2. 每轮汇报前**主动查** `git rev-list --count main..HEAD` 与 `herdr agent list`，不依赖单一信号
 3. agent 长时间 idle 却无新提交 → **一定是在等你**，去读屏幕
 
@@ -114,6 +116,12 @@ docker exec nimpression-postgres psql -U nimpression -d nimpression -tAc \
 **测试变绿不等于修对了。**
 
 ### 2.7 偶发失败必须查根因，不许放过
+
+**"偶发"往往是"必然"的伪装。** W3 两个分支各有一条测试时好时坏，
+查下去根因是 `AssignVehicleCommandHandlerTests` 用 `UtcNow.AddDays(-1)`
+对上 `FakeVehicleRepository` 硬编码的 `2026-08-24`——
+真实时钟跨过那天后**从此必然失败**，只是在跨过之前表现为随机。
+
 
 W3 两个分支各有 1 条测试**第一次挂、第二次代码没改就过了**。
 偶发失败比稳定失败更危险：它让人习惯性重跑，最终对所有失败脱敏，测试套件名存实亡。
