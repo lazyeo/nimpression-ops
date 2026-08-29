@@ -12,6 +12,7 @@ using Nimpression.Domain.Entities.Identity;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Persistence.Seed;
 using Nimpression.Infrastructure.Security;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
@@ -58,14 +59,14 @@ public sealed class F12_4_TransportFallbackIntegrationTests : IAsyncLifetime, ID
             _userId,
             _empNo,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+            SeedConstants.ReferenceDate.AddYears(1),
             new Money(25m),
             new Money(15m),
             new Money(1.2m),
             "phone",
             "address",
             "emergency",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         context.Users.Add(user);
         context.Drivers.Add(driver);
@@ -103,7 +104,7 @@ public sealed class F12_4_TransportFallbackIntegrationTests : IAsyncLifetime, ID
     public async Task F12_4_LongPollingFallback_DeliversInvalidationSignal_WithoutFunctionalDegradation()
     {
         var taskId = Guid.NewGuid();
-        var expectedMessage = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskId, DateTimeOffset.UtcNow);
+        var expectedMessage = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskId, new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
 
         var tcs = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
