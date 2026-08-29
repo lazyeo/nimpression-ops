@@ -94,12 +94,32 @@ herdr agent send-keys <name> esc     # 关问题菜单
   那是 NuGet **漏洞告警**，压制后构建照样全绿，实际藏着一个 **High** 级漏洞（`SSH.NET`）。
 - 只看"测试是否通过"会完全漏掉这类问题。
 
-### 2.3 「定义了」不等于「用上了」
+### 2.3 静默降级一律视为缺陷
+
+**出错时"想办法继续跑"，是本项目反复出现的最危险模式。**
+它的共同特征：功能上能跑、测试全过，但**保证已经丧失，且无人知晓**。
+
+已抓到的实例：
+| 位置 | 表现 | 后果 |
+|---|---|---|
+| `seed.sh`（W1） | 不调用 seeder 却打印 `seeding complete` | 库是空的，报告说成功 |
+| 构建（W2） | `-nowarn:NU1901-1904` | 藏住一个 **High** 级漏洞 |
+| 加密密钥（W4） | 环境变量缺失时用硬编码 `FallbackDevKey` | **假装加密了**——密钥已在 git 里 |
+| 解密（W4） | 解不开就 `return cipherText` | **假装解密了**——密文当明文吐给上层 |
+
+**判据**：任何"失败时退回一个看起来能用的值"的代码，都要问一句
+——**这个降级发生时，有人会知道吗？** 没有就是缺陷。
+
+**正确做法**：快速失败（抛异常），或**显式标记**而非猜测。
+如 W4 最终方案：密文加 `enc:v1:` 前缀，有前缀必须解密成功否则抛异常，
+无前缀才当明文——兼容是显式的、可 SQL 统计的、可收敛的。
+
+### 2.4 「定义了」不等于「用上了」
 
 magic bytes 校验写得再对，没接进 handler 就是摆设。
 验收要追到**调用链**：`UploadDriverAvatarCommandHandler:39` 是否真的调了 `ImageValidator`。
 
-### 2.4 只认库里的数字，不认进程 stdout
+### 2.5 只认库里的数字，不认进程 stdout
 
 W1 有个 `seed.sh` 跑完打印 `seeding complete`，**零调用** seeder，业务表全空。
 **打印成功却什么都没做的脚本，比直接报错更糟。**
@@ -109,18 +129,18 @@ docker exec nimpression-postgres psql -U nimpression -d nimpression -tAc \
   "SELECT relname, n_live_tup FROM pg_stat_user_tables WHERE n_live_tup>0 ORDER BY 2 DESC;"
 ```
 
-### 2.5 空表上的约束测试什么都证明不了
+### 2.6 空表上的约束测试什么都证明不了
 
 试 `UPDATE "AuditEvents"` 返回 `UPDATE 0` —— 那是"语句成功、影响 0 行"，**不是拒绝**。
 补真实数据后才拿到真正的 append-only 报错。
 
-### 2.6 修复可能引入新缺陷
+### 2.7 修复可能引入新缺陷
 
 测试隔离首版把 14 个确定性失败清零，却引入两个**偶发失败**隐患
 （`Random.Next(1000,9999)` 仅 9000 种、截断 Guid 仅 4096 种，而两者均有唯一约束）。
 **测试变绿不等于修对了。**
 
-### 2.7 偶发失败必须查根因，不许放过
+### 2.8 偶发失败必须查根因，不许放过
 
 **"偶发"往往是"必然"的伪装。** W3 两个分支各有一条测试时好时坏，
 查下去根因是 `AssignVehicleCommandHandlerTests` 用 `UtcNow.AddDays(-1)`
@@ -135,12 +155,12 @@ W3 两个分支各有 1 条测试**第一次挂、第二次代码没改就过了
 参考 `w3-realtime` 的解法：测试直接调用 `ProcessMessageAsync` 驱动一轮处理，
 不依赖后台定时器，配 `TaskCompletionSource` + 超时做确定性等待。
 
-### 2.8 越界先查对错，再谈流程
+### 2.9 越界先查对错，再谈流程
 
 W2 有 agent 越界改了 `Directory.Packages.props`——但它**正确修掉了两个漏洞**。
 按流程直接打回会丢掉一个有效的安全修复。**先验证，再决定。**
 
-### 2.9 绕开 rtk 取证
+### 2.10 绕开 rtk 取证
 
 `rtk` 代理会缓存/过滤输出。W1 它三次害我误判
 （"部分唯一索引不存在""`ops/seed/` 是空目录""merge 被 fast-forward"）。
