@@ -10,6 +10,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<Nimpression.Application.Features.Realtime.Abstractions.IRealtimeNotifier, Nimpression.Api.Hubs.RealtimeNotifier>();
 
 var app = builder.Build();
 
@@ -42,6 +44,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
 // 全部功能端点在此自动挂载。新增一组端点请实现 IEndpointModule，
 // 不要在这里加行 —— 见 Endpoints/IEndpointModule.cs 的说明。
 app.MapEndpointModules(typeof(Program).Assembly);
+
+app.MapHub<Nimpression.Api.Hubs.RealtimeHub>("/hubs/realtime");
 
 app.Run();
 
