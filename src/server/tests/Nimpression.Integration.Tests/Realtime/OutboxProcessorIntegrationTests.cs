@@ -14,6 +14,7 @@ using Nimpression.Domain.Entities.Standalone;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Persistence.Seed;
 using Nimpression.Infrastructure.Realtime.BackgroundServices;
 using Nimpression.Infrastructure.Realtime.Services;
 using Nimpression.Infrastructure.Security;
@@ -64,14 +65,14 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
             _userId,
             _empNo,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+            SeedConstants.ReferenceDate.AddYears(1),
             new Money(25m),
             new Money(15m),
             new Money(1.2m),
             "phone",
             "address",
             "emergency",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         context.Users.Add(user);
         context.Drivers.Add(driver);
@@ -131,7 +132,7 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
 
         await using (var db = _fixture.CreateDbContext())
         {
-            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, DateTimeOffset.UtcNow);
+            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
             db.OutboxMessages.Add(msg);
             await db.SaveChangesAsync();
         }
@@ -176,7 +177,7 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
 
         await using (var db = _fixture.CreateDbContext())
         {
-            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, DateTimeOffset.UtcNow);
+            var msg = new OutboxMessage(outboxId, "JobTaskAssigned", payload, new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
             db.OutboxMessages.Add(msg);
             await db.SaveChangesAsync();
         }

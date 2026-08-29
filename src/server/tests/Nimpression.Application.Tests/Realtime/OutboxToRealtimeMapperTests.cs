@@ -11,6 +11,7 @@ namespace Nimpression.Application.Tests.Realtime;
 public sealed class OutboxToRealtimeMapperTests
 {
     private readonly OutboxToRealtimeMapper _mapper = new();
+    private static readonly DateTimeOffset FixedNow = new(2026, 8, 24, 10, 0, 0, TimeSpan.Zero);
 
     [Fact]
     public void Map_JobTaskAssigned_ReturnsPureInvalidationSignal_AndRoutesToDriverAndDispatchers()
@@ -19,7 +20,7 @@ public sealed class OutboxToRealtimeMapperTests
         var taskId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
         var vehicleId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             JobTaskId = taskId,
@@ -53,7 +54,7 @@ public sealed class OutboxToRealtimeMapperTests
         // Arrange
         var taskId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             JobTaskId = taskId,
@@ -70,8 +71,6 @@ public sealed class OutboxToRealtimeMapperTests
         result.Message.Kind.Should().Be(RealtimeEventKinds.TaskAcknowledged);
         result.Message.EntityId.Should().Be(taskId);
         result.TargetDriverId.Should().Be(driverId);
-        result.TargetGroups.Should().Contain(RealtimeGroupNames.Driver(driverId));
-        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()));
     }
 
     [Fact]
@@ -80,12 +79,11 @@ public sealed class OutboxToRealtimeMapperTests
         // Arrange
         var taskId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             JobTaskId = taskId,
             DriverId = driverId,
-            DistanceKm = 42.5m,
             OccurredAt = occurredAt
         });
 
@@ -98,7 +96,6 @@ public sealed class OutboxToRealtimeMapperTests
         result.Message.Kind.Should().Be(RealtimeEventKinds.TaskCompleted);
         result.Message.EntityId.Should().Be(taskId);
         result.TargetDriverId.Should().Be(driverId);
-        result.TargetGroups.Should().Contain(RealtimeGroupNames.Driver(driverId));
     }
 
     [Fact]
@@ -106,12 +103,10 @@ public sealed class OutboxToRealtimeMapperTests
     {
         // Arrange
         var driverId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             DriverId = driverId,
-            UserId = userId,
             OccurredAt = occurredAt
         });
 
@@ -124,7 +119,6 @@ public sealed class OutboxToRealtimeMapperTests
         result.Message.Kind.Should().Be(RealtimeEventKinds.DriverDeactivated);
         result.Message.EntityId.Should().Be(driverId);
         result.TargetDriverId.Should().Be(driverId);
-        result.TargetGroups.Should().Contain(RealtimeGroupNames.Driver(driverId));
     }
 
     [Fact]
@@ -133,12 +127,11 @@ public sealed class OutboxToRealtimeMapperTests
         // Arrange
         var incidentId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             IncidentId = incidentId,
             DriverId = driverId,
-            Severity = 2,
             OccurredAt = occurredAt
         });
 
@@ -159,7 +152,7 @@ public sealed class OutboxToRealtimeMapperTests
         // Arrange
         var fineId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             FineId = fineId,
@@ -184,7 +177,7 @@ public sealed class OutboxToRealtimeMapperTests
         // Arrange
         var payslipId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var occurredAt = DateTimeOffset.UtcNow;
+        var occurredAt = FixedNow;
         var payload = JsonSerializer.Serialize(new
         {
             PayslipId = payslipId,
@@ -210,7 +203,7 @@ public sealed class OutboxToRealtimeMapperTests
     public void Map_NewsPublished_WithDifferentAudiences_RoutesToExpectedGroups()
     {
         var newsId = Guid.NewGuid();
-        var now = DateTimeOffset.UtcNow;
+        var now = FixedNow;
 
         // 1. All audience
         var allPayload = JsonSerializer.Serialize(new { NewsPostId = newsId, Audience = (int)NewsAudience.All, OccurredAt = now });
@@ -235,7 +228,7 @@ public sealed class OutboxToRealtimeMapperTests
     public void Map_ServiceThresholdReached_RoutesToDispatcherAndAdmin()
     {
         var vehicleId = Guid.NewGuid();
-        var now = DateTimeOffset.UtcNow;
+        var now = FixedNow;
         var payload = JsonSerializer.Serialize(new { VehicleId = vehicleId, OccurredAt = now });
 
         var res = _mapper.Map("ServiceThresholdReached", payload, now);

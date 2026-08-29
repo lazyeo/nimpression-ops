@@ -18,6 +18,7 @@ using Nimpression.Domain.Entities.Vehicle;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Persistence.Seed;
 using Nimpression.Infrastructure.Security;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
@@ -74,14 +75,14 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
             _userId,
             _empNo,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+            SeedConstants.ReferenceDate.AddYears(1),
             new Money(28m),
             new Money(15m),
             new Money(1.2m),
             "phone",
             "address",
             "emergency",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         var vehicle = new Vehicle(
             _vehicleId,
@@ -101,7 +102,7 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
             "TSK-AUTH-001",
             "Authoritative High Priority Delivery",
             _areaId,
-            DateTimeOffset.UtcNow.AddHours(2),
+            new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero),
             _userId,
             "Authoritative Delivery Notes",
             TaskPriority.High,
@@ -159,12 +160,12 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
         var tamperedSignal = new RealtimeMessage(
             Kind: "malicious.tampered.kind",
             EntityId: bogusEntityId,
-            OccurredAt: DateTimeOffset.UtcNow);
+            OccurredAt: new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
 
         var legitimateSignal = new RealtimeMessage(
             Kind: RealtimeEventKinds.TaskAssigned,
             EntityId: _taskId,
-            OccurredAt: DateTimeOffset.UtcNow);
+            OccurredAt: new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
 
         var tcsTampered = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         var tcsLegitimate = new TaskCompletionSource<RealtimeMessage>(TaskCreationOptions.RunContinuationsAsynchronously);

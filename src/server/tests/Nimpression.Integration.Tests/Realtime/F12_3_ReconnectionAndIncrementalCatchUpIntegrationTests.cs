@@ -15,6 +15,7 @@ using Nimpression.Domain.Entities.Standalone;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Persistence.Seed;
 using Nimpression.Infrastructure.Security;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
@@ -68,28 +69,28 @@ public sealed class F12_3_ReconnectionAndIncrementalCatchUpIntegrationTests : IA
             _driverAUserId,
             _empNoA,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+            SeedConstants.ReferenceDate.AddYears(1),
             new Money(25m),
             new Money(15m),
             new Money(1.2m),
             "phoneA",
             "addressA",
             "emergencyA",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         var driverB = new Driver(
             _driverBId,
             _driverBUserId,
             _empNoB,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+            SeedConstants.ReferenceDate.AddYears(1),
             new Money(25m),
             new Money(15m),
             new Money(1.2m),
             "phoneB",
             "addressB",
             "emergencyB",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         context.Users.AddRange(userA, userB);
         context.Drivers.AddRange(driverA, driverB);
@@ -140,7 +141,7 @@ public sealed class F12_3_ReconnectionAndIncrementalCatchUpIntegrationTests : IA
         connection.State.Should().Be(HubConnectionState.Connected);
 
         // 2. 模拟发生网络波动，客户端断开连接，记录断线时间点
-        var disconnectionTime = DateTimeOffset.UtcNow;
+        var disconnectionTime = new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero);
         await connection.StopAsync();
         connection.State.Should().Be(HubConnectionState.Disconnected);
 

@@ -12,6 +12,7 @@ using Nimpression.Domain.Entities.Identity;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Persistence.Seed;
 using Nimpression.Infrastructure.Security;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
@@ -72,28 +73,28 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
             _userAId,
             _empNoA,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(2)),
+            SeedConstants.ReferenceDate.AddYears(2),
             new Money(28m),
             new Money(15m),
             new Money(1.2m),
             "phoneA",
             "addressA",
             "emergencyA",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         var driverB = new Driver(
             _driverBId,
             _userBId,
             _empNoB,
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(2)),
+            SeedConstants.ReferenceDate.AddYears(2),
             new Money(28m),
             new Money(15m),
             new Money(1.2m),
             "phoneB",
             "addressB",
             "emergencyB",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            SeedConstants.ReferenceDate);
 
         context.Users.AddRange(userA, userB, userDsp);
         context.Drivers.AddRange(driverA, driverB);
@@ -182,8 +183,8 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
         using var scope = _factory.Services.CreateScope();
         var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
 
-        var messageForDriverA = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskAId, DateTimeOffset.UtcNow);
-        var messageForDriverB = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskBId, DateTimeOffset.UtcNow);
+        var messageForDriverA = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskAId, new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
+        var messageForDriverB = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskBId, new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
 
         // Act 1: 向司机 A 专属群组推送消息
         await notifier.PublishToDriverAsync(_driverAId, messageForDriverA);
@@ -243,7 +244,7 @@ public sealed class F12_2_GroupIsolationIntegrationTests : IAsyncLifetime, IDisp
         using var scope = _factory.Services.CreateScope();
         var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
 
-        var alertMessage = new RealtimeMessage(RealtimeEventKinds.VehicleServiceThresholdReached, vehicleId, DateTimeOffset.UtcNow);
+        var alertMessage = new RealtimeMessage(RealtimeEventKinds.VehicleServiceThresholdReached, vehicleId, new DateTimeOffset(2026, 8, 24, 10, 0, 0, TimeSpan.Zero));
 
         // Act: 向 Dispatcher 角色组广播车辆保养报警
         await notifier.PublishToRoleAsync(UserRole.Dispatcher.ToString(), alertMessage);

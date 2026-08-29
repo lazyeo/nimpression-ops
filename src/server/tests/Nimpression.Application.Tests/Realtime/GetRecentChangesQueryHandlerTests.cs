@@ -18,6 +18,9 @@ public sealed class GetRecentChangesQueryHandlerTests
     private readonly IDriverRepository _driverRepo = Substitute.For<IDriverRepository>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
 
+    private static readonly DateTimeOffset FixedNow = new(2026, 8, 24, 10, 0, 0, TimeSpan.Zero);
+    private static readonly DateOnly FixedToday = new(2026, 8, 24);
+
     [Fact]
     public async Task Handle_UnauthenticatedUser_ReturnsUnauthorizedError()
     {
@@ -26,7 +29,7 @@ public sealed class GetRecentChangesQueryHandlerTests
         _currentUser.UserId.Returns((Guid?)null);
 
         var handler = new GetRecentChangesQueryHandler(_changesRepo, _driverRepo, _currentUser);
-        var query = new GetRecentChangesQuery(DateTimeOffset.UtcNow.AddMinutes(-5));
+        var query = new GetRecentChangesQuery(FixedNow.AddMinutes(-5));
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);
@@ -43,7 +46,7 @@ public sealed class GetRecentChangesQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
-        var since = DateTimeOffset.UtcNow.AddMinutes(-10);
+        var since = FixedNow.AddMinutes(-10);
 
         _currentUser.IsAuthenticated.Returns(true);
         _currentUser.UserId.Returns(userId);
@@ -54,20 +57,20 @@ public sealed class GetRecentChangesQueryHandlerTests
             userId,
             "DRV-001001",
             "Class 2",
-            DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+            FixedToday.AddYears(1),
             new Money(25m),
             new Money(15m),
             new Money(1.5m),
             "phoneEnc",
             "addressEnc",
             "emergencyEnc",
-            DateOnly.FromDateTime(DateTime.UtcNow));
+            FixedToday);
 
         _driverRepo.GetByUserIdAsync(userId, Arg.Any<CancellationToken>()).Returns(dummyDriver);
 
         var expectedChanges = new List<RealtimeChangeDto>
         {
-            new("task.assigned", Guid.NewGuid(), DateTimeOffset.UtcNow)
+            new("task.assigned", Guid.NewGuid(), FixedNow)
         };
 
         _changesRepo.GetChangesSinceAsync(since, driverId, UserRole.Driver, 100, Arg.Any<CancellationToken>())
@@ -89,7 +92,7 @@ public sealed class GetRecentChangesQueryHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var since = DateTimeOffset.UtcNow.AddMinutes(-10);
+        var since = FixedNow.AddMinutes(-10);
 
         _currentUser.IsAuthenticated.Returns(true);
         _currentUser.UserId.Returns(userId);
@@ -97,8 +100,8 @@ public sealed class GetRecentChangesQueryHandlerTests
 
         var expectedChanges = new List<RealtimeChangeDto>
         {
-            new("incident.reported", Guid.NewGuid(), DateTimeOffset.UtcNow),
-            new("task.completed", Guid.NewGuid(), DateTimeOffset.UtcNow)
+            new("incident.reported", Guid.NewGuid(), FixedNow),
+            new("task.completed", Guid.NewGuid(), FixedNow)
         };
 
         _changesRepo.GetChangesSinceAsync(since, null, UserRole.Dispatcher, 50, Arg.Any<CancellationToken>())
