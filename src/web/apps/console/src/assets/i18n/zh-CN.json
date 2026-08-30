@@ -156,5 +156,168 @@
     "LABEL": "语言设置",
     "EN_NZ": "English (NZ)",
     "ZH_CN": "中文 (简体)"
+  },
+  "DASHBOARD": {
+    "TITLE": "运营管理仪表盘",
+    "SUBTITLE": "Nimpression Ops — 智能车队监控、工时热力与运营多维图表 (F14)",
+    "RENDER_DURATION": "渲染耗时: {ms} ms",
+    "RENDER_PASS": "PASS (<500ms)",
+    "THEME_DARK": "暗黑主题",
+    "THEME_LIGHT": "明亮主题",
+    "REFRESH_DATA": "刷新数据",
+    "REFRESH_TITLE": "刷新全量图表数据",
+    "ERROR_BANNER_TITLE": "数据加载异常:",
+    "KPI": {
+      "IN_TRANSIT": "今日在途车辆",
+      "IN_TRANSIT_SUB": "当前车队实时作业负荷",
+      "VEHICLES_UNIT": "/ {total} 辆",
+      "MAINTENANCE": "保养到期预警",
+      "MAINTENANCE_UNIT": "辆待保养",
+      "MAINTENANCE_SUB": "基于里程阈值自动预警",
+      "FINES": "罚单累计总额",
+      "FINES_SUB": "含超速、违停、红灯等违章记录",
+      "CONVERSION": "任务链路完结率",
+      "CONVERSION_SUB": "从创建到完成全流程转化"
+    },
+    "ERRORS": {
+      "LOAD_FAILED": "加载仪表盘数据失败",
+      "NETWORK_FAILED": "网络请求失败，请检查服务连接状态"
+    }
+  },
+  "CHARTS": {
+    "COMMON": {
+      "EXPORT_PNG": "导出 PNG",
+      "EXPORT_PNG_TITLE": "导出 PNG 图表",
+      "LOADING": "图表加载中...",
+      "ERROR": "图表加载失败",
+      "RETRY": "重试",
+      "NO_DATA": "暂无图表数据",
+      "MINUTES": "{count} 分钟",
+      "HOURS_MINUTES": "{hours}小时{mins}分",
+      "HOURS": "{hours}小时"
+    },
+    "FLEET_UTILIZATION": {
+      "TITLE": "车队利用率",
+      "SUBTITLE": "近 30 天每日在途 / 闲置 / 维修车辆数分布（点击下钻查看当日任务）",
+      "IN_TRANSIT": "在途",
+      "IDLE": "闲置",
+      "MAINTENANCE": "维修中",
+      "TOTAL": "车队总数",
+      "TOOLTIP_TOTAL": "车队总数: {count} 辆",
+      "RATE": "车队利用率: {rate}%",
+      "DATE_AXIS": "日期",
+      "COUNT_AXIS": "车辆数 (辆)",
+      "NO_DATA": "暂无车队利用率数据"
+    },
+    "TIMESHEET_HEATMAP": {
+      "TITLE": "工时热力图",
+      "SUBTITLE": "周 × 小时工时密度与加班聚集时段（悬浮查看司机数与总工时）",
+      "PEAK_OVERTIME": "加班聚集时段",
+      "ACTIVE_DRIVERS": "活跃司机数: {count} 人",
+      "TOTAL_HOURS": "累计总工时: {hours} 小时",
+      "LEGEND_HIGH": "高工时/加班",
+      "LEGEND_LOW": "低工时",
+      "SERIES_NAME": "工时分布",
+      "NO_DATA": "暂无工时热力图数据",
+      "WEEKDAYS": {
+        "MON": "周一",
+        "TUE": "周二",
+        "WED": "周三",
+        "THU": "周四",
+        "FRI": "周五",
+        "SAT": "周六",
+        "SUN": "周日"
+      }
+    },
+    "ODOMETER_TREND": {
+      "TITLE": "车辆里程趋势",
+      "SUBTITLE": "每车累计行驶里程、保养阈值参考线与超期预警标注（红色标记点）",
+      "DUE_FOR_SERVICE": "需保养",
+      "MAINTENANCE_LINE": "保养阈值线 ({km} km)",
+      "ODOMETER_AXIS": "累计里程 (km)",
+      "DATE_AXIS": "日期",
+      "NO_DATA": "暂无车辆里程趋势数据"
+    },
+    "FINES_COMPOSITION": {
+      "TITLE": "交通罚单构成与金额排行",
+      "SUBTITLE": "环形图违章原因分类占比 ↔ 右侧金额排行条形图（点击环形扇区联动筛选）",
+      "FILTERED_BY": "已筛选: {category}",
+      "CLEAR_FILTER": "清除筛选",
+      "EXPORT_DOUGHNUT": "环形图",
+      "EXPORT_RANKING": "排行图",
+      "DOUGHNUT_SERIES": "罚单原因分布",
+      "RANKING_SERIES": "罚单金额 ($)",
+      "CATEGORY_TOTAL": "累计金额: ${amount}",
+      "CATEGORY_COUNT": "罚单总数: {count} 笔",
+      "CATEGORY_SHARE": "金额占比: {share}%",
+      "DRIVER": "责任司机: {name}",
+      "VEHICLE": "涉事车辆: {rego}",
+      "AMOUNT": "罚金金额: ${amount}",
+      "REASON": "违章原因: {reason}",
+      "ISSUED_DATE": "开具日期: {date}",
+      "NO_DATA": "暂无罚单数据",
+      "REASONS": {
+        "SPEEDING": "超速违章",
+        "PARKING": "违规停车",
+        "RED_LIGHT": "闯红灯",
+        "BUS_LANE": "公交车道占用",
+        "LANE_MARKING": "压线行驶",
+        "OTHER": "其他违章"
+      }
+    },
+    "TASK_FUNNEL": {
+      "TITLE": "任务流转漏斗",
+      "SUBTITLE": "已创建 → 已指派 → 已确认 → 进行中 → 已完成全链路转化率与平均停留时长",
+      "SERIES_NAME": "任务流程漏斗",
+      "STAGE_COUNT": "当前阶段任务量: {count} 单",
+      "PREV_CONVERSION": "上一阶段转化率: {rate}%",
+      "OVERALL_CONVERSION": "全链路总转化率: {rate}%",
+      "AVG_DURATION": "平均停留时长: {duration}",
+      "CONVERSION_LABEL": "转化率: {rate}%",
+      "AVG_STAY_LABEL": "均留: {duration}",
+      "TASKS_COUNT": "{count} 单",
+      "NO_DATA": "暂无任务漏斗数据",
+      "STAGES": {
+        "DRAFT": "草稿",
+        "ASSIGNED": "已指派",
+        "ACKNOWLEDGED": "已确认",
+        "IN_PROGRESS": "进行中",
+        "COMPLETED": "已完成",
+        "CANCELLED": "已取消"
+      }
+    },
+    "PAYROLL_COMPARISON": {
+      "TITLE": "薪资对比分析",
+      "SUBTITLE": "本薪期 vs 上薪期按司机分组，含普通 / 加班 / 假期工时三段堆叠构成",
+      "CURRENT_PERIOD": "本薪期",
+      "PREVIOUS_PERIOD": "上薪期",
+      "REGULAR_PAY": "普通工时",
+      "OVERTIME_PAY": "加班工时",
+      "HOLIDAY_PAY": "假期工时",
+      "CURR_REGULAR": "本期-普通",
+      "CURR_OVERTIME": "本期-加班",
+      "CURR_HOLIDAY": "本期-假期",
+      "PREV_REGULAR": "上期-普通",
+      "PREV_OVERTIME": "上期-加班",
+      "PREV_HOLIDAY": "上期-假期",
+      "DIFF_CHANGE": "环比变动: {diff} ({percent}%)",
+      "GROSS_PAY_AXIS": "税前薪资 ($)",
+      "DRIVER_AXIS": "司机",
+      "NO_DATA": "暂无薪资对比数据"
+    },
+    "DRILLDOWN_MODAL": {
+      "TITLE": "{date} 派发任务详情",
+      "SUBTITLE": "当日共计 {count} 项派发任务",
+      "NO_TASKS": "该日期暂无派发任务记录",
+      "COL_REF": "任务编号",
+      "COL_TITLE": "任务标题",
+      "COL_DRIVER": "指派司机",
+      "COL_VEHICLE": "执行车辆",
+      "COL_STATUS": "状态",
+      "COL_TIME": "计划时间",
+      "COL_DISTANCE": "里程",
+      "UNASSIGNED": "未指派",
+      "CLOSE": "关闭"
+    }
   }
 }

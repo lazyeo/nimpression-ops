@@ -4,10 +4,12 @@ import { EChartsOption } from 'echarts';
 import { BaseChartComponent } from '../../../../shared/charts/base-chart/base-chart.component';
 import { ChartThemeConfig } from '../../../../shared/charts/theme/chart-theme';
 
+import { I18nPipe } from '../../../../core/i18n/i18n.pipe';
+
 @Component({
   selector: 'nim-odometer-trend-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartComponent],
+  imports: [CommonModule, BaseChartComponent, I18nPipe],
   templateUrl: './odometer-trend-chart.component.html',
   styleUrl: './odometer-trend-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

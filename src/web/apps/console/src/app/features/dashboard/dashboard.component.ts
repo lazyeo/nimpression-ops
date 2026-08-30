@@ -18,11 +18,14 @@ import { TaskFunnelChartComponent } from './components/task-funnel/task-funnel-c
 import { PayrollComparisonChartComponent } from './components/payroll-comparison/payroll-comparison-chart.component';
 import { TaskDrilldownDialogComponent } from './components/task-drilldown-dialog/task-drilldown-dialog.component';
 
+import { I18nPipe } from '../../core/i18n/i18n.pipe';
+
 @Component({
   selector: 'nim-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    I18nPipe,
     FleetUtilizationChartComponent,
     TimesheetHeatmapChartComponent,
     OdometerTrendChartComponent,

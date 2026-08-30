@@ -18,11 +18,33 @@ export interface FineRankingItem {
   issuedOn: string;
 }
 
+export interface FinesCompositionLabels {
+  doughnutNoData?: string;
+  rankingNoData?: string;
+  rankingFilteredNoData?: string;
+  doughnutSeriesName?: string;
+  rankingSeriesName?: string;
+  totalAmountText?: string;
+  finesCountText?: string;
+  shareText?: string;
+  doughnutHint?: string;
+  rankingTitle?: string;
+  rankingTitleFiltered?: string;
+  driverText?: string;
+  vehicleText?: string;
+  reasonText?: string;
+  issuedDateText?: string;
+  unassignedText?: string;
+  totalCountSubtitle?: string;
+  xAxisName?: string;
+}
+
 export interface FinesDoughnutOptionsParams {
   data: FineCategoryStat[];
   selectedCategory?: string | null;
   theme?: ChartThemeConfig;
   isMobile?: boolean;
+  labels?: FinesCompositionLabels;
 }
 
 export interface FinesRankingBarOptionsParams {
@@ -30,18 +52,27 @@ export interface FinesRankingBarOptionsParams {
   selectedCategory?: string | null;
   theme?: ChartThemeConfig;
   isMobile?: boolean;
+  labels?: FinesCompositionLabels;
 }
 
 /**
  * Pure function to construct ECharts options for F14.4 Fine Doughnut Chart (by category).
  */
 export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EChartsOption {
-  const { data, selectedCategory, theme = LIGHT_THEME, isMobile = false } = params;
+  const { data, selectedCategory, theme = LIGHT_THEME, isMobile = false, labels = {} } = params;
+
+  const noDataText = labels.doughnutNoData || 'No fines category data available';
+  const totalAmountLabel = labels.totalAmountText || 'Total Amount';
+  const finesCountLabel = labels.finesCountText || 'Fines Count';
+  const shareLabel = labels.shareText || 'Proportion';
+  const doughnutHintText = labels.doughnutHint || 'Click sector to filter ranking';
+  const doughnutSeriesNameText = labels.doughnutSeriesName || 'Fine Breakdown';
+  const totalCountSubtitleText = labels.totalCountSubtitle || 'Total {count} Fines';
 
   if (!data || data.length === 0) {
     return {
       title: {
-        text: '暂无罚单分类数据',
+        text: noDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -95,10 +126,10 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
           <div style="font-weight:600;margin-bottom:4px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:2px;">
             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px;"></span>${p.name}
           </div>
-          <div style="font-size:12px;margin:2px 0;">罚单总额: <strong>$${p.value.toLocaleString()}</strong></div>
-          <div style="font-size:12px;margin:2px 0;">罚单数量: <strong>${p.data.count}</strong> 张</div>
-          <div style="font-size:12px;margin:2px 0;">金额占比: <strong>${p.data.percentage.toFixed(1)}%</strong></div>
-          <div style="font-size:11px;color:${theme.textMutedColor};margin-top:4px;font-style:italic;">💡 点击扇区联动右侧金额排行</div>
+          <div style="font-size:12px;margin:2px 0;">${totalAmountLabel}: <strong>$${p.value.toLocaleString()}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${finesCountLabel}: <strong>${p.data.count}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${shareLabel}: <strong>${p.data.percentage.toFixed(1)}%</strong></div>
+          <div style="font-size:11px;color:${theme.textMutedColor};margin-top:4px;font-style:italic;">💡 ${doughnutHintText}</div>
         `;
       },
     },
@@ -117,7 +148,7 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
     },
     title: {
       text: `$${grandTotalAmount.toLocaleString()}`,
-      subtext: `总计 ${grandTotalCount} 张罚单`,
+      subtext: totalCountSubtitleText.replace('{count}', String(grandTotalCount)),
       left: isMobile ? 'center' : '38%',
       top: isMobile ? '38%' : '44%',
       textAlign: 'center',
@@ -133,7 +164,7 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
     },
     series: [
       {
-        name: '罚单构成',
+        name: doughnutSeriesNameText,
         type: 'pie',
         radius: isMobile ? ['38%', '62%'] : ['44%', '70%'],
         center: isMobile ? ['50%', '42%'] : ['40%', '50%'],
@@ -163,7 +194,18 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
  * Pure function to construct ECharts options for F14.4 Fine Ranking Bar Chart (Linked).
  */
 export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams): EChartsOption {
-  const { data, selectedCategory, theme = LIGHT_THEME, isMobile = false } = params;
+  const { data, selectedCategory, theme = LIGHT_THEME, isMobile = false, labels = {} } = params;
+
+  const rankingNoDataText = labels.rankingNoData || 'No fine ranking data available';
+  const rankingTitleText = labels.rankingTitle || 'Fine Amount Ranking TOP 10';
+  const rankingTitleFilteredText = labels.rankingTitleFiltered || `[${selectedCategory}] Ranking TOP 10`;
+  const driverLabel = labels.driverText || 'Driver';
+  const vehicleLabel = labels.vehicleText || 'Vehicle';
+  const reasonLabel = labels.reasonText || 'Reason';
+  const issuedDateLabel = labels.issuedDateText || 'Issued Date';
+  const unassignedLabel = labels.unassignedText || 'Unassigned';
+  const rankingSeriesNameText = labels.rankingSeriesName || 'Fine Amount';
+  const xAxisNameText = labels.xAxisName || 'Amount ($)';
 
   // Filter by selected category if provided
   const filteredData = selectedCategory
@@ -176,7 +218,7 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
   if (sorted.length === 0) {
     return {
       title: {
-        text: selectedCategory ? `类别 "${selectedCategory}" 暂无排行数据` : '暂无罚单排行数据',
+        text: selectedCategory ? (labels.rankingFilteredNoData || `Category "${selectedCategory}" has no ranking data`) : rankingNoDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -188,13 +230,13 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
     };
   }
 
-  const yLabels = sorted.map(d => `${d.vehicleRego} (${d.driverName || '未指派'})`);
+  const yLabels = sorted.map(d => `${d.vehicleRego} (${d.driverName || unassignedLabel})`);
   const values = sorted.map(d => d.amount);
 
   const option: EChartsOption = {
     backgroundColor: 'transparent',
     title: {
-      text: selectedCategory ? `【${selectedCategory}】金额排行 TOP 10` : '单笔罚单金额排行 TOP 10',
+      text: selectedCategory ? rankingTitleFilteredText : rankingTitleText,
       left: 12,
       top: 6,
       textStyle: {
@@ -221,14 +263,14 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
 
         return `
           <div style="font-weight:600;margin-bottom:4px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">
-            罚单编号: ${item.reference}
+            ${item.reference}
           </div>
-          <div style="font-size:12px;margin:2px 0;">车辆车牌: <strong>${item.vehicleRego}</strong></div>
-          <div style="font-size:12px;margin:2px 0;">责任司机: <strong>${item.driverName || '未指派'}</strong></div>
-          <div style="font-size:12px;margin:2px 0;">违章原因: <strong>${item.category}</strong></div>
-          <div style="font-size:12px;margin:2px 0;">开单日期: <strong>${item.issuedOn}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${vehicleLabel}: <strong>${item.vehicleRego}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${driverLabel}: <strong>${item.driverName || unassignedLabel}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${reasonLabel}: <strong>${item.category}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${issuedDateLabel}: <strong>${item.issuedOn}</strong></div>
           <div style="font-size:13px;margin-top:4px;color:${SEMANTIC_COLORS.danger};font-weight:bold;">
-            罚金金额: $${item.amount.toLocaleString()}
+            $${item.amount.toLocaleString()}
           </div>
         `;
       },
@@ -242,7 +284,7 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
     },
     xAxis: {
       type: 'value',
-      name: '金额 ($)',
+      name: xAxisNameText,
       nameTextStyle: {
         color: theme.textSecondaryColor,
         fontSize: 11,
@@ -279,7 +321,7 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
     },
     series: [
       {
-        name: '罚金金额',
+        name: rankingSeriesNameText,
         type: 'bar',
         data: values,
         itemStyle: {

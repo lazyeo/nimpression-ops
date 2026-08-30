@@ -9,25 +9,47 @@ export interface TimesheetHeatmapCell {
   isOvertimePeak: boolean; // Flagged if heavily clustered during non-standard hours
 }
 
+export interface TimesheetHeatmapLabels {
+  noData?: string;
+  weekdays?: string[];
+  peakOvertime?: string;
+  activeDrivers?: string;
+  totalHours?: string;
+  legendHigh?: string;
+  legendLow?: string;
+  seriesName?: string;
+}
+
 export interface TimesheetHeatmapOptionsParams {
   data: TimesheetHeatmapCell[];
   theme?: ChartThemeConfig;
   isMobile?: boolean;
+  labels?: TimesheetHeatmapLabels;
 }
 
-export const WEEKDAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+export const DEFAULT_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+export const WEEKDAYS = DEFAULT_WEEKDAYS;
 export const HOURS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
 /**
  * Pure function to construct ECharts options for F14.2 Timesheet Heatmap (Calendar Week x Hour).
  */
 export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsParams): EChartsOption {
-  const { data, theme = LIGHT_THEME, isMobile = false } = params;
+  const { data, theme = LIGHT_THEME, isMobile = false, labels = {} } = params;
+
+  const noDataText = labels.noData || 'No timesheet heatmap data available';
+  const weekdaysList = labels.weekdays && labels.weekdays.length === 7 ? labels.weekdays : DEFAULT_WEEKDAYS;
+  const activeDriversLabel = labels.activeDrivers || 'Active Drivers';
+  const totalHoursLabel = labels.totalHours || 'Total Hours';
+  const peakOvertimeLabel = labels.peakOvertime || 'Peak Overtime Cluster';
+  const legendHighText = labels.legendHigh || 'High / Overtime';
+  const legendLowText = labels.legendLow || 'Low Hours';
+  const seriesNameText = labels.seriesName || 'Work Distribution';
 
   if (!data || data.length === 0) {
     return {
       title: {
-        text: '暂无工时热力图数据',
+        text: noDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -66,15 +88,15 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
         };
         if (!p || !p.value) return '';
         const [hour, dayIdx, totalHrs, drivers, isOt] = p.value;
-        const weekday = WEEKDAYS[dayIdx] || `第 ${dayIdx + 1} 天`;
+        const weekday = weekdaysList[dayIdx] || `Day ${dayIdx + 1}`;
         const nextHour = (hour + 1) % 24;
         const timeRange = `${hour.toString().padStart(2, '0')}:00 - ${nextHour.toString().padStart(2, '0')}:00`;
 
         let html = `<div style="font-weight:600;margin-bottom:4px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">${weekday} ${timeRange}</div>`;
-        html += `<div style="font-size:12px;margin:2px 0;">👥 活跃司机数: <strong>${drivers}</strong> 人</div>`;
-        html += `<div style="font-size:12px;margin:2px 0;">⏱️ 累计总工时: <strong>${totalHrs}</strong> 小时</div>`;
+        html += `<div style="font-size:12px;margin:2px 0;">👥 ${activeDriversLabel}: <strong>${drivers}</strong></div>`;
+        html += `<div style="font-size:12px;margin:2px 0;">⏱️ ${totalHoursLabel}: <strong>${totalHrs} h</strong></div>`;
         if (isOt) {
-          html += `<div style="font-size:11px;color:${OKABE_ITO_PALETTE.vermilion};font-weight:bold;margin-top:4px;">⚠️ 加班聚集时段</div>`;
+          html += `<div style="font-size:11px;color:${OKABE_ITO_PALETTE.vermilion};font-weight:bold;margin-top:4px;">⚠️ ${peakOvertimeLabel}</div>`;
         }
         return html;
       },
@@ -106,7 +128,7 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
     },
     yAxis: {
       type: 'category',
-      data: WEEKDAYS,
+      data: weekdaysList,
       splitArea: {
         show: true,
       },
@@ -127,7 +149,7 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       orient: 'horizontal',
       left: 'center',
       bottom: 0,
-      text: ['高工时/加班', '低工时'],
+      text: [legendHighText, legendLowText],
       textStyle: {
         color: theme.textColor,
         fontSize: isMobile ? 10 : 11,
@@ -141,7 +163,7 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
     },
     series: [
       {
-        name: '工时分布',
+        name: seriesNameText,
         type: 'heatmap',
         data: seriesData,
         label: {

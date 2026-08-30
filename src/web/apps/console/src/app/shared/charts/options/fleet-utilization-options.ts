@@ -10,22 +10,47 @@ export interface FleetUtilizationItem {
   tasksCount: number;
 }
 
+export interface FleetUtilizationLabels {
+  noData?: string;
+  inTransit?: string;
+  idle?: string;
+  maintenance?: string;
+  totalVehicles?: string;
+  utilizationRate?: string;
+  tasksCount?: string;
+  drilldownHint?: string;
+  yAxisName?: string;
+  statusTitle?: string;
+  vehiclesUnit?: string;
+}
+
 export interface FleetUtilizationOptionsParams {
   data: FleetUtilizationItem[];
   theme?: ChartThemeConfig;
   isMobile?: boolean;
+  labels?: FleetUtilizationLabels;
 }
 
 /**
  * Pure function to construct ECharts options for F14.1 Fleet Utilization (Stacked Bar).
  */
 export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsParams): EChartsOption {
-  const { data, theme = LIGHT_THEME, isMobile = false } = params;
+  const { data, theme = LIGHT_THEME, isMobile = false, labels = {} } = params;
+
+  const noDataText = labels.noData || 'No fleet utilization data available';
+  const inTransitLabel = labels.inTransit || 'In Transit';
+  const idleLabel = labels.idle || 'Idle';
+  const maintenanceLabel = labels.maintenance || 'Under Maintenance';
+  const tasksCountLabel = labels.tasksCount || 'Tasks';
+  const rateLabel = labels.utilizationRate || 'Rate';
+  const statusTitleText = labels.statusTitle || 'Fleet Status';
+  const drilldownHintText = labels.drilldownHint || 'Click bar to drill down into tasks';
+  const yAxisNameText = labels.yAxisName || 'Vehicles';
 
   if (!data || data.length === 0) {
     return {
       title: {
-        text: '暂无车队利用率数据',
+        text: noDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -38,7 +63,6 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
   }
 
   const dates = data.map(d => {
-    // Format date for display: 'MM-DD' on mobile or full 'YYYY-MM-DD'
     return isMobile ? d.date.substring(5) : d.date;
   });
 
@@ -73,23 +97,23 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
         const total = (item?.inTransit ?? 0) + (item?.idle ?? 0) + (item?.maintenance ?? 0);
         const utilRate = total > 0 ? (((item?.inTransit ?? 0) / total) * 100).toFixed(1) : '0.0';
 
-        let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:4px;">${dateStr} 车队状态</div>`;
-        html += `<div style="font-size:12px;margin-bottom:4px;color:${theme.textSecondaryColor};">当日任务数: <strong>${item?.tasksCount ?? 0}</strong> | 利用率: <strong>${utilRate}%</strong></div>`;
+        let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:4px;">${dateStr} ${statusTitleText}</div>`;
+        html += `<div style="font-size:12px;margin-bottom:4px;color:${theme.textSecondaryColor};">${tasksCountLabel}: <strong>${item?.tasksCount ?? 0}</strong> | ${rateLabel}: <strong>${utilRate}%</strong></div>`;
         
         items.forEach(it => {
           html += `
             <div style="display:flex;justify-content:space-between;align-items:center;margin:3px 0;gap:12px;">
               <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${it.color};margin-right:6px;"></span>${it.seriesName}</span>
-              <span style="font-weight:600;">${it.value} 辆</span>
+              <span style="font-weight:600;">${it.value}</span>
             </div>
           `;
         });
-        html += `<div style="font-size:11px;color:${theme.textMutedColor};margin-top:6px;font-style:italic;">💡 点击柱子下钻当日任务详情</div>`;
+        html += `<div style="font-size:11px;color:${theme.textMutedColor};margin-top:6px;font-style:italic;">💡 ${drilldownHintText}</div>`;
         return html;
       },
     },
     legend: {
-      data: ['在途车辆', '闲置车辆', '维修车辆'],
+      data: [inTransitLabel, idleLabel, maintenanceLabel],
       top: 8,
       right: isMobile ? 'center' : 16,
       textStyle: {
@@ -127,7 +151,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
     },
     yAxis: {
       type: 'value',
-      name: '车辆数 (辆)',
+      name: yAxisNameText,
       nameTextStyle: {
         color: theme.textSecondaryColor,
         fontSize: 11,
@@ -150,7 +174,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
     },
     series: [
       {
-        name: '在途车辆',
+        name: inTransitLabel,
         type: 'bar',
         stack: 'vehicles',
         data: inTransitData,
@@ -167,7 +191,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
         },
       },
       {
-        name: '闲置车辆',
+        name: idleLabel,
         type: 'bar',
         stack: 'vehicles',
         data: idleData,
@@ -184,13 +208,13 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
         },
       },
       {
-        name: '维修车辆',
+        name: maintenanceLabel,
         type: 'bar',
         stack: 'vehicles',
         data: maintenanceData,
         itemStyle: {
           color: SEMANTIC_COLORS.maintenance, // #D55E00 (Okabe-Ito Vermilion)
-          borderRadius: [3, 3, 0, 0], // Rounded top of the stack
+          borderRadius: [3, 3, 0, 0],
         },
         emphasis: {
           focus: 'series',

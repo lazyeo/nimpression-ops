@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { JobTaskDto } from '../../../../core/api/models/api-models';
+import { I18nPipe } from '../../../../core/i18n/i18n.pipe';
 
 @Component({
   selector: 'nim-task-drilldown-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, I18nPipe],
   templateUrl: './task-drilldown-dialog.component.html',
   styleUrl: './task-drilldown-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,14 +33,14 @@ export class TaskDrilldownDialogComponent {
     }
   }
 
-  getStatusLabel(status: string): string {
+  getStatusKey(status: string): string {
     switch (status) {
-      case 'Completed': return '已完成';
-      case 'InProgress': return '进行中';
-      case 'Acknowledged': return '已确认';
-      case 'Assigned': return '已指派';
-      case 'Draft': return '草稿';
-      case 'Cancelled': return '已取消';
+      case 'Completed': return 'CHARTS.TASK_FUNNEL.STAGES.COMPLETED';
+      case 'InProgress': return 'CHARTS.TASK_FUNNEL.STAGES.IN_PROGRESS';
+      case 'Acknowledged': return 'CHARTS.TASK_FUNNEL.STAGES.ACKNOWLEDGED';
+      case 'Assigned': return 'CHARTS.TASK_FUNNEL.STAGES.ASSIGNED';
+      case 'Draft': return 'CHARTS.TASK_FUNNEL.STAGES.DRAFT';
+      case 'Cancelled': return 'CHARTS.TASK_FUNNEL.STAGES.CANCELLED';
       default: return status;
     }
   }

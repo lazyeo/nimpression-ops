@@ -30,6 +30,8 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { ChartSkeletonComponent, ChartSkeletonType } from '../skeletons/chart-skeleton.component';
 import { ChartThemeConfig, LIGHT_THEME } from '../theme/chart-theme';
 
+import { I18nPipe } from '../../../core/i18n/i18n.pipe';
+
 // Register standard ECharts components
 echarts.use([
   BarChart,
@@ -51,7 +53,7 @@ echarts.use([
 @Component({
   selector: 'nim-base-chart',
   standalone: true,
-  imports: [CommonModule, NgxEchartsDirective, ChartSkeletonComponent],
+  imports: [CommonModule, NgxEchartsDirective, ChartSkeletonComponent, I18nPipe],
   providers: [
     provideEchartsCore({ echarts: () => import('echarts') }),
   ],
@@ -64,7 +66,7 @@ export class BaseChartComponent {
   readonly loading = input<boolean>(false);
   readonly error = input<string | null>(null);
   readonly isEmpty = input<boolean>(false);
-  readonly emptyText = input<string>('暂无相关数据');
+  readonly emptyText = input<string>('CHARTS.COMMON.NO_DATA');
   readonly skeletonType = input<ChartSkeletonType>('bar');
   readonly height = input<string>('360px');
   readonly theme = input<ChartThemeConfig>(LIGHT_THEME);

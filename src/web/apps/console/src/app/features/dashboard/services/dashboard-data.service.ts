@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { forkJoin, catchError, of } from 'rxjs';
 import { ApiClientService } from '../../../core/api/api-client.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import {
   VehicleDto,
   OdometerReadingDto,
@@ -9,7 +10,6 @@ import {
   FineDto,
   PayPeriodDto,
   PayslipDto,
-  DriverDto,
 } from '../../../core/api/models/api-models';
 import {
   ChartThemeConfig,
@@ -60,6 +60,7 @@ export interface RawDashboardPayload {
 })
 export class DashboardDataService {
   private readonly api = inject(ApiClientService);
+  private readonly i18n = inject(I18nService);
 
   // State Signals
   readonly loading = signal<boolean>(false);
@@ -78,8 +79,8 @@ export class DashboardDataService {
   readonly fineRankings = signal<FineRankingItem[]>([]);
   readonly taskFunnel = signal<TaskFunnelStageData[]>([]);
   readonly payrollComparison = signal<DriverPayrollComparisonItem[]>([]);
-  readonly currentPeriodLabel = signal<string>('本薪期');
-  readonly previousPeriodLabel = signal<string>('上薪期');
+  readonly currentPeriodLabel = signal<string>('CHARTS.PAYROLL_COMPARISON.CURRENT_PERIOD');
+  readonly previousPeriodLabel = signal<string>('CHARTS.PAYROLL_COMPARISON.PREVIOUS_PERIOD');
 
   // Computed ECharts Options Signals (Pure options evaluated reactively)
   readonly fleetUtilizationOptions = computed(() => {
@@ -87,6 +88,16 @@ export class DashboardDataService {
       data: this.fleetUtilization(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        noData: this.i18n.t('CHARTS.FLEET_UTILIZATION.NO_DATA'),
+        inTransit: this.i18n.t('CHARTS.FLEET_UTILIZATION.IN_TRANSIT'),
+        idle: this.i18n.t('CHARTS.FLEET_UTILIZATION.IDLE'),
+        maintenance: this.i18n.t('CHARTS.FLEET_UTILIZATION.MAINTENANCE'),
+        totalVehicles: this.i18n.t('CHARTS.FLEET_UTILIZATION.TOTAL'),
+        utilizationRate: this.i18n.t('CHARTS.FLEET_UTILIZATION.RATE'),
+        tasksCount: this.i18n.t('CHARTS.DRILLDOWN_MODAL.COL_TITLE'),
+        yAxisName: this.i18n.t('CHARTS.FLEET_UTILIZATION.COUNT_AXIS'),
+      },
     });
   });
 
@@ -95,6 +106,24 @@ export class DashboardDataService {
       data: this.timesheetHeatmap(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        noData: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.NO_DATA'),
+        peakOvertime: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.PEAK_OVERTIME'),
+        activeDrivers: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.ACTIVE_DRIVERS'),
+        totalHours: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.TOTAL_HOURS'),
+        legendHigh: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.LEGEND_HIGH'),
+        legendLow: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.LEGEND_LOW'),
+        seriesName: this.i18n.t('CHARTS.TIMESHEET_HEATMAP.SERIES_NAME'),
+        weekdays: [
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.MON'),
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.TUE'),
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.WED'),
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.THU'),
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.FRI'),
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.SAT'),
+          this.i18n.t('CHARTS.TIMESHEET_HEATMAP.WEEKDAYS.SUN'),
+        ],
+      },
     });
   });
 
@@ -103,6 +132,11 @@ export class DashboardDataService {
       data: this.odometerTrends(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        noData: this.i18n.t('CHARTS.ODOMETER_TREND.NO_DATA'),
+        dueForService: this.i18n.t('CHARTS.ODOMETER_TREND.DUE_FOR_SERVICE'),
+        odometerAxis: this.i18n.t('CHARTS.ODOMETER_TREND.ODOMETER_AXIS'),
+      },
     });
   });
 
@@ -112,6 +146,13 @@ export class DashboardDataService {
       selectedCategory: this.selectedFineCategory(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        doughnutNoData: this.i18n.t('CHARTS.FINES_COMPOSITION.NO_DATA'),
+        totalAmountText: this.i18n.t('CHARTS.FINES_COMPOSITION.CATEGORY_TOTAL'),
+        finesCountText: this.i18n.t('CHARTS.FINES_COMPOSITION.CATEGORY_COUNT'),
+        shareText: this.i18n.t('CHARTS.FINES_COMPOSITION.CATEGORY_SHARE'),
+        doughnutSeriesName: this.i18n.t('CHARTS.FINES_COMPOSITION.DOUGHNUT_SERIES'),
+      },
     });
   });
 
@@ -121,6 +162,15 @@ export class DashboardDataService {
       selectedCategory: this.selectedFineCategory(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        rankingNoData: this.i18n.t('CHARTS.FINES_COMPOSITION.NO_DATA'),
+        rankingSeriesName: this.i18n.t('CHARTS.FINES_COMPOSITION.RANKING_SERIES'),
+        driverText: this.i18n.t('CHARTS.DRILLDOWN_MODAL.COL_DRIVER'),
+        vehicleText: this.i18n.t('CHARTS.DRILLDOWN_MODAL.COL_VEHICLE'),
+        reasonText: this.i18n.t('CHARTS.FINES_COMPOSITION.REASON'),
+        issuedDateText: this.i18n.t('CHARTS.FINES_COMPOSITION.ISSUED_DATE'),
+        unassignedText: this.i18n.t('CHARTS.DRILLDOWN_MODAL.UNASSIGNED'),
+      },
     });
   });
 
@@ -129,16 +179,52 @@ export class DashboardDataService {
       data: this.taskFunnel(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        noData: this.i18n.t('CHARTS.TASK_FUNNEL.NO_DATA'),
+        seriesName: this.i18n.t('CHARTS.TASK_FUNNEL.SERIES_NAME'),
+        stageCountText: this.i18n.t('CHARTS.TASK_FUNNEL.STAGE_COUNT'),
+        prevConversionText: this.i18n.t('CHARTS.TASK_FUNNEL.PREV_CONVERSION'),
+        overallConversionText: this.i18n.t('CHARTS.TASK_FUNNEL.OVERALL_CONVERSION'),
+        avgDurationText: this.i18n.t('CHARTS.TASK_FUNNEL.AVG_DURATION'),
+        conversionLabelText: this.i18n.t('CHARTS.TASK_FUNNEL.CONVERSION_LABEL'),
+        avgStayLabelText: this.i18n.t('CHARTS.TASK_FUNNEL.AVG_STAY_LABEL'),
+        tasksCountUnit: this.i18n.t('CHARTS.TASK_FUNNEL.TASKS_COUNT'),
+        formatDurationFn: (mins: number) => {
+          if (mins < 1) return this.i18n.t('CHARTS.COMMON.MINUTES', { count: '<1' });
+          if (mins < 60) return this.i18n.t('CHARTS.COMMON.MINUTES', { count: Math.round(mins) });
+          const hrs = Math.floor(mins / 60);
+          const rMins = Math.round(mins % 60);
+          return rMins > 0
+            ? this.i18n.t('CHARTS.COMMON.HOURS_MINUTES', { hours: hrs, mins: rMins })
+            : this.i18n.t('CHARTS.COMMON.HOURS', { hours: hrs });
+        },
+      },
     });
   });
 
   readonly payrollComparisonOptions = computed(() => {
     return buildPayrollComparisonOptions({
       data: this.payrollComparison(),
-      currentPeriodLabel: this.currentPeriodLabel(),
-      previousPeriodLabel: this.previousPeriodLabel(),
+      currentPeriodLabel: this.currentPeriodLabel().startsWith('CHARTS.') ? this.i18n.t(this.currentPeriodLabel()) : this.currentPeriodLabel(),
+      previousPeriodLabel: this.previousPeriodLabel().startsWith('CHARTS.') ? this.i18n.t(this.previousPeriodLabel()) : this.previousPeriodLabel(),
       theme: this.theme(),
       isMobile: this.isMobile(),
+      labels: {
+        noData: this.i18n.t('CHARTS.PAYROLL_COMPARISON.NO_DATA'),
+        currentPeriod: this.i18n.t('CHARTS.PAYROLL_COMPARISON.CURRENT_PERIOD'),
+        previousPeriod: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREVIOUS_PERIOD'),
+        regularPay: this.i18n.t('CHARTS.PAYROLL_COMPARISON.REGULAR_PAY'),
+        overtimePay: this.i18n.t('CHARTS.PAYROLL_COMPARISON.OVERTIME_PAY'),
+        holidayPay: this.i18n.t('CHARTS.PAYROLL_COMPARISON.HOLIDAY_PAY'),
+        currRegular: this.i18n.t('CHARTS.PAYROLL_COMPARISON.CURR_REGULAR'),
+        currOvertime: this.i18n.t('CHARTS.PAYROLL_COMPARISON.CURR_OVERTIME'),
+        currHoliday: this.i18n.t('CHARTS.PAYROLL_COMPARISON.CURR_HOLIDAY'),
+        prevRegular: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREV_REGULAR'),
+        prevOvertime: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREV_OVERTIME'),
+        prevHoliday: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREV_HOLIDAY'),
+        diffChange: this.i18n.t('CHARTS.PAYROLL_COMPARISON.DIFF_CHANGE'),
+        grossPayAxis: this.i18n.t('CHARTS.PAYROLL_COMPARISON.GROSS_PAY_AXIS'),
+      },
     });
   });
 
@@ -166,27 +252,27 @@ export class DashboardDataService {
     forkJoin({
       vehiclesRes: this.api.getVehicles({ pageSize: 100 }).pipe(
         catchError(err => {
-          throw new Error(`加载车辆数据失败: ${err.message || err.statusText}`);
+          throw new Error(`Failed to load vehicles: ${err.message || err.statusText}`);
         })
       ),
       tasksRes: this.api.getJobTasks({ pageSize: 1000 }).pipe(
         catchError(err => {
-          throw new Error(`加载任务数据失败: ${err.message || err.statusText}`);
+          throw new Error(`Failed to load tasks: ${err.message || err.statusText}`);
         })
       ),
       timesheetsRes: this.api.getTimesheets({ pageSize: 1000 }).pipe(
         catchError(err => {
-          throw new Error(`加载工时打卡数据失败: ${err.message || err.statusText}`);
+          throw new Error(`Failed to load timesheets: ${err.message || err.statusText}`);
         })
       ),
       finesRes: this.api.getFines({ pageSize: 500 }).pipe(
         catchError(err => {
-          throw new Error(`加载交通罚单数据失败: ${err.message || err.statusText}`);
+          throw new Error(`Failed to load fines: ${err.message || err.statusText}`);
         })
       ),
       periodsRes: this.api.getPayPeriods({ pageSize: 10 }).pipe(
         catchError(err => {
-          throw new Error(`加载薪资周期数据失败: ${err.message || err.statusText}`);
+          throw new Error(`Failed to load pay periods: ${err.message || err.statusText}`);
         })
       ),
     }).subscribe({
@@ -222,7 +308,7 @@ export class DashboardDataService {
               this.loading.set(false);
             },
             error: err => {
-              this.error.set(err.message || '加载工资单明细失败');
+              this.error.set(err.message || 'DASHBOARD.ERRORS.LOAD_FAILED');
               this.loading.set(false);
             },
           });
@@ -239,7 +325,7 @@ export class DashboardDataService {
         }
       },
       error: err => {
-        this.error.set(err.message || '网络请求失败，请检查服务连接状态');
+        this.error.set(err.message || 'DASHBOARD.ERRORS.NETWORK_FAILED');
         this.loading.set(false);
       },
     });
@@ -282,10 +368,10 @@ export class DashboardDataService {
     this.payrollComparison.set(payrollData);
 
     if (currentPeriod) {
-      this.currentPeriodLabel.set(`本期 (${currentPeriod.startsOn} ~ ${currentPeriod.endsOn})`);
+      this.currentPeriodLabel.set(`${currentPeriod.startsOn} ~ ${currentPeriod.endsOn}`);
     }
     if (previousPeriod) {
-      this.previousPeriodLabel.set(`上期 (${previousPeriod.startsOn} ~ ${previousPeriod.endsOn})`);
+      this.previousPeriodLabel.set(`${previousPeriod.startsOn} ~ ${previousPeriod.endsOn}`);
     }
 
     if (typeof performance !== 'undefined' && performance.mark && performance.measure) {
@@ -327,7 +413,6 @@ export class DashboardDataService {
     // Generate 30 days series up to current date
     const fleetData: FleetUtilizationItem[] = [];
     const baseDate = new Date();
-    // Default 30 days window
     for (let i = 29; i >= 0; i--) {
       const d = new Date(baseDate);
       d.setDate(d.getDate() - i);
@@ -421,7 +506,6 @@ export class DashboardDataService {
             odometerKm: r.readingKm,
           }))
         : [
-            // Generate historical trend points leading up to current odometer
             { date: '2026-08-01', odometerKm: Math.max(0, v.odometerKm - 2400) },
             { date: '2026-08-10', odometerKm: Math.max(0, v.odometerKm - 1600) },
             { date: '2026-08-20', odometerKm: Math.max(0, v.odometerKm - 750) },
@@ -450,7 +534,7 @@ export class DashboardDataService {
     const totalAllAmount = fines.reduce((sum, f) => sum + f.amount, 0);
 
     fines.forEach(f => {
-      const cat = f.reason || '其他违章';
+      const cat = f.reason || 'Other';
       const existing = catMap.get(cat) || { count: 0, totalAmount: 0 };
       catMap.set(cat, {
         count: existing.count + 1,
@@ -468,9 +552,9 @@ export class DashboardDataService {
     const rankings: FineRankingItem[] = fines.map(f => ({
       id: f.id,
       reference: f.reference,
-      category: f.reason || '其他违章',
-      vehicleRego: f.vehicleRego || '未知车辆',
-      driverName: f.driverName || '未指定',
+      category: f.reason || 'Other',
+      vehicleRego: f.vehicleRego || '-',
+      driverName: f.driverName || '',
       amount: f.amount,
       issuedOn: f.issuedOn || '',
     }));
@@ -495,11 +579,10 @@ export class DashboardDataService {
       Completed: completedTasks.length || Math.floor(totalCreated * 0.76),
     };
 
-    // Calculate durations in minutes
     const stages: TaskFunnelStageData[] = [
       {
         stage: 'Draft',
-        stageName: '已创建',
+        stageName: this.i18n.t('CHARTS.TASK_FUNNEL.STAGES.DRAFT'),
         count: counts.Draft,
         conversionRate: 100.0,
         overallConversionRate: 100.0,
@@ -507,7 +590,7 @@ export class DashboardDataService {
       },
       {
         stage: 'Assigned',
-        stageName: '已指派',
+        stageName: this.i18n.t('CHARTS.TASK_FUNNEL.STAGES.ASSIGNED'),
         count: counts.Assigned,
         conversionRate: counts.Draft > 0 ? (counts.Assigned / counts.Draft) * 100 : 0,
         overallConversionRate: counts.Draft > 0 ? (counts.Assigned / counts.Draft) * 100 : 0,
@@ -515,7 +598,7 @@ export class DashboardDataService {
       },
       {
         stage: 'Acknowledged',
-        stageName: '已确认',
+        stageName: this.i18n.t('CHARTS.TASK_FUNNEL.STAGES.ACKNOWLEDGED'),
         count: counts.Acknowledged,
         conversionRate: counts.Assigned > 0 ? (counts.Acknowledged / counts.Assigned) * 100 : 0,
         overallConversionRate: counts.Draft > 0 ? (counts.Acknowledged / counts.Draft) * 100 : 0,
@@ -523,7 +606,7 @@ export class DashboardDataService {
       },
       {
         stage: 'InProgress',
-        stageName: '进行中',
+        stageName: this.i18n.t('CHARTS.TASK_FUNNEL.STAGES.IN_PROGRESS'),
         count: counts.InProgress,
         conversionRate: counts.Acknowledged > 0 ? (counts.InProgress / counts.Acknowledged) * 100 : 0,
         overallConversionRate: counts.Draft > 0 ? (counts.InProgress / counts.Draft) * 100 : 0,
@@ -531,7 +614,7 @@ export class DashboardDataService {
       },
       {
         stage: 'Completed',
-        stageName: '已完成',
+        stageName: this.i18n.t('CHARTS.TASK_FUNNEL.STAGES.COMPLETED'),
         count: counts.Completed,
         conversionRate: counts.InProgress > 0 ? (counts.Completed / counts.InProgress) * 100 : 0,
         overallConversionRate: counts.Draft > 0 ? (counts.Completed / counts.Draft) * 100 : 0,
@@ -546,7 +629,6 @@ export class DashboardDataService {
     const prevMap = new Map<string, PayslipDto>();
     previous.forEach(p => prevMap.set(p.driverId, p));
 
-    // Combine drivers from both periods
     const driverIdSet = new Set<string>();
     current.forEach(p => driverIdSet.add(p.driverId));
     previous.forEach(p => driverIdSet.add(p.driverId));
@@ -557,7 +639,7 @@ export class DashboardDataService {
       const cur = current.find(p => p.driverId === driverId);
       const prev = prevMap.get(driverId);
 
-      const driverName = cur?.driverName || prev?.driverName || '未知司机';
+      const driverName = cur?.driverName || prev?.driverName || 'Driver';
       const employeeNo = cur?.employeeNo || prev?.employeeNo || 'EMP';
 
       const curRegHours = cur?.regularHours || 0;
@@ -565,7 +647,6 @@ export class DashboardDataService {
       const curHolHours = cur?.holidayHours || 0;
       const curGross = cur?.grossPay || 0;
 
-      // Estimate breakdown if exact sub-wage not itemized
       const curRegPay = curGross > 0 ? Math.round(curGross * (curRegHours / Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2))) : 0;
       const curOtPay = curGross > 0 ? Math.round(curGross * ((curOtHours * 1.5) / Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2))) : 0;
       const curHolPay = Math.max(0, curGross - curRegPay - curOtPay);

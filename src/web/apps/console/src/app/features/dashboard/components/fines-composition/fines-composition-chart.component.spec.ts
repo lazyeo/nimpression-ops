@@ -29,12 +29,12 @@ describe('FinesCompositionChartComponent', () => {
       selected = cat;
     });
 
-    component.onDoughnutClick({ name: '超速' } as any);
-    expect(selected).toBe('超速');
+    component.onDoughnutClick({ name: 'Speeding' } as any);
+    expect(selected).toBe('Speeding');
   });
 
   it('should clear category filter when clear button is clicked', () => {
-    fixture.componentRef.setInput('selectedCategory', '超速');
+    fixture.componentRef.setInput('selectedCategory', 'Speeding');
     fixture.detectChanges();
 
     let selected: string | null = 'init';

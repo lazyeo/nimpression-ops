@@ -55,7 +55,7 @@ describe('PayrollComparisonOptions Pure Function (F14.6)', () => {
   it('should return empty state when data is empty', () => {
     const opt = buildPayrollComparisonOptions({ data: [] });
     expect(opt.title).toBeDefined();
-    expect((opt.title as { text: string }).text).toContain('暂无薪资对比数据');
+    expect((opt.title as { text: string }).text).toContain('No payroll comparison data available');
   });
 
   it('should generate 6 series partitioned into two stack groups (current and previous)', () => {
@@ -65,28 +65,28 @@ describe('PayrollComparisonOptions Pure Function (F14.6)', () => {
     expect(series).toHaveLength(6);
 
     // Current period stack
-    expect(series[0].name).toBe('本期-普通');
+    expect(series[0].name).toBe('Current - Regular');
     expect(series[0].stack).toBe('current');
     expect(series[0].data).toEqual([2000, 2200]);
 
-    expect(series[1].name).toBe('本期-加班');
+    expect(series[1].name).toBe('Current - Overtime');
     expect(series[1].stack).toBe('current');
     expect(series[1].data).toEqual([450, 600]);
 
-    expect(series[2].name).toBe('本期-假期');
+    expect(series[2].name).toBe('Current - Holiday');
     expect(series[2].stack).toBe('current');
     expect(series[2].data).toEqual([200, 0]);
 
     // Previous period stack
-    expect(series[3].name).toBe('上期-普通');
+    expect(series[3].name).toBe('Previous - Regular');
     expect(series[3].stack).toBe('previous');
     expect(series[3].data).toEqual([1900, 2100]);
 
-    expect(series[4].name).toBe('上期-加班');
+    expect(series[4].name).toBe('Previous - Overtime');
     expect(series[4].stack).toBe('previous');
     expect(series[4].data).toEqual([300, 750]);
 
-    expect(series[5].name).toBe('上期-假期');
+    expect(series[5].name).toBe('Previous - Holiday');
     expect(series[5].stack).toBe('previous');
     expect(series[5].data).toEqual([0, 150]);
   });
@@ -100,11 +100,11 @@ describe('PayrollComparisonOptions Pure Function (F14.6)', () => {
     const tooltip = opt.tooltip as { formatter: (p: unknown) => string };
 
     const formatted = tooltip.formatter([{ dataIndex: 0 }]); // Dave Smith
-    expect(formatted).toContain('Dave Smith (EMP-001) — 薪资对比');
-    expect(formatted).toContain('2026-08-11 ~ 08-24 (总计: $2,650)');
-    expect(formatted).toContain('2026-07-28 ~ 08-10 (总计: $2,200)');
-    expect(formatted).toContain('普通工时: $2,000 (80h)');
-    expect(formatted).toContain('加班工时: $450 (12h)');
-    expect(formatted).toContain('环比变动: +$450 (+20.5%)');
+    expect(formatted).toContain('Dave Smith (EMP-001) — Payroll Comparison');
+    expect(formatted).toContain('2026-08-11 ~ 08-24 ($2,650)');
+    expect(formatted).toContain('2026-07-28 ~ 08-10 ($2,200)');
+    expect(formatted).toContain('Regular: $2,000 (80h)');
+    expect(formatted).toContain('Overtime: $450 (12h)');
+    expect(formatted).toContain('Period Change: +$450 (+20.5%)');
   });
 });

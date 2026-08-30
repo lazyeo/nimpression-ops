@@ -12,7 +12,7 @@ describe('TimesheetHeatmapOptions Pure Function (F14.2)', () => {
   it('should return empty state when data is empty', () => {
     const opt = buildTimesheetHeatmapOptions({ data: [] });
     expect(opt.title).toBeDefined();
-    expect((opt.title as { text: string }).text).toContain('暂无工时热力图数据');
+    expect((opt.title as { text: string }).text).toContain('No timesheet heatmap data available');
   });
 
   it('should construct 7 weekdays yAxis and 24 hours xAxis', () => {
@@ -35,17 +35,25 @@ describe('TimesheetHeatmapOptions Pure Function (F14.2)', () => {
   });
 
   it('should format tooltip showing driver count, total hours, and overtime warning', () => {
-    const opt = buildTimesheetHeatmapOptions({ data: mockData });
+    const opt = buildTimesheetHeatmapOptions({
+      data: mockData,
+      labels: {
+        activeDrivers: 'Active Drivers',
+        totalHours: 'Total Hours',
+        peakOvertime: 'Peak Overtime Cluster',
+        weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      },
+    });
     const tooltip = opt.tooltip as { formatter: (p: unknown) => string };
 
     const formatted = tooltip.formatter({
       value: [19, 0, 14.0, 6, 1],
     });
 
-    expect(formatted).toContain('周一 19:00 - 20:00');
-    expect(formatted).toContain('活跃司机数: <strong>6</strong> 人');
-    expect(formatted).toContain('累计总工时: <strong>14</strong> 小时');
-    expect(formatted).toContain('加班聚集时段');
+    expect(formatted).toContain('Mon 19:00 - 20:00');
+    expect(formatted).toContain('Active Drivers: <strong>6</strong>');
+    expect(formatted).toContain('Total Hours: <strong>14 h</strong>');
+    expect(formatted).toContain('Peak Overtime Cluster');
   });
 
   it('should dynamically configure visualMap range and colors based on theme', () => {

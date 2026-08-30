@@ -3,14 +3,14 @@
     <div class="header-text">
       <div class="title-row">
         <span class="badge-tag">F14.6</span>
-        <h3 class="card-title">薪资对比分析</h3>
-        <span class="period-pill">{{ currentPeriodLabel() }} vs {{ previousPeriodLabel() }}</span>
+        <h3 class="card-title">{{ 'CHARTS.PAYROLL_COMPARISON.TITLE' | i18n }}</h3>
+        <span class="period-pill">{{ (currentPeriodLabel() | i18n) }} vs {{ (previousPeriodLabel() | i18n) }}</span>
       </div>
-      <p class="card-subtitle">本薪期 vs 上薪期按司机分组，含普通 / 加班 / 假期工时三段堆叠构成</p>
+      <p class="card-subtitle">{{ 'CHARTS.PAYROLL_COMPARISON.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportPng()" title="导出 PNG 图表">
-        📷 导出 PNG
+      <button type="button" class="btn-action-icon" (click)="exportPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
+        📷 {{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}
       </button>
     </div>
   </div>

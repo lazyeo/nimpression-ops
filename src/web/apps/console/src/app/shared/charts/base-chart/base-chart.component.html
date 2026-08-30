@@ -6,14 +6,14 @@
   } @else if (error()) {
     <div class="state-overlay error-state">
       <div class="error-icon">⚠️</div>
-      <div class="error-title">图表加载失败</div>
+      <div class="error-title">{{ 'CHARTS.COMMON.ERROR' | i18n }}</div>
       <div class="error-message">{{ error() }}</div>
-      <button type="button" class="btn-retry" (click)="onRetry()">重新加载</button>
+      <button type="button" class="btn-retry" (click)="onRetry()">{{ 'CHARTS.COMMON.RETRY' | i18n }}</button>
     </div>
   } @else if (isEmpty() || !options()) {
     <div class="state-overlay empty-state">
       <div class="empty-icon">📊</div>
-      <div class="empty-text">{{ emptyText() }}</div>
+      <div class="empty-text">{{ (emptyText() || 'CHARTS.COMMON.NO_DATA') | i18n }}</div>
     </div>
   } @else {
     <div

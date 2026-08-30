@@ -35,7 +35,7 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
   it('should return empty state when data is empty', () => {
     const opt = buildOdometerTrendOptions({ data: [] });
     expect(opt.title).toBeDefined();
-    expect((opt.title as { text: string }).text).toContain('暂无里程趋势数据');
+    expect((opt.title as { text: string }).text).toContain('No odometer trend data available');
   });
 
   it('should create multi-series line chart with accessible symbols and line types', () => {
@@ -66,7 +66,7 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
 
     const v1Series = series[0];
     expect(v1Series.markPoint.data).toHaveLength(1);
-    expect(v1Series.markPoint.data[0].name).toBe('保养超期点');
+    expect(v1Series.markPoint.data[0].name).toBe('Overdue');
     expect(v1Series.markPoint.data[0].coord).toEqual(['2026-08-20', 50200]);
     expect(v1Series.markPoint.data[0].itemStyle.color).toBe(SEMANTIC_COLORS.danger);
 
@@ -88,7 +88,13 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
   });
 
   it('should format tooltip with mileage and maintenance alert tag', () => {
-    const opt = buildOdometerTrendOptions({ data: mockData });
+    const opt = buildOdometerTrendOptions({
+      data: mockData,
+      labels: {
+        dueForService: 'Due for Service',
+        odometerRecordTitle: 'Mileage Record',
+      },
+    });
     const tooltip = opt.tooltip as { formatter: (params: unknown) => string };
 
     const formatted = tooltip.formatter([
@@ -96,8 +102,8 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
       { seriesName: 'XYZ789', value: ['2026-08-20', 29000], color: '#E69F00' },
     ]);
 
-    expect(formatted).toContain('2026-08-20 车辆里程记录');
+    expect(formatted).toContain('2026-08-20 Mileage Record');
     expect(formatted).toContain('50,200 km');
-    expect(formatted).toContain('(需保养)');
+    expect(formatted).toContain('(Due for Service)');
   });
 });

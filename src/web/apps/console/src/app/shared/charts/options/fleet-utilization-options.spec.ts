@@ -12,7 +12,7 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
   it('should return empty state title when data is empty', () => {
     const option = buildFleetUtilizationOptions({ data: [] });
     expect(option.title).toBeDefined();
-    expect((option.title as { text: string }).text).toContain('暂无车队利用率数据');
+    expect((option.title as { text: string }).text).toContain('No fleet utilization data available');
   });
 
   it('should generate 3 stacked bar series with Okabe-Ito semantic colors', () => {
@@ -20,17 +20,17 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
     expect(option.series).toHaveLength(3);
     const series = option.series as Array<{ name: string; type: string; stack: string; data: number[]; itemStyle?: { color: string } }>;
     
-    expect(series[0].name).toBe('在途车辆');
+    expect(series[0].name).toBe('In Transit');
     expect(series[0].stack).toBe('vehicles');
     expect(series[0].data).toEqual([7, 8, 5]);
     expect(series[0].itemStyle?.color).toBe(SEMANTIC_COLORS.inTransit);
 
-    expect(series[1].name).toBe('闲置车辆');
+    expect(series[1].name).toBe('Idle');
     expect(series[1].stack).toBe('vehicles');
     expect(series[1].data).toEqual([3, 2, 4]);
     expect(series[1].itemStyle?.color).toBe(SEMANTIC_COLORS.idle);
 
-    expect(series[2].name).toBe('维修车辆');
+    expect(series[2].name).toBe('Under Maintenance');
     expect(series[2].stack).toBe('vehicles');
     expect(series[2].data).toEqual([1, 1, 2]);
     expect(series[2].itemStyle?.color).toBe(SEMANTIC_COLORS.maintenance);
@@ -60,18 +60,25 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
     expect(desktopX.axisLabel.rotate).toBe(0);
   });
 
-  it('should include drilldown tooltip formatter', () => {
-    const option = buildFleetUtilizationOptions({ data: mockData });
+  it('should include drilldown tooltip formatter and support custom labels', () => {
+    const option = buildFleetUtilizationOptions({
+      data: mockData,
+      labels: {
+        statusTitle: 'Fleet Status',
+        tasksCount: 'Tasks',
+        drilldownHint: 'Click bar to drill down',
+      },
+    });
     const tooltip = option.tooltip as { formatter: (params: unknown) => string };
     expect(typeof tooltip.formatter).toBe('function');
 
     const formatted = tooltip.formatter([
-      { name: '2026-08-01', seriesName: '在途车辆', value: 7, color: '#0072B2', dataIndex: 0 },
-      { name: '2026-08-01', seriesName: '闲置车辆', value: 3, color: '#56B4E9', dataIndex: 0 },
-      { name: '2026-08-01', seriesName: '维修车辆', value: 1, color: '#D55E00', dataIndex: 0 },
+      { name: '2026-08-01', seriesName: 'In Transit', value: 7, color: '#0072B2', dataIndex: 0 },
+      { name: '2026-08-01', seriesName: 'Idle', value: 3, color: '#56B4E9', dataIndex: 0 },
+      { name: '2026-08-01', seriesName: 'Under Maintenance', value: 1, color: '#D55E00', dataIndex: 0 },
     ]);
-    expect(formatted).toContain('2026-08-01 车队状态');
-    expect(formatted).toContain('当日任务数: <strong>14</strong>');
-    expect(formatted).toContain('点击柱子下钻');
+    expect(formatted).toContain('2026-08-01 Fleet Status');
+    expect(formatted).toContain('Tasks: <strong>14</strong>');
+    expect(formatted).toContain('Click bar to drill down');
   });
 });

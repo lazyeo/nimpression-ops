@@ -16,22 +16,38 @@ export interface VehicleOdometerSeriesData {
   isDueForService: boolean;
 }
 
+export interface OdometerTrendLabels {
+  noData?: string;
+  dueForService?: string;
+  maintenanceThresholdLine?: string;
+  odometerAxis?: string;
+  odometerRecordTitle?: string;
+  overduePointName?: string;
+}
+
 export interface OdometerTrendOptionsParams {
   data: VehicleOdometerSeriesData[];
   theme?: ChartThemeConfig;
   isMobile?: boolean;
+  labels?: OdometerTrendLabels;
 }
 
 /**
  * Pure function to construct ECharts options for F14.3 Odometer Trend (Multi-series Line + Maintenance Threshold).
  */
 export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): EChartsOption {
-  const { data, theme = LIGHT_THEME, isMobile = false } = params;
+  const { data, theme = LIGHT_THEME, isMobile = false, labels = {} } = params;
+
+  const noDataText = labels.noData || 'No odometer trend data available';
+  const dueForServiceText = labels.dueForService || 'Due for Service';
+  const odometerAxisText = labels.odometerAxis || 'Cumulative Mileage (km)';
+  const odometerRecordTitleText = labels.odometerRecordTitle || 'Mileage Record';
+  const overduePointNameText = labels.overduePointName || 'Overdue';
 
   if (!data || data.length === 0) {
     return {
       title: {
-        text: '暂无里程趋势数据',
+        text: noDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -76,9 +92,9 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
         // Check if odometer exceeds maintenance threshold
         if (km >= vehicle.maintenanceThresholdKm) {
           markPointData.push({
-            name: '保养超期点',
+            name: overduePointNameText,
             coord: [date, km],
-            value: '超期',
+            value: overduePointNameText,
             itemStyle: {
               color: SEMANTIC_COLORS.danger, // #D55E00
             },
@@ -96,7 +112,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
     const markLineData = vehicle.maintenanceThresholdKm > 0
       ? [
           {
-            name: `${vehicle.rego} 保养阈值`,
+            name: `${vehicle.rego}`,
             yAxis: vehicle.maintenanceThresholdKm,
             lineStyle: {
               color: SEMANTIC_COLORS.danger,
@@ -104,7 +120,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
               width: 1.5,
             },
             label: {
-              formatter: isMobile ? '{b}' : `${vehicle.rego} 保养线 ({c} km)`,
+              formatter: isMobile ? '{b}' : `${vehicle.rego} (${vehicle.maintenanceThresholdKm} km)`,
               position: 'insideEndTop' as const,
               color: SEMANTIC_COLORS.danger,
               fontSize: 10,
@@ -158,7 +174,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
         }>;
         if (!items || items.length === 0) return '';
         const date = items[0].value[0];
-        let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">${date} 车辆里程记录</div>`;
+        let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">${date} ${odometerRecordTitleText}</div>`;
 
         items.forEach(it => {
           const rego = it.seriesName;
@@ -170,7 +186,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
           html += `
             <div style="display:flex;justify-content:space-between;align-items:center;margin:3px 0;gap:16px;">
               <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${it.color};margin-right:6px;"></span>${rego}</span>
-              <span style="font-weight:600;">${km.toLocaleString()} km ${isOver ? '<span style="color:#D55E00;font-size:11px;">(需保养)</span>' : ''}</span>
+              <span style="font-weight:600;">${km.toLocaleString()} km ${isOver ? `<span style="color:#D55E00;font-size:11px;">(${dueForServiceText})</span>` : ''}</span>
             </div>
           `;
         });
@@ -210,7 +226,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
     },
     yAxis: {
       type: 'value',
-      name: '累计里程 (km)',
+      name: odometerAxisText,
       nameTextStyle: {
         color: theme.textSecondaryColor,
         fontSize: 11,

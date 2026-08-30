@@ -3,22 +3,22 @@
     <div class="header-text">
       <div class="title-row">
         <span class="badge-tag">F14.4</span>
-        <h3 class="card-title">交通罚单构成与金额排行</h3>
+        <h3 class="card-title">{{ 'CHARTS.FINES_COMPOSITION.TITLE' | i18n }}</h3>
         @if (selectedCategory()) {
           <span class="active-filter-badge">
-            已筛选: <strong>{{ selectedCategory() }}</strong>
-            <button type="button" class="btn-clear-tag" (click)="clearFilter()" title="清除筛选">✕</button>
+            {{ 'CHARTS.FINES_COMPOSITION.FILTERED_BY' | i18n: { category: selectedCategory()! } }}
+            <button type="button" class="btn-clear-tag" (click)="clearFilter()" [title]="'CHARTS.FINES_COMPOSITION.CLEAR_FILTER' | i18n">✕</button>
           </span>
         }
       </div>
-      <p class="card-subtitle">环形图违章原因分类占比 ↔ 右侧金额排行条形图（点击环形扇区联动筛选）</p>
+      <p class="card-subtitle">{{ 'CHARTS.FINES_COMPOSITION.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportDoughnutPng()" title="导出环形图">
-        📷 环形图
+      <button type="button" class="btn-action-icon" (click)="exportDoughnutPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
+        📷 {{ 'CHARTS.FINES_COMPOSITION.EXPORT_DOUGHNUT' | i18n }}
       </button>
-      <button type="button" class="btn-action-icon" (click)="exportRankingPng()" title="导出排行图">
-        📷 排行图
+      <button type="button" class="btn-action-icon" (click)="exportRankingPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
+        📷 {{ 'CHARTS.FINES_COMPOSITION.EXPORT_RANKING' | i18n }}
       </button>
     </div>
   </div>

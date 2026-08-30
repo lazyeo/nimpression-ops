@@ -19,12 +19,31 @@ export interface DriverPayrollComparisonItem {
   previousPeriod: DriverPayrollPeriodBreakdown;
 }
 
+export interface PayrollComparisonLabels {
+  noData?: string;
+  currentPeriod?: string;
+  previousPeriod?: string;
+  regularPay?: string;
+  overtimePay?: string;
+  holidayPay?: string;
+  currRegular?: string;
+  currOvertime?: string;
+  currHoliday?: string;
+  prevRegular?: string;
+  prevOvertime?: string;
+  prevHoliday?: string;
+  diffChange?: string;
+  grossPayAxis?: string;
+  comparisonTitleSuffix?: string;
+}
+
 export interface PayrollComparisonOptionsParams {
   data: DriverPayrollComparisonItem[];
   currentPeriodLabel?: string;   // e.g. '2026-08-11 ~ 08-24'
   previousPeriodLabel?: string;  // e.g. '2026-07-28 ~ 08-10'
   theme?: ChartThemeConfig;
   isMobile?: boolean;
+  labels?: PayrollComparisonLabels;
 }
 
 /**
@@ -33,16 +52,33 @@ export interface PayrollComparisonOptionsParams {
 export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsParams): EChartsOption {
   const {
     data,
-    currentPeriodLabel = '本薪期',
-    previousPeriodLabel = '上薪期',
+    currentPeriodLabel,
+    previousPeriodLabel,
     theme = LIGHT_THEME,
     isMobile = false,
+    labels = {},
   } = params;
+
+  const noDataText = labels.noData || 'No payroll comparison data available';
+  const currLabel = currentPeriodLabel || labels.currentPeriod || 'Current Period';
+  const prevLabel = previousPeriodLabel || labels.previousPeriod || 'Previous Period';
+  const regularPayLabel = labels.regularPay || 'Regular';
+  const overtimePayLabel = labels.overtimePay || 'Overtime';
+  const holidayPayLabel = labels.holidayPay || 'Holiday';
+  const currRegularName = labels.currRegular || 'Current - Regular';
+  const currOvertimeName = labels.currOvertime || 'Current - Overtime';
+  const currHolidayName = labels.currHoliday || 'Current - Holiday';
+  const prevRegularName = labels.prevRegular || 'Previous - Regular';
+  const prevOvertimeName = labels.prevOvertime || 'Previous - Overtime';
+  const prevHolidayName = labels.prevHoliday || 'Previous - Holiday';
+  const diffChangeLabel = labels.diffChange || 'Period Change';
+  const grossPayAxisText = labels.grossPayAxis || 'Gross Pay ($)';
+  const compSuffix = labels.comparisonTitleSuffix || 'Payroll Comparison';
 
   if (!data || data.length === 0) {
     return {
       title: {
-        text: '暂无薪资对比数据',
+        text: noDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -66,8 +102,6 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
   const prevHoliday = data.map(d => d.previousPeriod.holidayPay);
 
   // Distinct Okabe-Ito colors:
-  // Current: Saturated solid colors
-  // Previous: Lighter tints or distinct patterns
   const colors = {
     currRegular: OKABE_ITO_PALETTE.blue,          // #0072B2
     currOvertime: OKABE_ITO_PALETTE.orange,       // #E69F00
@@ -105,33 +139,33 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
 
         return `
           <div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">
-            ${item.driverName} (${item.employeeNo}) — 薪资对比
+            ${item.driverName} (${item.employeeNo}) — ${compSuffix}
           </div>
           
           <div style="margin-bottom:6px;">
-            <div style="font-weight:600;color:${OKABE_ITO_PALETTE.skyBlue};">📅 ${currentPeriodLabel} (总计: $${currTotal.toLocaleString()})</div>
-            <div style="font-size:12px;padding-left:8px;">• 普通工时: $${item.currentPeriod.regularPay.toLocaleString()} (${item.currentPeriod.regularHours}h)</div>
-            <div style="font-size:12px;padding-left:8px;">• 加班工时: $${item.currentPeriod.overtimePay.toLocaleString()} (${item.currentPeriod.overtimeHours}h)</div>
-            <div style="font-size:12px;padding-left:8px;">• 假期工时: $${item.currentPeriod.holidayPay.toLocaleString()} (${item.currentPeriod.holidayHours}h)</div>
+            <div style="font-weight:600;color:${OKABE_ITO_PALETTE.skyBlue};">📅 ${currLabel} ($${currTotal.toLocaleString()})</div>
+            <div style="font-size:12px;padding-left:8px;">• ${regularPayLabel}: $${item.currentPeriod.regularPay.toLocaleString()} (${item.currentPeriod.regularHours}h)</div>
+            <div style="font-size:12px;padding-left:8px;">• ${overtimePayLabel}: $${item.currentPeriod.overtimePay.toLocaleString()} (${item.currentPeriod.overtimeHours}h)</div>
+            <div style="font-size:12px;padding-left:8px;">• ${holidayPayLabel}: $${item.currentPeriod.holidayPay.toLocaleString()} (${item.currentPeriod.holidayHours}h)</div>
           </div>
 
           <div style="margin-bottom:6px;">
-            <div style="font-weight:600;color:${theme.textSecondaryColor};">📅 ${previousPeriodLabel} (总计: $${prevTotal.toLocaleString()})</div>
-            <div style="font-size:12px;padding-left:8px;">• 普通工时: $${item.previousPeriod.regularPay.toLocaleString()} (${item.previousPeriod.regularHours}h)</div>
-            <div style="font-size:12px;padding-left:8px;">• 加班工时: $${item.previousPeriod.overtimePay.toLocaleString()} (${item.previousPeriod.overtimeHours}h)</div>
-            <div style="font-size:12px;padding-left:8px;">• 假期工时: $${item.previousPeriod.holidayPay.toLocaleString()} (${item.previousPeriod.holidayHours}h)</div>
+            <div style="font-weight:600;color:${theme.textSecondaryColor};">📅 ${prevLabel} ($${prevTotal.toLocaleString()})</div>
+            <div style="font-size:12px;padding-left:8px;">• ${regularPayLabel}: $${item.previousPeriod.regularPay.toLocaleString()} (${item.previousPeriod.regularHours}h)</div>
+            <div style="font-size:12px;padding-left:8px;">• ${overtimePayLabel}: $${item.previousPeriod.overtimePay.toLocaleString()} (${item.previousPeriod.overtimeHours}h)</div>
+            <div style="font-size:12px;padding-left:8px;">• ${holidayPayLabel}: $${item.previousPeriod.holidayPay.toLocaleString()} (${item.previousPeriod.holidayHours}h)</div>
           </div>
 
           <div style="font-size:12px;border-top:1px dashed ${theme.tooltipBorderColor};padding-top:4px;color:${diff >= 0 ? OKABE_ITO_PALETTE.bluishGreen : OKABE_ITO_PALETTE.vermilion};font-weight:bold;">
-            环比变动: ${diffSign}$${diff.toLocaleString()} (${diffSign}${diffPercent}%)
+            ${diffChangeLabel}: ${diffSign}$${diff.toLocaleString()} (${diffSign}${diffPercent}%)
           </div>
         `;
       },
     },
     legend: {
       data: [
-        `本期-普通`, `本期-加班`, `本期-假期`,
-        `上期-普通`, `上期-加班`, `上期-假期`,
+        currRegularName, currOvertimeName, currHolidayName,
+        prevRegularName, prevOvertimeName, prevHolidayName,
       ],
       top: 6,
       textStyle: {
@@ -166,7 +200,7 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
     },
     yAxis: {
       type: 'value',
-      name: '税前薪资 ($)',
+      name: grossPayAxisText,
       nameTextStyle: {
         color: theme.textSecondaryColor,
         fontSize: 11,
@@ -189,9 +223,9 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
       },
     },
     series: [
-      // Stack 1: Current Period (本薪期)
+      // Stack 1: Current Period
       {
-        name: `本期-普通`,
+        name: currRegularName,
         type: 'bar',
         stack: 'current',
         barGap: '20%',
@@ -201,7 +235,7 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
         },
       },
       {
-        name: `本期-加班`,
+        name: currOvertimeName,
         type: 'bar',
         stack: 'current',
         data: currOvertime,
@@ -210,7 +244,7 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
         },
       },
       {
-        name: `本期-假期`,
+        name: currHolidayName,
         type: 'bar',
         stack: 'current',
         data: currHoliday,
@@ -220,9 +254,9 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
         },
       },
 
-      // Stack 2: Previous Period (上薪期)
+      // Stack 2: Previous Period
       {
-        name: `上期-普通`,
+        name: prevRegularName,
         type: 'bar',
         stack: 'previous',
         data: prevRegular,
@@ -234,7 +268,7 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
         },
       },
       {
-        name: `上期-加班`,
+        name: prevOvertimeName,
         type: 'bar',
         stack: 'previous',
         data: prevOvertime,
@@ -246,7 +280,7 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
         },
       },
       {
-        name: `上期-假期`,
+        name: prevHolidayName,
         type: 'bar',
         stack: 'previous',
         data: prevHoliday,

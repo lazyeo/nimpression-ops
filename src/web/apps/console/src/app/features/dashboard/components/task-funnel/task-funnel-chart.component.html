@@ -3,13 +3,13 @@
     <div class="header-text">
       <div class="title-row">
         <span class="badge-tag">F14.5</span>
-        <h3 class="card-title">任务流转漏斗</h3>
+        <h3 class="card-title">{{ 'CHARTS.TASK_FUNNEL.TITLE' | i18n }}</h3>
       </div>
-      <p class="card-subtitle">已创建 → 已指派 → 已确认 → 进行中 → 已完成全链路转化率与平均停留时长</p>
+      <p class="card-subtitle">{{ 'CHARTS.TASK_FUNNEL.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportPng()" title="导出 PNG 图表">
-        📷 导出 PNG
+      <button type="button" class="btn-action-icon" (click)="exportPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
+        📷 {{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}
       </button>
     </div>
   </div>

@@ -3,13 +3,13 @@
     <div class="header-text">
       <div class="title-row">
         <span class="badge-tag">F14.1</span>
-        <h3 class="card-title">车队利用率</h3>
+        <h3 class="card-title">{{ 'CHARTS.FLEET_UTILIZATION.TITLE' | i18n }}</h3>
       </div>
-      <p class="card-subtitle">近 30 天每日在途 / 闲置 / 维修车辆数分布（点击下钻查看当日任务）</p>
+      <p class="card-subtitle">{{ 'CHARTS.FLEET_UTILIZATION.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportPng()" title="导出 PNG 图表">
-        📷 导出 PNG
+      <button type="button" class="btn-action-icon" (click)="exportPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
+        📷 {{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}
       </button>
     </div>
   </div>
