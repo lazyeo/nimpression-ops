@@ -49,7 +49,8 @@ public class EmailLogConfiguration : IEntityTypeConfiguration<EmailLog>
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.HasIndex(el => el.CorrelationId);
+        builder.HasIndex(el => new { el.CorrelationId, el.ToAddress })
+            .IsUnique();
         builder.HasIndex(el => new { el.Status, el.SentAt });
     }
 }
