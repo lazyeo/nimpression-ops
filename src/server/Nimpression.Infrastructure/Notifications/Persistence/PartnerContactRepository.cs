@@ -3,13 +3,14 @@ using Nimpression.Application.Features.Notifications.Abstractions;
 using Nimpression.Application.Features.Notifications.DTOs;
 using Nimpression.Domain.Entities.Communications;
 using Nimpression.Domain.Enums;
+using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
 
 namespace Nimpression.Infrastructure.Notifications.Persistence;
 
 /// <summary>
-/// 外部伙伴联系人 EF Core 仓储实现（F11.1）。
-/// 列表查询均采用 Select 投影，消除实体映射开销与 N+1 问题。
+/// 外部合作伙伴联系人 EF Core 仓储实现（F11.1）。
+/// 列表查询采用 Select 投影，消除 N+1 与映射开销。
 /// </summary>
 public sealed class PartnerContactRepository(AppDbContext dbContext) : IPartnerContactRepository
 {
@@ -17,6 +18,12 @@ public sealed class PartnerContactRepository(AppDbContext dbContext) : IPartnerC
     {
         return await dbContext.PartnerContacts
             .FirstOrDefaultAsync(pc => pc.Id == id, cancellationToken);
+    }
+
+    public async Task<PartnerContact?> GetByEmailAsync(EmailAddress email, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.PartnerContacts
+            .FirstOrDefaultAsync(pc => pc.Email == email, cancellationToken);
     }
 
     public async Task<List<PartnerContact>> GetActiveByKindAsync(PartnerKind kind, CancellationToken cancellationToken = default)
@@ -43,16 +50,13 @@ public sealed class PartnerContactRepository(AppDbContext dbContext) : IPartnerC
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var search = $"%{filter.SearchTerm.Trim()}%";
-            query = query.Where(pc =>
-                EF.Functions.ILike(pc.CompanyName, search) ||
-                EF.Functions.ILike((string)(object)pc.Email, search));
+            query = query.Where(pc => EF.Functions.ILike(pc.CompanyName, search));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
-            .OrderBy(pc => pc.Kind)
-            .ThenBy(pc => pc.CompanyName)
+            .OrderBy(pc => pc.CompanyName)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Select(pc => new PartnerContactDto(

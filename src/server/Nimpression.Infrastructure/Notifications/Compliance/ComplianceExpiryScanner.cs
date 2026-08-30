@@ -6,20 +6,21 @@ using Nimpression.Application.Common.Results;
 using Nimpression.Application.Features.Notifications.Abstractions;
 using Nimpression.Application.Features.Notifications.Common;
 using Nimpression.Domain.Entities.Communications;
-using Nimpression.Domain.Entities.Vehicle;
 using Nimpression.Domain.Enums;
+using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Persistence;
 
 namespace Nimpression.Infrastructure.Notifications.Compliance;
 
 /// <summary>
-/// 车辆合规到期预警定时扫描器（F3.5 / F11）。
+/// 车辆合规到期预警扫描器实现（F3.5 &amp; F11.3 / F11.4）。
 /// <para>
-/// 核心特性：<br/>
-/// 1. <b>确定性时钟注入</b>：严格使用 <see cref="IDateTimeProvider.NzToday"/>，禁止依赖真实时钟，确保 30/14/7 天边界可精确测试。<br/>
-/// 2. <b>精确触发</b>：到期前 30/14/7 天各发一次，EmailLog 恰好 3 条。<br/>
-/// 3. <b>幂等不重复</b>：基于 CorrelationId 唯一判定，同一到期日重跑调度绝不产生第 4 条。<br/>
-/// 4. <b>伙伴状态过滤</b>：停用的联系人（Active=false）绝不发送邮件。
+/// <b>核心规则：</b><br/>
+/// 1. <b>基准时钟</b>：使用 <see cref="IDateTimeProvider.NzToday"/> 获取新西兰当前自然日。<br/>
+/// 2. <b>合规项与阈值</b>：每日扫描 WOF / COF / 保险到期日，精准匹配 30 天、14 天、7 天窗口。<br/>
+/// 3. <b>接收人过滤</b>：拉取活跃年检机构联系人（<see cref="PartnerKind.Inspection"/> 且 Active=true），停用联系人绝不发信。<br/>
+/// 4. <b>严格去重与幂等（F11.4）</b>：按固定 CorrelationId（如 CORR-WOF-{rego}-30DAY）发信，同一车同一阈值仅记录 1 条 Sent 日志。<br/>
+/// 5. <b>绝不静默降级</b>：发信异常记录于 EmailLog 追踪并重试。
 /// </para>
 /// </summary>
 public sealed partial class ComplianceExpiryScanner(
@@ -28,193 +29,149 @@ public sealed partial class ComplianceExpiryScanner(
     IDateTimeProvider dateTimeProvider,
     ILogger<ComplianceExpiryScanner> logger) : IComplianceExpiryScanner
 {
-    private static readonly int[] AlertThresholdDays = [30, 14, 7];
+    private static readonly int[] ThresholdDays = [30, 14, 7];
 
     public async Task<Result<int>> ScanAndNotifyAsync(CancellationToken cancellationToken = default)
     {
-        var today = dateTimeProvider.NzToday;
-        LogScanStarting(logger, today);
+        var nzToday = dateTimeProvider.NzToday;
+        var nowUtc = dateTimeProvider.UtcNow;
 
-        // 1. 查询所有有效车辆
-        var vehicles = await dbContext.Vehicles
-            .AsNoTracking()
-            .Where(v => v.Status == VehicleStatus.Active)
-            .ToListAsync(cancellationToken);
-
-        // 2. 查询活跃的年检伙伴联系人（F11.1：停用联系人不发邮件）
-        var activePartners = await dbContext.PartnerContacts
+        var inspectionPartners = await dbContext.PartnerContacts
             .Where(pc => pc.Kind == PartnerKind.Inspection && pc.Active)
             .ToListAsync(cancellationToken);
 
-        if (activePartners.Count == 0)
+        if (inspectionPartners.Count == 0)
         {
             LogNoActiveInspectionPartners(logger);
-            return 0;
+            return Result<int>.Success(0);
         }
 
-        // 3. 加载模板
         var template = await dbContext.EmailTemplates
             .FirstOrDefaultAsync(t => t.Key == NotificationTemplateKeys.ComplianceExpiryWarning, cancellationToken);
 
-        var templateKey = template?.Key ?? NotificationTemplateKeys.ComplianceExpiryWarning;
-        var subjectEnPattern = template?.SubjectEn ?? "Vehicle {{ExpiryType}} Expiry Warning - {{VehicleRego}}";
-        var subjectZhPattern = template?.SubjectZh ?? "车辆 {{ExpiryType}} 到期合规预警 - {{VehicleRego}}";
-        var bodyEnPattern = template?.BodyEn ?? "Vehicle {{VehicleRego}} compliance item ({{ExpiryType}}) is expiring on {{ExpiryDate}}. Please book inspection.";
-        var bodyZhPattern = template?.BodyZh ?? "车辆 {{VehicleRego}} 的 {{ExpiryType}} 即将于 {{ExpiryDate}} 到期，请及时预约年检与续保。";
+        var maxThresholdDate = nzToday.AddDays(ThresholdDays.Max());
+        var minThresholdDate = nzToday.AddDays(ThresholdDays.Min());
 
-        var sentCount = 0;
+        var activeVehicles = await dbContext.Vehicles
+            .AsNoTracking()
+            .Where(v => v.Status == VehicleStatus.Active || v.Status == VehicleStatus.Maintenance)
+            .ToListAsync(cancellationToken);
 
-        foreach (var vehicle in vehicles)
+        var totalSentCount = 0;
+
+        foreach (var vehicle in activeVehicles)
         {
-            // 检查 WOF
-            if (vehicle.WofExpiry.HasValue)
+            var expiryItems = new (string ExpiryType, DateOnly? ExpiryDate)[]
             {
-                sentCount += await CheckAndSendExpiryAlertAsync(
-                    vehicle, "WOF", vehicle.WofExpiry.Value, today, activePartners,
-                    templateKey, subjectEnPattern, subjectZhPattern, bodyEnPattern, bodyZhPattern, cancellationToken);
-            }
+                ("WOF", vehicle.WofExpiry),
+                ("COF", vehicle.CofExpiry),
+                ("Insurance", vehicle.InsuranceExpiry)
+            };
 
-            // 检查 COF
-            if (vehicle.CofExpiry.HasValue)
+            foreach (var (expiryType, expiryDate) in expiryItems)
             {
-                sentCount += await CheckAndSendExpiryAlertAsync(
-                    vehicle, "COF", vehicle.CofExpiry.Value, today, activePartners,
-                    templateKey, subjectEnPattern, subjectZhPattern, bodyEnPattern, bodyZhPattern, cancellationToken);
-            }
+                if (!expiryDate.HasValue)
+                {
+                    continue;
+                }
 
-            // 检查保险
-            if (vehicle.InsuranceExpiry.HasValue)
-            {
-                sentCount += await CheckAndSendExpiryAlertAsync(
-                    vehicle, "Insurance", vehicle.InsuranceExpiry.Value, today, activePartners,
-                    templateKey, subjectEnPattern, subjectZhPattern, bodyEnPattern, bodyZhPattern, cancellationToken);
+                var daysUntilExpiry = expiryDate.Value.DayNumber - nzToday.DayNumber;
+
+                if (!ThresholdDays.Contains(daysUntilExpiry))
+                {
+                    continue;
+                }
+
+                var correlationId = string.Format(
+                    CultureInfo.InvariantCulture,
+                    "CORR-{0}-{1}-{2}DAY",
+                    expiryType.ToUpperInvariant(),
+                    vehicle.Rego.Value,
+                    daysUntilExpiry);
+
+                var templateKey = template?.Key ?? NotificationTemplateKeys.ComplianceExpiryWarning;
+                var subjectEn = (template?.SubjectEn ?? "Vehicle {{ExpiryType}} Expiry Warning - {{VehicleRego}}")
+                    .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
+                    .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase);
+                var subjectZh = (template?.SubjectZh ?? "车辆 {{ExpiryType}} 到期合规预警 - {{VehicleRego}}")
+                    .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
+                    .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase);
+
+                var expiryDateStr = expiryDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var bodyEn = (template?.BodyEn ?? "Vehicle {{VehicleRego}} compliance item ({{ExpiryType}}) is expiring on {{ExpiryDate}}. Please book inspection.")
+                    .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase)
+                    .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
+                    .Replace("{{ExpiryDate}}", expiryDateStr, StringComparison.OrdinalIgnoreCase);
+                var bodyZh = (template?.BodyZh ?? "车辆 {{VehicleRego}} 的 {{ExpiryType}} 即将于 {{ExpiryDate}} 到期，请及时预约年检与续保。")
+                    .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase)
+                    .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
+                    .Replace("{{ExpiryDate}}", expiryDateStr, StringComparison.OrdinalIgnoreCase);
+
+                var fullSubject = $"{subjectEn} / {subjectZh}";
+                var fullBody = $"{bodyEn}\n\n{bodyZh}";
+
+                var existingLogs = await dbContext.EmailLogs
+                    .Where(el => el.CorrelationId == correlationId)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var partner in inspectionPartners)
+                {
+                    var existingLog = existingLogs.FirstOrDefault(el => el.ToAddress == partner.Email);
+
+                    if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogExpiryNoticeAlreadySent(logger, correlationId, partner.Email.Value);
+                        continue;
+                    }
+
+                    var emailLog = existingLog ?? new EmailLog(
+                        Guid.NewGuid(),
+                        templateKey,
+                        partner.Email,
+                        fullSubject,
+                        "Scheduler.ComplianceExpiryScanner",
+                        correlationId);
+
+                    if (existingLog is null)
+                    {
+                        await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
+                        existingLogs.Add(emailLog);
+                    }
+
+                    try
+                    {
+                        await emailSender.SendEmailAsync(partner.Email.Value, fullSubject, fullBody, cancellationToken);
+                        emailLog.RecordSuccess(nowUtc);
+                        totalSentCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogExpirySendFailed(logger, ex, correlationId, partner.Email.Value);
+                        emailLog.RecordFailure(ex.Message);
+                    }
+                }
             }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        LogScanCompleted(logger, sentCount);
-        return sentCount;
-    }
-
-    private async Task<int> CheckAndSendExpiryAlertAsync(
-        Vehicle vehicle,
-        string expiryType,
-        DateOnly expiryDate,
-        DateOnly today,
-        List<PartnerContact> activePartners,
-        string templateKey,
-        string subjectEnPattern,
-        string subjectZhPattern,
-        string bodyEnPattern,
-        string bodyZhPattern,
-        CancellationToken cancellationToken)
-    {
-        var daysRemaining = expiryDate.DayNumber - today.DayNumber;
-        if (!AlertThresholdDays.Contains(daysRemaining))
-        {
-            return 0;
-        }
-
-        var correlationId = $"CORR-{expiryType.ToUpperInvariant()}-{vehicle.Rego.Value}-{daysRemaining}DAY";
-        var expiryDateStr = expiryDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-        var subjectEn = subjectEnPattern
-            .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{ExpiryDate}}", expiryDateStr, StringComparison.OrdinalIgnoreCase);
-
-        var subjectZh = subjectZhPattern
-            .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{ExpiryDate}}", expiryDateStr, StringComparison.OrdinalIgnoreCase);
-
-        var bodyEn = bodyEnPattern
-            .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{ExpiryDate}}", expiryDateStr, StringComparison.OrdinalIgnoreCase);
-
-        var bodyZh = bodyZhPattern
-            .Replace("{{ExpiryType}}", expiryType, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{VehicleRego}}", vehicle.Rego.Value, StringComparison.OrdinalIgnoreCase)
-            .Replace("{{ExpiryDate}}", expiryDateStr, StringComparison.OrdinalIgnoreCase);
-
-        var fullSubject = $"{subjectEn} / {subjectZh}";
-        var fullBody = $"{bodyEn}\n\n{bodyZh}";
-
-        var count = 0;
-
-        foreach (var partner in activePartners)
-        {
-            // 幂等去重：检查该 CorrelationId + 邮箱是否已发过（F11.4 / F3.5）
-            var existingLog = await dbContext.EmailLogs
-                .FirstOrDefaultAsync(el =>
-                    el.CorrelationId == correlationId &&
-                    el.ToAddress == partner.Email,
-                    cancellationToken);
-
-            if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
-            {
-                LogAlreadySent(logger, correlationId, partner.Email.Value);
-                continue;
-            }
-
-            var emailLog = existingLog ?? new EmailLog(
-                Guid.NewGuid(),
-                templateKey,
-                partner.Email,
-                fullSubject,
-                "BackgroundService.ComplianceMonitor",
-                correlationId);
-
-            if (existingLog is null)
-            {
-                await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
-            }
-
-            try
-            {
-                await emailSender.SendEmailAsync(partner.Email.Value, fullSubject, fullBody, cancellationToken);
-                emailLog.RecordSuccess(dateTimeProvider.UtcNow);
-                count++;
-            }
-            catch (Exception ex)
-            {
-                // 严禁静默吞掉异常（_COMMON.md）：记录失败并进入退避重试
-                LogEmailFailed(logger, ex, vehicle.Rego.Value, expiryType, partner.Email.Value);
-                emailLog.RecordFailure(ex.Message);
-            }
-        }
-
-        return count;
+        return Result<int>.Success(totalSentCount);
     }
 
     [LoggerMessage(
         EventId = 4101,
-        Level = LogLevel.Information,
-        Message = "Starting compliance expiry scan for date: {Today}")]
-    private static partial void LogScanStarting(ILogger logger, DateOnly today);
-
-    [LoggerMessage(
-        EventId = 4102,
         Level = LogLevel.Warning,
-        Message = "No active Inspection partner contacts found. Skipping email delivery.")]
+        Message = "No active Inspection partners configured in database.")]
     private static partial void LogNoActiveInspectionPartners(ILogger logger);
 
     [LoggerMessage(
-        EventId = 4103,
-        Level = LogLevel.Information,
-        Message = "Compliance expiry scan completed. Dispatched {Count} emails.")]
-    private static partial void LogScanCompleted(ILogger logger, int count);
-
-    [LoggerMessage(
-        EventId = 4104,
+        EventId = 4102,
         Level = LogLevel.Debug,
-        Message = "Compliance alert {CorrelationId} for {Email} already sent. Skipping.")]
-    private static partial void LogAlreadySent(ILogger logger, string correlationId, string email);
+        Message = "Compliance expiry email for {CorrelationId} to {Email} already sent. Skipping.")]
+    private static partial void LogExpiryNoticeAlreadySent(ILogger logger, string correlationId, string email);
 
     [LoggerMessage(
-        EventId = 4105,
+        EventId = 4103,
         Level = LogLevel.Error,
-        Message = "Failed to send compliance expiry email for {Rego} ({Type}) to {Email}")]
-    private static partial void LogEmailFailed(ILogger logger, Exception exception, string rego, string type, string email);
+        Message = "Failed delivering compliance expiry notice for {CorrelationId} to {Email}")]
+    private static partial void LogExpirySendFailed(ILogger logger, Exception exception, string correlationId, string email);
 }

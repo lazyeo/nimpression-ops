@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -37,25 +38,35 @@ public sealed partial class NotificationOutboxService(
         "IncidentReported"
     };
 
+    public static readonly ConcurrentDictionary<Guid, DateTimeOffset> LastAttemptTimestamps = new();
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> CorrelationLocks = new();
+
     public async Task<int> ProcessPendingOutboxMessagesAsync(CancellationToken cancellationToken = default)
     {
         var outboxMessages = await dbContext.OutboxMessages
-            .Where(m => RelevantEventTypes.Contains(m.Type))
+            .Where(m => RelevantEventTypes.Contains(m.Type) && m.ProcessedAt == null)
             .OrderBy(m => m.OccurredAt)
             .Take(50)
             .ToListAsync(cancellationToken);
 
         var processedCount = 0;
+        var now = dateTimeProvider.UtcNow;
+
         foreach (var msg in outboxMessages)
         {
             var handled = await ProcessSingleOutboxMessageCoreAsync(msg, cancellationToken);
             if (handled)
             {
+                msg.MarkProcessed(now);
                 processedCount++;
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (outboxMessages.Count > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         return processedCount;
     }
 
@@ -64,12 +75,17 @@ public sealed partial class NotificationOutboxService(
         var message = await dbContext.OutboxMessages
             .FirstOrDefaultAsync(m => m.Id == outboxMessageId, cancellationToken);
 
-        if (message is null || !RelevantEventTypes.Contains(message.Type))
+        if (message is null || !RelevantEventTypes.Contains(message.Type) || message.ProcessedAt != null)
         {
             return false;
         }
 
         var handled = await ProcessSingleOutboxMessageCoreAsync(message, cancellationToken);
+        if (handled)
+        {
+            message.MarkProcessed(dateTimeProvider.UtcNow);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return handled;
     }
@@ -94,13 +110,15 @@ public sealed partial class NotificationOutboxService(
                 _ => TimeSpan.FromMinutes(25)
             };
 
-            var lastAttemptTime = log.SentAt ?? now;
+            var lastAttemptTime = LastAttemptTimestamps.GetOrAdd(log.Id, now);
+
             if (now < lastAttemptTime + backoff)
             {
                 continue;
             }
 
             LogRetryingEmail(logger, log.Id, log.Attempts + 1);
+            LastAttemptTimestamps[log.Id] = now;
 
             var template = await dbContext.EmailTemplates
                 .FirstOrDefaultAsync(t => t.Key == log.TemplateKey, cancellationToken);
@@ -322,50 +340,68 @@ public sealed partial class NotificationOutboxService(
         string correlationId,
         CancellationToken cancellationToken)
     {
-        var anySent = false;
-        var now = dateTimeProvider.UtcNow;
+        var correlationLock = CorrelationLocks.GetOrAdd(correlationId, _ => new SemaphoreSlim(1, 1));
+        await correlationLock.WaitAsync(cancellationToken);
 
-        foreach (var partner in partners)
+        try
         {
-            var existingLog = await dbContext.EmailLogs
-                .FirstOrDefaultAsync(el =>
-                    el.CorrelationId == correlationId &&
-                    el.ToAddress == partner.Email,
-                    cancellationToken);
+            var anySent = false;
+            var now = dateTimeProvider.UtcNow;
 
-            if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
+            var existingLogs = await dbContext.EmailLogs
+                .Where(el => el.CorrelationId == correlationId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var partner in partners)
             {
-                LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
-                continue;
+                var existingLog = existingLogs.FirstOrDefault(el => el.ToAddress == partner.Email);
+
+                if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
+                {
+                    LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
+                    continue;
+                }
+
+                var emailLog = existingLog ?? new EmailLog(
+                    Guid.NewGuid(),
+                    templateKey,
+                    partner.Email,
+                    subject,
+                    triggeredBy,
+                    correlationId);
+
+                if (existingLog is null)
+                {
+                    await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
+                    existingLogs.Add(emailLog);
+                }
+
+                LastAttemptTimestamps[emailLog.Id] = now;
+
+                try
+                {
+                    await emailSender.SendEmailAsync(partner.Email.Value, subject, body, cancellationToken);
+                    emailLog.RecordSuccess(now);
+                    anySent = true;
+                }
+                catch (Exception ex)
+                {
+                    LogDeliveryFailed(logger, ex, correlationId, partner.Email.Value);
+                    emailLog.RecordFailure(ex.Message);
+                }
             }
 
-            var emailLog = existingLog ?? new EmailLog(
-                Guid.NewGuid(),
-                templateKey,
-                partner.Email,
-                subject,
-                triggeredBy,
-                correlationId);
-
-            if (existingLog is null)
+            if (anySent || existingLogs.Count > 0)
             {
-                await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
 
-            try
-            {
-                await emailSender.SendEmailAsync(partner.Email.Value, subject, body, cancellationToken);
-                emailLog.RecordSuccess(now);
-                anySent = true;
-            }
-            catch (Exception ex)
-            {
-                LogDeliveryFailed(logger, ex, correlationId, partner.Email.Value);
-                emailLog.RecordFailure(ex.Message);
-            }
+            return anySent;
         }
-
-        return anySent;
+        finally
+        {
+            correlationLock.Release();
+        }
     }
 
     private static Guid? TryGetGuid(JsonElement root, params string[] propertyNames)

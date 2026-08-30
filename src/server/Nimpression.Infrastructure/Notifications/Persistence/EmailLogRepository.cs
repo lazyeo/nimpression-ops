@@ -37,7 +37,8 @@ public sealed class EmailLogRepository(AppDbContext dbContext) : IEmailLogReposi
 
         if (!string.IsNullOrWhiteSpace(filter.Status))
         {
-            query = query.Where(el => el.Status == filter.Status.Trim());
+            var status = filter.Status.Trim();
+            query = query.Where(el => el.Status == status);
         }
 
         if (!string.IsNullOrWhiteSpace(filter.TemplateKey))
@@ -48,13 +49,21 @@ public sealed class EmailLogRepository(AppDbContext dbContext) : IEmailLogReposi
 
         if (!string.IsNullOrWhiteSpace(filter.ToAddress))
         {
-            var address = $"%{filter.ToAddress.Trim()}%";
-            query = query.Where(el => EF.Functions.ILike((string)(object)el.ToAddress, address));
+            try
+            {
+                var emailVo = new EmailAddress(filter.ToAddress.Trim());
+                query = query.Where(el => el.ToAddress == emailVo);
+            }
+            catch
+            {
+                // Invalid email string ignored in filter
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filter.CorrelationId))
         {
-            query = query.Where(el => el.CorrelationId == filter.CorrelationId.Trim());
+            var corrId = filter.CorrelationId.Trim();
+            query = query.Where(el => el.CorrelationId == corrId);
         }
 
         if (filter.FromDate.HasValue)
@@ -73,8 +82,7 @@ public sealed class EmailLogRepository(AppDbContext dbContext) : IEmailLogReposi
             query = query.Where(el =>
                 EF.Functions.ILike(el.Subject, search) ||
                 EF.Functions.ILike(el.CorrelationId, search) ||
-                EF.Functions.ILike(el.TriggeredBy, search) ||
-                EF.Functions.ILike((string)(object)el.ToAddress, search));
+                EF.Functions.ILike(el.TriggeredBy, search));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
