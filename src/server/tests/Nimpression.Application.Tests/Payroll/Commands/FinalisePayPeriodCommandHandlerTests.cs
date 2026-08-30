@@ -134,4 +134,44 @@ public sealed class FinalisePayPeriodCommandHandlerTests
         var result = await finaliseHandler.Handle(new FinalisePayPeriodCommand(period.Id), CancellationToken.None);
         Assert.True(result.IsSuccess);
     }
+
+    [Fact]
+    public async Task F7_6_FinalisePayPeriod_Boundary_Exactly1000Km_AllowsFinalisation()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var driver = CreateDriver();
+        _repository.Drivers[driver.Id] = driver;
+
+        var nzOffset = TimeSpan.FromHours(12);
+        var completedAt = new DateTimeOffset(2026, 8, 17, 14, 0, 0, nzOffset);
+
+        // 恰好 1000km (2000 - 1000 = 1000km)
+        var task1000 = new JobTask(
+            id: Guid.NewGuid(),
+            @ref: "TASK-1000KM",
+            title: "Task with exactly 1000km diff",
+            areaId: Guid.NewGuid(),
+            scheduledFor: completedAt.AddHours(-3),
+            createdByUserId: Guid.NewGuid(),
+            plannedDistanceKm: new Kilometres(100m),
+            driverId: driver.Id,
+            vehicleId: Guid.NewGuid());
+        task1000.Acknowledge(completedAt.AddHours(-2));
+        task1000.Start(completedAt.AddHours(-1), new Kilometres(1000m));
+        task1000.Complete(completedAt, endOdometerKm: new Kilometres(2000m));
+        _repository.Tasks.Add(task1000);
+
+        var calcHandler = new CalculatePayPeriodPayrollCommandHandler(
+            _repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
+        await calcHandler.Handle(new CalculatePayPeriodPayrollCommand(period.Id), CancellationToken.None);
+
+        var finaliseHandler = new FinalisePayPeriodCommandHandler(
+            _repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
+
+        var result = await finaliseHandler.Handle(new FinalisePayPeriodCommand(period.Id), CancellationToken.None);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PayPeriodStatus.Finalised, result.Value.Status);
+    }
 }

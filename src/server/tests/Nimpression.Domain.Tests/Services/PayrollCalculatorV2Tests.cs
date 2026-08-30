@@ -506,4 +506,96 @@ public class PayrollCalculatorV2Tests
         Assert.Equal(240.00m, payslip.GrossPay.Amount);
         Assert.DoesNotContain(payslip.Lines, l => l.Kind == "Fine" || l.Description.Contains("Fine"));
     }
+
+    [Fact]
+    public void F7_5_MinimumWageFloor_Boundary_OperationalGrossEqualsFloor_NoTopUp()
+    {
+        // 边界测试：实收金额恰好等于最低工资地板线时，MinimumWageTopUp 必须为 false 且不产出 MinimumWageTopUp 明细行
+        // 司机时薪 $23.15，趟次和公里费率设 0，工作 1 小时 -> 实际工时薪资 $23.15，最低工资地板 $23.15
+        var driver = CreateTestDriver(hourlyRate: 23.15m, perTripRate: 0m, perKmRate: 0m);
+        var nzOffset = TimeSpan.FromHours(12);
+        var shift = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 17, 8, 0, 0, nzOffset), durationHours: 1);
+
+        var payslip = PayrollCalculatorV2.Calculate(
+            driver: driver,
+            payPeriod: TestPayPeriod,
+            shifts: [shift],
+            tasks: [],
+            minimumHourlyWage: new Money(23.15m));
+
+        Assert.Equal(23.15m, payslip.HoursBasedGross.Amount);
+        Assert.Equal(23.15m, payslip.GrossPay.Amount);
+        Assert.False(payslip.MinimumWageTopUp);
+        Assert.Equal(PayBasis.Hourly, payslip.BasisUsed);
+        Assert.DoesNotContain(payslip.Lines, l => l.Kind == "MinimumWageTopUp");
+    }
+
+    [Fact]
+    public void F7_5_MinimumWageFloor_Boundary_TripGrossEqualsFloor_NoTopUp()
+    {
+        // 边界测试：趟次胜且金额恰好等于最低工资地板线时，不触发补差
+        // 司机时薪 $10/h，1 小时班次（工时口径 $10）；趟次费率 $23.15/trip，1 趟任务（趟次口径 $23.15）。
+        // 最低工资地板 = 1h * $23.15 = $23.15。
+        // 实收恰好等于地板线：BasisUsed 为 Trip，MinimumWageTopUp 为 false，Lines 不含 MinimumWageTopUp
+        var driver = CreateTestDriver(hourlyRate: 10.00m, perTripRate: 23.15m, perKmRate: 0m);
+        var nzOffset = TimeSpan.FromHours(12);
+        var shift = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 17, 8, 0, 0, nzOffset), durationHours: 1);
+        var task = CreateCompletedTask(driver.Id, new DateTimeOffset(2026, 8, 17, 10, 0, 0, nzOffset));
+
+        var payslip = PayrollCalculatorV2.Calculate(
+            driver: driver,
+            payPeriod: TestPayPeriod,
+            shifts: [shift],
+            tasks: [task],
+            minimumHourlyWage: new Money(23.15m));
+
+        Assert.Equal(10.00m, payslip.HoursBasedGross.Amount);
+        Assert.Equal(23.15m, payslip.TripBasedGross.Amount);
+        Assert.Equal(23.15m, payslip.GrossPay.Amount);
+        Assert.False(payslip.MinimumWageTopUp);
+        Assert.Equal(PayBasis.Trip, payslip.BasisUsed);
+        Assert.DoesNotContain(payslip.Lines, l => l.Kind == "MinimumWageTopUp");
+    }
+
+    [Fact]
+    public void F7_6_OdometerDifference_Boundary_Exactly1000Km_IsAllowed()
+    {
+        // 边界测试：里程差恰好等于 1000km (2000 - 1000 = 1000km) 为合法上限，不抛异常
+        var driver = CreateTestDriver(hourlyRate: 30.00m, perTripRate: 50.00m, perKmRate: 1.00m);
+        var nzOffset = TimeSpan.FromHours(12);
+        var completedTime = new DateTimeOffset(2026, 8, 17, 12, 0, 0, nzOffset);
+
+        var taskExactly1000 = CreateCompletedTask(driver.Id, completedTime, startOdo: 1000m, endOdo: 2000m);
+        Assert.Equal(1000m, taskExactly1000.EffectiveDistanceKm!.Value.Value);
+
+        var payslip = PayrollCalculatorV2.Calculate(
+            driver: driver,
+            payPeriod: TestPayPeriod,
+            shifts: [],
+            tasks: [taskExactly1000]);
+
+        Assert.Equal(1, payslip.CompletedTripCount);
+        Assert.Equal(1000m, payslip.TotalDistanceKm.Value);
+        Assert.Equal(50.00m + 1000m * 1.00m, payslip.TripBasedGross.Amount);
+    }
+
+    [Fact]
+    public void F7_1_DailyWorkHours_Boundary_Exactly8Hours_NoOvertime()
+    {
+        // 边界测试：当日工时恰好 8.0 小时 -> 8.0h 常规（1.0x），0.0h 加班（1.5x）
+        var driver = CreateTestDriver(hourlyRate: 30.00m, perTripRate: 0m, perKmRate: 0m);
+        var nzOffset = TimeSpan.FromHours(12);
+        var shift = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 17, 8, 0, 0, nzOffset), durationHours: 8);
+
+        var payslip = PayrollCalculatorV2.Calculate(
+            driver: driver,
+            payPeriod: TestPayPeriod,
+            shifts: [shift],
+            tasks: []);
+
+        Assert.Equal(8.00m, payslip.OrdinaryHours.Value);
+        Assert.Equal(0.00m, payslip.OvertimeHours.Value);
+        Assert.Equal(0.00m, payslip.HolidayHours.Value);
+        Assert.Equal(240.00m, payslip.HoursBasedGross.Amount);
+    }
 }
