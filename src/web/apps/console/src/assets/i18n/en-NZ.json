@@ -156,5 +156,168 @@
     "LABEL": "Language",
     "EN_NZ": "English (NZ)",
     "ZH_CN": "中文 (简体)"
+  },
+  "DASHBOARD": {
+    "TITLE": "Operations Dashboard",
+    "SUBTITLE": "Nimpression Ops — Fleet monitoring, timesheets, and multidimensional charts (F14)",
+    "RENDER_DURATION": "Render Time: {ms} ms",
+    "RENDER_PASS": "PASS (<500ms)",
+    "THEME_DARK": "Dark Theme",
+    "THEME_LIGHT": "Light Theme",
+    "REFRESH_DATA": "Refresh Data",
+    "REFRESH_TITLE": "Refresh all chart data",
+    "ERROR_BANNER_TITLE": "Data loading error:",
+    "KPI": {
+      "IN_TRANSIT": "Active Vehicles Today",
+      "IN_TRANSIT_SUB": "Real-time fleet workload",
+      "VEHICLES_UNIT": "/ {total} vehicles",
+      "MAINTENANCE": "Maintenance Alert",
+      "MAINTENANCE_UNIT": "due for service",
+      "MAINTENANCE_SUB": "Auto alert based on odometer threshold",
+      "FINES": "Total Fines",
+      "FINES_SUB": "Includes speeding, parking, red light, etc.",
+      "CONVERSION": "Task Completion Rate",
+      "CONVERSION_SUB": "End-to-end task lifecycle conversion"
+    },
+    "ERRORS": {
+      "LOAD_FAILED": "Failed to load dashboard data",
+      "NETWORK_FAILED": "Network request failed. Please check your connection."
+    }
+  },
+  "CHARTS": {
+    "COMMON": {
+      "EXPORT_PNG": "Export PNG",
+      "EXPORT_PNG_TITLE": "Export PNG image",
+      "LOADING": "Loading chart...",
+      "ERROR": "Failed to load chart",
+      "RETRY": "Retry",
+      "NO_DATA": "No data available",
+      "MINUTES": "{count} mins",
+      "HOURS_MINUTES": "{hours}h {mins}m",
+      "HOURS": "{hours}h"
+    },
+    "FLEET_UTILIZATION": {
+      "TITLE": "Fleet Utilization",
+      "SUBTITLE": "30-day daily in-transit / idle / maintenance distribution (click to drill down into tasks)",
+      "IN_TRANSIT": "In Transit",
+      "IDLE": "Idle",
+      "MAINTENANCE": "Under Maintenance",
+      "TOTAL": "Total Vehicles",
+      "TOOLTIP_TOTAL": "Total Vehicles: {count}",
+      "RATE": "Utilization Rate: {rate}%",
+      "DATE_AXIS": "Date",
+      "COUNT_AXIS": "Vehicle Count",
+      "NO_DATA": "No fleet utilization data available"
+    },
+    "TIMESHEET_HEATMAP": {
+      "TITLE": "Timesheet Heatmap",
+      "SUBTITLE": "Week × Hour work density and overtime clusters (hover to inspect driver count and total hours)",
+      "PEAK_OVERTIME": "Peak Overtime Cluster",
+      "ACTIVE_DRIVERS": "Active Drivers: {count}",
+      "TOTAL_HOURS": "Total Hours: {hours} h",
+      "LEGEND_HIGH": "High / Overtime",
+      "LEGEND_LOW": "Low Hours",
+      "SERIES_NAME": "Work Distribution",
+      "NO_DATA": "No timesheet heatmap data available",
+      "WEEKDAYS": {
+        "MON": "Mon",
+        "TUE": "Tue",
+        "WED": "Wed",
+        "THU": "Thu",
+        "FRI": "Fri",
+        "SAT": "Sat",
+        "SUN": "Sun"
+      }
+    },
+    "ODOMETER_TREND": {
+      "TITLE": "Vehicle Odometer Trend",
+      "SUBTITLE": "Cumulative mileage per vehicle, maintenance threshold line, and overdue alerts (red marker)",
+      "DUE_FOR_SERVICE": "Due for Service",
+      "MAINTENANCE_LINE": "Maintenance Threshold ({km} km)",
+      "ODOMETER_AXIS": "Cumulative Mileage (km)",
+      "DATE_AXIS": "Date",
+      "NO_DATA": "No odometer trend data available"
+    },
+    "FINES_COMPOSITION": {
+      "TITLE": "Traffic Fines Composition & Ranking",
+      "SUBTITLE": "Violation reason breakdown ↔ Right-side fine amount ranking (click doughnut sector to filter)",
+      "FILTERED_BY": "Filtered: {category}",
+      "CLEAR_FILTER": "Clear filter",
+      "EXPORT_DOUGHNUT": "Doughnut Chart",
+      "EXPORT_RANKING": "Ranking Chart",
+      "DOUGHNUT_SERIES": "Fine Breakdown",
+      "RANKING_SERIES": "Fine Amount ($)",
+      "CATEGORY_TOTAL": "Total Amount: ${amount}",
+      "CATEGORY_COUNT": "Total Fines: {count}",
+      "CATEGORY_SHARE": "Proportion: {share}%",
+      "DRIVER": "Driver: {name}",
+      "VEHICLE": "Vehicle: {rego}",
+      "AMOUNT": "Amount: ${amount}",
+      "REASON": "Reason: {reason}",
+      "ISSUED_DATE": "Issued Date: {date}",
+      "NO_DATA": "No fines data available",
+      "REASONS": {
+        "SPEEDING": "Speeding",
+        "PARKING": "Illegal Parking",
+        "RED_LIGHT": "Red Light",
+        "BUS_LANE": "Bus Lane",
+        "LANE_MARKING": "Lane Violation",
+        "OTHER": "Other Violation"
+      }
+    },
+    "TASK_FUNNEL": {
+      "TITLE": "Task Lifecycle Funnel",
+      "SUBTITLE": "Created → Assigned → Acknowledged → In Progress → Completed end-to-end conversion and duration",
+      "SERIES_NAME": "Task Lifecycle",
+      "STAGE_COUNT": "Tasks at Stage: {count}",
+      "PREV_CONVERSION": "Conversion from Previous: {rate}%",
+      "OVERALL_CONVERSION": "Overall Conversion: {rate}%",
+      "AVG_DURATION": "Avg Stay Duration: {duration}",
+      "CONVERSION_LABEL": "Conv: {rate}%",
+      "AVG_STAY_LABEL": "Avg: {duration}",
+      "TASKS_COUNT": "{count} tasks",
+      "NO_DATA": "No task funnel data available",
+      "STAGES": {
+        "DRAFT": "Draft",
+        "ASSIGNED": "Assigned",
+        "ACKNOWLEDGED": "Acknowledged",
+        "IN_PROGRESS": "In Progress",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled"
+      }
+    },
+    "PAYROLL_COMPARISON": {
+      "TITLE": "Payroll Comparison Analysis",
+      "SUBTITLE": "Current period vs previous period by driver, with regular / overtime / holiday 3-tier stack",
+      "CURRENT_PERIOD": "Current Period",
+      "PREVIOUS_PERIOD": "Previous Period",
+      "REGULAR_PAY": "Regular Pay",
+      "OVERTIME_PAY": "Overtime Pay",
+      "HOLIDAY_PAY": "Holiday Pay",
+      "CURR_REGULAR": "Current - Regular",
+      "CURR_OVERTIME": "Current - Overtime",
+      "CURR_HOLIDAY": "Current - Holiday",
+      "PREV_REGULAR": "Previous - Regular",
+      "PREV_OVERTIME": "Previous - Overtime",
+      "PREV_HOLIDAY": "Previous - Holiday",
+      "DIFF_CHANGE": "Period Change: {diff} ({percent}%)",
+      "GROSS_PAY_AXIS": "Gross Pay ($)",
+      "DRIVER_AXIS": "Driver",
+      "NO_DATA": "No payroll comparison data available"
+    },
+    "DRILLDOWN_MODAL": {
+      "TITLE": "Dispatch Task Details for {date}",
+      "SUBTITLE": "{count} tasks dispatched on this day",
+      "NO_TASKS": "No task records for this date",
+      "COL_REF": "Task Ref",
+      "COL_TITLE": "Title",
+      "COL_DRIVER": "Driver",
+      "COL_VEHICLE": "Vehicle",
+      "COL_STATUS": "Status",
+      "COL_TIME": "Scheduled Time",
+      "COL_DISTANCE": "Distance",
+      "UNASSIGNED": "Unassigned",
+      "CLOSE": "Close"
+    }
   }
 }

@@ -1,0 +1,217 @@
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  box-sizing: border-box;
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog-card {
+  background: var(--p-surface-0, #ffffff);
+  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+
+  .header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .header-icon {
+      font-size: 1.5rem;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--p-surface-900, #0f172a);
+    }
+
+    .subtitle {
+      margin: 2px 0 0 0;
+      font-size: 0.8125rem;
+      color: var(--p-surface-500, #64748b);
+    }
+  }
+
+  .btn-close {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--p-surface-400, #94a3b8);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: var(--p-surface-100, #f1f5f9);
+      color: var(--p-surface-800, #1e293b);
+    }
+  }
+}
+
+.dialog-body {
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--p-surface-400, #94a3b8);
+
+  .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+
+  th {
+    padding: 0.75rem 1rem;
+    background: var(--p-surface-50, #f8fafc);
+    color: var(--p-surface-600, #475569);
+    font-weight: 600;
+    border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--p-surface-100, #f1f5f9);
+    color: var(--p-surface-800, #1e293b);
+  }
+
+  tr:hover td {
+    background: var(--p-surface-50, #f8fafc);
+  }
+
+  .cell-ref code {
+    background: var(--p-surface-100, #f1f5f9);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.8125rem;
+    color: var(--p-primary-700, #0369a1);
+  }
+
+  .cell-title {
+    font-weight: 500;
+  }
+
+  .driver-tag, .vehicle-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    background: var(--p-surface-100, #f1f5f9);
+    color: var(--p-surface-700, #334155);
+  }
+
+  .unassigned-text {
+    color: var(--p-surface-400, #94a3b8);
+    font-style: italic;
+    font-size: 0.8125rem;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &.status-completed {
+      background: #e6f7ed;
+      color: #009e73;
+    }
+    &.status-in-progress {
+      background: #fdf2e9;
+      color: #e69f00;
+    }
+    &.status-acked {
+      background: #e0f2fe;
+      color: #0072b2;
+    }
+    &.status-assigned {
+      background: #f3e8ff;
+      color: #7e22ce;
+    }
+    &.status-draft {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    &.status-cancelled {
+      background: #fee2e2;
+      color: #d55e00;
+    }
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--p-surface-200, #e2e8f0);
+
+  .btn-primary {
+    padding: 0.5rem 1.25rem;
+    background: var(--p-primary-color, #0284c7);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}

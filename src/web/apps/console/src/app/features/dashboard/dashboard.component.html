@@ -1,0 +1,169 @@
+<div class="dashboard-wrapper" [ngClass]="{ 'dark-theme': dataService.theme().name === 'dark' }">
+  <!-- Top Navigation / App Bar -->
+  <header class="dashboard-header">
+    <div class="header-branding">
+      <span class="logo-badge">NIM</span>
+      <div>
+        <h1 class="header-title">{{ 'DASHBOARD.TITLE' | i18n }}</h1>
+        <p class="header-subtitle">{{ 'DASHBOARD.SUBTITLE' | i18n }}</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <!-- Performance measure live indicator (F14.8) -->
+      @if (dataService.lastRenderDurationMs() > 0) {
+        <div class="perf-badge" [title]="'DASHBOARD.RENDER_PASS' | i18n">
+          ⚡ {{ 'DASHBOARD.RENDER_DURATION' | i18n: { ms: dataService.lastRenderDurationMs() } }}
+          <span class="perf-status-tag">{{ 'DASHBOARD.RENDER_PASS' | i18n }}</span>
+        </div>
+      }
+
+      <button type="button" class="btn-ctrl" (click)="toggleTheme()" [title]="(dataService.theme().name === 'light' ? 'DASHBOARD.THEME_DARK' : 'DASHBOARD.THEME_LIGHT') | i18n">
+        {{ (dataService.theme().name === 'light' ? 'DASHBOARD.THEME_DARK' : 'DASHBOARD.THEME_LIGHT') | i18n }}
+      </button>
+
+      <button type="button" class="btn-ctrl btn-refresh" (click)="reload()" [title]="'DASHBOARD.REFRESH_TITLE' | i18n" [disabled]="dataService.loading()">
+        🔄 {{ 'DASHBOARD.REFRESH_DATA' | i18n }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Global Error Banner -->
+  @if (dataService.error()) {
+    <div class="error-banner">
+      <span class="banner-icon">⚠️</span>
+      <div class="banner-content">
+        <strong>{{ 'DASHBOARD.ERROR_BANNER_TITLE' | i18n }}</strong> {{ (dataService.error() || '') | i18n }}
+      </div>
+      <button type="button" class="btn-banner-retry" (click)="reload()">{{ 'COMMON.RETRY' | i18n }}</button>
+    </div>
+  }
+
+  <!-- Metric Summary KPI Cards -->
+  <section class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">{{ 'DASHBOARD.KPI.IN_TRANSIT' | i18n }}</span>
+        <span class="kpi-icon" style="background:#e0f2fe;color:#0072b2;">🚗</span>
+      </div>
+      <div class="kpi-value">
+        {{ activeVehiclesCount() }}
+        <span class="kpi-unit">{{ 'DASHBOARD.KPI.VEHICLES_UNIT' | i18n: { total: totalVehiclesCount() } }}</span>
+      </div>
+      <div class="kpi-sub">{{ 'DASHBOARD.KPI.IN_TRANSIT_SUB' | i18n }}</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">{{ 'DASHBOARD.KPI.MAINTENANCE' | i18n }}</span>
+        <span class="kpi-icon" style="background:#fee2e2;color:#d55e00;">🔧</span>
+      </div>
+      <div class="kpi-value" [style.color]="maintenanceDueCount() > 0 ? '#d55e00' : 'inherit'">
+        {{ maintenanceDueCount() }}
+        <span class="kpi-unit">{{ 'DASHBOARD.KPI.MAINTENANCE_UNIT' | i18n }}</span>
+      </div>
+      <div class="kpi-sub">{{ 'DASHBOARD.KPI.MAINTENANCE_SUB' | i18n }}</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">{{ 'DASHBOARD.KPI.FINES' | i18n }}</span>
+        <span class="kpi-icon" style="background:#fef3c7;color:#d97706;">📄</span>
+      </div>
+      <div class="kpi-value">${{ totalFineAmount().toLocaleString() }}</div>
+      <div class="kpi-sub">{{ 'DASHBOARD.KPI.FINES_SUB' | i18n }}</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">{{ 'DASHBOARD.KPI.CONVERSION' | i18n }}</span>
+        <span class="kpi-icon" style="background:#e6f7ed;color:#009e73;">🎯</span>
+      </div>
+      <div class="kpi-value">{{ overallTaskConversion().toFixed(1) }}%</div>
+      <div class="kpi-sub">{{ 'DASHBOARD.KPI.CONVERSION_SUB' | i18n }}</div>
+    </div>
+  </section>
+
+  <!-- Main Charts Grid Layout (2 columns responsive) -->
+  <main class="charts-grid">
+    <!-- Chart 1: F14.1 Fleet Utilization -->
+    <div class="chart-grid-item">
+      <nim-fleet-utilization-chart
+        [options]="dataService.fleetUtilizationOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (dayClick)="onFleetDayDrilldown($event)"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 2: F14.2 Timesheet Heatmap -->
+    <div class="chart-grid-item">
+      <nim-timesheet-heatmap-chart
+        [options]="dataService.timesheetHeatmapOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 3: F14.3 Odometer Trend -->
+    <div class="chart-grid-item">
+      <nim-odometer-trend-chart
+        [options]="dataService.odometerTrendOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 4: F14.4 Fines Composition & Ranking -->
+    <div class="chart-grid-item chart-grid-item-full">
+      <nim-fines-composition-chart
+        [doughnutOptions]="dataService.fineDoughnutOptions()"
+        [rankingOptions]="dataService.fineRankingBarOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [selectedCategory]="dataService.selectedFineCategory()"
+        [theme]="dataService.theme()"
+        (categorySelect)="dataService.setSelectedFineCategory($event)"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 5: F14.5 Task Funnel -->
+    <div class="chart-grid-item">
+      <nim-task-funnel-chart
+        [options]="dataService.taskFunnelOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 6: F14.6 Payroll Comparison -->
+    <div class="chart-grid-item">
+      <nim-payroll-comparison-chart
+        [options]="dataService.payrollComparisonOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [currentPeriodLabel]="dataService.currentPeriodLabel()"
+        [previousPeriodLabel]="dataService.previousPeriodLabel()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+  </main>
+
+  <!-- Drilldown Modal for F14.1 -->
+  <nim-task-drilldown-dialog
+    [visible]="drilldownVisible()"
+    [date]="drilldownDate()"
+    [tasks]="drilldownTasks()"
+    (close)="closeDrilldown()"
+  />
+</div>
