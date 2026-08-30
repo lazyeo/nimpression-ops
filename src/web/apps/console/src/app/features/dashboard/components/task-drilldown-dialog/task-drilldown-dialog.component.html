@@ -1,0 +1,80 @@
+@if (visible()) {
+  <div class="dialog-backdrop" (click)="onClose()">
+    <div class="dialog-card" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <div class="header-title-group">
+          <span class="header-icon">📅</span>
+          <div>
+            <h3>{{ date() }} 派发任务详情</h3>
+            <p class="subtitle">当日共计 {{ tasks().length }} 项派发任务</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="onClose()" aria-label="关闭">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        @if (tasks().length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">📭</span>
+            <p>该日期暂无派发任务记录</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="tasks-table">
+              <thead>
+                <tr>
+                  <th>任务编号</th>
+                  <th>任务标题</th>
+                  <th>指派司机</th>
+                  <th>执行车辆</th>
+                  <th>状态</th>
+                  <th>计划时间</th>
+                  <th>里程</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (task of tasks(); track task.id) {
+                  <tr>
+                    <td class="cell-ref">
+                      <code>{{ task.ref || task.id.substring(0, 8) }}</code>
+                    </td>
+                    <td class="cell-title">{{ task.title }}</td>
+                    <td class="cell-driver">
+                      @if (task.driverName) {
+                        <span class="driver-tag">👤 {{ task.driverName }}</span>
+                      } @else {
+                        <span class="unassigned-text">未指派</span>
+                      }
+                    </td>
+                    <td class="cell-vehicle">
+                      @if (task.vehicleRego) {
+                        <span class="vehicle-tag">🚗 {{ task.vehicleRego }}</span>
+                      } @else {
+                        <span class="unassigned-text">-</span>
+                      }
+                    </td>
+                    <td class="cell-status">
+                      <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+                        {{ getStatusLabel(task.status) }}
+                      </span>
+                    </td>
+                    <td class="cell-time">
+                      {{ task.scheduledFor ? task.scheduledFor.substring(11, 16) : '-' }}
+                    </td>
+                    <td class="cell-distance">
+                      {{ task.actualDistanceKm || task.plannedDistanceKm ? (task.actualDistanceKm || task.plannedDistanceKm) + ' km' : '-' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="btn-primary" (click)="onClose()">关闭</button>
+      </div>
+    </div>
+  </div>
+}

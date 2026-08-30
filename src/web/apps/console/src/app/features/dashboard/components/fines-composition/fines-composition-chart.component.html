@@ -1,0 +1,54 @@
+<div class="chart-card">
+  <div class="card-header">
+    <div class="header-text">
+      <div class="title-row">
+        <span class="badge-tag">F14.4</span>
+        <h3 class="card-title">交通罚单构成与金额排行</h3>
+        @if (selectedCategory()) {
+          <span class="active-filter-badge">
+            已筛选: <strong>{{ selectedCategory() }}</strong>
+            <button type="button" class="btn-clear-tag" (click)="clearFilter()" title="清除筛选">✕</button>
+          </span>
+        }
+      </div>
+      <p class="card-subtitle">环形图违章原因分类占比 ↔ 右侧金额排行条形图（点击环形扇区联动筛选）</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-action-icon" (click)="exportDoughnutPng()" title="导出环形图">
+        📷 环形图
+      </button>
+      <button type="button" class="btn-action-icon" (click)="exportRankingPng()" title="导出排行图">
+        📷 排行图
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body multi-chart-grid">
+    <div class="chart-sub-pane">
+      <nim-base-chart
+        #doughnutBase
+        [options]="doughnutOptions()"
+        [loading]="loading()"
+        [error]="error()"
+        [skeletonType]="'doughnut'"
+        [height]="height()"
+        [exportFileName]="'fines-composition-doughnut'"
+        (chartClick)="onDoughnutClick($event)"
+        (retry)="retry.emit()"
+      />
+    </div>
+
+    <div class="chart-sub-pane">
+      <nim-base-chart
+        #rankingBase
+        [options]="rankingOptions()"
+        [loading]="loading()"
+        [error]="error()"
+        [skeletonType]="'bar'"
+        [height]="height()"
+        [exportFileName]="'fines-ranking-bar'"
+        (retry)="retry.emit()"
+      />
+    </div>
+  </div>
+</div>

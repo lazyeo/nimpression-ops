@@ -1,0 +1,28 @@
+<div class="chart-card">
+  <div class="card-header">
+    <div class="header-text">
+      <div class="title-row">
+        <span class="badge-tag">F14.2</span>
+        <h3 class="card-title">工时热力图</h3>
+      </div>
+      <p class="card-subtitle">周 × 小时工时密度与加班聚集时段（悬浮查看司机数与总工时）</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-action-icon" (click)="exportPng()" title="导出 PNG 图表">
+        📷 导出 PNG
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <nim-base-chart
+      [options]="options()"
+      [loading]="loading()"
+      [error]="error()"
+      [skeletonType]="'heatmap'"
+      [height]="height()"
+      [exportFileName]="'timesheet-heatmap-week'"
+      (retry)="retry.emit()"
+    />
+  </div>
+</div>

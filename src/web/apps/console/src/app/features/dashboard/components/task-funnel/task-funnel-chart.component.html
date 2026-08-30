@@ -1,0 +1,28 @@
+<div class="chart-card">
+  <div class="card-header">
+    <div class="header-text">
+      <div class="title-row">
+        <span class="badge-tag">F14.5</span>
+        <h3 class="card-title">任务流转漏斗</h3>
+      </div>
+      <p class="card-subtitle">已创建 → 已指派 → 已确认 → 进行中 → 已完成全链路转化率与平均停留时长</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-action-icon" (click)="exportPng()" title="导出 PNG 图表">
+        📷 导出 PNG
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <nim-base-chart
+      [options]="options()"
+      [loading]="loading()"
+      [error]="error()"
+      [skeletonType]="'funnel'"
+      [height]="height()"
+      [exportFileName]="'task-lifecycle-funnel'"
+      (retry)="retry.emit()"
+    />
+  </div>
+</div>

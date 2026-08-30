@@ -1,0 +1,28 @@
+<div class="chart-card">
+  <div class="card-header">
+    <div class="header-text">
+      <div class="title-row">
+        <span class="badge-tag">F14.3</span>
+        <h3 class="card-title">车辆里程趋势</h3>
+      </div>
+      <p class="card-subtitle">每车累计行驶里程、保养阈值参考线与超期预警标注（红色标记点）</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-action-icon" (click)="exportPng()" title="导出 PNG 图表">
+        📷 导出 PNG
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <nim-base-chart
+      [options]="options()"
+      [loading]="loading()"
+      [error]="error()"
+      [skeletonType]="'line'"
+      [height]="height()"
+      [exportFileName]="'odometer-trend-vehicles'"
+      (retry)="retry.emit()"
+    />
+  </div>
+</div>
