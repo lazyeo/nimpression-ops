@@ -1,0 +1,151 @@
+<div class="offline-status-container">
+  <!-- 3-State Indicator Badge -->
+  @switch (offlineQueue.syncStatus()) {
+    @case ('offline') {
+      <button
+        type="button"
+        class="status-badge badge-offline"
+        (click)="openQueueModal()"
+        [title]="'OFFLINE.STATUS_OFFLINE' | i18n"
+      >
+        <span class="status-dot"></span>
+        <span class="status-label">{{ 'OFFLINE.STATUS_OFFLINE' | i18n }}</span>
+        @if (offlineQueue.pendingCount() > 0) {
+          <span class="badge-count">{{ offlineQueue.pendingCount() }}</span>
+        }
+      </button>
+    }
+    @case ('reconnecting') {
+      <button
+        type="button"
+        class="status-badge badge-syncing"
+        (click)="openQueueModal()"
+        [title]="'OFFLINE.STATUS_SYNCING' | i18n"
+      >
+        <span class="spinner-icon"></span>
+        <span class="status-label">{{ 'OFFLINE.STATUS_SYNCING' | i18n }}</span>
+        @if (offlineQueue.pendingCount() > 0) {
+          <span class="badge-count">{{ offlineQueue.pendingCount() }}</span>
+        }
+      </button>
+    }
+    @case ('synced') {
+      <button
+        type="button"
+        class="status-badge badge-synced"
+        (click)="openQueueModal()"
+        [title]="'OFFLINE.STATUS_SYNCED' | i18n"
+      >
+        <span class="check-icon">✓</span>
+        <span class="status-label">{{ 'OFFLINE.STATUS_SYNCED' | i18n }}</span>
+      </button>
+    }
+    @default {
+      <button
+        type="button"
+        class="status-badge badge-synced"
+        (click)="openQueueModal()"
+        [title]="'OFFLINE.STATUS_ONLINE' | i18n"
+      >
+        <span class="check-icon">✓</span>
+        <span class="status-label">{{ 'OFFLINE.STATUS_ONLINE' | i18n }}</span>
+      </button>
+    }
+  }
+
+  <!-- Failure Notification Warning (if any failed items) -->
+  @if (offlineQueue.hasFailures()) {
+    <button
+      type="button"
+      class="warning-badge"
+      (click)="openQueueModal()"
+      [title]="'OFFLINE.SYNC_FAILED_MSG' | i18n: { count: offlineQueue.failedCount() }"
+    >
+      <span class="warning-icon">⚠️</span>
+      <span class="warning-count">{{ offlineQueue.failedCount() }}</span>
+    </button>
+  }
+
+  <!-- Queue Detail Modal -->
+  @if (showQueueModal()) {
+    <div class="modal-backdrop" (click)="closeQueueModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ 'OFFLINE.QUEUE_DRAWER_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeQueueModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+          @if (offlineQueue.queueItems().length === 0) {
+            <div class="empty-state">
+              <p>{{ 'OFFLINE.EMPTY_QUEUE' | i18n }}</p>
+            </div>
+          } @else {
+            <p class="queue-summary">
+              {{ 'OFFLINE.PENDING_OPERATIONS' | i18n: { count: offlineQueue.queueItems().length } }}
+            </p>
+            <p class="queue-notice">
+              {{ 'OFFLINE.NO_SILENT_DISCARD' | i18n }}
+            </p>
+
+            <div class="table-wrapper">
+              <table class="queue-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'OFFLINE.OPERATION' | i18n }}</th>
+                    <th>{{ 'OFFLINE.TARGET' | i18n }}</th>
+                    <th>{{ 'COMMON.STATUS' | i18n }}</th>
+                    <th>{{ 'OFFLINE.RETRY_COUNT' | i18n }}</th>
+                    <th>{{ 'COMMON.ACTIONS' | i18n }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of offlineQueue.queueItems(); track item.id) {
+                    <tr [class.row-failed]="item.status === 'failed'">
+                      <td>
+                        <span class="method-tag tag-{{ item.method.toLowerCase() }}">{{
+                          item.method
+                        }}</span>
+                        @if (item.description) {
+                          <span class="item-desc">{{ item.description }}</span>
+                        }
+                      </td>
+                      <td class="col-url">{{ item.url }}</td>
+                      <td>
+                        <span class="status-pill pill-{{ item.status }}">
+                          {{ item.status }}
+                        </span>
+                        @if (item.lastError) {
+                          <small class="error-detail">{{ item.lastError }}</small>
+                        }
+                      </td>
+                      <td>{{ item.retryCount }}</td>
+                      <td>
+                        @if (item.status === 'failed') {
+                          <button type="button" class="btn-retry" (click)="retryItem(item.id)">
+                            {{ 'OFFLINE.RETRY_ITEM' | i18n }}
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          @if (offlineQueue.hasFailures()) {
+            <button type="button" class="btn-retry-all" (click)="retryAll()">
+              {{ 'OFFLINE.RETRY_ALL' | i18n }}
+            </button>
+          }
+          <button type="button" class="btn-cancel" (click)="closeQueueModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
