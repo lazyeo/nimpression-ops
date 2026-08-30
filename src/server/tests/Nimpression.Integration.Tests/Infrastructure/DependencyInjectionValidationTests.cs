@@ -1,0 +1,174 @@
+using System.Net;
+using System.Reflection;
+using FluentAssertions;
+using MediatR;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Nimpression.Application;
+using Nimpression.Infrastructure.Persistence;
+using Nimpression.Integration.Tests.Fixtures;
+using Xunit;
+
+namespace Nimpression.Integration.Tests.Infrastructure;
+
+/// <summary>
+/// 真实应用容器引导与全量依赖注入验证测试。
+/// 验证应用能以完整 DI 容器成功启动，且所有 MediatR Handlers 及 Application 抽象仓储均可正确解析，
+/// 杜绝缺失 DI 注册（如 IVehicleRepository 遗漏）导致的运行时崩溃。
+/// </summary>
+[Collection("PostgreSqlCollection")]
+public sealed class DependencyInjectionValidationTests : IAsyncLifetime, IDisposable
+{
+    private readonly PostgreSqlContainerFixture _fixture;
+    private DependencyInjectionValidationTestAppFactory _factory = null!;
+    private HttpClient _client = null!;
+
+    public DependencyInjectionValidationTests(PostgreSqlContainerFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
+    public async Task InitializeAsync()
+    {
+        _factory = new DependencyInjectionValidationTestAppFactory(_fixture.ConnectionString);
+        _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("http://localhost")
+        });
+
+        await using var context = _fixture.CreateDbContext();
+        await context.Database.MigrateAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    public void Dispose()
+    {
+        _client?.Dispose();
+        _factory?.Dispose();
+    }
+
+    [Fact]
+    public async Task Application_Host_Starts_Successfully_And_Responds_To_HealthCheck()
+    {
+        var response = await _client.GetAsync("/health");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public void All_Application_Repository_Interfaces_Are_Registered_And_Resolvable()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var sp = scope.ServiceProvider;
+
+        var appAssembly = typeof(ApplicationAssemblyMarker).Assembly;
+        var repositoryInterfaces = appAssembly.GetTypes()
+            .Where(t => t.IsInterface && t.Name.EndsWith("Repository", StringComparison.Ordinal))
+            .ToList();
+
+        repositoryInterfaces.Should().NotBeEmpty();
+
+        var missingRegistrations = new List<string>();
+
+        foreach (var repoInterface in repositoryInterfaces)
+        {
+            try
+            {
+                var resolved = sp.GetService(repoInterface);
+                if (resolved is null)
+                {
+                    missingRegistrations.Add($"Interface {repoInterface.FullName} is not registered in DI.");
+                }
+            }
+            catch (Exception ex)
+            {
+                missingRegistrations.Add($"Interface {repoInterface.FullName} failed to resolve: {ex.Message}");
+            }
+        }
+
+        missingRegistrations.Should().BeEmpty(
+            "All Application repository interfaces must be registered and resolvable from DI container");
+    }
+
+    [Fact]
+    public void All_MediatR_Request_Handlers_Can_Be_Resolved_From_DI_Container()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var sp = scope.ServiceProvider;
+
+        var appAssembly = typeof(ApplicationAssemblyMarker).Assembly;
+        var handlerTypes = appAssembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface)
+            .Where(t => t.GetInterfaces().Any(i => i.IsGenericType &&
+                (i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>) ||
+                 i.GetGenericTypeDefinition() == typeof(IRequestHandler<>))))
+            .ToList();
+
+        handlerTypes.Should().NotBeEmpty();
+
+        var resolutionFailures = new List<string>();
+
+        foreach (var handlerType in handlerTypes)
+        {
+            try
+            {
+                // 解析其实现的 IRequestHandler<,> 接口
+                var handlerInterfaces = handlerType.GetInterfaces()
+                    .Where(i => i.IsGenericType &&
+                        (i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>) ||
+                         i.GetGenericTypeDefinition() == typeof(IRequestHandler<>)))
+                    .ToList();
+
+                foreach (var handlerInterface in handlerInterfaces)
+                {
+                    var resolved = sp.GetService(handlerInterface);
+                    if (resolved is null)
+                    {
+                        resolutionFailures.Add($"Handler {handlerType.Name} implementing {handlerInterface} could not be resolved.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                resolutionFailures.Add($"Handler {handlerType.FullName} failed with error: {ex.Message}");
+            }
+        }
+
+        resolutionFailures.Should().BeEmpty(
+            "All MediatR handlers must have all constructor dependencies registered and resolvable in DI");
+    }
+}
+
+public sealed class DependencyInjectionValidationTestAppFactory : WebApplicationFactory<Program>
+{
+    private readonly string _connectionString;
+
+    public DependencyInjectionValidationTestAppFactory(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+        builder.ConfigureServices(services =>
+        {
+            var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            if (dbContextDescriptor != null)
+            {
+                services.Remove(dbContextDescriptor);
+            }
+
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(_connectionString, npgsql =>
+                {
+                    npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                    npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                });
+            });
+        });
+    }
+}
