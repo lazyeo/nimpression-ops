@@ -141,7 +141,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
             await outboxService.ProcessPendingOutboxMessagesAsync();
         }
 
-        // ── Step 3: 人为/并发重复触发第二次、第三次 ──
+        // ── Step 3: 人为重复触发第二次、第三次 ──
         using (var scope2 = factory.Services.CreateScope())
         {
             var outboxService = scope2.ServiceProvider.GetRequiredService<INotificationOutboxService>();
@@ -169,5 +169,108 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
             m.Subject.Contains(fineRef, StringComparison.OrdinalIgnoreCase)).ToList();
 
         targetMessages.Should().HaveCount(1, "Mailpit 实际接收邮件必须恰好为 1 封");
+    }
+
+    [Fact]
+    public async Task ConcurrentTriggers_WithSameCorrelationId_ViaTaskWhenAll_ProducesExactlyOneSentRecordAndOneEmail()
+    {
+        // ── Step 1: 准备测试数据 ──
+        var driverId = Guid.NewGuid();
+        var vehicleId = Guid.NewGuid();
+        var fineId = Guid.NewGuid();
+        var reviewerUserId = Guid.NewGuid();
+        var driverUserId = Guid.NewGuid();
+        var fineRef = $"INF-{Guid.NewGuid():N}"[..12].ToUpperInvariant();
+        var insurerEmail = TestDataFactory.CreateEmailAddress("concurrent_insurer");
+
+        using (var db = _fixture.CreateDbContext())
+        {
+            var reviewer = new User(reviewerUserId, TestDataFactory.CreateEmailAddress("reviewer_c"), "Hash123", UserRole.Admin, "Reviewer Admin");
+            var user = new User(driverUserId, TestDataFactory.CreateEmailAddress("driver_uc"), "Hash123456", UserRole.Driver, "Test Driver User");
+            var driver = new Driver(
+                driverId,
+                user.Id,
+                TestDataFactory.CreateEmployeeNo(),
+                "Class 1",
+                DateOnly.FromDateTime(DateTime.Today.AddYears(2)),
+                new Money(30m, "NZD"),
+                new Money(15m, "NZD"),
+                new Money(1.5m, "NZD"),
+                "phone_enc",
+                "addr_enc",
+                "emg_enc",
+                DateOnly.FromDateTime(DateTime.Today));
+
+            var vehicle = new Vehicle(
+                vehicleId,
+                TestDataFactory.CreateRegoObject("CON"),
+                "Toyota",
+                "Corolla",
+                2021,
+                "VIN-CONCUR-001",
+                new Kilometres(30000m),
+                new Kilometres(10000m));
+
+            var fine = new Fine(fineId, driverId, vehicleId, DateOnly.FromDateTime(DateTime.Today), "NZ Police", fineRef, new Money(150m, "NZD"), "Speeding", null);
+            fine.StartReview(reviewer.Id, _dateTimeProvider.UtcNow);
+            fine.Accept(reviewer.Id, _dateTimeProvider.UtcNow);
+
+            var partner = new PartnerContact(Guid.NewGuid(), PartnerKind.Insurer, "State Insurance NZ Concurrent", insurerEmail, true);
+
+            var payload = new
+            {
+                FineId = fineId,
+                DriverId = driverId,
+                VehicleId = vehicleId,
+                Amount = new { Value = 150m, Currency = "NZD" },
+                OccurredAt = _dateTimeProvider.UtcNow
+            };
+
+            var outboxMsg = new OutboxMessage(Guid.NewGuid(), "FineAccepted", JsonSerializer.Serialize(payload), _dateTimeProvider.UtcNow);
+
+            await db.Users.AddAsync(reviewer);
+            await db.Users.AddAsync(user);
+            await db.Drivers.AddAsync(driver);
+            await db.Vehicles.AddAsync(vehicle);
+            await db.Fines.AddAsync(fine);
+            await db.PartnerContacts.AddAsync(partner);
+            await db.OutboxMessages.AddAsync(outboxMsg);
+            await db.SaveChangesAsync();
+        }
+
+        using var factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString, _dateTimeProvider);
+
+        // ── Step 2: 两个独立 Scope / DbContext 并发执行 Task.WhenAll ──
+        using var scope1 = factory.Services.CreateScope();
+        using var scope2 = factory.Services.CreateScope();
+
+        var outboxService1 = scope1.ServiceProvider.GetRequiredService<INotificationOutboxService>();
+        var outboxService2 = scope2.ServiceProvider.GetRequiredService<INotificationOutboxService>();
+
+        var task1 = Task.Run(() => outboxService1.ProcessPendingOutboxMessagesAsync());
+        var task2 = Task.Run(() => outboxService2.ProcessPendingOutboxMessagesAsync());
+
+        await Task.WhenAll(task1, task2);
+
+        // ── Step 3: 断言数据库中该 CorrelationId + ToAddress 恰好只有 1 条 Sent 记录 ──
+        var correlationId = $"CORR-FINE-{fineRef}";
+        using (var verifyDb = _fixture.CreateDbContext())
+        {
+            var logs = await verifyDb.EmailLogs
+                .Where(el => el.CorrelationId == correlationId && el.ToAddress == insurerEmail)
+                .ToListAsync();
+
+            logs.Should().HaveCount(1, "并发执行下通过数据库唯一索引 + 23505 捕获确保恰好只有 1 条日志");
+            logs[0].Status.Should().Be("Sent");
+            logs[0].Attempts.Should().Be(1);
+        }
+
+        // ── Step 4: 断言 Mailpit 实际只收到 1 封邮件 ──
+        var allMessages = await _mailpit.GetAllMessagesAsync();
+        var targetMessages = allMessages.Where(m =>
+            m.To.Any(t => t.Address.Equals(insurerEmail.Value, StringComparison.OrdinalIgnoreCase)) &&
+            m.Subject.Contains(fineRef, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        targetMessages.Should().HaveCount(1, "真并发下 Mailpit 实际收到的邮件必须恰好为 1 封，绝无重复投递");
     }
 }
