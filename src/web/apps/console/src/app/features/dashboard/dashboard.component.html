@@ -1,0 +1,165 @@
+<div class="dashboard-wrapper" [ngClass]="{ 'dark-theme': dataService.theme().name === 'dark' }">
+  <!-- Top Navigation / App Bar -->
+  <header class="dashboard-header">
+    <div class="header-branding">
+      <span class="logo-badge">NIM</span>
+      <div>
+        <h1 class="header-title">运营管理仪表盘</h1>
+        <p class="header-subtitle">Nimpression Ops — 智能车队监控、工时热力与运营多维图表 (F14)</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <!-- Performance measure live indicator (F14.8) -->
+      @if (dataService.lastRenderDurationMs() > 0) {
+        <div class="perf-badge" title="F14.8 首屏渲染性能埋点耗时">
+          ⚡ 渲染耗时: <strong>{{ dataService.lastRenderDurationMs() }} ms</strong>
+          <span class="perf-status-tag">PASS (&lt;500ms)</span>
+        </div>
+      }
+
+      <button type="button" class="btn-ctrl" (click)="toggleTheme()" [title]="dataService.theme().name === 'light' ? '切换到暗黑模式' : '切换到明亮模式'">
+        {{ dataService.theme().name === 'light' ? '🌙 暗黑主题' : '☀️ 明亮主题' }}
+      </button>
+
+      <button type="button" class="btn-ctrl btn-refresh" (click)="reload()" title="刷新全量图表数据" [disabled]="dataService.loading()">
+        🔄 刷新数据
+      </button>
+    </div>
+  </header>
+
+  <!-- Global Error Banner -->
+  @if (dataService.error()) {
+    <div class="error-banner">
+      <span class="banner-icon">⚠️</span>
+      <div class="banner-content">
+        <strong>数据加载异常:</strong> {{ dataService.error() }}
+      </div>
+      <button type="button" class="btn-banner-retry" (click)="reload()">重试</button>
+    </div>
+  }
+
+  <!-- Metric Summary KPI Cards -->
+  <section class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">今日在途车辆</span>
+        <span class="kpi-icon" style="background:#e0f2fe;color:#0072b2;">🚗</span>
+      </div>
+      <div class="kpi-value">{{ activeVehiclesCount() }} <span class="kpi-unit">/ {{ totalVehiclesCount() }} 辆</span></div>
+      <div class="kpi-sub">当前车队实时作业负荷</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">保养到期预警</span>
+        <span class="kpi-icon" style="background:#fee2e2;color:#d55e00;">🔧</span>
+      </div>
+      <div class="kpi-value" [style.color]="maintenanceDueCount() > 0 ? '#d55e00' : 'inherit'">
+        {{ maintenanceDueCount() }} <span class="kpi-unit">辆待保养</span>
+      </div>
+      <div class="kpi-sub">基于里程阈值自动预警</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">罚单累计总额</span>
+        <span class="kpi-icon" style="background:#fef3c7;color:#d97706;">📄</span>
+      </div>
+      <div class="kpi-value">${{ totalFineAmount().toLocaleString() }}</div>
+      <div class="kpi-sub">含超速、违停、红灯等违章记录</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">任务链路完结率</span>
+        <span class="kpi-icon" style="background:#e6f7ed;color:#009e73;">🎯</span>
+      </div>
+      <div class="kpi-value">{{ overallTaskConversion().toFixed(1) }}%</div>
+      <div class="kpi-sub">从创建到完成全流程转化</div>
+    </div>
+  </section>
+
+  <!-- Main Charts Grid Layout (2 columns responsive) -->
+  <main class="charts-grid">
+    <!-- Chart 1: F14.1 Fleet Utilization -->
+    <div class="chart-grid-item">
+      <nim-fleet-utilization-chart
+        [options]="dataService.fleetUtilizationOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (dayClick)="onFleetDayDrilldown($event)"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 2: F14.2 Timesheet Heatmap -->
+    <div class="chart-grid-item">
+      <nim-timesheet-heatmap-chart
+        [options]="dataService.timesheetHeatmapOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 3: F14.3 Odometer Trend -->
+    <div class="chart-grid-item">
+      <nim-odometer-trend-chart
+        [options]="dataService.odometerTrendOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 4: F14.4 Fines Composition & Ranking -->
+    <div class="chart-grid-item chart-grid-item-full">
+      <nim-fines-composition-chart
+        [doughnutOptions]="dataService.fineDoughnutOptions()"
+        [rankingOptions]="dataService.fineRankingBarOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [selectedCategory]="dataService.selectedFineCategory()"
+        [theme]="dataService.theme()"
+        (categorySelect)="dataService.setSelectedFineCategory($event)"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 5: F14.5 Task Funnel -->
+    <div class="chart-grid-item">
+      <nim-task-funnel-chart
+        [options]="dataService.taskFunnelOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+
+    <!-- Chart 6: F14.6 Payroll Comparison -->
+    <div class="chart-grid-item">
+      <nim-payroll-comparison-chart
+        [options]="dataService.payrollComparisonOptions()"
+        [loading]="dataService.loading()"
+        [error]="dataService.error()"
+        [currentPeriodLabel]="dataService.currentPeriodLabel()"
+        [previousPeriodLabel]="dataService.previousPeriodLabel()"
+        [theme]="dataService.theme()"
+        (retry)="reload()"
+      />
+    </div>
+  </main>
+
+  <!-- Drilldown Modal for F14.1 -->
+  <nim-task-drilldown-dialog
+    [visible]="drilldownVisible()"
+    [date]="drilldownDate()"
+    [tasks]="drilldownTasks()"
+    (close)="closeDrilldown()"
+  />
+</div>
