@@ -1,0 +1,73 @@
+<div class="skeleton-container" [style.height]="height()">
+  @switch (type()) {
+    @case ('bar') {
+      <div class="skeleton-bar-wrapper">
+        <div class="skeleton-bar" style="height: 45%;"></div>
+        <div class="skeleton-bar" style="height: 70%;"></div>
+        <div class="skeleton-bar" style="height: 60%;"></div>
+        <div class="skeleton-bar" style="height: 85%;"></div>
+        <div class="skeleton-bar" style="height: 50%;"></div>
+        <div class="skeleton-bar" style="height: 75%;"></div>
+        <div class="skeleton-bar" style="height: 90%;"></div>
+        <div class="skeleton-bar" style="height: 65%;"></div>
+      </div>
+    }
+    @case ('grouped-bar') {
+      <div class="skeleton-grouped-wrapper">
+        <div class="skeleton-group">
+          <div class="skeleton-bar-small" style="height: 60%;"></div>
+          <div class="skeleton-bar-small" style="height: 75%;"></div>
+        </div>
+        <div class="skeleton-group">
+          <div class="skeleton-bar-small" style="height: 45%;"></div>
+          <div class="skeleton-bar-small" style="height: 55%;"></div>
+        </div>
+        <div class="skeleton-group">
+          <div class="skeleton-bar-small" style="height: 80%;"></div>
+          <div class="skeleton-bar-small" style="height: 90%;"></div>
+        </div>
+        <div class="skeleton-group">
+          <div class="skeleton-bar-small" style="height: 65%;"></div>
+          <div class="skeleton-bar-small" style="height: 50%;"></div>
+        </div>
+      </div>
+    }
+    @case ('heatmap') {
+      <div class="skeleton-heatmap-grid">
+        @for (row of [1,2,3,4,5,6,7]; track row) {
+          <div class="skeleton-heatmap-row">
+            @for (col of [1,2,3,4,5,6,7,8,9,10,11,12]; track col) {
+              <div class="skeleton-heatmap-cell"></div>
+            }
+          </div>
+        }
+      </div>
+    }
+    @case ('line') {
+      <div class="skeleton-line-wrapper">
+        <div class="skeleton-line-grid">
+          <div class="grid-line"></div>
+          <div class="grid-line"></div>
+          <div class="grid-line"></div>
+        </div>
+        <div class="skeleton-line-curve"></div>
+      </div>
+    }
+    @case ('doughnut') {
+      <div class="skeleton-doughnut-wrapper">
+        <div class="skeleton-doughnut-ring">
+          <div class="skeleton-doughnut-center"></div>
+        </div>
+      </div>
+    }
+    @case ('funnel') {
+      <div class="skeleton-funnel-wrapper">
+        <div class="skeleton-funnel-tier tier-1"></div>
+        <div class="skeleton-funnel-tier tier-2"></div>
+        <div class="skeleton-funnel-tier tier-3"></div>
+        <div class="skeleton-funnel-tier tier-4"></div>
+        <div class="skeleton-funnel-tier tier-5"></div>
+      </div>
+    }
+  }
+</div>
