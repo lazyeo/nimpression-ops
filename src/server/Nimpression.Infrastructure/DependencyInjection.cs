@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Nimpression.Infrastructure.Notifications;
 using Nimpression.Infrastructure.Persistence;
 using Nimpression.Infrastructure.Realtime;
 using Nimpression.Infrastructure.Storage;
@@ -117,6 +118,9 @@ public static class DependencyInjection
 
         // 实时通信基础设施（F12 实时通信）
         services.AddRealtimeInfrastructure();
+
+        // 邮件与通知基础设施（F11 邮件与外部集成）
+        services.AddNotificationInfrastructure(configuration);
 
         return services;
     }
