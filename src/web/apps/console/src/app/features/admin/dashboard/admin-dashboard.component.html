@@ -1,0 +1,51 @@
+<div class="dashboard-page">
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon icon-dispatch">🚚</div>
+      <div class="metric-info">
+        <span class="metric-label">{{ 'ADMIN.ACTIVE_DISPATCHES' | i18n }}</span>
+        <strong class="metric-val">{{ metrics().activeDispatches | localeNumber }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon icon-drivers">👥</div>
+      <div class="metric-info">
+        <span class="metric-label">{{ 'ADMIN.ONLINE_DRIVERS' | i18n }}</span>
+        <strong class="metric-val">{{ metrics().onlineDrivers | localeNumber }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon icon-incidents">🚨</div>
+      <div class="metric-info">
+        <span class="metric-label">{{ 'ADMIN.PENDING_INCIDENTS' | i18n }}</span>
+        <strong class="metric-val">{{ metrics().pendingIncidents | localeNumber }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon icon-fines">📄</div>
+      <div class="metric-info">
+        <span class="metric-label">{{ 'ADMIN.UNRESOLVED_FINES' | i18n }}</span>
+        <strong class="metric-val">{{ metrics().unresolvedFines | localeNumber }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-panels">
+    <div class="panel-card">
+      <h3 class="panel-title">{{ 'ADMIN.SYSTEM_STATUS' | i18n }}</h3>
+      <div class="status-rows">
+        <div class="status-row">
+          <span>{{ 'COMMON.STATUS' | i18n }}</span>
+          <span class="badge-online">OK</span>
+        </div>
+        <div class="status-row">
+          <span>{{ 'ADMIN.RECENT_ALERTS' | i18n }}</span>
+          <span class="text-muted">{{ 'COMMON.NO_DATA' | i18n }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
