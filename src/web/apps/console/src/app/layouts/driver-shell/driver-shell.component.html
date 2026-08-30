@@ -1,0 +1,60 @@
+<div class="driver-layout">
+  <!-- Mobile Header -->
+  <header class="driver-header">
+    <div class="header-user">
+      <div class="driver-avatar">
+        {{ authService.currentUser()?.displayName?.charAt(0) || 'D' }}
+      </div>
+      <div class="driver-greeting">
+        <span class="greeting-text">
+          {{
+            'DRIVER.GREETING' | i18n: { name: authService.currentUser()?.displayName || 'Driver' }
+          }}
+        </span>
+        <small class="app-tag">{{ 'COMMON.APP_TITLE' | i18n }}</small>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- 3-State Offline / Sync Status -->
+      <nim-offline-status />
+
+      <!-- Language Toggle Button (Touch target >= 44px) -->
+      <button
+        type="button"
+        class="touch-btn lang-btn"
+        (click)="toggleLanguage()"
+        [title]="'LANG.LABEL' | i18n"
+      >
+        {{ (currentLang === 'en-NZ' ? 'LANG.ZH_CN' : 'LANG.EN_NZ') | i18n }}
+      </button>
+
+      <!-- Logout Button (Touch target >= 44px) -->
+      <button
+        type="button"
+        class="touch-btn logout-btn"
+        (click)="logout()"
+        [title]="'NAV.LOGOUT' | i18n"
+      >
+        <span>{{ 'NAV.LOGOUT' | i18n }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Scrollable Main Content -->
+  <main class="driver-main">
+    <router-outlet />
+  </main>
+
+  <!-- Mobile Bottom Navigation (Single-hand reachable, touch target >= 44px) -->
+  <nav class="driver-bottom-nav" aria-label="Driver Navigation">
+    <div class="bottom-nav-inner">
+      @for (item of bottomNavItems; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" class="bottom-nav-link">
+          <span class="bottom-nav-icon">{{ item.icon }}</span>
+          <span class="bottom-nav-label">{{ item.labelKey | i18n }}</span>
+        </a>
+      }
+    </div>
+  </nav>
+</div>

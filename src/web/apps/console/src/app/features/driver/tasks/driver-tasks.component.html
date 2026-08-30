@@ -1,0 +1,84 @@
+<div class="driver-page">
+  <div class="page-title-row">
+    <h2 class="page-title">{{ 'DRIVER.TODAY_TASKS' | i18n }}</h2>
+    <button
+      type="button"
+      class="refresh-btn"
+      (click)="loadTasks()"
+      [title]="'COMMON.REFRESH' | i18n"
+    >
+      🔄
+    </button>
+  </div>
+
+  <!-- Offline Cached View Banner -->
+  @if (isUsingCache()) {
+    <div class="cached-banner">
+      <span>💾 {{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
+    </div>
+  }
+
+  <!-- Task List -->
+  @if (tasks().length === 0 && !isLoading()) {
+    <div class="empty-card">
+      <span class="empty-icon">📋</span>
+      <p>{{ 'DRIVER.NO_TASKS' | i18n }}</p>
+    </div>
+  } @else {
+    <div class="task-cards-list">
+      @for (task of tasks(); track task.id) {
+        <div class="task-card" [class.card-active]="task.status === 'IN_PROGRESS'">
+          <div class="card-top">
+            <span class="trip-badge">#{{ task.tripNo }}</span>
+            <span class="status-pill status-{{ task.status.toLowerCase() }}">
+              {{ 'DRIVER.TRIP_STATUS_' + task.status | i18n }}
+            </span>
+          </div>
+
+          <div class="route-details">
+            <div class="route-point">
+              <span class="point-dot pickup"></span>
+              <div class="point-info">
+                <small class="point-label">{{ 'DRIVER.PICKUP' | i18n }}</small>
+                <div class="point-address">{{ task.pickupLocation }}</div>
+              </div>
+            </div>
+            <div class="route-point">
+              <span class="point-dot delivery"></span>
+              <div class="point-info">
+                <small class="point-label">{{ 'DRIVER.DELIVERY' | i18n }}</small>
+                <div class="point-address">{{ task.deliveryLocation }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-meta">
+            <span class="meta-item">🚛 {{ task.vehiclePlate }}</span>
+            <span class="meta-item">🕒 {{ task.scheduledTime | localeDate: 'short' }}</span>
+          </div>
+
+          <!-- Driver Action Touch Buttons (>= 44x44px) -->
+          <div class="card-actions">
+            @if (task.status === 'ASSIGNED' || task.status === 'PENDING') {
+              <button
+                type="button"
+                class="touch-action-btn btn-start"
+                (click)="updateTaskStatus(task, 'IN_PROGRESS')"
+              >
+                {{ 'DRIVER.START_TRIP' | i18n }}
+              </button>
+            } @else if (task.status === 'IN_PROGRESS') {
+              <button
+                type="button"
+                class="touch-action-btn btn-complete"
+                (click)="updateTaskStatus(task, 'COMPLETED')"
+              >
+                {{ 'DRIVER.COMPLETE_TRIP' | i18n }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

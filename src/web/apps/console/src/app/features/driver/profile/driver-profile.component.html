@@ -1,0 +1,72 @@
+<div class="driver-page">
+  <div class="page-title-row">
+    <h2 class="page-title">{{ 'DRIVER.PROFILE_TITLE' | i18n }}</h2>
+  </div>
+
+  @if (saveSuccess()) {
+    <div class="alert-success">
+      <span>✓ {{ 'DRIVER.PROFILE_UPDATED' | i18n }}</span>
+    </div>
+  }
+
+  @if (profile()) {
+    <div class="profile-card">
+      <div class="profile-top">
+        <div class="profile-avatar">
+          {{ profile()?.displayName?.charAt(0) || 'D' }}
+        </div>
+        <div class="profile-names">
+          <h3 class="driver-name">{{ profile()?.displayName }}</h3>
+          <span class="driver-email">{{ profile()?.email }}</span>
+          <span class="driver-emp"
+            >{{ 'DRIVER.EMPLOYEE_NO' | i18n }}: {{ profile()?.employeeNo }}</span
+          >
+        </div>
+      </div>
+
+      <div class="compliance-box">
+        <div class="comp-item">
+          <small>{{ 'DRIVER.LICENCE_CLASS' | i18n }}</small>
+          <strong>{{ profile()?.licenceClass }}</strong>
+        </div>
+        <div class="comp-item">
+          <small>{{ 'DRIVER.LICENCE_EXPIRY' | i18n }}</small>
+          <strong>{{ profile()?.licenceExpiry | localeDate: 'medium' }}</strong>
+        </div>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+        <div class="form-group">
+          <label for="localeSelect" class="form-label">{{
+            'DRIVER.LANGUAGE_PREFERENCE' | i18n
+          }}</label>
+          <select id="localeSelect" formControlName="locale" class="form-control select-control">
+            <option value="en-NZ">{{ 'LANG.EN_NZ' | i18n }}</option>
+            <option value="zh-CN">{{ 'LANG.ZH_CN' | i18n }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="driverPhone" class="form-label">{{ 'DRIVER.PHONE' | i18n }}</label>
+          <input id="driverPhone" type="text" formControlName="phone" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="driverEmergency" class="form-label">{{
+            'DRIVER.EMERGENCY_CONTACT' | i18n
+          }}</label>
+          <input
+            id="driverEmergency"
+            type="text"
+            formControlName="emergencyContact"
+            class="form-control"
+          />
+        </div>
+
+        <button type="submit" class="btn-save-profile" [disabled]="isSaving()">
+          {{ 'DRIVER.SAVE_PROFILE' | i18n }}
+        </button>
+      </form>
+    </div>
+  }
+</div>
