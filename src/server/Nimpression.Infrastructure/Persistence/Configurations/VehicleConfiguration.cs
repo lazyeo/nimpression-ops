@@ -35,6 +35,7 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
             .IsRequired();
 
         builder.Property(v => v.VinEnc)
+            .HasConversion<AesGcmEncryptionConverter>()
             .HasMaxLength(500)
             .IsRequired();
 
