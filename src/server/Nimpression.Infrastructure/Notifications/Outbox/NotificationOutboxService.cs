@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Nimpression.Application.Common.Abstractions;
 using Nimpression.Application.Features.Notifications.Abstractions;
 using Nimpression.Application.Features.Notifications.Common;
+using Nimpression.Application.Features.Vehicles.Common;
 using Nimpression.Domain.Entities.Communications;
 using Nimpression.Domain.Entities.Standalone;
 using Nimpression.Domain.Enums;
@@ -20,7 +21,7 @@ namespace Nimpression.Infrastructure.Notifications.Outbox;
 /// 核心职责：<br/>
 /// 1. <b>领域事件消费</b>：消费 ServiceThresholdReached、FineAccepted、IncidentReported 领域事件，并转化为邮件通知。<br/>
 /// 2. <b>精准收件人与状态过滤</b>：按伙伴类型匹配，停用（Active=false）的伙伴绝不发信。<br/>
-/// 3. <b>天然幂等去重（F11.4）</b>：基于唯一 CorrelationId 判定，重复触发只记录 1 条 Sent 日志。<br/>
+/// 3. <b>原子幂等去重（F11.4）</b>：先写占位后读（Write-First），捕获数据库唯一约束冲突（SqlState 23505），杜绝 TOCTOU 竞态，同一 CorrelationId + ToAddress 重复触发恰好只记录 1 条 Sent 日志与发信。<br/>
 /// 4. <b>阶梯退避重试（F11.3）</b>：失败邮件按 1/5/25 分钟阶梯退避重试至多 3 次。<br/>
 /// 5. <b>绝不静默降级</b>：发送异常必须落库追踪，禁止空 catch。
 /// </para>
@@ -39,7 +40,6 @@ public sealed partial class NotificationOutboxService(
     };
 
     public static readonly ConcurrentDictionary<Guid, DateTimeOffset> LastAttemptTimestamps = new();
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> CorrelationLocks = new();
 
     public async Task<int> ProcessPendingOutboxMessagesAsync(CancellationToken cancellationToken = default)
     {
@@ -340,29 +340,28 @@ public sealed partial class NotificationOutboxService(
         string correlationId,
         CancellationToken cancellationToken)
     {
-        var correlationLock = CorrelationLocks.GetOrAdd(correlationId, _ => new SemaphoreSlim(1, 1));
-        await correlationLock.WaitAsync(cancellationToken);
+        var anySent = false;
+        var now = dateTimeProvider.UtcNow;
 
-        try
+        foreach (var partner in partners)
         {
-            var anySent = false;
-            var now = dateTimeProvider.UtcNow;
+            var existingLog = await dbContext.EmailLogs
+                .FirstOrDefaultAsync(el =>
+                    el.CorrelationId == correlationId &&
+                    el.ToAddress == partner.Email,
+                    cancellationToken);
 
-            var existingLogs = await dbContext.EmailLogs
-                .Where(el => el.CorrelationId == correlationId)
-                .ToListAsync(cancellationToken);
-
-            foreach (var partner in partners)
+            if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
             {
-                var existingLog = existingLogs.FirstOrDefault(el => el.ToAddress == partner.Email);
+                LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
+                continue;
+            }
 
-                if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
-                {
-                    LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
-                    continue;
-                }
-
-                var emailLog = existingLog ?? new EmailLog(
+            EmailLog emailLog;
+            if (existingLog is null)
+            {
+                // 先写占位（Pending 记录），借助 (CorrelationId, ToAddress) 数据库唯一索引保证原子性排他
+                var newLog = new EmailLog(
                     Guid.NewGuid(),
                     templateKey,
                     partner.Email,
@@ -370,38 +369,55 @@ public sealed partial class NotificationOutboxService(
                     triggeredBy,
                     correlationId);
 
-                if (existingLog is null)
-                {
-                    await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
-                    existingLogs.Add(emailLog);
-                }
-
-                LastAttemptTimestamps[emailLog.Id] = now;
-
                 try
                 {
-                    await emailSender.SendEmailAsync(partner.Email.Value, subject, body, cancellationToken);
-                    emailLog.RecordSuccess(now);
-                    anySent = true;
+                    await dbContext.EmailLogs.AddAsync(newLog, cancellationToken);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                    emailLog = newLog;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (DbExceptionHelper.IsUniqueConstraintViolation(ex))
                 {
-                    LogDeliveryFailed(logger, ex, correlationId, partner.Email.Value);
-                    emailLog.RecordFailure(ex.Message);
+                    // 撞了唯一索引（SqlState 23505）：说明并发竞争者已率先插入
+                    dbContext.Entry(newLog).State = EntityState.Detached;
+
+                    var winnerLog = await dbContext.EmailLogs
+                        .FirstOrDefaultAsync(el =>
+                            el.CorrelationId == correlationId &&
+                            el.ToAddress == partner.Email,
+                            cancellationToken);
+
+                    if (winnerLog is not null && (string.Equals(winnerLog.Status, "Sent", StringComparison.OrdinalIgnoreCase) || winnerLog.Attempts > 0))
+                    {
+                        LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
+                        continue;
+                    }
+
+                    emailLog = winnerLog ?? newLog;
                 }
             }
-
-            if (anySent || existingLogs.Count > 0)
+            else
             {
+                emailLog = existingLog;
+            }
+
+            LastAttemptTimestamps[emailLog.Id] = now;
+
+            try
+            {
+                await emailSender.SendEmailAsync(partner.Email.Value, subject, body, cancellationToken);
+                emailLog.RecordSuccess(now);
+                await dbContext.SaveChangesAsync(cancellationToken);
+                anySent = true;
+            }
+            catch (Exception ex)
+            {
+                LogDeliveryFailed(logger, ex, correlationId, partner.Email.Value);
+                emailLog.RecordFailure(ex.Message);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
+        }
 
-            return anySent;
-        }
-        finally
-        {
-            correlationLock.Release();
-        }
+        return anySent;
     }
 
     private static Guid? TryGetGuid(JsonElement root, params string[] propertyNames)

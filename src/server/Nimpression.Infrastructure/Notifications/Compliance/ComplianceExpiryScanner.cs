@@ -5,6 +5,7 @@ using Nimpression.Application.Common.Abstractions;
 using Nimpression.Application.Common.Results;
 using Nimpression.Application.Features.Notifications.Abstractions;
 using Nimpression.Application.Features.Notifications.Common;
+using Nimpression.Application.Features.Vehicles.Common;
 using Nimpression.Domain.Entities.Communications;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
@@ -19,7 +20,7 @@ namespace Nimpression.Infrastructure.Notifications.Compliance;
 /// 1. <b>基准时钟</b>：使用 <see cref="IDateTimeProvider.NzToday"/> 获取新西兰当前自然日。<br/>
 /// 2. <b>合规项与阈值</b>：每日扫描 WOF / COF / 保险到期日，精准匹配 30 天、14 天、7 天窗口。<br/>
 /// 3. <b>接收人过滤</b>：拉取活跃年检机构联系人（<see cref="PartnerKind.Inspection"/> 且 Active=true），停用联系人绝不发信。<br/>
-/// 4. <b>严格去重与幂等（F11.4）</b>：按固定 CorrelationId（如 CORR-WOF-{rego}-30DAY）发信，同一车同一阈值仅记录 1 条 Sent 日志。<br/>
+/// 4. <b>原子去重与幂等（F11.4）</b>：先写占位并捕获数据库唯一索引约束（SqlState 23505），杜绝并发 TOCTOU，同一车同一阈值仅记录 1 条 Sent 日志与发信。<br/>
 /// 5. <b>绝不静默降级</b>：发信异常记录于 EmailLog 追踪并重试。
 /// </para>
 /// </summary>
@@ -48,9 +49,6 @@ public sealed partial class ComplianceExpiryScanner(
 
         var template = await dbContext.EmailTemplates
             .FirstOrDefaultAsync(t => t.Key == NotificationTemplateKeys.ComplianceExpiryWarning, cancellationToken);
-
-        var maxThresholdDate = nzToday.AddDays(ThresholdDays.Max());
-        var minThresholdDate = nzToday.AddDays(ThresholdDays.Min());
 
         var activeVehicles = await dbContext.Vehicles
             .AsNoTracking()
@@ -110,13 +108,13 @@ public sealed partial class ComplianceExpiryScanner(
                 var fullSubject = $"{subjectEn} / {subjectZh}";
                 var fullBody = $"{bodyEn}\n\n{bodyZh}";
 
-                var existingLogs = await dbContext.EmailLogs
-                    .Where(el => el.CorrelationId == correlationId)
-                    .ToListAsync(cancellationToken);
-
                 foreach (var partner in inspectionPartners)
                 {
-                    var existingLog = existingLogs.FirstOrDefault(el => el.ToAddress == partner.Email);
+                    var existingLog = await dbContext.EmailLogs
+                        .FirstOrDefaultAsync(el =>
+                            el.CorrelationId == correlationId &&
+                            el.ToAddress == partner.Email,
+                            cancellationToken);
 
                     if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
                     {
@@ -124,36 +122,64 @@ public sealed partial class ComplianceExpiryScanner(
                         continue;
                     }
 
-                    var emailLog = existingLog ?? new EmailLog(
-                        Guid.NewGuid(),
-                        templateKey,
-                        partner.Email,
-                        fullSubject,
-                        "Scheduler.ComplianceExpiryScanner",
-                        correlationId);
-
+                    EmailLog emailLog;
                     if (existingLog is null)
                     {
-                        await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
-                        existingLogs.Add(emailLog);
+                        var newLog = new EmailLog(
+                            Guid.NewGuid(),
+                            templateKey,
+                            partner.Email,
+                            fullSubject,
+                            "Scheduler.ComplianceExpiryScanner",
+                            correlationId);
+
+                        try
+                        {
+                            await dbContext.EmailLogs.AddAsync(newLog, cancellationToken);
+                            await dbContext.SaveChangesAsync(cancellationToken);
+                            emailLog = newLog;
+                        }
+                        catch (Exception ex) when (DbExceptionHelper.IsUniqueConstraintViolation(ex))
+                        {
+                            dbContext.Entry(newLog).State = EntityState.Detached;
+
+                            var winnerLog = await dbContext.EmailLogs
+                                .FirstOrDefaultAsync(el =>
+                                    el.CorrelationId == correlationId &&
+                                    el.ToAddress == partner.Email,
+                                    cancellationToken);
+
+                            if (winnerLog is not null && (string.Equals(winnerLog.Status, "Sent", StringComparison.OrdinalIgnoreCase) || winnerLog.Attempts > 0))
+                            {
+                                LogExpiryNoticeAlreadySent(logger, correlationId, partner.Email.Value);
+                                continue;
+                            }
+
+                            emailLog = winnerLog ?? newLog;
+                        }
+                    }
+                    else
+                    {
+                        emailLog = existingLog;
                     }
 
                     try
                     {
                         await emailSender.SendEmailAsync(partner.Email.Value, fullSubject, fullBody, cancellationToken);
                         emailLog.RecordSuccess(nowUtc);
+                        await dbContext.SaveChangesAsync(cancellationToken);
                         totalSentCount++;
                     }
                     catch (Exception ex)
                     {
                         LogExpirySendFailed(logger, ex, correlationId, partner.Email.Value);
                         emailLog.RecordFailure(ex.Message);
+                        await dbContext.SaveChangesAsync(cancellationToken);
                     }
                 }
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
         return Result<int>.Success(totalSentCount);
     }
 
