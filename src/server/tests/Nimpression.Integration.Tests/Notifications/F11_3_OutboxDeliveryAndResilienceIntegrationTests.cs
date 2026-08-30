@@ -131,7 +131,7 @@ public sealed class F11_3_OutboxDeliveryAndResilienceIntegrationTests : IAsyncLi
         using (var verifyDb = _fixture.CreateDbContext())
         {
             var correlationId = $"CORR-SVC-{rego.Value}-CYCLE05";
-            var log = await verifyDb.EmailLogs.FirstOrDefaultAsync(el => el.CorrelationId == correlationId);
+            var log = await verifyDb.EmailLogs.FirstOrDefaultAsync(el => el.CorrelationId == correlationId && el.ToAddress == partnerEmail);
             log.Should().NotBeNull();
             log!.Status.Should().Be("Sent");
             log.Attempts.Should().Be(1);
