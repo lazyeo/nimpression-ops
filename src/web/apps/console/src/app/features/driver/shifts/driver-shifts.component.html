@@ -1,0 +1,53 @@
+<div class="driver-page">
+  <div class="page-title-row">
+    <h2 class="page-title">{{ 'DRIVER.CURRENT_SHIFT' | i18n }}</h2>
+  </div>
+
+  <div class="shift-card">
+    <div class="shift-status-badge">
+      <span class="status-indicator status-{{ currentShift().status.toLowerCase() }}"></span>
+      <span class="status-text">{{ 'DRIVER.SHIFT_STATUS_' + currentShift().status | i18n }}</span>
+    </div>
+
+    <div class="timer-display">
+      <span class="timer-value">
+        {{ currentShift().totalWorkedMinutes / 60 | localeNumber: 1 : 1 }}
+      </span>
+      <span class="timer-unit">{{ 'DRIVER.SHIFT_HOURS' | i18n }}</span>
+    </div>
+
+    @if (currentShift().clockedInAt) {
+      <div class="clockin-info">
+        <small
+          >{{ 'COMMON.TIME' | i18n }}:
+          {{ currentShift().clockedInAt | localeDate: 'medium' }}</small
+        >
+      </div>
+    }
+
+    <!-- Shift Action Buttons (>= 44x44px, large mobile buttons) -->
+    <div class="shift-actions">
+      @if (currentShift().status === 'NOT_STARTED' || currentShift().status === 'COMPLETED') {
+        <button type="button" class="btn-shift-action btn-clockin" (click)="clockIn()">
+          <span class="action-icon">🟢</span>
+          <span>{{ 'DRIVER.CLOCK_IN' | i18n }}</span>
+        </button>
+      } @else {
+        <button type="button" class="btn-shift-action btn-break" (click)="toggleBreak()">
+          <span class="action-icon">☕</span>
+          <span>
+            {{
+              (currentShift().status === 'ON_BREAK' ? 'DRIVER.END_BREAK' : 'DRIVER.START_BREAK')
+                | i18n
+            }}
+          </span>
+        </button>
+
+        <button type="button" class="btn-shift-action btn-clockout" (click)="clockOut()">
+          <span class="action-icon">🔴</span>
+          <span>{{ 'DRIVER.CLOCK_OUT' | i18n }}</span>
+        </button>
+      }
+    </div>
+  </div>
+</div>

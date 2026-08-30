@@ -1,0 +1,68 @@
+<div class="driver-page">
+  <div class="page-title-row">
+    <h2 class="page-title">{{ 'DRIVER.MY_PAYSLIPS' | i18n }}</h2>
+    <button
+      type="button"
+      class="refresh-btn"
+      (click)="loadPayslips()"
+      [title]="'COMMON.REFRESH' | i18n"
+    >
+      🔄
+    </button>
+  </div>
+
+  @if (isUsingCache()) {
+    <div class="cached-banner">
+      <span>💾 {{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
+    </div>
+  }
+
+  @if (payslips().length === 0 && !isLoading()) {
+    <div class="empty-card">
+      <span class="empty-icon">💵</span>
+      <p>{{ 'COMMON.NO_DATA' | i18n }}</p>
+    </div>
+  } @else {
+    <div class="payslip-list">
+      @for (slip of payslips(); track slip.id) {
+        <div class="payslip-card">
+          <div class="card-header">
+            <div class="period-info">
+              <span class="period-label">{{ 'DRIVER.PAY_PERIOD' | i18n }}</span>
+              <strong class="period-val">{{ slip.payPeriod }}</strong>
+            </div>
+            <span class="pay-date-badge">
+              {{ 'DRIVER.PAY_DATE' | i18n }}: {{ slip.payDate | localeDate: 'short' }}
+            </span>
+          </div>
+
+          <div class="net-pay-section">
+            <span class="net-label">{{ 'DRIVER.NET_PAY' | i18n }}</span>
+            <span class="net-amount">{{ slip.netPay | localeCurrency: slip.currency }}</span>
+          </div>
+
+          <div class="breakdown-grid">
+            <div class="breakdown-item">
+              <small>{{ 'DRIVER.GROSS_PAY' | i18n }}</small>
+              <span>{{ slip.grossPay | localeCurrency: slip.currency }}</span>
+            </div>
+            <div class="breakdown-item">
+              <small>{{ 'DRIVER.DEDUCTIONS' | i18n }}</small>
+              <span class="deduction-val"
+                >-{{ slip.deductions | localeCurrency: slip.currency }}</span
+              >
+            </div>
+            <div class="breakdown-item">
+              <small>{{ 'DRIVER.TOTAL_HOURS' | i18n }}</small>
+              <span>{{ slip.totalHours | localeNumber: 1 : 1 }} hrs</span>
+            </div>
+            <div class="breakdown-item">
+              <small>{{ 'DRIVER.HOURLY_RATE' | i18n }}</small>
+              <span>{{ slip.hourlyRate | localeCurrency: slip.currency }}/hr</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,79 @@
+<div class="admin-layout">
+  <!-- Desktop Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">🚛</span>
+      <div class="brand-text">
+        <h1 class="brand-name">{{ 'COMMON.APP_TITLE' | i18n }}</h1>
+        <small class="brand-sub">{{ 'COMMON.SUBTITLE' | i18n }}</small>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main Navigation">
+      <ul class="nav-list">
+        @for (item of navItems; track item.path) {
+          <li class="nav-item">
+            <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">{{ item.icon }}</span>
+              <span class="nav-label">{{ item.labelKey | i18n }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">
+          {{ authService.currentUser()?.displayName?.charAt(0) || 'U' }}
+        </div>
+        <div class="user-info">
+          <div class="user-name">{{ authService.currentUser()?.displayName }}</div>
+          <span class="role-badge">{{
+            'ROLES.' + (authService.currentUser()?.role?.toUpperCase() || 'ADMIN') | i18n
+          }}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="admin-main">
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="header-left">
+        <span class="view-title">{{ 'ADMIN.DASHBOARD_TITLE' | i18n }}</span>
+      </div>
+
+      <div class="header-right">
+        <!-- 3-State Offline & Sync Status Indicator -->
+        <nim-offline-status />
+
+        <!-- Language Switcher -->
+        <button
+          type="button"
+          class="header-btn btn-lang"
+          (click)="toggleLanguage()"
+          [title]="'LANG.LABEL' | i18n"
+        >
+          {{ (currentLang === 'en-NZ' ? 'LANG.ZH_CN' : 'LANG.EN_NZ') | i18n }}
+        </button>
+
+        <!-- Logout Button -->
+        <button
+          type="button"
+          class="header-btn btn-logout"
+          (click)="logout()"
+          [title]="'NAV.LOGOUT' | i18n"
+        >
+          <span>{{ 'NAV.LOGOUT' | i18n }}</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Outlet -->
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

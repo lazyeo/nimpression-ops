@@ -1,0 +1,145 @@
+.driver-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .page-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+}
+
+.shift-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.shift-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  background-color: #0f172a;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+
+  &.status-active {
+    background-color: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+  }
+
+  &.status-on_break {
+    background-color: #f59e0b;
+  }
+
+  &.status-not_started,
+  &.status-completed {
+    background-color: #94a3b8;
+  }
+}
+
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .timer-value {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #38bdf8;
+    line-height: 1;
+    font-family: monospace;
+  }
+
+  .timer-unit {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+  }
+}
+
+.clockin-info {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.shift-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.btn-shift-action {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 12px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition:
+    transform 0.1s,
+    background-color 0.2s;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.btn-clockin {
+    background-color: #16a34a;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #15803d;
+    }
+  }
+
+  &.btn-break {
+    background-color: #d97706;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #b45309;
+    }
+  }
+
+  &.btn-clockout {
+    background-color: #dc2626;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #b91c1c;
+    }
+  }
+
+  .action-icon {
+    font-size: 1.25rem;
+  }
+}
