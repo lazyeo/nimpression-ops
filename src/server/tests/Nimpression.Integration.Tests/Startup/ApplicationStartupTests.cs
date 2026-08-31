@@ -1,5 +1,4 @@
 using System.Net;
-using System.Reflection;
 using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Hosting;
@@ -11,28 +10,28 @@ using Nimpression.Infrastructure.Persistence;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
 
-namespace Nimpression.Integration.Tests.Infrastructure;
+namespace Nimpression.Integration.Tests.Startup;
 
 /// <summary>
-/// 真实应用容器引导与全量依赖注入验证测试。
+/// 真实应用引导与全量依赖注入验证测试（W7b / AC N3.4）。
 /// 验证应用能以完整 DI 容器成功启动，且所有 MediatR Handlers 及 Application 抽象仓储均可正确解析，
 /// 杜绝缺失 DI 注册（如 IVehicleRepository 遗漏）导致的运行时崩溃。
 /// </summary>
 [Collection("PostgreSqlCollection")]
-public sealed class DependencyInjectionValidationTests : IAsyncLifetime, IDisposable
+public sealed class ApplicationStartupTests : IAsyncLifetime, IDisposable
 {
     private readonly PostgreSqlContainerFixture _fixture;
-    private DependencyInjectionValidationTestAppFactory _factory = null!;
+    private ApplicationStartupTestAppFactory _factory = null!;
     private HttpClient _client = null!;
 
-    public DependencyInjectionValidationTests(PostgreSqlContainerFixture fixture)
+    public ApplicationStartupTests(PostgreSqlContainerFixture fixture)
     {
         _fixture = fixture;
     }
 
     public async Task InitializeAsync()
     {
-        _factory = new DependencyInjectionValidationTestAppFactory(_fixture.ConnectionString);
+        _factory = new ApplicationStartupTestAppFactory(_fixture.ConnectionString);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")
@@ -55,6 +54,14 @@ public sealed class DependencyInjectionValidationTests : IAsyncLifetime, IDispos
     {
         var response = await _client.GetAsync("/health");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public void SeedConstants_DefaultPasswordHash_Matches_DefaultPassword()
+    {
+        var hasher = new Nimpression.Infrastructure.Security.PasswordHasher();
+        hasher.VerifyPassword(Nimpression.Infrastructure.Persistence.Seed.SeedConstants.DefaultPassword,
+            Nimpression.Infrastructure.Persistence.Seed.SeedConstants.DefaultPasswordHash).Should().BeTrue();
     }
 
     [Fact]
@@ -114,7 +121,6 @@ public sealed class DependencyInjectionValidationTests : IAsyncLifetime, IDispos
         {
             try
             {
-                // 解析其实现的 IRequestHandler<,> 接口
                 var handlerInterfaces = handlerType.GetInterfaces()
                     .Where(i => i.IsGenericType &&
                         (i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>) ||
@@ -141,11 +147,11 @@ public sealed class DependencyInjectionValidationTests : IAsyncLifetime, IDispos
     }
 }
 
-public sealed class DependencyInjectionValidationTestAppFactory : WebApplicationFactory<Program>
+public sealed class ApplicationStartupTestAppFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString;
 
-    public DependencyInjectionValidationTestAppFactory(string connectionString)
+    public ApplicationStartupTestAppFactory(string connectionString)
     {
         _connectionString = connectionString;
     }
