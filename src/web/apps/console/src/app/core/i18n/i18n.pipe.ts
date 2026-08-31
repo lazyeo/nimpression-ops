@@ -11,6 +11,8 @@ export class I18nPipe implements PipeTransform {
 
   transform(key: string, params?: Record<string, string | number>): string {
     if (!key) return '';
+    this.i18n.currentLang();
+    this.i18n.isLoaded();
     return this.i18n.translate(key, params);
   }
 }

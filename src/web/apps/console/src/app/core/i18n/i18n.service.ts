@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { catchError, map, Observable, of, tap } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 import { SupportedLang } from '../models/i18n.models';
 
 const STORAGE_KEY = 'nim_locale_pref';
@@ -44,6 +44,16 @@ export class I18nService {
     if (typeof document !== 'undefined') {
       document.documentElement.lang = lang;
     }
+  }
+
+  init(): Observable<boolean> {
+    return forkJoin([
+      this.loadLanguage('en-NZ'),
+      this.loadLanguage('zh-CN'),
+    ]).pipe(
+      map(() => true),
+      catchError(() => of(true)),
+    );
   }
 
   setLanguage(lang: SupportedLang): Observable<boolean> {
