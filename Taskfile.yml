@@ -54,6 +54,7 @@ tasks:
       - 'echo "  Mailpit Web UI:        http://localhost:8025"'
       - 'echo "  MinIO Console:         http://localhost:9001"'
       - 'echo "========================================================"'
+      - dotnet build {{.SERVER}}/Nimpression.Api --nologo
       - task: dev:all
 
   dev:all:
@@ -64,7 +65,7 @@ tasks:
   dev:server:
     desc: 启动后端 API 服务
     cmds:
-      - dotnet run --project {{.SERVER}}/Nimpression.Api --no-launch-profile --urls "http://localhost:5080"
+      - dotnet run --project {{.SERVER}}/Nimpression.Api --no-build --no-launch-profile --urls "http://localhost:5080"
 
   dev:web:
     desc: 启动前端 Angular 开发服务器（带代理）
