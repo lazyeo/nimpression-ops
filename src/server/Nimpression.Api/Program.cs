@@ -10,6 +10,16 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "http://127.0.0.1:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 builder.Services.AddSignalR();
 builder.Services.AddScoped<Nimpression.Application.Features.Realtime.Abstractions.IRealtimeNotifier, Nimpression.Api.Hubs.RealtimeNotifier>();
 
@@ -31,6 +41,7 @@ if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {

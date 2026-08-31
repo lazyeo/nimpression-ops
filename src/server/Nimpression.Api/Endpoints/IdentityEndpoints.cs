@@ -59,7 +59,7 @@ public sealed class IdentityEndpoints : IEndpointModule
                 result.Value.AccessToken,
                 result.Value.ExpiresIn,
                 result.Value.TokenType,
-                result.Value.User);
+                AuthUserResponseDto.From(result.Value.User));
 
             return Results.Ok(response);
         })
@@ -97,7 +97,7 @@ public sealed class IdentityEndpoints : IEndpointModule
                 result.Value.AccessToken,
                 result.Value.ExpiresIn,
                 result.Value.TokenType,
-                result.Value.User);
+                AuthUserResponseDto.From(result.Value.User));
 
             return Results.Ok(response);
         })
@@ -233,7 +233,20 @@ public sealed record AuthSuccessResponse(
     string AccessToken,
     int ExpiresIn,
     string TokenType,
-    AuthUserDto User);
+    AuthUserResponseDto User);
+
+public sealed record AuthUserResponseDto(
+    Guid Id,
+    string Email,
+    string DisplayName,
+    [property: System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+    Nimpression.Domain.Enums.UserRole Role,
+    string Locale,
+    string? AvatarKey)
+{
+    public static AuthUserResponseDto From(AuthUserDto dto) =>
+        new(dto.Id, dto.Email, dto.DisplayName, dto.Role, dto.Locale, dto.AvatarKey);
+}
 
 /// <summary>
 /// 登录端点固定窗口限流器（5次/分钟/IP）。
