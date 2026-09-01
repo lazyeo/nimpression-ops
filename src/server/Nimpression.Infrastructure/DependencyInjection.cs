@@ -43,6 +43,9 @@ public static class DependencyInjection
         services.AddScoped<Nimpression.Application.Features.Fines.Abstractions.IFineRepository, Nimpression.Infrastructure.Persistence.Repositories.FineRepository>();
         services.AddScoped<Nimpression.Application.Features.Incidents.Abstractions.IIncidentRepository, Nimpression.Infrastructure.Persistence.Repositories.IncidentRepository>();
         services.AddScoped<Nimpression.Application.Features.News.Abstractions.INewsRepository, Nimpression.Infrastructure.Persistence.Repositories.NewsRepository>();
+        services.AddScoped<Nimpression.Application.Features.Privacy.Abstractions.IPrivacyRepository, Nimpression.Infrastructure.Privacy.PrivacyRepository>();
+        services.AddScoped<Nimpression.Application.Features.Privacy.Abstractions.IPrivacyExportService, Nimpression.Infrastructure.Privacy.PrivacyExportService>();
+        services.AddScoped<Nimpression.Application.Features.Vehicles.Abstractions.IVehicleRepository, Nimpression.Infrastructure.Persistence.Repositories.VehicleRepository>();
 
         // 认证与授权基础设施（F1 认证授权）
         services.Configure<Nimpression.Infrastructure.Security.JwtSettings>(configuration.GetSection(Nimpression.Infrastructure.Security.JwtSettings.SectionName));

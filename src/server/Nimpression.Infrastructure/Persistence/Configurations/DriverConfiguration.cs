@@ -79,14 +79,17 @@ public class DriverConfiguration : IEntityTypeConfiguration<Driver>
         });
 
         builder.Property(d => d.PhoneEnc)
+            .HasConversion<AesGcmEncryptionConverter>()
             .HasMaxLength(500)
             .IsRequired();
 
         builder.Property(d => d.AddressEnc)
+            .HasConversion<AesGcmEncryptionConverter>()
             .HasMaxLength(1000)
             .IsRequired();
 
         builder.Property(d => d.EmergencyContactEnc)
+            .HasConversion<AesGcmEncryptionConverter>()
             .HasMaxLength(1000)
             .IsRequired();
 
