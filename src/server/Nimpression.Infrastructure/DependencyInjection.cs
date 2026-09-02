@@ -121,7 +121,7 @@ public static class DependencyInjection
         services.AddStorage(configuration);
 
         // 实时通信基础设施（F12 实时通信）
-        services.AddRealtimeInfrastructure();
+        services.AddRealtimeInfrastructure(configuration);
 
         // 邮件与通知基础设施（F11 邮件与外部集成）
         services.AddNotificationInfrastructure(configuration);

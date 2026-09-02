@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nimpression.Application.Features.Notifications.Abstractions;
 
 namespace Nimpression.Infrastructure.Notifications.Outbox;
@@ -16,9 +17,10 @@ namespace Nimpression.Infrastructure.Notifications.Outbox;
 /// </summary>
 public sealed partial class NotificationOutboxProcessorBackgroundService(
     IServiceScopeFactory scopeFactory,
-    ILogger<NotificationOutboxProcessorBackgroundService> logger) : BackgroundService
+    ILogger<NotificationOutboxProcessorBackgroundService> logger,
+    IOptions<NotificationOptions>? options = null) : BackgroundService
 {
-    private static readonly TimeSpan PollingInterval = TimeSpan.FromMilliseconds(500);
+    private readonly TimeSpan _pollingInterval = options?.Value.PollingInterval ?? TimeSpan.FromMilliseconds(500);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -48,7 +50,7 @@ public sealed partial class NotificationOutboxProcessorBackgroundService(
 
             if (processedOutboxCount == 0 && retriedCount == 0)
             {
-                await Task.Delay(PollingInterval, stoppingToken);
+                await Task.Delay(_pollingInterval, stoppingToken);
             }
         }
 

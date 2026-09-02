@@ -47,10 +47,7 @@ export class I18nService {
   }
 
   init(): Observable<boolean> {
-    return forkJoin([
-      this.loadLanguage('en-NZ'),
-      this.loadLanguage('zh-CN'),
-    ]).pipe(
+    return forkJoin([this.loadLanguage('en-NZ'), this.loadLanguage('zh-CN')]).pipe(
       map(() => true),
       catchError(() => of(true)),
     );

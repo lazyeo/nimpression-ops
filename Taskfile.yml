@@ -7,6 +7,7 @@ vars:
   SERVER: src/server
   SLN: src/server/Nimpression.slnx
   WEB_APP: console
+  PNPM: corepack pnpm
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -19,6 +20,11 @@ tasks:
     cmds:
       - task --list
     silent: true
+
+  doctor:
+    desc: 检查开发环境依赖（.NET / Node / pnpm / Colima / Docker / 端口）
+    cmds:
+      - ./scripts/doctor.sh
 
   # ── 本地环境 ───────────────────────────────────────
   up:
@@ -46,13 +52,13 @@ tasks:
     desc: 起全栈开发环境（依赖 + 后端 + 前端）
     deps: [up]
     cmds:
+      - ./scripts/check-ports.sh 5080 4200
       - 'echo "========================================================"'
-      - 'echo "  Nimpression Ops — Full Stack Development Environment"'
+      - 'echo "  Nimpression Ops — Starting Development Environment"'
       - 'echo "========================================================"'
-      - 'echo "  Frontend (Angular):    http://localhost:4200"'
-      - 'echo "  Backend API (.NET):    http://localhost:5080"'
-      - 'echo "  Mailpit Web UI:        http://localhost:8025"'
-      - 'echo "  MinIO Console:         http://localhost:9001"'
+      - 'echo "  Starting backend API and Angular frontend..."'
+      - 'echo "  Note: Angular initial build takes ~40-60s on cold start."'
+      - 'echo "  Ready URLs will be displayed once services are online."'
       - 'echo "========================================================"'
       - dotnet build {{.SERVER}}/Nimpression.Api --nologo
       - task: dev:all
@@ -61,16 +67,24 @@ tasks:
     deps:
       - dev:server
       - dev:web
+      - dev:wait-ready
 
   dev:server:
     desc: 启动后端 API 服务
     cmds:
+      - ./scripts/check-ports.sh 5080
       - dotnet run --project {{.SERVER}}/Nimpression.Api --no-build --no-launch-profile --urls "http://localhost:5080"
 
   dev:web:
     desc: 启动前端 Angular 开发服务器（带代理）
     cmds:
-      - pnpm -F {{.WEB_APP}} exec ng serve --port 4200
+      - ./scripts/check-ports.sh 4200
+      - "{{.PNPM}} -F {{.WEB_APP}} exec ng serve --port 4200"
+
+  dev:wait-ready:
+    desc: 等待前端与后端完全就绪后打印访问入口
+    cmds:
+      - ./scripts/wait-for-dev.sh
 
   # ── 构建 ──────────────────────────────────────────
   build:
@@ -85,7 +99,7 @@ tasks:
   build:web:
     desc: 构建 Angular 应用
     cmds:
-      - pnpm -F {{.WEB_APP}} exec ng build
+      - "{{.PNPM}} -F {{.WEB_APP}} exec ng build"
 
   # ── 测试 ──────────────────────────────────────────
   test:
@@ -110,12 +124,12 @@ tasks:
   test:web:
     desc: 跑 Angular 单元测试
     cmds:
-      - pnpm -F {{.WEB_APP}} exec ng test --watch=false
+      - "{{.PNPM}} -F {{.WEB_APP}} exec ng test --watch=false"
 
   test:e2e:
     desc: 跑 Playwright 端到端测试
     cmds:
-      - pnpm -F {{.WEB_APP}} exec playwright test
+      - "{{.PNPM}} -F {{.WEB_APP}} exec playwright test"
 
   coverage:
     desc: 产出合并覆盖率报告
@@ -154,10 +168,10 @@ tasks:
     desc: 格式化前后端代码
     cmds:
       - dotnet format {{.SLN}}
-      - pnpm -F {{.WEB_APP}} exec prettier --write "src/**/*.{ts,html,scss,json}"
+      - "{{.PNPM}} -F {{.WEB_APP}} exec prettier --write \"src/**/*.{ts,html,scss,json}\""
 
   fmt:check:
     desc: 只检查格式，不改文件（CI 用）
     cmds:
       - dotnet format {{.SLN}} --verify-no-changes
-      - pnpm -F {{.WEB_APP}} exec prettier --check "src/**/*.{ts,html,scss,json}"
+      - "{{.PNPM}} -F {{.WEB_APP}} exec prettier --check \"src/**/*.{ts,html,scss,json}\""

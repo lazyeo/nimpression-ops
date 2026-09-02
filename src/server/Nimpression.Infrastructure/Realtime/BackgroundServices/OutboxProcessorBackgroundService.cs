@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nimpression.Application.Common.Abstractions;
 using Nimpression.Application.Features.Realtime.Abstractions;
 using Nimpression.Domain.Entities.Standalone;
@@ -21,10 +22,11 @@ namespace Nimpression.Infrastructure.Realtime.BackgroundServices;
 /// </summary>
 public sealed partial class OutboxProcessorBackgroundService(
     IServiceScopeFactory scopeFactory,
-    ILogger<OutboxProcessorBackgroundService> logger) : BackgroundService
+    ILogger<OutboxProcessorBackgroundService> logger,
+    IOptions<RealtimeOptions>? options = null) : BackgroundService
 {
     private const int BatchSize = 50;
-    private static readonly TimeSpan PollingInterval = TimeSpan.FromMilliseconds(200);
+    private readonly TimeSpan _pollingInterval = options?.Value.PollingInterval ?? TimeSpan.FromMilliseconds(200);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -48,7 +50,7 @@ public sealed partial class OutboxProcessorBackgroundService(
 
             if (processedCount == 0)
             {
-                await Task.Delay(PollingInterval, stoppingToken);
+                await Task.Delay(_pollingInterval, stoppingToken);
             }
         }
 
