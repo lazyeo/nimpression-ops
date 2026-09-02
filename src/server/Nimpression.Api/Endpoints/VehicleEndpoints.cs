@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
+using Nimpression.Application.Common.Security;
 using Nimpression.Application.Features.Vehicles.Commands.AssignVehicle;
 using Nimpression.Application.Features.Vehicles.Commands.CreateVehicle;
 using Nimpression.Application.Features.Vehicles.Commands.RecordOdometerReading;
@@ -30,79 +31,114 @@ public sealed class VehicleEndpoints : IEndpointModule
 
         // F3.1 车辆 CRUD 与状态管理
         group.MapPost("/", CreateVehicle)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("CreateVehicle")
             .Produces<Guid>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapGet("/", GetVehicles)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("GetVehicles")
             .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/{id:guid}", GetVehicleById)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("GetVehicleById")
             .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id:guid}", UpdateVehicle)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateVehicle")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPatch("/{id:guid}/status", UpdateVehicleStatus)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("UpdateVehicleStatus")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/service", RecordVehicleService)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly)
             .WithName("RecordVehicleService")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         // F3.2 车辆分派管理
         group.MapPost("/{id:guid}/assignments", AssignVehicle)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("AssignVehicle")
             .Produces<Guid>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         group.MapPost("/assignments/{assignmentId:guid}/release", ReleaseAssignment)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("ReleaseVehicleAssignment")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         group.MapGet("/{id:guid}/assignments/active", GetActiveAssignment)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("GetActiveVehicleAssignment")
             .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/{id:guid}/assignments", GetVehicleAssignments)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("GetVehicleAssignments")
             .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         // F3.3 里程上报与历史
         group.MapPost("/{id:guid}/odometer", RecordOdometerReading)
+            .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
             .WithName("RecordOdometerReading")
             .Produces<Guid>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         group.MapGet("/{id:guid}/odometer", GetOdometerReadings)
+            .RequireAuthorization(AuthorizationPolicies.Dispatcher)
             .WithName("GetOdometerReadings")
             .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     private static async Task<IResult> CreateVehicle(
