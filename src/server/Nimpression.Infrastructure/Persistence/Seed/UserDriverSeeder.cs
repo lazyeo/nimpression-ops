@@ -9,7 +9,7 @@ public static class UserDriverSeeder
 {
     public static (List<User> Users, List<Driver> Drivers) Generate(string? passwordHash = null, DateOnly? baseDate = null)
     {
-        var today = baseDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = baseDate ?? SeedConstants.ReferenceDate;
         var hash = passwordHash ?? SeedConstants.DefaultPasswordHash;
         var users = new List<User>();
         var drivers = new List<Driver>();
