@@ -13,7 +13,7 @@ public static class VehicleSeeder
         List<User> users,
         DateOnly? baseDate = null)
     {
-        var today = baseDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = baseDate ?? SeedConstants.ReferenceDate;
         var vehicles = new List<Vehicle>();
         var assignments = new List<VehicleAssignment>();
         var readings = new List<OdometerReading>();

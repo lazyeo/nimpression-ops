@@ -2,6 +2,7 @@ using Nimpression.Application.Common.Results;
 using Nimpression.Application.Features.Vehicles.Commands.RecordOdometerReading;
 using Nimpression.Application.Tests.Vehicles.TestDoubles;
 using Nimpression.Domain.Entities.Vehicle;
+using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
 using Xunit;
 
@@ -12,11 +13,12 @@ public class RecordOdometerReadingCommandHandlerTests
     private readonly FakeVehicleRepository _repository = new();
     private readonly FakeUnitOfWork _unitOfWork = new();
     private readonly FakeDateTimeProvider _dateTimeProvider = new();
+    private readonly FakeCurrentUser _currentUser = new(role: UserRole.Dispatcher);
     private readonly RecordOdometerReadingCommandHandler _handler;
 
     public RecordOdometerReadingCommandHandlerTests()
     {
-        _handler = new RecordOdometerReadingCommandHandler(_repository, _unitOfWork, _dateTimeProvider);
+        _handler = new RecordOdometerReadingCommandHandler(_repository, _unitOfWork, _currentUser, _dateTimeProvider);
     }
 
     [Fact]
@@ -52,6 +54,98 @@ public class RecordOdometerReadingCommandHandlerTests
         Assert.Equal(12500m, vehicle.OdometerKm.Value);
         Assert.Single(_repository.OdometerReadings);
         Assert.Equal(1, _unitOfWork.SaveChangesCallCount);
+    }
+
+    [Fact]
+    public async Task Handle_DriverAssignedToVehicle_Succeeds()
+    {
+        // Arrange
+        var driverUserId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
+        _currentUser.UserId = driverUserId;
+        _currentUser.Role = UserRole.Driver;
+
+        _repository.DriverUserIdToDriverId[driverUserId] = driverId;
+        _repository.ExistingDriverIds.Add(driverId);
+
+        var vehicle = new Vehicle(
+            Guid.NewGuid(),
+            new Rego("ABC123"),
+            "Toyota",
+            "Hilux",
+            2022,
+            "VIN",
+            new Kilometres(10000),
+            new Kilometres(10000));
+        _repository.Vehicles[vehicle.Id] = vehicle;
+
+        var assignment = new VehicleAssignment(
+            Guid.NewGuid(),
+            vehicle.Id,
+            driverId,
+            DateTimeOffset.UtcNow.AddDays(-1),
+            Guid.NewGuid());
+        _repository.Assignments[assignment.Id] = assignment;
+
+        var command = new RecordOdometerReadingCommand(
+            vehicle.Id,
+            driverId,
+            12000m);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(12000m, vehicle.OdometerKm.Value);
+    }
+
+    [Fact]
+    public async Task Handle_DriverNotAssignedToVehicle_ReturnsForbidden403()
+    {
+        // Arrange
+        var driverUserId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
+        _currentUser.UserId = driverUserId;
+        _currentUser.Role = UserRole.Driver;
+
+        _repository.DriverUserIdToDriverId[driverUserId] = driverId;
+        _repository.ExistingDriverIds.Add(driverId);
+
+        var otherDriverId = Guid.NewGuid();
+
+        var vehicle = new Vehicle(
+            Guid.NewGuid(),
+            new Rego("ABC123"),
+            "Toyota",
+            "Hilux",
+            2022,
+            "VIN",
+            new Kilometres(10000),
+            new Kilometres(10000));
+        _repository.Vehicles[vehicle.Id] = vehicle;
+
+        // Assigned to another driver
+        var assignment = new VehicleAssignment(
+            Guid.NewGuid(),
+            vehicle.Id,
+            otherDriverId,
+            DateTimeOffset.UtcNow.AddDays(-1),
+            Guid.NewGuid());
+        _repository.Assignments[assignment.Id] = assignment;
+
+        var command = new RecordOdometerReadingCommand(
+            vehicle.Id,
+            driverId,
+            12000m);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
     }
 
     [Fact]

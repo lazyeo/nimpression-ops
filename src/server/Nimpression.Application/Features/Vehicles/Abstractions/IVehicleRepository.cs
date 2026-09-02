@@ -20,6 +20,7 @@ public interface IVehicleRepository
 
     // 司机与分派 (Drivers & Assignments)
     Task<bool> DriverExistsAsync(Guid driverId, CancellationToken cancellationToken = default);
+    Task<Guid?> GetDriverIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<VehicleAssignment?> GetAssignmentByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<VehicleAssignment?> GetActiveAssignmentByVehicleIdAsync(Guid vehicleId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<VehicleAssignmentDto>> GetAssignmentsByVehicleIdAsync(Guid vehicleId, CancellationToken cancellationToken = default);
