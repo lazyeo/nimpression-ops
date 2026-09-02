@@ -417,7 +417,8 @@ public class VehicleIntegrationTests : IAsyncLifetime
         var repo = new EfVehicleRepository(context);
         var uow = new EfUnitOfWork(context);
         var dtProvider = new TestDateTimeProvider();
-        var handler = new RecordOdometerReadingCommandHandler(repo, uow, dtProvider);
+        var currentUser = new TestCurrentUser(driver1.Id, UserRole.Dispatcher);
+        var handler = new RecordOdometerReadingCommandHandler(repo, uow, currentUser, dtProvider);
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
@@ -466,7 +467,8 @@ public class VehicleIntegrationTests : IAsyncLifetime
         var repo = new EfVehicleRepository(context);
         var uow = new EfUnitOfWork(context);
         var dtProvider = new TestDateTimeProvider();
-        var handler = new RecordOdometerReadingCommandHandler(repo, uow, dtProvider);
+        var currentUser = new TestCurrentUser(driver1.Id, UserRole.Dispatcher);
+        var handler = new RecordOdometerReadingCommandHandler(repo, uow, currentUser, dtProvider);
 
         var vehicle = new Vehicle(
             Guid.NewGuid(),
@@ -582,10 +584,10 @@ public class VehicleIntegrationTests : IAsyncLifetime
 
     #endregion
 
-    private sealed class TestCurrentUser(Guid userId) : ICurrentUser
+    private sealed class TestCurrentUser(Guid userId, UserRole role = UserRole.Dispatcher) : ICurrentUser
     {
         public Guid? UserId => userId;
-        public UserRole? Role => UserRole.Dispatcher;
+        public UserRole? Role => role;
         public string? IpAddress => "127.0.0.1";
         public string? UserAgent => "IntegrationTest";
         public bool IsAuthenticated => true;

@@ -165,6 +165,14 @@ public sealed class EfVehicleRepository(AppDbContext context) : IVehicleReposito
         return await context.Drivers.AnyAsync(d => d.Id == driverId, cancellationToken);
     }
 
+    public async Task<Guid?> GetDriverIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await context.Drivers
+            .Where(d => d.UserId == userId)
+            .Select(d => (Guid?)d.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<VehicleAssignment?> GetAssignmentByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await context.VehicleAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);

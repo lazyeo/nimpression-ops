@@ -135,9 +135,20 @@ public sealed class FakeVehicleRepository : IVehicleRepository
         Vehicles[vehicle.Id] = vehicle;
     }
 
+    public Dictionary<Guid, Guid> DriverUserIdToDriverId { get; } = [];
+
     public Task<bool> DriverExistsAsync(Guid driverId, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(ExistingDriverIds.Contains(driverId));
+    }
+
+    public Task<Guid?> GetDriverIdByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (DriverUserIdToDriverId.TryGetValue(userId, out var driverId))
+        {
+            return Task.FromResult<Guid?>(driverId);
+        }
+        return Task.FromResult<Guid?>(null);
     }
 
     public Task<VehicleAssignment?> GetAssignmentByIdAsync(Guid id, CancellationToken cancellationToken = default)
