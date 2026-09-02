@@ -46,179 +46,179 @@ public sealed class OutboxToRealtimeMapper : IOutboxToRealtimeMapper
         switch (typeNormalized)
         {
             case "JobTaskAssigned":
-            {
-                var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
-                var driverId = TryGetGuid(root, "DriverId", "driverId");
-                var groups = new List<string>
+                {
+                    var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.TaskAssigned, taskId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "JobTaskAcknowledged":
-            {
-                var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
-                var driverId = TryGetGuid(root, "DriverId", "driverId");
-                var groups = new List<string>
+                {
+                    var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.TaskAcknowledged, taskId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.TaskAcknowledged, taskId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "JobTaskCompleted":
-            {
-                var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
-                var driverId = TryGetGuid(root, "DriverId", "driverId");
-                var groups = new List<string>
+                {
+                    var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.TaskCompleted, taskId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.TaskCompleted, taskId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "DriverDeactivated":
-            {
-                var driverId = TryGetGuid(root, "DriverId", "driverId", "Id", "id");
-                var groups = new List<string>
+                {
+                    var driverId = TryGetGuid(root, "DriverId", "driverId", "Id", "id");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.DriverDeactivated, driverId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.DriverDeactivated, driverId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "IncidentReported":
-            {
-                var incidentId = TryGetGuid(root, "IncidentId", "incidentId", "Id", "id");
-                var driverId = TryGetGuid(root, "DriverId", "driverId");
-                var groups = new List<string>
+                {
+                    var incidentId = TryGetGuid(root, "IncidentId", "incidentId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.IncidentReported, incidentId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.IncidentReported, incidentId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "FineAccepted":
-            {
-                var fineId = TryGetGuid(root, "FineId", "fineId", "Id", "id");
-                var driverId = TryGetGuid(root, "DriverId", "driverId");
-                var groups = new List<string>
+                {
+                    var fineId = TryGetGuid(root, "FineId", "fineId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.FineAccepted, fineId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.FineAccepted, fineId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "PayslipFinalised":
-            {
-                var payslipId = TryGetGuid(root, "PayslipId", "payslipId", "Id", "id");
-                var driverId = TryGetGuid(root, "DriverId", "driverId");
-                var groups = new List<string>
+                {
+                    var payslipId = TryGetGuid(root, "PayslipId", "payslipId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                if (driverId.HasValue && driverId.Value != Guid.Empty)
-                {
-                    groups.Add(RealtimeGroupNames.Driver(driverId.Value));
-                }
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.PayslipFinalised, payslipId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, driverId);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.PayslipFinalised, payslipId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
 
             case "NewsPublished":
-            {
-                var newsPostId = TryGetGuid(root, "NewsPostId", "newsPostId", "Id", "id");
-                var audienceVal = TryGetInt(root, "Audience", "audience") ?? (int)NewsAudience.All;
-                var audience = (NewsAudience)audienceVal;
-
-                var groups = new List<string>();
-                switch (audience)
                 {
-                    case NewsAudience.Drivers:
-                        groups.Add(RealtimeGroupNames.Role(UserRole.Driver.ToString()));
-                        break;
-                    case NewsAudience.Dispatchers:
-                        groups.Add(RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()));
-                        groups.Add(RealtimeGroupNames.Role(UserRole.Admin.ToString()));
-                        break;
-                    case NewsAudience.All:
-                    default:
-                        groups.Add(RealtimeGroupNames.All);
-                        break;
+                    var newsPostId = TryGetGuid(root, "NewsPostId", "newsPostId", "Id", "id");
+                    var audienceVal = TryGetInt(root, "Audience", "audience") ?? (int)NewsAudience.All;
+                    var audience = (NewsAudience)audienceVal;
+
+                    var groups = new List<string>();
+                    switch (audience)
+                    {
+                        case NewsAudience.Drivers:
+                            groups.Add(RealtimeGroupNames.Role(UserRole.Driver.ToString()));
+                            break;
+                        case NewsAudience.Dispatchers:
+                            groups.Add(RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()));
+                            groups.Add(RealtimeGroupNames.Role(UserRole.Admin.ToString()));
+                            break;
+                        case NewsAudience.All:
+                        default:
+                            groups.Add(RealtimeGroupNames.All);
+                            break;
+                    }
+
+                    var msg = new RealtimeMessage(RealtimeEventKinds.NewsPublished, newsPostId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, null);
                 }
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.NewsPublished, newsPostId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, null);
-            }
-
             case "ServiceThresholdReached":
-            {
-                var vehicleId = TryGetGuid(root, "VehicleId", "vehicleId", "Id", "id");
-                var groups = new List<string>
+                {
+                    var vehicleId = TryGetGuid(root, "VehicleId", "vehicleId", "Id", "id");
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
 
-                var msg = new RealtimeMessage(RealtimeEventKinds.VehicleServiceThresholdReached, vehicleId ?? Guid.Empty, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, null);
-            }
+                    var msg = new RealtimeMessage(RealtimeEventKinds.VehicleServiceThresholdReached, vehicleId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, null);
+                }
 
             default:
-            {
-                var entityId = TryGetGuid(root, "Id", "id", "EntityId", "entityId", "JobTaskId", "DriverId", "VehicleId") ?? Guid.Empty;
-                var groups = new List<string>
+                {
+                    var entityId = TryGetGuid(root, "Id", "id", "EntityId", "entityId", "JobTaskId", "DriverId", "VehicleId") ?? Guid.Empty;
+                    var groups = new List<string>
                 {
                     RealtimeGroupNames.Role(UserRole.Admin.ToString())
                 };
-                var kind = ConvertPascalToKebabOrSnake(typeNormalized);
-                var msg = new RealtimeMessage(kind, entityId, occurredAt);
-                return new OutboxRealtimeMapping(msg, groups, null);
-            }
+                    var kind = ConvertPascalToKebabOrSnake(typeNormalized);
+                    var msg = new RealtimeMessage(kind, entityId, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, null);
+                }
         }
     }
 

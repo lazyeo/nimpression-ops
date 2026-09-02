@@ -18,6 +18,7 @@ public static class NotificationInfrastructureExtensions
         IConfiguration configuration)
     {
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.Configure<NotificationOptions>(configuration.GetSection(NotificationOptions.SectionName));
 
         // 仓储注册
         services.AddScoped<IPartnerContactRepository, PartnerContactRepository>();
