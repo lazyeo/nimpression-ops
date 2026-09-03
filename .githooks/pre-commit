@@ -3,7 +3,7 @@
 # .gitignore 已忽略它，但 `git add -f` 能绕过 —— 这个钩子是第二道锁。
 set -euo pipefail
 
-leaked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^_design/' || true)
+leaked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^_design(/|$)' || true)
 if [ -n "$leaked" ]; then
   echo "" >&2
   echo "✗ 提交被拒绝：_design/ 下的文件不允许进入版本库。" >&2
