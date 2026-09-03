@@ -1,0 +1,834 @@
+<div class="payroll-page">
+  <!-- 403 Forbidden State -->
+  @if (isForbidden()) {
+    <div class="state-card forbidden-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon warning" />
+      <h2 class="state-title">{{ 'ADMIN.FORBIDDEN_TITLE' | i18n }}</h2>
+      <p class="state-desc">{{ 'ADMIN.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  }
+
+  <!-- Error State with Retry -->
+  @else if (hasError()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon danger" />
+      <h2 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h2>
+      <p class="state-desc">{{ errorMessage() || ('DASHBOARD.ERRORS.LOAD_FAILED' | i18n) }}</p>
+      <button type="button" class="action-btn btn-primary retry-btn" (click)="loadPayPeriods()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+
+  <!-- Normal Content -->
+  @else {
+    <!-- Main Pay Periods View -->
+    @if (currentView() === 'periods') {
+      <div class="page-header">
+        <div class="title-group">
+          <h1 class="page-title">{{ 'PAYROLL.TITLE' | i18n }}</h1>
+          <p class="page-subtitle">{{ 'PAYROLL.SUBTITLE' | i18n }}</p>
+        </div>
+        <div class="header-actions">
+          <button
+            type="button"
+            class="action-btn btn-refresh"
+            (click)="applyFilters()"
+            [disabled]="isLoading()"
+            [title]="'COMMON.REFRESH' | i18n"
+          >
+            <nim-icon name="refresh" [size]="16" />
+            <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+          </button>
+          <button
+            type="button"
+            class="action-btn btn-primary"
+            (click)="openCreateModal()"
+          >
+            <nim-icon name="calendar" [size]="16" />
+            <span>{{ 'PAYROLL.NEW_PERIOD' | i18n }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-card">
+        <div class="filter-group">
+          <label for="payroll-status-filter" class="filter-label">{{ 'PAYROLL.COL_STATUS' | i18n }}</label>
+          <select
+            id="payroll-status-filter"
+            class="form-control"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event)"
+          >
+            <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+            <option value="Open">{{ 'PAYROLL.STATUS_OPEN' | i18n }}</option>
+            <option value="Calculating">{{ 'PAYROLL.STATUS_CALCULATING' | i18n }}</option>
+            <option value="Finalised">{{ 'PAYROLL.STATUS_FINALISED' | i18n }}</option>
+            <option value="Paid">{{ 'PAYROLL.STATUS_PAID' | i18n }}</option>
+            <option value="Voided">{{ 'PAYROLL.STATUS_VOIDED' | i18n }}</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="payroll-from-date" class="filter-label">{{ 'TIMESHEETS.FILTER_FROM' | i18n }}</label>
+          <input
+            type="date"
+            id="payroll-from-date"
+            class="form-control"
+            [ngModel]="fromDate()"
+            (ngModelChange)="fromDate.set($event)"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label for="payroll-to-date" class="filter-label">{{ 'TIMESHEETS.FILTER_TO' | i18n }}</label>
+          <input
+            type="date"
+            id="payroll-to-date"
+            class="form-control"
+            [ngModel]="toDate()"
+            (ngModelChange)="toDate.set($event)"
+          />
+        </div>
+
+        <div class="filter-buttons">
+          <button type="button" class="btn-filter btn-primary" (click)="applyFilters()">
+            <nim-icon name="target" [size]="14" />
+            <span>{{ 'TIMESHEETS.FILTER_APPLY' | i18n }}</span>
+          </button>
+          <button type="button" class="btn-filter btn-secondary" (click)="resetFilters()">
+            <span>{{ 'TIMESHEETS.FILTER_RESET' | i18n }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Periods Table -->
+      <div class="table-container">
+        @if (isLoading()) {
+          <div class="skeleton-table">
+            <div class="skeleton-row header">
+              <div class="skeleton-cell" *ngFor="let c of [1, 2, 3, 4, 5, 6]"></div>
+            </div>
+            <div class="skeleton-row" *ngFor="let r of [1, 2, 3, 4, 5]">
+              <div class="skeleton-cell" *ngFor="let c of [1, 2, 3, 4, 5, 6]"></div>
+            </div>
+          </div>
+        } @else if (payPeriods().length === 0) {
+          <div class="state-card empty-state">
+            <nim-icon name="payroll" [size]="56" class="state-icon muted" />
+            <h2 class="state-title">{{ 'PAYROLL.EMPTY_PERIODS_TITLE' | i18n }}</h2>
+            <p class="state-desc">{{ 'PAYROLL.EMPTY_PERIODS_DESC' | i18n }}</p>
+            <button type="button" class="action-btn btn-primary" (click)="openCreateModal()">
+              <nim-icon name="calendar" [size]="16" />
+              <span>{{ 'PAYROLL.NEW_PERIOD' | i18n }}</span>
+            </button>
+          </div>
+        } @else {
+          <div class="responsive-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ 'PAYROLL.COL_PERIOD_RANGE' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_STATUS' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_PAYSLIP_COUNT' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_FINALISED_AT' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_PAID_AT' | i18n }}</th>
+                  <th class="actions-col">{{ 'COMMON.ACTIONS' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (period of payPeriods(); track period.id) {
+                  <tr>
+                    <td class="period-cell">
+                      <strong>{{ period.startsOn }} ~ {{ period.endsOn }}</strong>
+                    </td>
+                    <td>
+                      <span
+                        class="status-badge"
+                        [ngClass]="{
+                          'status-open': period.status === 'Open',
+                          'status-calculating': period.status === 'Calculating',
+                          'status-finalised': period.status === 'Finalised',
+                          'status-paid': period.status === 'Paid',
+                          'status-voided': period.status === 'Voided'
+                        }"
+                      >
+                        {{ 'PAYROLL.STATUS_' + period.status.toUpperCase() | i18n }}
+                      </span>
+                    </td>
+                    <td>{{ period.payslipCount }}</td>
+                    <td>{{ period.finalisedAt ? (period.finalisedAt | localeDate: 'short') : '-' }}</td>
+                    <td>{{ period.paidAt ? (period.paidAt | localeDate: 'short') : '-' }}</td>
+                    <td class="actions-cell">
+                      <!-- Action: View payslips -->
+                      <button
+                        type="button"
+                        class="table-btn btn-view-payslips"
+                        (click)="viewPeriodPayslips(period)"
+                        [title]="'PAYROLL.ACTION_VIEW_PAYSLIPS' | i18n"
+                      >
+                        <nim-icon name="payslips" [size]="14" />
+                        <span>{{ 'PAYROLL.ACTION_VIEW_PAYSLIPS' | i18n }}</span>
+                      </button>
+
+                      <!-- Action: Calculate/Recalculate (if not finalised) -->
+                      @if (period.status === 'Open' || period.status === 'Calculating') {
+                        <button
+                          type="button"
+                          class="table-btn btn-calc"
+                          (click)="openCalculateModal(period)"
+                          [title]="'PAYROLL.ACTION_CALCULATE' | i18n"
+                        >
+                          <nim-icon name="target" [size]="14" />
+                          <span>{{ (period.status === 'Calculating' ? 'PAYROLL.ACTION_RECALCULATE' : 'PAYROLL.ACTION_CALCULATE') | i18n }}</span>
+                        </button>
+                      }
+
+                      <!-- Action: Finalise (if calculated) -->
+                      @if (period.status === 'Calculating') {
+                        <button
+                          type="button"
+                          class="table-btn btn-finalise"
+                          (click)="openFinaliseModal(period)"
+                          [title]="'PAYROLL.ACTION_FINALISE' | i18n"
+                        >
+                          <nim-icon name="check-circle" [size]="14" />
+                          <span>{{ 'PAYROLL.ACTION_FINALISE' | i18n }}</span>
+                        </button>
+                      }
+
+                      <!-- Action: Void (if calculated or finalised) -->
+                      @if (period.status === 'Calculating' || period.status === 'Finalised') {
+                        <button
+                          type="button"
+                          class="table-btn btn-void"
+                          (click)="openVoidModal(period)"
+                          [title]="'PAYROLL.ACTION_VOID' | i18n"
+                        >
+                          <nim-icon name="alert-triangle" [size]="14" />
+                          <span>{{ 'PAYROLL.ACTION_VOID' | i18n }}</span>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-bar">
+            <span class="page-info">
+              Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+            </span>
+            <div class="pagination-controls">
+              <button
+                type="button"
+                class="page-btn"
+                [disabled]="currentPage() <= 1"
+                (click)="goToPage(currentPage() - 1)"
+              >
+                Prev
+              </button>
+              <span class="current-page-num">{{ currentPage() }}</span>
+              <button
+                type="button"
+                class="page-btn"
+                [disabled]="currentPage() >= totalPages()"
+                (click)="goToPage(currentPage() + 1)"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Drilldown View: Period Payslips -->
+    @if (currentView() === 'payslips') {
+      <div class="page-header">
+        <div class="title-group">
+          <div class="breadcrumb-back">
+            <button type="button" class="back-link-btn" (click)="backToPeriods()">
+              <nim-icon name="construction" [size]="16" />
+              <span>{{ 'PAYROLL.BACK_TO_PERIODS' | i18n }}</span>
+            </button>
+          </div>
+          <h1 class="page-title">
+            {{ selectedPeriod()?.startsOn }} ~ {{ selectedPeriod()?.endsOn }} ({{ 'PAYROLL.TAB_PAYSLIPS' | i18n }})
+          </h1>
+          <p class="page-subtitle">
+            Status: {{ selectedPeriod()?.status }} | Payslips: {{ periodPayslips().length }}
+          </p>
+        </div>
+        <div class="header-actions">
+          @if (selectedPeriod()?.status === 'Open' || selectedPeriod()?.status === 'Calculating') {
+            <button
+              type="button"
+              class="action-btn btn-primary"
+              (click)="openCalculateModal(selectedPeriod()!)"
+            >
+              <nim-icon name="target" [size]="16" />
+              <span>{{ 'PAYROLL.ACTION_CALCULATE' | i18n }}</span>
+            </button>
+          }
+          @if (selectedPeriod()?.status === 'Calculating') {
+            <button
+              type="button"
+              class="action-btn btn-success"
+              (click)="openFinaliseModal(selectedPeriod()!)"
+            >
+              <nim-icon name="check-circle" [size]="16" />
+              <span>{{ 'PAYROLL.ACTION_FINALISE' | i18n }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Payslips Table -->
+      <div class="table-container">
+        @if (isPayslipsLoading()) {
+          <div class="skeleton-table">
+            <div class="skeleton-row header">
+              <div class="skeleton-cell" *ngFor="let c of [1, 2, 3, 4, 5, 6]"></div>
+            </div>
+            <div class="skeleton-row" *ngFor="let r of [1, 2, 3, 4, 5]">
+              <div class="skeleton-cell" *ngFor="let c of [1, 2, 3, 4, 5, 6]"></div>
+            </div>
+          </div>
+        } @else if (periodPayslips().length === 0) {
+          <div class="state-card empty-state">
+            <nim-icon name="payslips" [size]="56" class="state-icon muted" />
+            <h2 class="state-title">No Payslips Calculated Yet</h2>
+            <p class="state-desc">Click Calculate / Trial above to compute driver earnings for this period.</p>
+          </div>
+        } @else {
+          <div class="responsive-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ 'PAYROLL.COL_DRIVER_NAME' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_EMPLOYEE_NO' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_GROSS_PAY' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_BASIS_USED' | i18n }}</th>
+                  <th>{{ 'PAYROLL.COL_MIN_WAGE_TOPUP' | i18n }}</th>
+                  <th class="actions-col">{{ 'COMMON.ACTIONS' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (slip of periodPayslips(); track slip.id) {
+                  <tr>
+                    <td class="driver-cell">
+                      <span class="driver-name">{{ slip.driverName || 'Driver ' + slip.driverId.substring(0, 8) }}</span>
+                    </td>
+                    <td>{{ slip.employeeNo || '-' }}</td>
+                    <td class="gross-cell">
+                      <strong>{{ slip.grossPay | localeCurrency: slip.currency }}</strong>
+                    </td>
+                    <td>
+                      <span
+                        class="basis-badge"
+                        [ngClass]="slip.basisUsed === 'Hourly' ? 'basis-hourly' : 'basis-trip'"
+                      >
+                        {{ (slip.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (slip.minimumWageTopUp) {
+                        <span class="topup-badge topup-applied" [title]="'PAYROLL.MIN_WAGE_NOTICE' | i18n">
+                          <nim-icon name="alert-triangle" [size]="12" />
+                          <span>{{ 'PAYROLL.TOPUP_APPLIED' | i18n }}</span>
+                        </span>
+                      } @else {
+                        <span class="topup-badge topup-none">
+                          {{ 'PAYROLL.TOPUP_NONE' | i18n }}
+                        </span>
+                      }
+                    </td>
+                    <td class="actions-cell">
+                      <button
+                        type="button"
+                        class="table-btn btn-primary"
+                        (click)="viewPayslipDetail(slip)"
+                        [title]="'PAYROLL.ACTION_VIEW_DETAIL' | i18n"
+                      >
+                        <nim-icon name="tasks" [size]="14" />
+                        <span>{{ 'PAYROLL.ACTION_VIEW_DETAIL' | i18n }}</span>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- PAYSLIP DETAILS COMPREHENSIVE MODAL (F7.10 - F7.12) -->
+  @if (isDetailModalOpen() && activePayslip()) {
+    <div class="modal-backdrop" (click)="closeDetailModal()">
+      <div class="modal-dialog modal-xl" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="payslips" [size]="22" />
+            <div>
+              <h3 class="modal-title">{{ 'PAYROLL.PAYSLIP_DETAIL_TITLE' | i18n }}</h3>
+              <small class="text-muted">{{ activePayslip()?.driverName }} ({{ activePayslip()?.employeeNo }}) | {{ activePayslip()?.periodStartsOn }} ~ {{ activePayslip()?.periodEndsOn }}</small>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeDetailModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          @if (isDetailLoading()) {
+            <div class="skeleton-table">
+              <div class="skeleton-row" *ngFor="let r of [1, 2, 3]"><div class="skeleton-cell"></div></div>
+            </div>
+          } @else {
+            <!-- Settlement Summary & Basis Banner -->
+            <div class="settlement-hero">
+              <div class="hero-left">
+                <span class="hero-label">{{ 'PAYROLL.PAYSLIP_SUMMARY_CARD' | i18n }}</span>
+                <span class="hero-gross">{{ activePayslip()?.grossPay | localeCurrency: activePayslip()?.currency }}</span>
+                <span class="hero-sub">{{ activePayslip()?.currency }} Gross Pay (Calculated: {{ activePayslip()?.calculatedAt | localeDate: 'short' }})</span>
+              </div>
+              <div class="hero-right">
+                <div class="basis-callout" [ngClass]="activePayslip()?.basisUsed === 'Hourly' ? 'callout-hourly' : 'callout-trip'">
+                  <span class="callout-tag">{{ 'PAYROLL.COL_BASIS_USED' | i18n }}: {{ (activePayslip()?.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n }}</span>
+                  <p class="callout-desc">
+                    {{ 'PAYROLL.SETTLED_BASIS_BANNER' | i18n: {
+                      basis: (activePayslip()?.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n,
+                      hoursGross: (activePayslip()?.hoursBasedGross | localeCurrency: activePayslip()?.currency),
+                      tripGross: (activePayslip()?.tripBasedGross | localeCurrency: activePayslip()?.currency)
+                    } }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Minimum Wage Statutory Banner (if applicable) -->
+            @if (activePayslip()?.minimumWageTopUp) {
+              <div class="min-wage-banner">
+                <div class="min-wage-icon">
+                  <nim-icon name="alert-triangle" [size]="24" />
+                </div>
+                <div class="min-wage-text">
+                  <h4 class="min-wage-title">{{ 'PAYROLL.MIN_WAGE_SECTION_TITLE' | i18n }}</h4>
+                  <p class="min-wage-desc">{{ 'PAYROLL.MIN_WAGE_NOTICE' | i18n }}</p>
+                </div>
+              </div>
+            }
+
+            <!-- Dual-Basis Comparison Grid (BOTH Always Shown) -->
+            <div class="dual-basis-grid">
+              <!-- Card 1: Hours-Based Gross -->
+              <div class="basis-card" [class.selected-basis]="activePayslip()?.basisUsed === 'Hourly'">
+                <div class="basis-card-header">
+                  <h4>{{ 'PAYROLL.HOURS_BASIS_CARD' | i18n }}</h4>
+                  @if (activePayslip()?.basisUsed === 'Hourly') {
+                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_HOURLY' | i18n }} (Applied)</span>
+                  }
+                </div>
+                <div class="basis-card-body">
+                  <div class="basis-row">
+                    <span>Ordinary Hours:</span>
+                    <strong>{{ activePayslip()?.ordinaryHours | localeNumber: 1 : 2 }}h @ {{ activePayslip()?.hourlyRateSnapshot | localeCurrency: activePayslip()?.currency }}/h</strong>
+                  </div>
+                  <div class="basis-row">
+                    <span>Overtime Hours:</span>
+                    <strong>{{ activePayslip()?.overtimeHours | localeNumber: 1 : 2 }}h</strong>
+                  </div>
+                  <div class="basis-row">
+                    <span>Holiday Hours:</span>
+                    <strong>{{ activePayslip()?.holidayHours | localeNumber: 1 : 2 }}h</strong>
+                  </div>
+                  <div class="basis-row subtotal">
+                    <span>{{ 'PAYROLL.HOURS_GROSS_TOTAL' | i18n }}:</span>
+                    <strong class="subtotal-val">{{ activePayslip()?.hoursBasedGross | localeCurrency: activePayslip()?.currency }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Trip-Based Gross -->
+              <div class="basis-card" [class.selected-basis]="activePayslip()?.basisUsed === 'Trip'">
+                <div class="basis-card-header">
+                  <h4>{{ 'PAYROLL.TRIP_BASIS_CARD' | i18n }}</h4>
+                  @if (activePayslip()?.basisUsed === 'Trip') {
+                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_TRIP' | i18n }} (Applied)</span>
+                  }
+                </div>
+                <div class="basis-card-body">
+                  <div class="basis-row">
+                    <span>Completed Trips:</span>
+                    <strong>{{ activePayslip()?.completedTripCount }} trips @ {{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }}/trip</strong>
+                  </div>
+                  <div class="basis-row">
+                    <span>Total Distance:</span>
+                    <strong>{{ activePayslip()?.totalDistanceKm | localeNumber: 1 : 1 }} km @ {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}/km</strong>
+                  </div>
+                  <div class="basis-row">
+                    <span>Per Trip / Km Snapshots:</span>
+                    <small>{{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }} / {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}</small>
+                  </div>
+                  <div class="basis-row subtotal">
+                    <span>{{ 'PAYROLL.TRIP_GROSS_TOTAL' | i18n }}:</span>
+                    <strong class="subtotal-val">{{ activePayslip()?.tripBasedGross | localeCurrency: activePayslip()?.currency }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Traceability & Audit Section -->
+            <div class="traceability-section">
+              <h4 class="trace-title">{{ 'PAYROLL.TRACEABILITY_TABS' | i18n }}</h4>
+              <div class="trace-tabs">
+                <button
+                  type="button"
+                  class="trace-tab-btn"
+                  [class.active]="activeTraceTab() === 'shifts'"
+                  (click)="activeTraceTab.set('shifts')"
+                >
+                  {{ 'PAYROLL.TAB_SHIFTS_TRACE' | i18n: { count: activePayslip()?.shiftDetails?.length || 0 } }}
+                </button>
+                <button
+                  type="button"
+                  class="trace-tab-btn"
+                  [class.active]="activeTraceTab() === 'trips'"
+                  (click)="activeTraceTab.set('trips')"
+                >
+                  {{ 'PAYROLL.TAB_TRIPS_TRACE' | i18n: { count: activePayslip()?.tripDetails?.length || 0 } }}
+                </button>
+                <button
+                  type="button"
+                  class="trace-tab-btn"
+                  [class.active]="activeTraceTab() === 'lines'"
+                  (click)="activeTraceTab.set('lines')"
+                >
+                  {{ 'PAYROLL.TAB_LINES_TRACE' | i18n: { count: activePayslip()?.lines?.length || 0 } }}
+                </button>
+              </div>
+
+              <!-- Traceability Content -->
+              <div class="trace-content">
+                @if (activeTraceTab() === 'shifts') {
+                  @if (!activePayslip()?.shiftDetails || activePayslip()?.shiftDetails?.length === 0) {
+                    <p class="empty-trace">No shift records linked to this payslip.</p>
+                  } @else {
+                    <table class="nested-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Clock In</th>
+                          <th>Clock Out</th>
+                          <th>Break</th>
+                          <th>Payable Hours</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (s of activePayslip()?.shiftDetails; track s.shiftId) {
+                          <tr>
+                            <td>{{ s.attributedDate }}</td>
+                            <td>{{ s.clockInAt | localeDate: 'short' }}</td>
+                            <td>{{ s.clockOutAt ? (s.clockOutAt | localeDate: 'short') : 'Ongoing' }}</td>
+                            <td>{{ s.breakMinutes }}m</td>
+                            <td><strong>{{ s.payableHours | localeNumber: 1 : 2 }}h</strong></td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                }
+
+                @if (activeTraceTab() === 'trips') {
+                  @if (!activePayslip()?.tripDetails || activePayslip()?.tripDetails?.length === 0) {
+                    <p class="empty-trace">No completed dispatch tasks linked to this payslip.</p>
+                  } @else {
+                    <table class="nested-table">
+                      <thead>
+                        <tr>
+                          <th>Task Ref</th>
+                          <th>Title</th>
+                          <th>Completed At</th>
+                          <th>Distance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (t of activePayslip()?.tripDetails; track t.jobTaskId) {
+                          <tr>
+                            <td><strong>{{ t.ref }}</strong></td>
+                            <td>{{ t.title }}</td>
+                            <td>{{ t.completedAt | localeDate: 'short' }}</td>
+                            <td>{{ t.effectiveDistanceKm ? (t.effectiveDistanceKm | localeNumber: 1 : 1) + ' km' : '-' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                }
+
+                @if (activeTraceTab() === 'lines') {
+                  @if (!activePayslip()?.lines || activePayslip()?.lines?.length === 0) {
+                    <p class="empty-trace">No calculation line details recorded.</p>
+                  } @else {
+                    <table class="nested-table">
+                      <thead>
+                        <tr>
+                          <th>Basis</th>
+                          <th>Kind</th>
+                          <th>Description</th>
+                          <th>Rate</th>
+                          <th>Qty / Hours / Dist</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (l of activePayslip()?.lines; track l.id) {
+                          <tr>
+                            <td><span class="basis-mini-badge">{{ l.basis }}</span></td>
+                            <td>{{ l.kind }}</td>
+                            <td>{{ l.description }}</td>
+                            <td>{{ l.rate | localeCurrency: l.currency }}</td>
+                            <td>{{ l.hours ? (l.hours | localeNumber: 1 : 2) + 'h' : (l.distance ? (l.distance | localeNumber: 1 : 1) + 'km' : (l.qty || '-')) }}</td>
+                            <td><strong>{{ l.amount | localeCurrency: l.currency }}</strong></td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                }
+              </div>
+            </div>
+
+            <!-- TRAFFIC FINES SEPARATE PARTITION (NZ Wages Protection Act 1983 Compliance) -->
+            <div class="fines-partition">
+              <div class="fines-partition-header">
+                <div class="fines-header-title">
+                  <nim-icon name="fines" [size]="20" />
+                  <h4>{{ 'PAYROLL.FINES_PARTITION_TITLE' | i18n }}</h4>
+                </div>
+                <span class="zero-deduction-badge">$0.00 Wage Deduction</span>
+              </div>
+
+              <!-- Mandatory Legal Disclaimer Banner -->
+              <div class="fines-legal-banner">
+                <nim-icon name="alert-triangle" [size]="20" class="legal-icon" />
+                <p class="legal-text">{{ 'PAYROLL.FINES_LEGAL_BANNER' | i18n }}</p>
+              </div>
+
+              @if (!activePayslip()?.fines || activePayslip()?.fines?.length === 0) {
+                <p class="no-fines-text">{{ 'PAYROLL.NO_FINES_IN_PERIOD' | i18n }}</p>
+              } @else {
+                <table class="nested-table fines-table">
+                  <thead>
+                    <tr>
+                      <th>Notice Ref</th>
+                      <th>Authority</th>
+                      <th>Issued On</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (f of activePayslip()?.fines; track f.fineId) {
+                      <tr>
+                        <td><strong>{{ f.reference }}</strong></td>
+                        <td>{{ f.authority }}</td>
+                        <td>{{ f.issuedOn }}</td>
+                        <td class="fine-amount-cell">{{ f.amount | localeCurrency: f.currency }}</td>
+                        <td><span class="fine-status-badge">{{ f.status }}</span></td>
+                        <td>{{ f.reason }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeDetailModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create Pay Period Dialog Modal -->
+  @if (isCreateModalOpen()) {
+    <div class="modal-backdrop" (click)="closeCreateModal()">
+      <div class="modal-dialog modal-form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="calendar" [size]="20" />
+            <h3 class="modal-title">{{ 'PAYROLL.DIALOG_CREATE_TITLE' | i18n }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeCreateModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-desc">{{ 'PAYROLL.DIALOG_CREATE_DESC' | i18n }}</p>
+          @if (actionError()) {
+            <div class="alert-box alert-danger">{{ actionError() }}</div>
+          }
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PAYROLL.STARTS_ON' | i18n }} *</label>
+            <input type="date" class="form-control" [(ngModel)]="newStartsOn" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PAYROLL.ENDS_ON' | i18n }}</label>
+            <input type="date" class="form-control" [(ngModel)]="newEndsOn" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeCreateModal()" [disabled]="isActionInProgress()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-dialog btn-primary"
+            (click)="submitCreatePeriod()"
+            [disabled]="isActionInProgress() || !newStartsOn"
+          >
+            {{ 'PAYROLL.CREATE_PERIOD_BTN' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Calculate Payroll Dialog Modal -->
+  @if (isCalculateModalOpen()) {
+    <div class="modal-backdrop" (click)="closeCalculateModal()">
+      <div class="modal-dialog modal-form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="target" [size]="20" />
+            <h3 class="modal-title">{{ 'PAYROLL.CALCULATE_DIALOG_TITLE' | i18n }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeCalculateModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-desc">{{ 'PAYROLL.CALCULATE_DIALOG_DESC' | i18n }}</p>
+          @if (actionError()) {
+            <div class="alert-box alert-danger">{{ actionError() }}</div>
+          }
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PAYROLL.MINIMUM_WAGE_RATE' | i18n }}</label>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              class="form-control"
+              [(ngModel)]="calcMinHourlyWage"
+              placeholder="e.g. 23.15"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeCalculateModal()" [disabled]="isActionInProgress()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-dialog btn-primary"
+            (click)="submitCalculatePayroll()"
+            [disabled]="isActionInProgress()"
+          >
+            {{ 'PAYROLL.RUN_CALCULATION' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Finalise Period Dialog Modal -->
+  @if (isFinaliseModalOpen()) {
+    <div class="modal-backdrop" (click)="closeFinaliseModal()">
+      <div class="modal-dialog modal-form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="alert-triangle" [size]="20" class="state-icon warning" />
+            <h3 class="modal-title">{{ 'PAYROLL.FINALISE_DIALOG_TITLE' | i18n }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeFinaliseModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="alert-box alert-warning">
+            <nim-icon name="alert-triangle" [size]="18" />
+            <span>{{ 'PAYROLL.FINALISE_WARNING' | i18n }}</span>
+          </div>
+          @if (actionError()) {
+            <div class="alert-box alert-danger">{{ actionError() }}</div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeFinaliseModal()" [disabled]="isActionInProgress()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-dialog btn-success"
+            (click)="submitFinalisePeriod()"
+            [disabled]="isActionInProgress()"
+          >
+            {{ 'PAYROLL.CONFIRM_FINALISE_BTN' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Void Period Dialog Modal -->
+  @if (isVoidModalOpen()) {
+    <div class="modal-backdrop" (click)="closeVoidModal()">
+      <div class="modal-dialog modal-form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="alert-triangle" [size]="20" class="state-icon danger" />
+            <h3 class="modal-title">{{ 'PAYROLL.VOID_DIALOG_TITLE' | i18n }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeVoidModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-desc">{{ 'PAYROLL.VOID_DESC' | i18n }}</p>
+          @if (actionError()) {
+            <div class="alert-box alert-danger">{{ actionError() }}</div>
+          }
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PAYROLL.VOID_REASON_LABEL' | i18n }} *</label>
+            <textarea
+              class="form-control textarea"
+              rows="3"
+              [(ngModel)]="voidReason"
+              required
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeVoidModal()" [disabled]="isActionInProgress()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-dialog btn-danger"
+            (click)="submitVoidPeriod()"
+            [disabled]="isActionInProgress() || !voidReason.trim()"
+          >
+            {{ 'PAYROLL.CONFIRM_VOID_BTN' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
