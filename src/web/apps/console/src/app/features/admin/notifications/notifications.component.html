@@ -1,0 +1,77 @@
+<div class="notifications-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="title-with-icon">
+        <nim-icon name="notifications" [size]="24" class="header-icon" />
+        <h2 class="page-title">{{ 'NOTIFICATIONS.PAGE_TITLE' | i18n }}</h2>
+      </div>
+      <p class="page-subtitle">{{ 'NOTIFICATIONS.PAGE_SUBTITLE' | i18n }}</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-nav-bar" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="nav-tab-btn"
+      [class.active]="activeTab() === 'logs'"
+      (click)="setActiveTab('logs')"
+    >
+      <nim-icon name="inbox" [size]="16" />
+      <span>{{ 'NOTIFICATIONS.TAB_LOGS' | i18n }}</span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      class="nav-tab-btn"
+      [class.active]="activeTab() === 'templates'"
+      (click)="setActiveTab('templates')"
+    >
+      <nim-icon name="notifications" [size]="16" />
+      <span>{{ 'NOTIFICATIONS.TAB_TEMPLATES' | i18n }}</span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      class="nav-tab-btn"
+      [class.active]="activeTab() === 'partners'"
+      (click)="setActiveTab('partners')"
+    >
+      <nim-icon name="drivers" [size]="16" />
+      <span>{{ 'NOTIFICATIONS.TAB_PARTNERS' | i18n }}</span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      class="nav-tab-btn"
+      [class.active]="activeTab() === 'compliance'"
+      (click)="setActiveTab('compliance')"
+    >
+      <nim-icon name="vehicles" [size]="16" />
+      <span>{{ 'NOTIFICATIONS.TAB_COMPLIANCE' | i18n }}</span>
+    </button>
+  </div>
+
+  <!-- Tab Contents -->
+  <div class="tab-pane-container">
+    @switch (activeTab()) {
+      @case ('logs') {
+        <nim-email-logs-tab />
+      }
+      @case ('templates') {
+        <nim-email-templates-tab />
+      }
+      @case ('partners') {
+        <nim-partner-contacts-tab />
+      }
+      @case ('compliance') {
+        <nim-compliance-scan-tab />
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,323 @@
+<div class="partners-tab-content">
+  <!-- Filter & Action Bar -->
+  <div class="filter-card">
+    <div class="filter-group">
+      <label for="filter-partner-kind" class="filter-label">{{ 'NOTIFICATIONS.FILTER_KIND' | i18n }}</label>
+      <select
+        id="filter-partner-kind"
+        [ngModel]="kindFilter() === null ? '' : kindFilter()?.toString()"
+        (ngModelChange)="kindFilter.set($event === '' ? null : +$event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="1">{{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}</option>
+        <option value="2">{{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}</option>
+        <option value="3">{{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-partner-active" class="filter-label">{{ 'COMMON.STATUS' | i18n }}</label>
+      <select
+        id="filter-partner-active"
+        [ngModel]="activeFilter() === null ? '' : activeFilter()?.toString()"
+        (ngModelChange)="activeFilter.set($event === '' ? null : $event === 'true'); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="true">{{ 'NEWS.ACTIVE' | i18n }}</option>
+        <option value="false">{{ 'NEWS.INACTIVE' | i18n }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group search-group">
+      <label for="filter-partner-search" class="filter-label">{{ 'COMMON.SEARCH' | i18n }}</label>
+      <input
+        id="filter-partner-search"
+        type="text"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event); onFilterChange()"
+        [placeholder]="'NOTIFICATIONS.SEARCH_PARTNERS_PLACEHOLDER' | i18n"
+        class="filter-input"
+      />
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn btn-primary" (click)="openCreateDialog()">
+        <nim-icon name="target" [size]="16" />
+        <span>{{ 'NOTIFICATIONS.NEW_PARTNER_BUTTON' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- State 3: Error State -->
+  @if (error()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon error-icon" />
+      <h3 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h3>
+      <p class="state-desc">{{ error() }}</p>
+      <button type="button" class="btn btn-primary" (click)="loadPartners()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+  <!-- State 1: Skeleton Loading -->
+  @else if (loading()) {
+    <div class="table-container">
+      <div class="skeleton-table-wrapper">
+        <div class="skeleton-row skeleton-header-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+    </div>
+  }
+  <!-- State 2: Empty State -->
+  @else if (partners().length === 0) {
+    <div class="state-card empty-state">
+      <nim-icon name="drivers" [size]="48" class="state-icon empty-icon" />
+      <h3 class="state-title">{{ 'NOTIFICATIONS.EMPTY_PARTNERS_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'NOTIFICATIONS.EMPTY_PARTNERS_DESC' | i18n }}</p>
+      <button type="button" class="btn btn-primary" (click)="openCreateDialog()">
+        <nim-icon name="target" [size]="16" />
+        <span>{{ 'NOTIFICATIONS.NEW_PARTNER_BUTTON' | i18n }}</span>
+      </button>
+    </div>
+  }
+  <!-- Content Table -->
+  @else {
+    <div class="table-container">
+      <table class="data-table" aria-label="Partner Contacts List">
+        <thead>
+          <tr>
+            <th class="th-name">{{ 'NOTIFICATIONS.COL_COMPANY_NAME' | i18n }}</th>
+            <th class="th-kind">{{ 'NOTIFICATIONS.COL_PARTNER_KIND' | i18n }}</th>
+            <th class="th-email">{{ 'NOTIFICATIONS.COL_EMAIL' | i18n }}</th>
+            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (partner of partners(); track partner.id) {
+            <tr (click)="openEditDialog(partner)">
+              <td class="cell-name">
+                <span class="company-title">{{ partner.companyName }}</span>
+              </td>
+              <td>
+                <span
+                  class="badge badge-kind"
+                  [class.kind-insurer]="partner.kind === 1"
+                  [class.kind-maintenance]="partner.kind === 2"
+                  [class.kind-inspection]="partner.kind === 3"
+                >
+                  @if (partner.kind === 1) {
+                    {{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}
+                  } @else if (partner.kind === 2) {
+                    {{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}
+                  } @else {
+                    {{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}
+                  }
+                </span>
+              </td>
+              <td class="cell-email">{{ partner.email }}</td>
+              <td>
+                @if (partner.active) {
+                  <span class="status-indicator status-active">
+                    <span class="dot"></span>
+                    <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+                  </span>
+                } @else {
+                  <span class="status-indicator status-inactive">
+                    <span class="dot"></span>
+                    <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
+                  </span>
+                }
+              </td>
+              <td class="cell-actions" (click)="$event.stopPropagation()">
+                <div class="action-buttons">
+                  <button
+                    type="button"
+                    class="btn-row-action"
+                    (click)="openEditDialog(partner)"
+                    [attr.title]="'COMMON.EDIT' | i18n"
+                  >
+                    <span>{{ 'COMMON.EDIT' | i18n }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn-row-action"
+                    [class.btn-deactivate]="partner.active"
+                    (click)="togglePartnerActive(partner, $event)"
+                  >
+                    <span>{{ (partner.active ? 'NOTIFICATIONS.DEACTIVATE' : 'NOTIFICATIONS.ACTIVATE') | i18n }}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn-row-action btn-delete"
+                    (click)="confirmDelete(partner, $event)"
+                    [attr.title]="'COMMON.DELETE' | i18n"
+                  >
+                    <span>{{ 'COMMON.DELETE' | i18n }}</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Create / Edit Partner Dialog -->
+  @if (showEditDialog()) {
+    <div class="modal-backdrop" (click)="closeDialog()">
+      <div
+        class="modal-card"
+        (click)="$event.stopPropagation()"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'partner-dialog-title'"
+      >
+        <div class="modal-header">
+          <div class="header-left">
+            <nim-icon name="drivers" [size]="22" class="title-icon" />
+            <h2 id="partner-dialog-title" class="modal-title">
+              {{ (isEditing() ? 'NOTIFICATIONS.EDIT_PARTNER_TITLE' : 'NOTIFICATIONS.NEW_PARTNER_TITLE') | i18n }}
+            </h2>
+          </div>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeDialog()"
+            [attr.aria-label]="'COMMON.CLOSE' | i18n"
+          >
+            <nim-icon name="check-circle" [size]="18" class="icon-hidden" />
+            <span class="close-x">&times;</span>
+          </button>
+        </div>
+
+        <form [formGroup]="partnerForm" (ngSubmit)="submitPartnerForm()" class="modal-body">
+          @if (dialogError()) {
+            <div class="alert-error" role="alert">
+              <nim-icon name="alert-triangle" [size]="18" />
+              <span>{{ dialogError() }}</span>
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="partner-kind-input" class="form-label">
+              {{ 'NOTIFICATIONS.COL_PARTNER_KIND' | i18n }} <span class="req">*</span>
+            </label>
+            <select id="partner-kind-input" formControlName="kind" class="form-select">
+              <option [value]="1">{{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}</option>
+              <option [value]="2">{{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}</option>
+              <option [value]="3">{{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="partner-name-input" class="form-label">
+              {{ 'NOTIFICATIONS.COL_COMPANY_NAME' | i18n }} <span class="req">*</span>
+            </label>
+            <input
+              id="partner-name-input"
+              type="text"
+              formControlName="companyName"
+              class="form-input"
+              [placeholder]="'NOTIFICATIONS.PARTNER_NAME_PLACEHOLDER' | i18n"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="partner-email-input" class="form-label">
+              {{ 'NOTIFICATIONS.COL_EMAIL' | i18n }} <span class="req">*</span>
+            </label>
+            <input
+              id="partner-email-input"
+              type="email"
+              formControlName="email"
+              class="form-input"
+              [placeholder]="'NOTIFICATIONS.PARTNER_EMAIL_PLACEHOLDER' | i18n"
+            />
+          </div>
+
+          @if (!isEditing()) {
+            <div class="form-group checkbox-wrap">
+              <label class="checkbox-label" for="partner-active-checkbox">
+                <input
+                  id="partner-active-checkbox"
+                  type="checkbox"
+                  formControlName="active"
+                  class="form-checkbox"
+                />
+                <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+              </label>
+            </div>
+          }
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeDialog()">
+              {{ 'COMMON.CANCEL' | i18n }}
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="partnerForm.invalid || dialogSubmitting()"
+            >
+              @if (dialogSubmitting()) {
+                <span>{{ 'COMMON.LOADING' | i18n }}</span>
+              } @else {
+                <span>{{ 'COMMON.SAVE' | i18n }}</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (deleteTarget(); as target) {
+    <div class="modal-backdrop" (click)="cancelDelete()">
+      <div
+        class="modal-card modal-sm"
+        (click)="$event.stopPropagation()"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'delete-partner-title'"
+      >
+        <div class="modal-header">
+          <div class="header-left">
+            <nim-icon name="alert-triangle" [size]="20" class="error-icon" />
+            <h2 id="delete-partner-title" class="modal-title">
+              {{ 'NOTIFICATIONS.DELETE_PARTNER_TITLE' | i18n }}
+            </h2>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <p class="delete-msg">
+            {{ 'NOTIFICATIONS.DELETE_PARTNER_CONFIRM' | i18n: { name: target.companyName } }}
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cancelDelete()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            [disabled]="deleting()"
+            (click)="executeDelete()"
+          >
+            <span>{{ (deleting() ? 'COMMON.LOADING' : 'COMMON.DELETE') | i18n }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

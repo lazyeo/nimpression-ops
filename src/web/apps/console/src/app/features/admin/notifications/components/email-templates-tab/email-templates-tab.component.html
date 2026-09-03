@@ -1,0 +1,279 @@
+<div class="templates-tab-content">
+  <!-- Header & Actions -->
+  <div class="tab-header-row">
+    <div class="search-wrap">
+      <input
+        type="text"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event); loadTemplates()"
+        [placeholder]="'NOTIFICATIONS.SEARCH_TEMPLATES_PLACEHOLDER' | i18n"
+        class="filter-input"
+      />
+    </div>
+
+    @if (authService.isAdmin()) {
+      <button type="button" class="btn btn-primary" (click)="openCreateDialog()">
+        <nim-icon name="target" [size]="16" />
+        <span>{{ 'NOTIFICATIONS.NEW_TEMPLATE_BUTTON' | i18n }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- State 3: Error State -->
+  @if (error()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon error-icon" />
+      <h3 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h3>
+      <p class="state-desc">{{ error() }}</p>
+      <button type="button" class="btn btn-primary" (click)="loadTemplates()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+  <!-- State 1: Skeleton Loading -->
+  @else if (loading()) {
+    <div class="table-container">
+      <div class="skeleton-table-wrapper">
+        <div class="skeleton-row skeleton-header-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+    </div>
+  }
+  <!-- State 2: Empty State -->
+  @else if (templates().length === 0) {
+    <div class="state-card empty-state">
+      <nim-icon name="notifications" [size]="48" class="state-icon empty-icon" />
+      <h3 class="state-title">{{ 'NOTIFICATIONS.EMPTY_TEMPLATES_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'NOTIFICATIONS.EMPTY_TEMPLATES_DESC' | i18n }}</p>
+      @if (authService.isAdmin()) {
+        <button type="button" class="btn btn-primary" (click)="openCreateDialog()">
+          <nim-icon name="target" [size]="16" />
+          <span>{{ 'NOTIFICATIONS.NEW_TEMPLATE_BUTTON' | i18n }}</span>
+        </button>
+      }
+    </div>
+  }
+  <!-- Content Table -->
+  @else {
+    <div class="table-container">
+      <table class="data-table" aria-label="Email Templates List">
+        <thead>
+          <tr>
+            <th class="th-key">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</th>
+            <th class="th-subject-en">{{ 'NOTIFICATIONS.COL_SUBJECT_EN' | i18n }}</th>
+            <th class="th-subject-zh">{{ 'NOTIFICATIONS.COL_SUBJECT_ZH' | i18n }}</th>
+            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (template of templates(); track template.id) {
+            <tr (click)="openEditDialog(template)">
+              <td>
+                <span class="badge-template">{{ template.key }}</span>
+              </td>
+              <td class="cell-subject">{{ template.subjectEn }}</td>
+              <td class="cell-subject">{{ template.subjectZh }}</td>
+              <td>
+                @if (template.active) {
+                  <span class="status-indicator status-active">
+                    <span class="dot"></span>
+                    <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+                  </span>
+                } @else {
+                  <span class="status-indicator status-inactive">
+                    <span class="dot"></span>
+                    <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
+                  </span>
+                }
+              </td>
+              <td class="cell-actions" (click)="$event.stopPropagation()">
+                <div class="action-buttons">
+                  <button
+                    type="button"
+                    class="btn-row-action"
+                    (click)="openEditDialog(template)"
+                  >
+                    <nim-icon name="target" [size]="14" />
+                    <span>{{ (authService.isAdmin() ? 'COMMON.EDIT' : 'COMMON.DETAILS') | i18n }}</span>
+                  </button>
+
+                  @if (authService.isAdmin()) {
+                    <button
+                      type="button"
+                      class="btn-row-action"
+                      [class.btn-deactivate]="template.active"
+                      (click)="toggleTemplateActive(template, $event)"
+                    >
+                      <span>{{ (template.active ? 'NOTIFICATIONS.DEACTIVATE' : 'NOTIFICATIONS.ACTIVATE') | i18n }}</span>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Create / Edit Dialog -->
+  @if (showEditDialog()) {
+    <div class="modal-backdrop" (click)="closeDialog()">
+      <div
+        class="modal-card"
+        (click)="$event.stopPropagation()"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'template-dialog-title'"
+      >
+        <div class="modal-header">
+          <div class="header-left">
+            <nim-icon name="notifications" [size]="22" class="title-icon" />
+            <h2 id="template-dialog-title" class="modal-title">
+              {{ (isEditing() ? 'NOTIFICATIONS.EDIT_TEMPLATE_TITLE' : 'NOTIFICATIONS.NEW_TEMPLATE_TITLE') | i18n }}
+            </h2>
+          </div>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeDialog()"
+            [attr.aria-label]="'COMMON.CLOSE' | i18n"
+          >
+            <nim-icon name="check-circle" [size]="18" class="icon-hidden" />
+            <span class="close-x">&times;</span>
+          </button>
+        </div>
+
+        <form [formGroup]="templateForm" (ngSubmit)="submitTemplateForm()" class="modal-body">
+          @if (dialogError()) {
+            <div class="alert-error" role="alert">
+              <nim-icon name="alert-triangle" [size]="18" />
+              <span>{{ dialogError() }}</span>
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="template-key-select" class="form-label">
+              {{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }} <span class="req">*</span>
+            </label>
+            @if (isEditing()) {
+              <input
+                id="template-key-disabled"
+                type="text"
+                [value]="templateForm.controls.key.value"
+                disabled
+                class="form-input disabled-input"
+              />
+            } @else {
+              <input
+                id="template-key-select"
+                type="text"
+                formControlName="key"
+                class="form-input"
+                [placeholder]="'NOTIFICATIONS.TEMPLATE_KEY_PLACEHOLDER' | i18n"
+              />
+            }
+          </div>
+
+          <!-- Required Placeholders Guidance Bar -->
+          @if (templateForm.controls.key.value; as currKey) {
+            @if (getPlaceholdersForKey(currKey); as reqPlaceholders) {
+              @if (reqPlaceholders.length > 0) {
+                <div class="placeholders-hint-card">
+                  <div class="hint-header">
+                    <nim-icon name="target" [size]="14" />
+                    <span>{{ 'NOTIFICATIONS.REQUIRED_PLACEHOLDERS_NOTE' | i18n }}</span>
+                  </div>
+                  <div class="placeholder-chips">
+                    @for (ph of reqPlaceholders; track ph) {
+                      <span class="chip-item">
+                        <span>{{ '{{' + ph + '}}' }}</span>
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            }
+          }
+
+          <!-- Bilingual Subjects -->
+          <div class="form-group">
+            <label for="template-subject-en" class="form-label">
+              {{ 'NOTIFICATIONS.SUBJECT_EN_LABEL' | i18n }} <span class="req">*</span>
+            </label>
+            <input
+              id="template-subject-en"
+              type="text"
+              formControlName="subjectEn"
+              class="form-input"
+              [placeholder]="'NOTIFICATIONS.SUBJECT_EN_PLACEHOLDER' | i18n"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="template-subject-zh" class="form-label">
+              {{ 'NOTIFICATIONS.SUBJECT_ZH_LABEL' | i18n }} <span class="req">*</span>
+            </label>
+            <input
+              id="template-subject-zh"
+              type="text"
+              formControlName="subjectZh"
+              class="form-input"
+              [placeholder]="'NOTIFICATIONS.SUBJECT_ZH_PLACEHOLDER' | i18n"
+            />
+          </div>
+
+          <!-- Bilingual Bodies -->
+          <div class="form-group">
+            <label for="template-body-en" class="form-label">
+              {{ 'NOTIFICATIONS.BODY_EN_LABEL' | i18n }} <span class="req">*</span>
+            </label>
+            <textarea
+              id="template-body-en"
+              rows="4"
+              formControlName="bodyEn"
+              class="form-textarea"
+              [placeholder]="'NOTIFICATIONS.BODY_EN_PLACEHOLDER' | i18n"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="template-body-zh" class="form-label">
+              {{ 'NOTIFICATIONS.BODY_ZH_LABEL' | i18n }} <span class="req">*</span>
+            </label>
+            <textarea
+              id="template-body-zh"
+              rows="4"
+              formControlName="bodyZh"
+              class="form-textarea"
+              [placeholder]="'NOTIFICATIONS.BODY_ZH_PLACEHOLDER' | i18n"
+            ></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeDialog()">
+              {{ 'COMMON.CANCEL' | i18n }}
+            </button>
+            @if (authService.isAdmin()) {
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="templateForm.invalid || dialogSubmitting()"
+              >
+                @if (dialogSubmitting()) {
+                  <span>{{ 'COMMON.LOADING' | i18n }}</span>
+                } @else {
+                  <span>{{ 'COMMON.SAVE' | i18n }}</span>
+                }
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

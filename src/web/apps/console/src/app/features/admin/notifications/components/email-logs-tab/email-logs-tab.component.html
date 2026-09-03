@@ -1,0 +1,371 @@
+<div class="logs-tab-content">
+  <!-- Outbox Status Monitoring Card -->
+  <div class="outbox-summary-grid">
+    <div class="outbox-card">
+      <div class="outbox-card-icon icon-all">
+        <nim-icon name="inbox" [size]="20" />
+      </div>
+      <div class="outbox-card-info">
+        <span class="outbox-card-label">{{ 'NOTIFICATIONS.OUTBOX_TOTAL' | i18n }}</span>
+        <strong class="outbox-card-val">{{ totalCount() }}</strong>
+      </div>
+    </div>
+
+    <div class="outbox-card">
+      <div class="outbox-card-icon icon-sent">
+        <nim-icon name="check-circle" [size]="20" />
+      </div>
+      <div class="outbox-card-info">
+        <span class="outbox-card-label">{{ 'NOTIFICATIONS.OUTBOX_SENT' | i18n }}</span>
+        <strong class="outbox-card-val text-success">{{ outboxStats().sent }}</strong>
+      </div>
+    </div>
+
+    <div class="outbox-card">
+      <div class="outbox-card-icon icon-failed">
+        <nim-icon name="alert-triangle" [size]="20" />
+      </div>
+      <div class="outbox-card-info">
+        <span class="outbox-card-label">{{ 'NOTIFICATIONS.OUTBOX_FAILED' | i18n }}</span>
+        <strong class="outbox-card-val text-danger">{{ outboxStats().failed }}</strong>
+      </div>
+    </div>
+
+    <div class="outbox-card">
+      <div class="outbox-card-icon icon-pending">
+        <nim-icon name="clock" [size]="20" />
+      </div>
+      <div class="outbox-card-info">
+        <span class="outbox-card-label">{{ 'NOTIFICATIONS.OUTBOX_PENDING' | i18n }}</span>
+        <strong class="outbox-card-val text-warning">{{ outboxStats().pending }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="filter-card">
+    <div class="filter-group">
+      <label for="filter-log-status" class="filter-label">{{ 'NOTIFICATIONS.FILTER_STATUS' | i18n }}</label>
+      <select
+        id="filter-log-status"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="Sent">{{ 'NOTIFICATIONS.STATUS_SENT' | i18n }}</option>
+        <option value="Failed">{{ 'NOTIFICATIONS.STATUS_FAILED' | i18n }}</option>
+        <option value="DeadLetter">{{ 'NOTIFICATIONS.STATUS_DEADLETTER' | i18n }}</option>
+        <option value="Pending">{{ 'NOTIFICATIONS.STATUS_PENDING' | i18n }}</option>
+        <option value="Sending">{{ 'NOTIFICATIONS.STATUS_SENDING' | i18n }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-log-template" class="filter-label">{{ 'NOTIFICATIONS.FILTER_TEMPLATE' | i18n }}</label>
+      <select
+        id="filter-log-template"
+        [ngModel]="templateKeyFilter()"
+        (ngModelChange)="templateKeyFilter.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="SERVICE_DUE_REMINDER">SERVICE_DUE_REMINDER</option>
+        <option value="COMPLIANCE_EXPIRY_WARNING">COMPLIANCE_EXPIRY_WARNING</option>
+        <option value="INCIDENT_NOTIFICATION">INCIDENT_NOTIFICATION</option>
+        <option value="FINE_ACCEPTED_NOTICE">FINE_ACCEPTED_NOTICE</option>
+      </select>
+    </div>
+
+    <div class="filter-group filter-search-group">
+      <label for="filter-log-search" class="filter-label">{{ 'COMMON.SEARCH' | i18n }}</label>
+      <input
+        id="filter-log-search"
+        type="text"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event); onFilterChange()"
+        [placeholder]="'NOTIFICATIONS.SEARCH_LOGS_PLACEHOLDER' | i18n"
+        class="filter-input"
+      />
+    </div>
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="btn btn-secondary btn-icon"
+        (click)="loadLogs()"
+        [attr.title]="'COMMON.REFRESH' | i18n"
+      >
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- State 3: Error State -->
+  @if (error()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon error-icon" />
+      <h3 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h3>
+      <p class="state-desc">{{ error() }}</p>
+      <button type="button" class="btn btn-primary" (click)="loadLogs()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+  <!-- State 1: Skeleton Loading State -->
+  @else if (loading()) {
+    <div class="table-container">
+      <div class="skeleton-table-wrapper">
+        <div class="skeleton-row skeleton-header-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+    </div>
+  }
+  <!-- State 2: Empty State -->
+  @else if (logs().length === 0) {
+    <div class="state-card empty-state">
+      <nim-icon name="inbox" [size]="48" class="state-icon empty-icon" />
+      <h3 class="state-title">{{ 'NOTIFICATIONS.EMPTY_LOGS_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'NOTIFICATIONS.EMPTY_LOGS_DESC' | i18n }}</p>
+    </div>
+  }
+  <!-- Content Table -->
+  @else {
+    <div class="table-container">
+      <table class="data-table" aria-label="Email Logs List">
+        <thead>
+          <tr>
+            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+            <th class="th-recipient">{{ 'NOTIFICATIONS.COL_RECIPIENT' | i18n }}</th>
+            <th class="th-template">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</th>
+            <th class="th-subject">{{ 'NOTIFICATIONS.COL_SUBJECT' | i18n }}</th>
+            <th class="th-attempts">{{ 'NOTIFICATIONS.COL_ATTEMPTS' | i18n }}</th>
+            <th class="th-time">{{ 'NOTIFICATIONS.COL_SENT_AT' | i18n }}</th>
+            <th class="th-trigger">{{ 'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n }}</th>
+            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr (click)="openLogDetail(log)">
+              <td>
+                <span
+                  class="badge-status"
+                  [class.status-sent]="log.status.toLowerCase() === 'sent'"
+                  [class.status-failed]="['failed', 'deadletter'].includes(log.status.toLowerCase())"
+                  [class.status-pending]="['pending', 'sending'].includes(log.status.toLowerCase())"
+                >
+                  @if (log.status.toLowerCase() === 'sent') {
+                    <nim-icon name="check-circle" [size]="12" />
+                  } @else if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
+                    <nim-icon name="alert-triangle" [size]="12" />
+                  } @else {
+                    <nim-icon name="clock" [size]="12" />
+                  }
+                  <span>{{ log.status }}</span>
+                </span>
+              </td>
+              <td class="cell-recipient">
+                <span class="text-truncate">{{ log.toAddress }}</span>
+              </td>
+              <td>
+                <span class="badge-template">{{ log.templateKey }}</span>
+              </td>
+              <td class="cell-subject">
+                <span class="text-truncate">{{ log.subject }}</span>
+              </td>
+              <td>
+                <span
+                  class="badge-attempts"
+                  [class.attempts-warn]="log.attempts > 1"
+                  [class.attempts-danger]="log.attempts >= 3"
+                >
+                  {{ log.attempts }} {{ 'NOTIFICATIONS.ATTEMPTS_UNIT' | i18n }}
+                </span>
+              </td>
+              <td class="cell-time">
+                {{ log.sentAt ? (log.sentAt | localeDate: 'medium') : '-' }}
+              </td>
+              <td class="cell-trigger">
+                <span class="text-muted-xs">{{ log.triggeredBy }}</span>
+              </td>
+              <td class="cell-actions" (click)="$event.stopPropagation()">
+                <div class="action-buttons">
+                  <button
+                    type="button"
+                    class="btn-row-action"
+                    (click)="openLogDetail(log)"
+                    [attr.title]="'COMMON.DETAILS' | i18n"
+                  >
+                    <nim-icon name="target" [size]="14" />
+                    <span>{{ 'COMMON.DETAILS' | i18n }}</span>
+                  </button>
+
+                  @if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
+                    <button
+                      type="button"
+                      class="btn-row-action btn-resend"
+                      [disabled]="resendingId() === log.id"
+                      (click)="resendEmail(log.id, $event)"
+                      [attr.title]="'NOTIFICATIONS.RESEND_TOOLTIP' | i18n"
+                    >
+                      <nim-icon name="refresh" [size]="14" />
+                      <span>{{ 'NOTIFICATIONS.RESEND' | i18n }}</span>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          <span>{{ 'NOTIFICATIONS.TOTAL_LOGS' | i18n: { count: totalCount() } }}</span>
+        </div>
+        <div class="pagination-controls">
+          <button
+            type="button"
+            class="btn-page"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+            [attr.aria-label]="'COMMON.PREV_PAGE' | i18n"
+          >
+            &lt;
+          </button>
+          <span class="page-number">{{ currentPage() }} / {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="btn-page"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+            [attr.aria-label]="'COMMON.NEXT_PAGE' | i18n"
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Detail & Error Trace Modal -->
+  @if (selectedLog(); as log) {
+    <div class="modal-backdrop" (click)="closeLogDetail()">
+      <div
+        class="modal-card"
+        (click)="$event.stopPropagation()"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'log-detail-title'"
+      >
+        <div class="modal-header">
+          <div class="header-left">
+            <nim-icon name="inbox" [size]="22" class="title-icon" />
+            <h2 id="log-detail-title" class="modal-title">
+              {{ 'NOTIFICATIONS.LOG_DETAIL_TITLE' | i18n }}
+            </h2>
+          </div>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeLogDetail()"
+            [attr.aria-label]="'COMMON.CLOSE' | i18n"
+          >
+            <nim-icon name="check-circle" [size]="18" class="icon-hidden" />
+            <span class="close-x">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          @if (resendSuccessMsg()) {
+            <div class="alert-success">
+              <nim-icon name="check-circle" [size]="18" />
+              <span>{{ resendSuccessMsg()! | i18n }}</span>
+            </div>
+          }
+
+          <!-- Metadata grid -->
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">{{ 'COMMON.STATUS' | i18n }}</span>
+              <span
+                class="badge-status"
+                [class.status-sent]="log.status.toLowerCase() === 'sent'"
+                [class.status-failed]="['failed', 'deadletter'].includes(log.status.toLowerCase())"
+                [class.status-pending]="['pending', 'sending'].includes(log.status.toLowerCase())"
+              >
+                {{ log.status }}
+              </span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">{{ 'NOTIFICATIONS.COL_RECIPIENT' | i18n }}</span>
+              <strong class="detail-val">{{ log.toAddress }}</strong>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</span>
+              <span class="badge-template">{{ log.templateKey }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">{{ 'NOTIFICATIONS.COL_ATTEMPTS' | i18n }}</span>
+              <strong class="detail-val">{{ log.attempts }}</strong>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">{{ 'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n }}</span>
+              <span class="detail-val">{{ log.triggeredBy }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">{{ 'NOTIFICATIONS.COL_CORRELATION_ID' | i18n }}</span>
+              <span class="code-val">{{ log.correlationId }}</span>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <span class="detail-label">{{ 'NOTIFICATIONS.COL_SUBJECT' | i18n }}</span>
+            <div class="subject-box">{{ log.subject }}</div>
+          </div>
+
+          <!-- Error Tracebox if failed -->
+          @if (log.lastError) {
+            <div class="error-trace-card">
+              <div class="error-trace-header">
+                <nim-icon name="alert-triangle" [size]="16" class="error-icon" />
+                <span class="error-trace-title">{{ 'NOTIFICATIONS.LAST_ERROR_DETAILS' | i18n }}</span>
+              </div>
+              <pre class="error-trace-body">{{ log.lastError }}</pre>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          @if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="resendingId() === log.id"
+              (click)="resendEmail(log.id)"
+            >
+              <nim-icon name="refresh" [size]="16" />
+              <span>{{ 'NOTIFICATIONS.RESEND_NOW' | i18n }}</span>
+            </button>
+          }
+          <button type="button" class="btn btn-secondary" (click)="closeLogDetail()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
