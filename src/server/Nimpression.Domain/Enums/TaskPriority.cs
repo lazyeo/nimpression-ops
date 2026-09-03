@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace Nimpression.Domain.Enums;
 
 /// <summary>
 /// 派发任务优先级。
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TaskPriority
 {
     Low = 1,

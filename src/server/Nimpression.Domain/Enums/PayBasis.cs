@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace Nimpression.Domain.Enums;
 
 /// <summary>
 /// 薪资结算口径（工时 vs 趟次）。
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum PayBasis
 {
     Hourly = 1,
