@@ -239,7 +239,6 @@ public sealed record AuthUserResponseDto(
     Guid Id,
     string Email,
     string DisplayName,
-    [property: System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     Nimpression.Domain.Enums.UserRole Role,
     string Locale,
     string? AvatarKey)

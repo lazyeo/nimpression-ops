@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Nimpression.Api.Endpoints;
 using Nimpression.Application;
 using Nimpression.Infrastructure;
@@ -5,6 +6,11 @@ using Nimpression.Infrastructure.Persistence;
 using Nimpression.Infrastructure.Persistence.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
