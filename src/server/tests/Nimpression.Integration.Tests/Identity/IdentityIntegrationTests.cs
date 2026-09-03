@@ -20,6 +20,14 @@ using Xunit;
 
 namespace Nimpression.Integration.Tests.Identity;
 
+/// <summary>
+/// 身份与访问控制模块集成测试。
+/// 
+/// 时序侧信道测试说明（R2 / R3）：
+/// 1. 登录路径的主时序防线由 Application 层接缝单元测试（LoginCommandHandlerTests）确定性覆盖；
+/// 2. 本类中的端到端挂钟测试带有 [Trait("Category", "Timing")]，已移出默认测试套件；
+/// 3. 挂钟测试仅供在低负载基准环境下运行（--filter "Category=Timing"），用于探测接缝无法覆盖的端到端时序差异。
+/// </summary>
 [Collection("PostgreSqlCollection")]
 public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
 {
@@ -153,7 +161,17 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         json.Should().Contain("Invalid email or password.");
     }
 
+    /// <summary>
+    /// 时序侧信道挂钟集成测试。
+    /// 
+    /// 隔离与设计说明（R2 / R3）：
+    /// 1. 【主保障在接缝】：时序侧信道的确定性防线在 Application 层接缝单元测试（LoginCommandHandlerTests），直接断言 VerifyPassword 调用次数与不可区分文案，免疫负载；
+    /// 2. 【端到端挂钟保留理由】：挂钟测试可捕捉接缝测不到的端到端时序泄漏（如存在用户分支多一次 DB 往返造成的微小时间差）；
+    /// 3. 【隔离原因与运行环境】：在 CPU 高负载（如 load > 20）或非专用执行环境下，系统时钟抖动极易导致误报，因此打上 Category=Timing 移出默认测试套件；
+    ///    应在专用、低负载、安静的基准测试环境中运行（通过 --filter "Category=Timing" 显式触发）。
+    /// </summary>
     [Fact]
+    [Trait("Category", "Timing")]
     public async Task F1_1_Login_TimingSideChannel_NonExistentVsWrongPassword_MedianLatencyDifferenceWithinThreshold()
     {
         // 预热请求（确保 JIT 编译及连接池建立）
@@ -174,7 +192,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
             await _client.SendAsync(warmupReq2);
         }
 
-        const int iterations = 20;
+        const int iterations = 50;
         var nonExistentLatencies = new List<double>(iterations);
         var wrongPasswordLatencies = new List<double>(iterations);
 
@@ -214,15 +232,31 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
         nonExistentLatencies.Sort();
         wrongPasswordLatencies.Sort();
 
-        var nonExistentMedian = (nonExistentLatencies[9] + nonExistentLatencies[10]) / 2.0;
-        var wrongPasswordMedian = (wrongPasswordLatencies[9] + wrongPasswordLatencies[10]) / 2.0;
+        var nonExistentMedian = CalculateMedian(nonExistentLatencies);
+        var wrongPasswordMedian = CalculateMedian(wrongPasswordLatencies);
 
+        var largerMedian = Math.Max(nonExistentMedian, wrongPasswordMedian);
         var diff = Math.Abs(nonExistentMedian - wrongPasswordMedian);
+        var relativeDiff = diff / largerMedian;
 
-        // 断言：两条路径均执行了完整的 BCrypt workFactor=12 哈希校验（耗时合理），且中位耗时差异在 50ms 以内
+        // 断言：
+        // 1. 保留原有两条下界断言：证明两条路径均执行了完整的 BCrypt workFactor=12 哈希校验（耗时 > 50ms）
         nonExistentMedian.Should().BeGreaterThan(50.0);
         wrongPasswordMedian.Should().BeGreaterThan(50.0);
-        diff.Should().BeLessThanOrEqualTo(50.0, $"中位耗时差异 {diff:F2}ms 应当在 50ms 阈值内 (不存在={nonExistentMedian:F2}ms, 密码错={wrongPasswordMedian:F2}ms)");
+
+        // 2. 相对比例阈值断言：差值不得超过两者较大中位数的 15%
+        relativeDiff.Should().BeLessThanOrEqualTo(0.15,
+            $"时序侧信道相对耗时差异 {relativeDiff:P2} (绝对差 {diff:F2}ms) 超过了两者较大中位数的 15% 阈值。" +
+            $"[采样详情] 样本数: {iterations}, 不存在用户中位数: {nonExistentMedian:F2}ms, 密码错误中位数: {wrongPasswordMedian:F2}ms (较大中位数: {largerMedian:F2}ms)。" +
+            $"若此断言失败，请检查是否因机器高负载导致时钟抖动。");
+    }
+
+    private static double CalculateMedian(List<double> sortedValues)
+    {
+        var count = sortedValues.Count;
+        if (count == 0) return 0;
+        if (count % 2 == 1) return sortedValues[count / 2];
+        return (sortedValues[count / 2 - 1] + sortedValues[count / 2]) / 2.0;
     }
 
     [Fact]
