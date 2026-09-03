@@ -1,0 +1,271 @@
+<div class="news-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="title-with-icon">
+        <nim-icon name="news" [size]="24" class="header-icon" />
+        <h2 class="page-title">{{ 'NEWS.PAGE_TITLE' | i18n }}</h2>
+      </div>
+      <p class="page-subtitle">{{ 'NEWS.PAGE_SUBTITLE' | i18n }}</p>
+    </div>
+
+    <div class="header-actions">
+      @if (authService.isAdmin()) {
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="openCreateDialog()"
+        >
+          <nim-icon name="target" [size]="16" />
+          <span>{{ 'NEWS.NEW_POST_BUTTON' | i18n }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Filter Toolbar -->
+  <div class="filter-card">
+    <div class="filter-group">
+      <label for="filter-audience" class="filter-label">{{ 'NEWS.FILTER_AUDIENCE' | i18n }}</label>
+      <select
+        id="filter-audience"
+        [ngModel]="selectedAudience() === null ? '' : selectedAudience()?.toString()"
+        (ngModelChange)="onAudienceFilterChange($event)"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="1">{{ 'NEWS.AUDIENCE_ALL' | i18n }}</option>
+        <option value="2">{{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}</option>
+        <option value="3">{{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-pinned" class="filter-label">{{ 'NEWS.FILTER_PINNED' | i18n }}</label>
+      <select
+        id="filter-pinned"
+        [ngModel]="selectedPinned() === null ? '' : selectedPinned()?.toString()"
+        (ngModelChange)="onPinnedFilterChange($event)"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="true">{{ 'NEWS.PINNED_ONLY' | i18n }}</option>
+        <option value="false">{{ 'NEWS.NORMAL_ONLY' | i18n }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group-checkbox">
+      <label class="checkbox-container" for="filter-active">
+        <input
+          id="filter-active"
+          type="checkbox"
+          [ngModel]="selectedActive()"
+          (ngModelChange)="onActiveFilterChange($event)"
+          class="filter-checkbox"
+        />
+        <span>{{ 'NEWS.ACTIVE_ONLY' | i18n }}</span>
+      </label>
+    </div>
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="btn btn-secondary btn-icon"
+        (click)="loadNews()"
+        [attr.title]="'COMMON.REFRESH' | i18n"
+      >
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- State 4: Forbidden State (403) -->
+  @if (isForbidden()) {
+    <div class="state-card forbidden-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon warning-icon" />
+      <h3 class="state-title">{{ 'COMMON.FORBIDDEN_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'NEWS.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  }
+  <!-- State 3: Error State with Retry -->
+  @else if (error()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon error-icon" />
+      <h3 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h3>
+      <p class="state-desc">{{ error() }}</p>
+      <button type="button" class="btn btn-primary" (click)="loadNews()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+  <!-- State 1: Skeleton Loading State -->
+  @else if (loading()) {
+    <div class="table-container">
+      <div class="skeleton-table-wrapper">
+        <div class="skeleton-row skeleton-header-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+    </div>
+  }
+  <!-- State 2: Empty Data State -->
+  @else if (sortedNews().length === 0) {
+    <div class="state-card empty-state">
+      <nim-icon name="news" [size]="48" class="state-icon empty-icon" />
+      <h3 class="state-title">{{ 'NEWS.EMPTY_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'NEWS.EMPTY_DESC' | i18n }}</p>
+      @if (authService.isAdmin()) {
+        <button type="button" class="btn btn-primary" (click)="openCreateDialog()">
+          <nim-icon name="target" [size]="16" />
+          <span>{{ 'NEWS.NEW_POST_BUTTON' | i18n }}</span>
+        </button>
+      }
+    </div>
+  }
+  <!-- Content Table -->
+  @else {
+    <div class="table-container">
+      <table class="data-table" aria-label="News and Notices List">
+        <thead>
+          <tr>
+            <th class="th-pin">{{ 'NEWS.COL_PIN' | i18n }}</th>
+            <th class="th-title">{{ 'NEWS.COL_TITLE' | i18n }}</th>
+            <th class="th-audience">{{ 'NEWS.COL_AUDIENCE' | i18n }}</th>
+            <th class="th-date">{{ 'NEWS.COL_PUBLISHED_AT' | i18n }}</th>
+            <th class="th-read">{{ 'NEWS.COL_READ_STATUS' | i18n }}</th>
+            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of sortedNews(); track item.id) {
+            <tr [class.pinned-row]="item.pinned" (click)="openDetailModal(item.id)">
+              <td class="cell-pin">
+                @if (item.pinned) {
+                  <span class="pin-badge" [attr.title]="'NEWS.PINNED_TOOLTIP' | i18n">
+                    <nim-icon name="target" [size]="14" />
+                    <span>{{ 'NEWS.PINNED_BADGE' | i18n }}</span>
+                  </span>
+                } @else {
+                  <span class="unpinned-dash">-</span>
+                }
+              </td>
+              <td class="cell-title">
+                <span class="news-title-text">{{ item.title }}</span>
+              </td>
+              <td>
+                <span class="badge badge-audience">
+                  @if (item.audience === 1) {
+                    {{ 'NEWS.AUDIENCE_ALL' | i18n }}
+                  } @else if (item.audience === 2) {
+                    {{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}
+                  } @else {
+                    {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
+                  }
+                </span>
+              </td>
+              <td class="cell-date">
+                {{ item.publishedAt | localeDate: 'medium' }}
+              </td>
+              <td>
+                @if (item.isRead) {
+                  <span class="badge badge-read">
+                    <nim-icon name="check-circle" [size]="12" />
+                    <span>{{ 'NEWS.STATUS_READ' | i18n }}</span>
+                  </span>
+                } @else {
+                  <span class="badge badge-unread">
+                    <span>{{ 'NEWS.STATUS_UNREAD' | i18n }}</span>
+                  </span>
+                }
+              </td>
+              <td>
+                @if (item.isActive) {
+                  <span class="status-indicator status-active">
+                    <span class="dot"></span>
+                    <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+                  </span>
+                } @else {
+                  <span class="status-indicator status-inactive">
+                    <span class="dot"></span>
+                    <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
+                  </span>
+                }
+              </td>
+              <td class="cell-actions" (click)="$event.stopPropagation()">
+                <div class="action-buttons">
+                  <button
+                    type="button"
+                    class="btn-row-action"
+                    (click)="openDetailModal(item.id)"
+                    [attr.title]="'NEWS.VIEW_DETAILS_AND_STATS' | i18n"
+                  >
+                    <nim-icon name="check-circle" [size]="14" />
+                    <span>{{ 'NEWS.RECEIPTS_BUTTON' | i18n }}</span>
+                  </button>
+
+                  @if (!item.isRead) {
+                    <button
+                      type="button"
+                      class="btn-row-action btn-mark-read"
+                      (click)="markAsRead(item, $event)"
+                      [attr.title]="'NEWS.MARK_READ_TOOLTIP' | i18n"
+                    >
+                      <span>{{ 'NEWS.MARK_AS_READ' | i18n }}</span>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          <span>{{ 'NEWS.TOTAL_COUNT' | i18n: { count: totalCount() } }}</span>
+        </div>
+        <div class="pagination-controls">
+          <button
+            type="button"
+            class="btn-page"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+            [attr.aria-label]="'COMMON.PREV_PAGE' | i18n"
+          >
+            &lt;
+          </button>
+          <span class="page-number">{{ currentPage() }} / {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="btn-page"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+            [attr.aria-label]="'COMMON.NEXT_PAGE' | i18n"
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Publish Dialog -->
+  @if (showCreateDialog()) {
+    <nim-news-create-dialog (closeDialog)="handleCreateClose($event)" />
+  }
+
+  <!-- Detail & Read Receipts Modal -->
+  @if (selectedNewsIdForDetail()) {
+    <nim-news-detail-modal
+      [newsId]="selectedNewsIdForDetail()!"
+      (closeModal)="closeDetailModal()"
+    />
+  }
+</div>

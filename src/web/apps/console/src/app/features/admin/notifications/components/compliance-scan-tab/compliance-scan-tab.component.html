@@ -1,0 +1,85 @@
+<div class="compliance-tab-content">
+  <!-- Policy & Overview Card -->
+  <div class="overview-card">
+    <div class="overview-header">
+      <nim-icon name="vehicles" [size]="24" class="overview-icon" />
+      <div>
+        <h3 class="overview-title">{{ 'NOTIFICATIONS.COMPLIANCE_TITLE' | i18n }}</h3>
+        <p class="overview-subtitle">{{ 'NOTIFICATIONS.COMPLIANCE_SUBTITLE' | i18n }}</p>
+      </div>
+    </div>
+
+    <!-- Timeline / Policy Rule Cards -->
+    <div class="policy-grid">
+      <div class="policy-card">
+        <div class="policy-badge badge-30">30 {{ 'NOTIFICATIONS.DAYS' | i18n }}</div>
+        <h4 class="policy-title">{{ 'NOTIFICATIONS.RULE_30_TITLE' | i18n }}</h4>
+        <p class="policy-desc">{{ 'NOTIFICATIONS.RULE_30_DESC' | i18n }}</p>
+      </div>
+
+      <div class="policy-card">
+        <div class="policy-badge badge-14">14 {{ 'NOTIFICATIONS.DAYS' | i18n }}</div>
+        <h4 class="policy-title">{{ 'NOTIFICATIONS.RULE_14_TITLE' | i18n }}</h4>
+        <p class="policy-desc">{{ 'NOTIFICATIONS.RULE_14_DESC' | i18n }}</p>
+      </div>
+
+      <div class="policy-card">
+        <div class="policy-badge badge-7">7 {{ 'NOTIFICATIONS.DAYS' | i18n }}</div>
+        <h4 class="policy-title">{{ 'NOTIFICATIONS.RULE_7_TITLE' | i18n }}</h4>
+        <p class="policy-desc">{{ 'NOTIFICATIONS.RULE_7_DESC' | i18n }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Scan Trigger Action Card -->
+  <div class="action-card">
+    <div class="action-info">
+      <h4 class="action-title">{{ 'NOTIFICATIONS.MANUAL_SCAN_TITLE' | i18n }}</h4>
+      <p class="action-desc">{{ 'NOTIFICATIONS.MANUAL_SCAN_DESC' | i18n }}</p>
+    </div>
+
+    <div class="action-controls">
+      @if (lastScanTime()) {
+        <span class="last-scan-text">
+          {{ 'NOTIFICATIONS.LAST_SCAN_LABEL' | i18n }}: {{ lastScanTime() }}
+        </span>
+      }
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="scanning()"
+        (click)="triggerScan()"
+      >
+        @if (scanning()) {
+          <nim-icon name="refresh" [size]="16" class="spin-icon" />
+          <span>{{ 'NOTIFICATIONS.SCANNING_BUTTON' | i18n }}</span>
+        } @else {
+          <nim-icon name="target" [size]="16" />
+          <span>{{ 'NOTIFICATIONS.TRIGGER_SCAN_BUTTON' | i18n }}</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Feedback Alerts -->
+  @if (scanSuccess()) {
+    <div class="alert-success" role="alert">
+      <nim-icon name="check-circle" [size]="20" />
+      <div>
+        <strong>{{ 'NOTIFICATIONS.SCAN_SUCCESS_TITLE' | i18n }}</strong>
+        <p>{{ 'NOTIFICATIONS.SCAN_SUCCESS_DESC' | i18n }}</p>
+      </div>
+    </div>
+  }
+
+  @if (scanError()) {
+    <div class="alert-error" role="alert">
+      <nim-icon name="alert-triangle" [size]="20" />
+      <div>
+        <strong>{{ 'COMMON.ERROR' | i18n }}</strong>
+        <p>{{ scanError() }}</p>
+      </div>
+    </div>
+  }
+</div>

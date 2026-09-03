@@ -1,0 +1,221 @@
+<div class="modal-backdrop" (click)="close()">
+  <div
+    class="modal-card"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'audit-diff-title'"
+  >
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <nim-icon name="audit" [size]="22" class="title-icon" />
+        <h2 id="audit-diff-title" class="modal-title">
+          {{ 'AUDIT.DIFF_TITLE' | i18n }}: {{ event().entityType }} ({{ event().entityId }})
+        </h2>
+      </div>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="close()"
+        [attr.aria-label]="'COMMON.CLOSE' | i18n"
+      >
+        <nim-icon name="check-circle" [size]="18" class="icon-hidden" />
+        <span class="close-x">&times;</span>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Event Metadata Bar -->
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">{{ 'AUDIT.COL_ACTION' | i18n }}</span>
+          <span
+            class="badge-action"
+            [class.action-create]="event().action.toLowerCase().includes('create') || event().action.toLowerCase().includes('add')"
+            [class.action-delete]="event().action.toLowerCase().includes('delete') || event().action.toLowerCase().includes('remove')"
+            [class.action-update]="event().action.toLowerCase().includes('update') || event().action.toLowerCase().includes('edit')"
+          >
+            {{ event().action }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-label">{{ 'AUDIT.COL_OCCURRED_AT' | i18n }}</span>
+          <strong class="meta-val">{{ event().occurredAt | localeDate: 'medium' }}</strong>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-label">{{ 'AUDIT.COL_ACTOR_ROLE' | i18n }}</span>
+          <span class="badge-role">
+            {{ event().actorRole ? ('ROLES.' + (event().actorRole === 1 || event().actorRole === 'Admin' ? 'ADMIN' : event().actorRole === 2 || event().actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-label">{{ 'AUDIT.COL_IP_ADDRESS' | i18n }}</span>
+          <span class="code-val">{{ event().ipAddress || '-' }}</span>
+        </div>
+      </div>
+
+      <!-- View Switcher Tabs -->
+      <div class="view-switch-bar">
+        <div class="tabs-group" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            class="tab-btn"
+            [class.active]="activeView() === 'diff'"
+            (click)="setView('diff')"
+          >
+            <nim-icon name="target" [size]="16" />
+            <span>{{ 'AUDIT.TAB_DIFF_VIEW' | i18n }}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="tab-btn"
+            [class.active]="activeView() === 'raw'"
+            (click)="setView('raw')"
+          >
+            <nim-icon name="audit" [size]="16" />
+            <span>{{ 'AUDIT.TAB_RAW_JSON' | i18n }}</span>
+          </button>
+        </div>
+
+        @if (activeView() === 'diff' && diffSummary().unchanged > 0) {
+          <button
+            type="button"
+            class="btn-toggle-unchanged"
+            (click)="toggleUnchanged()"
+          >
+            <span>
+              {{ (showUnchanged() ? 'AUDIT.HIDE_UNCHANGED' : 'AUDIT.SHOW_UNCHANGED') | i18n: { count: diffSummary().unchanged } }}
+            </span>
+          </button>
+        }
+      </div>
+
+      <!-- View 1: Readable Structured Diff View -->
+      @if (activeView() === 'diff') {
+        <div class="diff-view-content">
+          <!-- Summary Pills -->
+          <div class="summary-pills">
+            @if (diffSummary().modified > 0) {
+              <span class="pill pill-modified">
+                ~ {{ diffSummary().modified }} {{ 'AUDIT.DIFF_MODIFIED' | i18n }}
+              </span>
+            }
+            @if (diffSummary().added > 0) {
+              <span class="pill pill-added">
+                + {{ diffSummary().added }} {{ 'AUDIT.DIFF_ADDED' | i18n }}
+              </span>
+            }
+            @if (diffSummary().removed > 0) {
+              <span class="pill pill-removed">
+                - {{ diffSummary().removed }} {{ 'AUDIT.DIFF_REMOVED' | i18n }}
+              </span>
+            }
+            @if (diffSummary().unchanged > 0 && showUnchanged()) {
+              <span class="pill pill-unchanged">
+                = {{ diffSummary().unchanged }} {{ 'AUDIT.DIFF_UNCHANGED' | i18n }}
+              </span>
+            }
+          </div>
+
+          <!-- Structured Diff Table -->
+          @if (visibleDiffItems().length > 0) {
+            <div class="diff-table-wrapper">
+              <table class="diff-table">
+                <thead>
+                  <tr>
+                    <th class="th-field">{{ 'AUDIT.COL_FIELD' | i18n }}</th>
+                    <th class="th-type">{{ 'AUDIT.COL_CHANGE_TYPE' | i18n }}</th>
+                    <th class="th-before">{{ 'AUDIT.COL_BEFORE_VALUE' | i18n }}</th>
+                    <th class="th-arrow"></th>
+                    <th class="th-after">{{ 'AUDIT.COL_AFTER_VALUE' | i18n }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of visibleDiffItems(); track item.key) {
+                    <tr
+                      class="diff-row"
+                      [class.row-modified]="item.changeType === 'modified'"
+                      [class.row-added]="item.changeType === 'added'"
+                      [class.row-removed]="item.changeType === 'removed'"
+                      [class.row-unchanged]="item.changeType === 'unchanged'"
+                    >
+                      <td class="cell-field">
+                        <code>{{ item.key }}</code>
+                      </td>
+                      <td>
+                        @switch (item.changeType) {
+                          @case ('added') {
+                            <span class="badge badge-diff-added">+ {{ 'AUDIT.DIFF_ADDED' | i18n }}</span>
+                          }
+                          @case ('removed') {
+                            <span class="badge badge-diff-removed">- {{ 'AUDIT.DIFF_REMOVED' | i18n }}</span>
+                          }
+                          @case ('modified') {
+                            <span class="badge badge-diff-modified">~ {{ 'AUDIT.DIFF_MODIFIED' | i18n }}</span>
+                          }
+                          @default {
+                            <span class="badge badge-diff-unchanged">= {{ 'AUDIT.DIFF_UNCHANGED' | i18n }}</span>
+                          }
+                        }
+                      </td>
+                      <td class="cell-val cell-before">
+                        @if (item.changeType === 'added') {
+                          <span class="val-empty">-</span>
+                        } @else {
+                          <pre class="val-code before-val">{{ item.formattedBefore }}</pre>
+                        }
+                      </td>
+                      <td class="cell-arrow">
+                        @if (item.changeType === 'modified') {
+                          <span class="arrow-indicator">&rarr;</span>
+                        }
+                      </td>
+                      <td class="cell-val cell-after">
+                        @if (item.changeType === 'removed') {
+                          <span class="val-empty">-</span>
+                        } @else {
+                          <pre class="val-code after-val">{{ item.formattedAfter }}</pre>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="empty-diff-box">
+              <span>{{ 'AUDIT.NO_CHANGES_DETECTED' | i18n }}</span>
+            </div>
+          }
+        </div>
+      }
+      <!-- View 2: Side-by-Side Raw JSON -->
+      @else {
+        <div class="raw-json-grid">
+          <div class="raw-json-col">
+            <div class="raw-json-header">{{ 'AUDIT.COL_BEFORE_JSON' | i18n }}</div>
+            <pre class="raw-json-box">{{ formattedBeforeJson() }}</pre>
+          </div>
+          <div class="raw-json-col">
+            <div class="raw-json-header">{{ 'AUDIT.COL_AFTER_JSON' | i18n }}</div>
+            <pre class="raw-json-box">{{ formattedAfterJson() }}</pre>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="close()">
+        {{ 'COMMON.CLOSE' | i18n }}
+      </button>
+    </div>
+  </div>
+</div>

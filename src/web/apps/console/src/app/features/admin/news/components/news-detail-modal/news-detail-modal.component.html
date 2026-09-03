@@ -1,0 +1,227 @@
+<div class="modal-backdrop" (click)="close()">
+  <div
+    class="modal-card"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'news-detail-title'"
+  >
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <nim-icon name="news" [size]="22" class="title-icon" />
+        <h2 id="news-detail-title" class="modal-title">
+          {{ newsPost()?.title || ('NEWS.DETAIL_TITLE' | i18n) }}
+        </h2>
+      </div>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="close()"
+        [attr.aria-label]="'COMMON.CLOSE' | i18n"
+      >
+        <nim-icon name="check-circle" [size]="18" class="icon-hidden" />
+        <span class="close-x">&times;</span>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="modal-body">
+      @if (loading()) {
+        <!-- Skeleton Loading State -->
+        <div class="skeleton-container">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-meta"></div>
+          <div class="skeleton-box"></div>
+          <div class="skeleton-line skeleton-meta"></div>
+          <div class="skeleton-table"></div>
+        </div>
+      } @else if (error()) {
+        <!-- Error State with Retry -->
+        <div class="error-state">
+          <nim-icon name="alert-triangle" [size]="36" class="error-icon" />
+          <h3 class="error-title">{{ 'COMMON.ERROR' | i18n }}</h3>
+          <p class="error-desc">{{ error() }}</p>
+          <button type="button" class="btn btn-primary" (click)="loadData()">
+            <nim-icon name="refresh" [size]="16" />
+            <span>{{ 'COMMON.RETRY' | i18n }}</span>
+          </button>
+        </div>
+      } @else if (newsPost()) {
+        <!-- Metadata Row -->
+        <div class="meta-card">
+          <div class="meta-item">
+            <span class="meta-label">{{ 'NEWS.COL_AUDIENCE' | i18n }}</span>
+            <span class="badge badge-audience">
+              @if (newsPost()?.audience === 1) {
+                {{ 'NEWS.AUDIENCE_ALL' | i18n }}
+              } @else if (newsPost()?.audience === 2) {
+                {{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}
+              } @else {
+                {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
+              }
+            </span>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">{{ 'NEWS.COL_PUBLISHED_AT' | i18n }}</span>
+            <span class="meta-val">{{ newsPost()?.publishedAt | localeDate: 'medium' }}</span>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">{{ 'NEWS.COL_AUTHOR' | i18n }}</span>
+            <span class="meta-val">{{ newsPost()?.authorDisplayName }}</span>
+          </div>
+
+          @if (newsPost()?.pinned) {
+            <div class="meta-item">
+              <span class="badge badge-pinned">
+                <nim-icon name="target" [size]="14" />
+                <span>{{ 'NEWS.PINNED_BADGE' | i18n }}</span>
+              </span>
+            </div>
+          }
+        </div>
+
+        <!-- Bilingual Content Tabs -->
+        <div class="content-section">
+          <div class="tabs-header" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              class="tab-btn"
+              [class.active]="activeLangTab() === 'en'"
+              (click)="setLangTab('en')"
+            >
+              {{ 'LANG.EN_NZ' | i18n }}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="tab-btn"
+              [class.active]="activeLangTab() === 'zh'"
+              (click)="setLangTab('zh')"
+            >
+              {{ 'LANG.ZH_CN' | i18n }}
+            </button>
+          </div>
+
+          <div class="tab-content">
+            @if (activeLangTab() === 'en') {
+              <div class="article-body">{{ newsPost()?.bodyEn }}</div>
+            } @else {
+              <div class="article-body">{{ newsPost()?.bodyZh }}</div>
+            }
+          </div>
+        </div>
+
+        <!-- Read Receipts & Stats Section (AC: F10.2) -->
+        <div class="receipts-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <nim-icon name="check-circle" [size]="18" class="receipt-icon" />
+              <span>{{ 'NEWS.RECEIPTS_TITLE' | i18n }}</span>
+            </h3>
+            <span class="denominator-notice">
+              {{ 'NEWS.RECEIPTS_DENOMINATOR_NOTE' | i18n }}
+            </span>
+          </div>
+
+          @if (stats(); as st) {
+            <div class="stats-card">
+              <div class="stats-kpi">
+                <div class="kpi-read">
+                  <span class="kpi-num">{{ st.readCount }}</span>
+                  <span class="kpi-slash">/</span>
+                  <span class="kpi-total">{{ st.targetAudienceCount }}</span>
+                  <span class="kpi-label">{{ 'NEWS.RECEIPTS_READ_COUNT_LABEL' | i18n }}</span>
+                </div>
+
+                <div class="kpi-rate">
+                  <span class="rate-val">{{ (st.readRate * 100).toFixed(1) }}%</span>
+                  <span class="rate-label">{{ 'NEWS.RECEIPTS_READ_RATE' | i18n }}</span>
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="progress-bar-track">
+                <div
+                  class="progress-bar-fill"
+                  [style.width.%]="st.readRate * 100"
+                ></div>
+              </div>
+            </div>
+          }
+
+          <!-- Unread Users Sub-List -->
+          <div class="unread-sub-section">
+            <div class="unread-header">
+              <h4 class="unread-title">
+                {{ 'NEWS.UNREAD_USERS_TITLE' | i18n }} ({{ unreadUsers().length }})
+              </h4>
+              <div class="search-box">
+                <input
+                  type="text"
+                  [ngModel]="unreadSearchTerm()"
+                  (ngModelChange)="unreadSearchTerm.set($event)"
+                  [placeholder]="'NEWS.SEARCH_UNREAD_PLACEHOLDER' | i18n"
+                  class="search-input"
+                />
+              </div>
+            </div>
+
+            @if (filteredUnreadUsers().length > 0) {
+              <div class="unread-table-wrapper">
+                <table class="unread-table">
+                  <thead>
+                    <tr>
+                      <th>{{ 'NEWS.COL_USER_NAME' | i18n }}</th>
+                      <th>{{ 'NEWS.COL_EMPLOYEE_NO' | i18n }}</th>
+                      <th>{{ 'NEWS.COL_EMAIL' | i18n }}</th>
+                      <th>{{ 'NEWS.COL_ROLE' | i18n }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (user of filteredUnreadUsers(); track user.userId) {
+                      <tr>
+                        <td class="cell-name">{{ user.displayName }}</td>
+                        <td class="cell-emp">{{ user.employeeNo || '-' }}</td>
+                        <td class="cell-email">{{ user.email }}</td>
+                        <td>
+                          <span class="badge badge-role">
+                            {{ 'ROLES.' + (user.role === 1 ? 'ADMIN' : user.role === 2 ? 'DISPATCHER' : 'DRIVER') | i18n }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else if (unreadUsers().length === 0) {
+              <!-- 100% Read Empty State -->
+              <div class="all-read-banner">
+                <nim-icon name="check-circle" [size]="24" class="all-read-icon" />
+                <div class="all-read-text">
+                  <strong>{{ 'NEWS.ALL_READ_TITLE' | i18n }}</strong>
+                  <span>{{ 'NEWS.ALL_READ_DESC' | i18n }}</span>
+                </div>
+              </div>
+            } @else {
+              <!-- Filter No Match State -->
+              <div class="no-filter-match">
+                <span>{{ 'COMMON.NO_DATA' | i18n }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="close()">
+        {{ 'COMMON.CLOSE' | i18n }}
+      </button>
+    </div>
+  </div>
+</div>
