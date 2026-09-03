@@ -15,8 +15,26 @@
 
 ```bash
 git worktree add ../nimpression-wt/<slice> feat/wave-N-<slice>
+ln -sfn "$(git rev-parse --show-toplevel)/_design" ../nimpression-wt/<slice>/_design
 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <worktree路径> --no-focus
 herdr agent start <name> --kind agy --pane <pane-id> -- --dangerously-skip-permissions
+```
+
+**那条 `ln -sfn` 不是可选步骤。** `_design/` 在 `.gitignore` 里，
+所以它**只存在于主仓 checkout**，`git worktree add` 不会带过去。
+漏掉它，agent 打开 `_design/tasks/<任务>.md` 会得到「文件不存在」，
+然后**默默地**只按 herdr prompt 里那几行字干活——规格、验收标准、`_COMMON.md`
+的通用约束（emoji 禁令、测试不得用真实时钟、并发测试要求）一条都没送到。
+W11 就是这么发生的：agent 做完了显而易见的前两步，
+而规格的核心交付（构建期守卫脚本）它根本不知道存在。
+更糟的是回头查证发现，**在此之前所有 worktree 都没有 `_design`**——
+前几波的产出之所以大体正确，靠的是我 prompt 写得细和构建期扫描器兜底，
+不是 agent 读过规则。这同样是调度方的环境缺陷，不是 agent 的问题。
+
+派活后**验证规格确实可读**，再发 prompt：
+
+```bash
+head -3 <worktree>/_design/tasks/<任务>.md   # 读不到就是环境没配好
 ```
 
 **为什么**：给每个 agent 一条分支但共用一个 checkout，隔离是**假的**。
