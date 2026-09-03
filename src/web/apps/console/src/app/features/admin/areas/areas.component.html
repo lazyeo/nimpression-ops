@@ -1,0 +1,438 @@
+<div class="areas-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2 class="page-title">{{ 'AREAS.TITLE' | i18n }}</h2>
+      <p class="page-subtitle">{{ 'AREAS.SUBTITLE' | i18n }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" (click)="loadAreas()" [title]="'COMMON.REFRESH' | i18n">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+      <button type="button" class="btn-primary" (click)="openCreateModal()">
+        <nim-icon name="areas" [size]="16" />
+        <span>{{ 'AREAS.CREATE_AREA' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="filter-item search-item">
+        <label for="area-search">{{ 'COMMON.SEARCH' | i18n }}</label>
+        <input
+          id="area-search"
+          type="text"
+          class="form-input"
+          [placeholder]="'AREAS.FILTER_SEARCH' | i18n"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="area-status">{{ 'AREAS.FILTER_STATUS' | i18n }}</label>
+        <select
+          id="area-status"
+          class="form-select"
+          [value]="selectedStatus()"
+          (change)="onStatusChange($event)"
+        >
+          <option value="">{{ 'AREAS.FILTER_STATUS_ALL' | i18n }}</option>
+          <option value="true">{{ 'AREAS.FILTER_STATUS_ACTIVE' | i18n }}</option>
+          <option value="false">{{ 'AREAS.FILTER_STATUS_INACTIVE' | i18n }}</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="btn-secondary" (click)="clearFilters()">
+          {{ 'AREAS.CLEAR_FILTERS' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Rendering -->
+  @if (state() === 'loading') {
+    <div class="table-card">
+      <div class="skeleton-table">
+        <div class="skeleton-header-row">
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell cell-lg"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell"></div>
+        </div>
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell cell-lg"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (state() === 'error') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-error" />
+      <h3 class="state-title">{{ 'AREAS.ERROR_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ errorMessage() || ('DASHBOARD.ERRORS.LOAD_FAILED' | i18n) }}</p>
+      <button type="button" class="btn-primary" (click)="loadAreas()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  } @else if (state() === 'forbidden') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-forbidden" />
+      <h3 class="state-title">{{ 'AREAS.FORBIDDEN_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'AREAS.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  } @else if (state() === 'empty') {
+    <div class="state-card">
+      <nim-icon name="inbox" [size]="48" class="state-icon icon-empty" />
+      <h3 class="state-title">{{ 'AREAS.EMPTY_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'AREAS.EMPTY_DESC' | i18n }}</p>
+      <button type="button" class="btn-primary" (click)="openCreateModal()">
+        <nim-icon name="areas" [size]="16" />
+        <span>{{ 'AREAS.CREATE_AREA' | i18n }}</span>
+      </button>
+    </div>
+  } @else {
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'AREAS.TABLE_CODE' | i18n }}</th>
+              <th>{{ 'AREAS.TABLE_NAME' | i18n }}</th>
+              <th>{{ 'AREAS.TABLE_DESCRIPTION' | i18n }}</th>
+              <th>{{ 'AREAS.TABLE_DRIVERS_COUNT' | i18n }}</th>
+              <th>{{ 'AREAS.TABLE_STATUS' | i18n }}</th>
+              <th>{{ 'AREAS.TABLE_ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (area of areas(); track area.id) {
+              <tr>
+                <td>
+                  <span class="code-badge">{{ area.code }}</span>
+                </td>
+                <td>
+                  <span class="area-name">{{ area.name }}</span>
+                </td>
+                <td>
+                  <span>{{ area.description || '-' }}</span>
+                </td>
+                <td>
+                  <strong>{{ getAreaDriverCount(area.id) }}</strong>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="area.isActive ? 'badge-active' : 'badge-inactive'">
+                    {{ (area.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n }}
+                  </span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="action-btn btn-view" (click)="openDriversModal(area)">
+                      {{ 'AREAS.ACTION_VIEW_DRIVERS' | i18n }}
+                    </button>
+                    <button type="button" class="action-btn btn-assign" (click)="openAssignModal(area)">
+                      {{ 'AREAS.ACTION_ASSIGN_DRIVER' | i18n }}
+                    </button>
+                    <button type="button" class="action-btn btn-edit" (click)="openEditModal(area)">
+                      {{ 'AREAS.ACTION_EDIT' | i18n }}
+                    </button>
+                    <button type="button" class="action-btn btn-delete" (click)="openDeleteModal(area)">
+                      {{ 'AREAS.ACTION_DELETE' | i18n }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-pagination">
+        <span>Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} areas)</span>
+        <div class="pagination-btns">
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create Area Dialog -->
+  @if (isCreateModalOpen()) {
+    <div class="dialog-backdrop" (click)="closeCreateModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'AREAS.MODAL_CREATE_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeCreateModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="create-code">{{ 'AREAS.FIELD_CODE' | i18n }} *</label>
+            <input id="create-code" type="text" class="input-control" [(ngModel)]="createForm.code" placeholder="e.g. AKL-CBD" />
+          </div>
+
+          <div class="form-field">
+            <label for="create-name">{{ 'AREAS.FIELD_NAME' | i18n }} *</label>
+            <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.name" placeholder="e.g. Auckland Central Business District" />
+          </div>
+
+          <div class="form-field">
+            <label for="create-desc">{{ 'AREAS.FIELD_DESCRIPTION' | i18n }}</label>
+            <textarea id="create-desc" class="input-control" [(ngModel)]="createForm.description" placeholder="Optional area description..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="createForm.isActive" />
+              <span>{{ 'AREAS.FIELD_IS_ACTIVE' | i18n }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !createForm.code || !createForm.name"
+            (click)="submitCreateArea()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Area Dialog -->
+  @if (isEditModalOpen() && selectedArea()) {
+    <div class="dialog-backdrop" (click)="closeEditModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'AREAS.MODAL_EDIT_TITLE' | i18n }} ({{ selectedArea()!.code }})</h3>
+          <button type="button" class="btn-close" (click)="closeEditModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="edit-code">{{ 'AREAS.FIELD_CODE' | i18n }} *</label>
+            <input id="edit-code" type="text" class="input-control" [(ngModel)]="editForm.code" />
+          </div>
+
+          <div class="form-field">
+            <label for="edit-name">{{ 'AREAS.FIELD_NAME' | i18n }} *</label>
+            <input id="edit-name" type="text" class="input-control" [(ngModel)]="editForm.name" />
+          </div>
+
+          <div class="form-field">
+            <label for="edit-desc">{{ 'AREAS.FIELD_DESCRIPTION' | i18n }}</label>
+            <textarea id="edit-desc" class="input-control" [(ngModel)]="editForm.description"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="editForm.isActive" />
+              <span>{{ 'AREAS.FIELD_IS_ACTIVE' | i18n }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !editForm.code || !editForm.name"
+            (click)="submitEditArea()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Assign Driver to Area Dialog -->
+  @if (isAssignModalOpen() && selectedArea()) {
+    <div class="dialog-backdrop" (click)="closeAssignModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'AREAS.MODAL_ASSIGN_TITLE' | i18n }} ({{ selectedArea()!.name }})</h3>
+          <button type="button" class="btn-close" (click)="closeAssignModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="assign-driver">{{ 'AREAS.FIELD_DRIVER' | i18n }} *</label>
+            <select id="assign-driver" class="input-control" [(ngModel)]="assignForm.driverId">
+              <option value="">-- Select Driver --</option>
+              @for (driver of drivers(); track driver.id) {
+                <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="assign-from">{{ 'AREAS.FIELD_EFFECTIVE_FROM' | i18n }} *</label>
+            <input id="assign-from" type="date" class="input-control" [(ngModel)]="assignForm.effectiveFrom" />
+          </div>
+
+          <div class="form-field">
+            <label for="assign-to">{{ 'AREAS.FIELD_EFFECTIVE_TO' | i18n }}</label>
+            <input id="assign-to" type="date" class="input-control" [(ngModel)]="assignForm.effectiveTo" />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeAssignModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !assignForm.driverId || !assignForm.effectiveFrom"
+            (click)="submitAssignDriver()"
+          >
+            {{ 'AREAS.ACTION_ASSIGN_DRIVER' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Driver Assignments List Modal -->
+  @if (isDriversModalOpen() && selectedArea()) {
+    <div class="dialog-backdrop" (click)="closeDriversModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'AREAS.MODAL_DRIVERS_TITLE' | i18n: { name: selectedArea()!.name } }}</h3>
+          <button type="button" class="btn-close" (click)="closeDriversModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (areaAssignments().length === 0) {
+            <p style="color: #94a3b8; margin: 1rem 0; text-align: center">
+              {{ 'AREAS.NO_ASSIGNMENTS' | i18n }}
+            </p>
+          } @else {
+            <table class="assignments-table">
+              <thead>
+                <tr>
+                  <th>{{ 'AREAS.FIELD_DRIVER' | i18n }}</th>
+                  <th>{{ 'AREAS.FIELD_EFFECTIVE_FROM' | i18n }}</th>
+                  <th>{{ 'AREAS.FIELD_EFFECTIVE_TO' | i18n }}</th>
+                  <th>{{ 'COMMON.STATUS' | i18n }}</th>
+                  <th>{{ 'COMMON.ACTIONS' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (asg of areaAssignments(); track asg.id) {
+                  <tr>
+                    <td>
+                      <strong>{{ asg.driverName || asg.driverId }}</strong>
+                      @if (asg.driverEmployeeNo) {
+                        <span style="color: #64748b; font-size: 0.75rem"> ({{ asg.driverEmployeeNo }})</span>
+                      }
+                    </td>
+                    <td>{{ asg.effectiveFrom | localeDate: 'short' }}</td>
+                    <td>{{ (asg.effectiveTo | localeDate: 'short') || '-' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="asg.isActive ? 'badge-active' : 'badge-inactive'">
+                        {{ (asg.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (asg.isActive && !asg.effectiveTo) {
+                        <button type="button" class="action-btn btn-delete" (click)="endAssignment(asg)">
+                          {{ 'AREAS.ACTION_END_ASSIGNMENT' | i18n }}
+                        </button>
+                      } @else {
+                        <span style="color: #94a3b8">-</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-primary" (click)="closeDriversModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Area Dialog -->
+  @if (isDeleteModalOpen() && selectedArea()) {
+    <div class="dialog-backdrop" (click)="closeDeleteModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'AREAS.ACTION_DELETE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+          <p>{{ 'AREAS.DELETE_CONFIRM' | i18n: { name: selectedArea()!.name, code: selectedArea()!.code } }}</p>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeDeleteModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            style="background: #dc2626"
+            [disabled]="isSubmitting()"
+            (click)="submitDeleteArea()"
+          >
+            {{ 'AREAS.ACTION_DELETE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,671 @@
+<div class="drivers-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2 class="page-title">{{ 'DRIVERS.TITLE' | i18n }}</h2>
+      <p class="page-subtitle">{{ 'DRIVERS.SUBTITLE' | i18n }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" (click)="loadDrivers()" [title]="'COMMON.REFRESH' | i18n">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+      @if (isAdmin()) {
+        <button type="button" class="btn-primary" (click)="openCreateModal()">
+          <nim-icon name="user" [size]="16" />
+          <span>{{ 'DRIVERS.CREATE_DRIVER' | i18n }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Licence Expiry Alerts Banner -->
+  @if (alerts().length > 0) {
+    <div class="alert-banner">
+      <nim-icon name="alert-triangle" [size]="18" class="alert-icon" />
+      <div class="alert-text">
+        <strong>{{ 'DRIVERS.LICENCE_ALERTS_TITLE' | i18n }}:</strong>
+        {{ 'DRIVERS.LICENCE_ALERTS_MSG' | i18n: { count: alerts().length } }}
+      </div>
+    </div>
+  }
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="filter-item search-item">
+        <label for="driver-search">{{ 'COMMON.SEARCH' | i18n }}</label>
+        <input
+          id="driver-search"
+          type="text"
+          class="form-input"
+          [placeholder]="'DRIVERS.FILTER_SEARCH' | i18n"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="driver-status">{{ 'DRIVERS.FILTER_STATUS' | i18n }}</label>
+        <select
+          id="driver-status"
+          class="form-select"
+          [value]="selectedStatus()"
+          (change)="onStatusChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          <option value="Active">{{ 'DRIVERS.STATUS_ACTIVE' | i18n }}</option>
+          <option value="Inactive">{{ 'DRIVERS.STATUS_INACTIVE' | i18n }}</option>
+          <option value="Suspended">{{ 'DRIVERS.STATUS_SUSPENDED' | i18n }}</option>
+          <option value="OnLeave">{{ 'DRIVERS.STATUS_ON_LEAVE' | i18n }}</option>
+          <option value="Terminated">{{ 'DRIVERS.STATUS_TERMINATED' | i18n }}</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="driver-area">{{ 'DRIVERS.FILTER_AREA' | i18n }}</label>
+        <select
+          id="driver-area"
+          class="form-select"
+          [value]="selectedAreaId()"
+          (change)="onAreaChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          @for (area of areas(); track area.id) {
+            <option [value]="area.id">{{ area.name }} ({{ area.code }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="btn-secondary" (click)="clearFilters()">
+          {{ 'DRIVERS.CLEAR_FILTERS' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Rendering -->
+  @if (state() === 'loading') {
+    <div class="table-card">
+      <div class="skeleton-table">
+        <div class="skeleton-header-row">
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-lg"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell cell-sm"></div>
+        </div>
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-lg"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell cell-sm"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (state() === 'error') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-error" />
+      <h3 class="state-title">{{ 'DRIVERS.ERROR_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ errorMessage() || ('DASHBOARD.ERRORS.LOAD_FAILED' | i18n) }}</p>
+      <button type="button" class="btn-primary" (click)="loadDrivers()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  } @else if (state() === 'forbidden') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-forbidden" />
+      <h3 class="state-title">{{ 'DRIVERS.FORBIDDEN_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'DRIVERS.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  } @else if (state() === 'empty') {
+    <div class="state-card">
+      <nim-icon name="inbox" [size]="48" class="state-icon icon-empty" />
+      <h3 class="state-title">{{ 'DRIVERS.EMPTY_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'DRIVERS.EMPTY_DESC' | i18n }}</p>
+      @if (isAdmin()) {
+        <button type="button" class="btn-primary" (click)="openCreateModal()">
+          <nim-icon name="user" [size]="16" />
+          <span>{{ 'DRIVERS.CREATE_DRIVER' | i18n }}</span>
+        </button>
+      }
+    </div>
+  } @else {
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'DRIVERS.TABLE_AVATAR' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_EMPLOYEE_NO' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_NAME' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_LICENCE' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_EXPIRY' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_STATUS' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_RATES' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_AREAS' | i18n }}</th>
+              <th>{{ 'DRIVERS.TABLE_ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (driver of drivers(); track driver.id) {
+              <tr [class.licence-alert-row]="driver.isLicenceExpired || driver.isLicenceExpiringSoon">
+                <td class="avatar-cell">
+                  @if (driver.avatarUrl) {
+                    <img [src]="driver.avatarUrl" [alt]="driver.displayName" class="driver-avatar" />
+                  } @else {
+                    <div class="avatar-fallback">{{ driver.displayName | slice: 0:1 }}</div>
+                  }
+                </td>
+                <td>
+                  <code>{{ driver.employeeNo }}</code>
+                </td>
+                <td class="driver-info-cell">
+                  <span class="driver-name">{{ driver.displayName }}</span>
+                  <span class="driver-email">{{ driver.email }}</span>
+                </td>
+                <td>
+                  <span>{{ driver.licenceClass }}</span>
+                </td>
+                <td>
+                  <div>{{ driver.licenceExpiry | localeDate: 'medium' }}</div>
+                  @if (driver.isLicenceExpired) {
+                    <span class="badge licence-expired">
+                      <nim-icon name="alert-triangle" [size]="10" />
+                      {{ 'DRIVERS.LICENCE_EXPIRED' | i18n }}
+                    </span>
+                  } @else if (driver.isLicenceExpiringSoon) {
+                    <span class="badge licence-warning">
+                      <nim-icon name="clock" [size]="10" />
+                      {{ 'DRIVERS.LICENCE_EXPIRING_SOON' | i18n: { days: driver.daysUntilLicenceExpiry } }}
+                    </span>
+                  }
+                </td>
+                <td>
+                  <span class="badge badge-{{ driver.status.toLowerCase() }}">
+                    {{ 'DRIVERS.STATUS_' + getStatusKey(driver.status) | i18n }}
+                  </span>
+                </td>
+                <td class="rate-cell">
+                  <div class="rate-line">${{ driver.hourlyRate }}/h</div>
+                  <div class="rate-line">${{ driver.perTripRate }}/trip | ${{ driver.perKmRate }}/km</div>
+                </td>
+                <td>
+                  <div class="area-tags">
+                    @for (areaName of driver.assignedAreaNames; track areaName) {
+                      <span class="area-chip">{{ areaName }}</span>
+                    }
+                    @if (driver.assignedAreaNames.length === 0) {
+                      <span style="color: #94a3b8">-</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="action-btn btn-view" (click)="openDetailsModal(driver)">
+                      {{ 'DRIVERS.ACTION_VIEW' | i18n }}
+                    </button>
+
+                    @if (isAdmin()) {
+                      <button type="button" class="action-btn btn-edit" (click)="openEditModal(driver)">
+                        {{ 'DRIVERS.ACTION_EDIT' | i18n }}
+                      </button>
+                    }
+
+                    <button type="button" class="action-btn btn-avatar" (click)="openAvatarModal(driver)">
+                      {{ 'DRIVERS.ACTION_AVATAR' | i18n }}
+                    </button>
+
+                    @if (isAdmin() && driver.status === 'Active') {
+                      <button type="button" class="action-btn btn-deact" (click)="openDeactivateModal(driver)">
+                        {{ 'DRIVERS.ACTION_DEACTIVATE' | i18n }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-pagination">
+        <span>Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} drivers)</span>
+        <div class="pagination-btns">
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create Driver Dialog (Admin Only) -->
+  @if (isCreateModalOpen()) {
+    <div class="dialog-backdrop" (click)="closeCreateModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DRIVERS.MODAL_CREATE_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeCreateModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="create-name">{{ 'DRIVERS.FIELD_DISPLAY_NAME' | i18n }} *</label>
+              <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.displayName" placeholder="e.g. John Smith" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-email">{{ 'DRIVERS.FIELD_EMAIL' | i18n }} *</label>
+              <input id="create-email" type="email" class="input-control" [(ngModel)]="createForm.email" placeholder="john.smith@example.co.nz" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-empno">{{ 'DRIVERS.FIELD_EMPLOYEE_NO' | i18n }} *</label>
+              <input id="create-empno" type="text" class="input-control" [(ngModel)]="createForm.employeeNo" placeholder="e.g. DRV-1001" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-pwd">{{ 'DRIVERS.FIELD_PASSWORD' | i18n }}</label>
+              <input id="create-pwd" type="password" class="input-control" [(ngModel)]="createForm.password" placeholder="Default: Initial@123" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-lic-class">{{ 'DRIVERS.FIELD_LICENCE_CLASS' | i18n }} *</label>
+              <input id="create-lic-class" type="text" class="input-control" [(ngModel)]="createForm.licenceClass" placeholder="Class 2 Heavy Rigid" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-lic-exp">{{ 'DRIVERS.FIELD_LICENCE_EXPIRY' | i18n }} *</label>
+              <input id="create-lic-exp" type="date" class="input-control" [(ngModel)]="createForm.licenceExpiry" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-hired">{{ 'DRIVERS.FIELD_HIRED_ON' | i18n }} *</label>
+              <input id="create-hired" type="date" class="input-control" [(ngModel)]="createForm.hiredOn" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-phone">{{ 'DRIVERS.FIELD_PHONE' | i18n }} *</label>
+              <input id="create-phone" type="text" class="input-control" [(ngModel)]="createForm.phone" placeholder="+64 21 123 4567" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-hourly">{{ 'DRIVERS.FIELD_HOURLY_RATE' | i18n }} *</label>
+              <input id="create-hourly" type="number" step="0.5" class="input-control" [(ngModel)]="createForm.hourlyRateAmount" placeholder="32.50" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-trip">{{ 'DRIVERS.FIELD_PER_TRIP_RATE' | i18n }} *</label>
+              <input id="create-trip" type="number" step="0.5" class="input-control" [(ngModel)]="createForm.perTripRateAmount" placeholder="15.00" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-km">{{ 'DRIVERS.FIELD_PER_KM_RATE' | i18n }} *</label>
+              <input id="create-km" type="number" step="0.1" class="input-control" [(ngModel)]="createForm.perKmRateAmount" placeholder="0.75" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-emergency">{{ 'DRIVERS.FIELD_EMERGENCY_CONTACT' | i18n }} *</label>
+              <input id="create-emergency" type="text" class="input-control" [(ngModel)]="createForm.emergencyContact" placeholder="Jane Smith - 021 987 6543" />
+            </div>
+
+            <div class="form-field full-width">
+              <label for="create-address">{{ 'DRIVERS.FIELD_ADDRESS' | i18n }} *</label>
+              <input id="create-address" type="text" class="input-control" [(ngModel)]="createForm.address" placeholder="12 Queen Street, Auckland" />
+            </div>
+
+            <div class="form-field full-width">
+              <label>{{ 'DRIVERS.FIELD_AREAS' | i18n }}</label>
+              <div class="areas-select-grid">
+                @for (area of areas(); track area.id) {
+                  <label class="checkbox-label">
+                    <input
+                      type="checkbox"
+                      [checked]="isAreaSelectedInCreate(area.id)"
+                      (change)="toggleAreaInCreate(area.id)"
+                    />
+                    <span>{{ area.name }} ({{ area.code }})</span>
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !createForm.displayName || !createForm.email || !createForm.employeeNo || !createForm.licenceExpiry"
+            (click)="submitCreateDriver()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Driver Dialog (Admin Only) -->
+  @if (isEditModalOpen() && selectedDriverDetail()) {
+    <div class="dialog-backdrop" (click)="closeEditModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DRIVERS.MODAL_EDIT_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeEditModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="edit-name">{{ 'DRIVERS.FIELD_DISPLAY_NAME' | i18n }} *</label>
+              <input id="edit-name" type="text" class="input-control" [(ngModel)]="editForm.displayName" />
+            </div>
+
+            <div class="form-field">
+              <label for="edit-status">{{ 'DRIVERS.FIELD_STATUS' | i18n }} *</label>
+              <select id="edit-status" class="input-control" [(ngModel)]="editForm.status">
+                <option value="Active">{{ 'DRIVERS.STATUS_ACTIVE' | i18n }}</option>
+                <option value="Inactive">{{ 'DRIVERS.STATUS_INACTIVE' | i18n }}</option>
+                <option value="Suspended">{{ 'DRIVERS.STATUS_SUSPENDED' | i18n }}</option>
+                <option value="OnLeave">{{ 'DRIVERS.STATUS_ON_LEAVE' | i18n }}</option>
+                <option value="Terminated">{{ 'DRIVERS.STATUS_TERMINATED' | i18n }}</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="edit-lic-class">{{ 'DRIVERS.FIELD_LICENCE_CLASS' | i18n }} *</label>
+              <input id="edit-lic-class" type="text" class="input-control" [(ngModel)]="editForm.licenceClass" />
+            </div>
+
+            <div class="form-field">
+              <label for="edit-lic-exp">{{ 'DRIVERS.FIELD_LICENCE_EXPIRY' | i18n }} *</label>
+              <input id="edit-lic-exp" type="date" class="input-control" [(ngModel)]="editForm.licenceExpiry" />
+            </div>
+
+            <div class="form-field">
+              <label for="edit-hourly">{{ 'DRIVERS.FIELD_HOURLY_RATE' | i18n }} *</label>
+              <input id="edit-hourly" type="number" step="0.5" class="input-control" [(ngModel)]="editForm.hourlyRateAmount" />
+            </div>
+
+            <div class="form-field">
+              <label for="edit-trip">{{ 'DRIVERS.FIELD_PER_TRIP_RATE' | i18n }} *</label>
+              <input id="edit-trip" type="number" step="0.5" class="input-control" [(ngModel)]="editForm.perTripRateAmount" />
+            </div>
+
+            <div class="form-field">
+              <label for="edit-km">{{ 'DRIVERS.FIELD_PER_KM_RATE' | i18n }} *</label>
+              <input id="edit-km" type="number" step="0.1" class="input-control" [(ngModel)]="editForm.perKmRateAmount" />
+            </div>
+
+            <div class="form-field">
+              <label for="edit-phone">{{ 'DRIVERS.FIELD_PHONE' | i18n }} *</label>
+              <input id="edit-phone" type="text" class="input-control" [(ngModel)]="editForm.phone" />
+            </div>
+
+            <div class="form-field full-width">
+              <label for="edit-address">{{ 'DRIVERS.FIELD_ADDRESS' | i18n }} *</label>
+              <input id="edit-address" type="text" class="input-control" [(ngModel)]="editForm.address" />
+            </div>
+
+            <div class="form-field full-width">
+              <label for="edit-emergency">{{ 'DRIVERS.FIELD_EMERGENCY_CONTACT' | i18n }} *</label>
+              <input id="edit-emergency" type="text" class="input-control" [(ngModel)]="editForm.emergencyContact" />
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !editForm.displayName || !editForm.licenceExpiry"
+            (click)="submitEditDriver()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Upload Avatar Dialog -->
+  @if (isAvatarModalOpen() && selectedDriver()) {
+    <div class="dialog-backdrop" (click)="closeAvatarModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DRIVERS.MODAL_AVATAR_TITLE' | i18n }} ({{ selectedDriver()!.displayName }})</h3>
+          <button type="button" class="btn-close" (click)="closeAvatarModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="avatar-preview-box">
+            @if (avatarPreviewUrl) {
+              <img [src]="avatarPreviewUrl" alt="Avatar preview" class="avatar-lg" />
+            } @else if (selectedDriver()!.avatarUrl) {
+              <img [src]="selectedDriver()!.avatarUrl" alt="Current avatar" class="avatar-lg" />
+            } @else {
+              <nim-icon name="camera" [size]="48" style="color: #94a3b8" />
+            }
+            <input
+              type="file"
+              accept="image/jpeg,image/png"
+              (change)="onAvatarFileSelected($event)"
+            />
+            <span class="field-hint">{{ 'DRIVERS.AVATAR_HINT' | i18n }}</span>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeAvatarModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !selectedAvatarFile"
+            (click)="submitAvatarUpload()"
+          >
+            {{ 'COMMON.SUBMIT' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Deactivate Driver Dialog (Admin Only) -->
+  @if (isDeactivateModalOpen() && selectedDriver()) {
+    <div class="dialog-backdrop" (click)="closeDeactivateModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DRIVERS.MODAL_DEACTIVATE_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeDeactivateModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+          <p>{{ 'DRIVERS.DEACTIVATE_CONFIRM' | i18n: { name: selectedDriver()!.displayName } }}</p>
+          <div class="form-field">
+            <label for="deact-reason">{{ 'DRIVERS.FIELD_DEACTIVATE_REASON' | i18n }}</label>
+            <input
+              id="deact-reason"
+              type="text"
+              class="input-control"
+              [(ngModel)]="deactivateReason"
+              placeholder="e.g. Voluntary resignation, contract ended"
+            />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeDeactivateModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            style="background: #dc2626"
+            [disabled]="isSubmitting()"
+            (click)="submitDeactivate()"
+          >
+            {{ 'DRIVERS.ACTION_DEACTIVATE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Driver Details Dialog -->
+  @if (isDetailsModalOpen() && selectedDriverDetail()) {
+    <div class="dialog-backdrop" (click)="closeDetailsModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DRIVERS.MODAL_DETAILS_TITLE' | i18n }} - {{ selectedDriverDetail()!.displayName }}</h3>
+          <button type="button" class="btn-close" (click)="closeDetailsModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          <div class="details-grid">
+            <div class="detail-group">
+              <h4>Employment</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_EMPLOYEE_NO' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.employeeNo }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_DISPLAY_NAME' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.displayName }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_EMAIL' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.email }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_HIRED_ON' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.hiredOn | localeDate: 'medium' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_STATUS' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.status }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Licence & Compliance</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_LICENCE_CLASS' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.licenceClass }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_LICENCE_EXPIRY' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.licenceExpiry | localeDate: 'medium' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-val">
+                  @if (selectedDriverDetail()!.isLicenceExpired) {
+                    <span style="color: #dc2626; font-weight: 700">{{ 'DRIVERS.LICENCE_EXPIRED' | i18n }}</span>
+                  } @else if (selectedDriverDetail()!.isLicenceExpiringSoon) {
+                    <span style="color: #d97706; font-weight: 700">
+                      {{ 'DRIVERS.LICENCE_EXPIRING_SOON' | i18n: { days: selectedDriverDetail()!.daysUntilLicenceExpiry } }}
+                    </span>
+                  } @else {
+                    <span style="color: #16a34a; font-weight: 600">{{ 'DRIVERS.LICENCE_VALID' | i18n }}</span>
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Rate Cards (NZD)</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_HOURLY_RATE' | i18n }}</span>
+                <span class="detail-val">${{ selectedDriverDetail()!.hourlyRateAmount }} / hr</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_PER_TRIP_RATE' | i18n }}</span>
+                <span class="detail-val">${{ selectedDriverDetail()!.perTripRateAmount }} / trip</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_PER_KM_RATE' | i18n }}</span>
+                <span class="detail-val">${{ selectedDriverDetail()!.perKmRateAmount }} / km</span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Contact Information</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_PHONE' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.phone }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_EMERGENCY_CONTACT' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.emergencyContact }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DRIVERS.FIELD_ADDRESS' | i18n }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.address }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group full-width">
+              <h4>Assigned Areas</h4>
+              <div class="area-tags">
+                @for (assignment of selectedDriverDetail()!.areaAssignments; track assignment.id) {
+                  <span class="area-chip">{{ assignment.areaName }} ({{ assignment.areaCode }})</span>
+                }
+                @if (selectedDriverDetail()!.areaAssignments.length === 0) {
+                  <span style="color: #94a3b8">No assigned operational areas</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-primary" (click)="closeDetailsModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

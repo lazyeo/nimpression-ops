@@ -1,0 +1,799 @@
+<div class="dispatch-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2 class="page-title">{{ 'DISPATCH.TITLE' | i18n }}</h2>
+      <p class="page-subtitle">{{ 'DISPATCH.SUBTITLE' | i18n }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" (click)="loadTasks()" [title]="'COMMON.REFRESH' | i18n">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+      <button type="button" class="btn-primary" (click)="openCreateModal()">
+        <nim-icon name="zap" [size]="16" />
+        <span>{{ 'DISPATCH.CREATE_TASK' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Unacknowledged Alerts Banner -->
+  @if (alerts().length > 0) {
+    <div class="alert-banner">
+      <nim-icon name="alert-triangle" [size]="18" class="alert-icon" />
+      <div class="alert-text">
+        <strong>{{ 'DISPATCH.UNACKNOWLEDGED_ALERTS_TITLE' | i18n }}:</strong>
+        {{ 'DISPATCH.UNACKNOWLEDGED_ALERTS_MSG' | i18n: { count: alerts().length } }}
+      </div>
+      <button type="button" class="alert-btn" (click)="filterByAssigned()">
+        {{ 'DISPATCH.STATUS_ASSIGNED' | i18n }} ({{ alerts().length }})
+      </button>
+    </div>
+  }
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="filter-item search-item">
+        <label for="filter-search">{{ 'COMMON.SEARCH' | i18n }}</label>
+        <input
+          id="filter-search"
+          type="text"
+          class="form-input"
+          [placeholder]="'DISPATCH.FILTER_SEARCH' | i18n"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-status">{{ 'DISPATCH.FILTER_STATUS' | i18n }}</label>
+        <select
+          id="filter-status"
+          class="form-select"
+          [value]="selectedStatus()"
+          (change)="onStatusChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          <option value="Draft">{{ 'DISPATCH.STATUS_DRAFT' | i18n }}</option>
+          <option value="Assigned">{{ 'DISPATCH.STATUS_ASSIGNED' | i18n }}</option>
+          <option value="Acknowledged">{{ 'DISPATCH.STATUS_ACKNOWLEDGED' | i18n }}</option>
+          <option value="InProgress">{{ 'DISPATCH.STATUS_IN_PROGRESS' | i18n }}</option>
+          <option value="Completed">{{ 'DISPATCH.STATUS_COMPLETED' | i18n }}</option>
+          <option value="Cancelled">{{ 'DISPATCH.STATUS_CANCELLED' | i18n }}</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-area">{{ 'DISPATCH.FILTER_AREA' | i18n }}</label>
+        <select
+          id="filter-area"
+          class="form-select"
+          [value]="selectedAreaId()"
+          (change)="onAreaChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          @for (area of areas(); track area.id) {
+            <option [value]="area.id">{{ area.name }} ({{ area.code }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-driver">{{ 'DISPATCH.FILTER_DRIVER' | i18n }}</label>
+        <select
+          id="filter-driver"
+          class="form-select"
+          [value]="selectedDriverId()"
+          (change)="onDriverChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          @for (driver of drivers(); track driver.id) {
+            <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-vehicle">{{ 'DISPATCH.FILTER_VEHICLE' | i18n }}</label>
+        <select
+          id="filter-vehicle"
+          class="form-select"
+          [value]="selectedVehicleId()"
+          (change)="onVehicleChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          @for (veh of vehicles(); track veh.id) {
+            <option [value]="veh.id">{{ veh.rego }} - {{ veh.make }} {{ veh.model }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="btn-secondary" (click)="clearFilters()">
+          {{ 'DISPATCH.CLEAR_FILTERS' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Rendering -->
+  @if (state() === 'loading') {
+    <div class="table-card">
+      <div class="skeleton-table">
+        <div class="skeleton-header-row">
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-lg"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-sm"></div>
+        </div>
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-lg"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-sm"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (state() === 'error') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-error" />
+      <h3 class="state-title">{{ 'DISPATCH.ERROR_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ errorMessage() || ('DASHBOARD.ERRORS.LOAD_FAILED' | i18n) }}</p>
+      <button type="button" class="btn-primary" (click)="loadTasks()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  } @else if (state() === 'forbidden') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-forbidden" />
+      <h3 class="state-title">{{ 'DISPATCH.FORBIDDEN_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'DISPATCH.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  } @else if (state() === 'empty') {
+    <div class="state-card">
+      <nim-icon name="inbox" [size]="48" class="state-icon icon-empty" />
+      <h3 class="state-title">{{ 'DISPATCH.EMPTY_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'DISPATCH.EMPTY_DESC' | i18n }}</p>
+      <button type="button" class="btn-primary" (click)="openCreateModal()">
+        <nim-icon name="zap" [size]="16" />
+        <span>{{ 'DISPATCH.CREATE_TASK' | i18n }}</span>
+      </button>
+    </div>
+  } @else {
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'DISPATCH.TABLE_REF' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_TITLE' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_DRIVER' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_VEHICLE' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_SCHEDULED' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_PRIORITY' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_STATUS' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_DISTANCE' | i18n }}</th>
+              <th>{{ 'DISPATCH.TABLE_ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (task of tasks(); track task.id) {
+              <tr [class.row-highlight]="isTaskOverdueUnacknowledged(task)">
+                <td>
+                  <span class="ref-code">{{ task.ref || (task.id | slice: 0:8) }}</span>
+                </td>
+                <td>
+                  <div class="title-cell">
+                    <span class="task-title">{{ task.title }}</span>
+                    <span class="task-area">
+                      <nim-icon name="target" [size]="12" />
+                      {{ task.areaName }} ({{ task.areaCode }})
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  @if (task.driverName) {
+                    <span class="user-tag">
+                      <nim-icon name="user" [size]="14" />
+                      {{ task.driverName }}
+                    </span>
+                  } @else {
+                    <span class="unassigned-label">-</span>
+                  }
+                </td>
+                <td>
+                  @if (task.vehicleRego) {
+                    <span class="vehicle-tag">
+                      <nim-icon name="car" [size]="14" />
+                      {{ task.vehicleRego }}
+                    </span>
+                  } @else {
+                    <span class="unassigned-label">-</span>
+                  }
+                </td>
+                <td>
+                  <span>{{ task.scheduledFor | localeDate: 'short' }}</span>
+                </td>
+                <td>
+                  <span class="badge priority-{{ task.priority.toLowerCase() }}">
+                    {{ 'DISPATCH.PRIORITY_' + task.priority.toUpperCase() | i18n }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-{{ task.status.toLowerCase() }}">
+                    {{ 'DISPATCH.STATUS_' + getStatusKey(task.status) | i18n }}
+                  </span>
+                  @if (isTaskOverdueUnacknowledged(task)) {
+                    <div class="badge badge-alert">
+                      <nim-icon name="clock" [size]="10" />
+                      {{ 'DISPATCH.OVERDUE_ALERT' | i18n }}
+                    </div>
+                  }
+                </td>
+                <td>
+                  <span>
+                    {{
+                      task.effectiveDistanceKm !== null && task.effectiveDistanceKm !== undefined
+                        ? task.effectiveDistanceKm + ' km'
+                        : (task.plannedDistanceKm ? task.plannedDistanceKm + ' km (est)' : '-')
+                    }}
+                  </span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="action-btn btn-view" (click)="openDetailsModal(task)">
+                      {{ 'DISPATCH.ACTION_VIEW' | i18n }}
+                    </button>
+
+                    @if (task.status === 'Draft') {
+                      <button type="button" class="action-btn btn-assign" (click)="openAssignModal(task)">
+                        {{ 'DISPATCH.ACTION_ASSIGN' | i18n }}
+                      </button>
+                    }
+
+                    @if (task.status === 'Assigned') {
+                      <button type="button" class="action-btn btn-ack" (click)="acknowledgeTask(task)">
+                        {{ 'DISPATCH.ACTION_ACKNOWLEDGE' | i18n }}
+                      </button>
+                    }
+
+                    @if (task.status === 'Acknowledged') {
+                      <button type="button" class="action-btn btn-start" (click)="openStartModal(task)">
+                        {{ 'DISPATCH.ACTION_START' | i18n }}
+                      </button>
+                    }
+
+                    @if (task.status === 'InProgress') {
+                      <button type="button" class="action-btn btn-comp" (click)="openCompleteModal(task)">
+                        {{ 'DISPATCH.ACTION_COMPLETE' | i18n }}
+                      </button>
+                    }
+
+                    @if (task.status !== 'Completed' && task.status !== 'Cancelled') {
+                      <button type="button" class="action-btn btn-cancel" (click)="openCancelModal(task)">
+                        {{ 'DISPATCH.ACTION_CANCEL' | i18n }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-pagination">
+        <span>
+          Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} tasks)
+        </span>
+        <div class="pagination-btns">
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create Task Dialog -->
+  @if (isCreateModalOpen()) {
+    <div class="dialog-backdrop" (click)="closeCreateModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DISPATCH.MODAL_CREATE_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeCreateModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="create-title">{{ 'DISPATCH.FIELD_TITLE' | i18n }} *</label>
+              <input
+                id="create-title"
+                type="text"
+                class="input-control"
+                [(ngModel)]="createForm.title"
+                placeholder="e.g. Morning Freight Delivery"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="create-ref">{{ 'DISPATCH.FIELD_REF' | i18n }}</label>
+              <input
+                id="create-ref"
+                type="text"
+                class="input-control"
+                [(ngModel)]="createForm.ref"
+                [placeholder]="'DISPATCH.FIELD_REF_PLACEHOLDER' | i18n"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="create-area">{{ 'DISPATCH.FIELD_AREA' | i18n }} *</label>
+              <select
+                id="create-area"
+                class="input-control"
+                [(ngModel)]="createForm.areaId"
+                (ngModelChange)="onAreaOrDriverChangeInCreate()"
+              >
+                <option value="">-- Select Area --</option>
+                @for (area of areas(); track area.id) {
+                  <option [value]="area.id">{{ area.name }} ({{ area.code }})</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="create-scheduled">{{ 'DISPATCH.FIELD_SCHEDULED_FOR' | i18n }} *</label>
+              <input
+                id="create-scheduled"
+                type="datetime-local"
+                class="input-control"
+                [(ngModel)]="createForm.scheduledFor"
+                (ngModelChange)="onAreaOrDriverChangeInCreate()"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="create-priority">{{ 'DISPATCH.FIELD_PRIORITY' | i18n }}</label>
+              <select id="create-priority" class="input-control" [(ngModel)]="createForm.priority">
+                <option value="Low">{{ 'DISPATCH.PRIORITY_LOW' | i18n }}</option>
+                <option value="Medium">{{ 'DISPATCH.PRIORITY_MEDIUM' | i18n }}</option>
+                <option value="High">{{ 'DISPATCH.PRIORITY_HIGH' | i18n }}</option>
+                <option value="Urgent">{{ 'DISPATCH.PRIORITY_URGENT' | i18n }}</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="create-distance">{{ 'DISPATCH.FIELD_PLANNED_DISTANCE' | i18n }}</label>
+              <input
+                id="create-distance"
+                type="number"
+                step="0.1"
+                class="input-control"
+                [(ngModel)]="createForm.plannedDistanceKm"
+                placeholder="e.g. 25.5"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="create-driver">{{ 'DISPATCH.FIELD_DRIVER' | i18n }}</label>
+              <select
+                id="create-driver"
+                class="input-control"
+                [(ngModel)]="createForm.driverId"
+                (ngModelChange)="onAreaOrDriverChangeInCreate()"
+              >
+                <option value="">-- Optional Driver --</option>
+                @for (driver of drivers(); track driver.id) {
+                  <option [value]="driver.id" [disabled]="driver.isLicenceExpired">
+                    {{ driver.displayName }} ({{ driver.employeeNo }})
+                    {{ driver.isLicenceExpired ? ' [Licence Expired]' : '' }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="create-vehicle">{{ 'DISPATCH.FIELD_VEHICLE' | i18n }}</label>
+              <select id="create-vehicle" class="input-control" [(ngModel)]="createForm.vehicleId">
+                <option value="">-- Optional Vehicle --</option>
+                @for (veh of vehicles(); track veh.id) {
+                  <option [value]="veh.id">{{ veh.rego }} - {{ veh.make }} {{ veh.model }}</option>
+                }
+              </select>
+            </div>
+
+            @if (areaWarning()) {
+              <div class="form-field full-width">
+                <div class="warning-box">
+                  <nim-icon name="alert-triangle" [size]="16" />
+                  <span>{{ 'DISPATCH.AREA_WARNING_MESSAGE' | i18n }} ({{ areaWarning() }})</span>
+                </div>
+                <label class="checkbox-label" style="margin-top: 0.5rem">
+                  <input type="checkbox" [(ngModel)]="createForm.overrideAreaWarning" />
+                  <span>{{ 'DISPATCH.FIELD_OVERRIDE_WARNING' | i18n }}</span>
+                </label>
+              </div>
+            }
+
+            <div class="form-field full-width">
+              <label for="create-desc">{{ 'DISPATCH.FIELD_DESCRIPTION' | i18n }}</label>
+              <textarea
+                id="create-desc"
+                class="input-control"
+                [(ngModel)]="createForm.description"
+                placeholder="Optional special instructions..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !createForm.title || !createForm.areaId || !createForm.scheduledFor"
+            (click)="submitCreateTask()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Assign Task Dialog -->
+  @if (isAssignModalOpen() && selectedTask()) {
+    <div class="dialog-backdrop" (click)="closeAssignModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DISPATCH.MODAL_ASSIGN_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeAssignModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="assign-driver">{{ 'DISPATCH.FIELD_DRIVER' | i18n }} *</label>
+            <select
+              id="assign-driver"
+              class="input-control"
+              [(ngModel)]="assignForm.driverId"
+              (ngModelChange)="checkAssignEligibility()"
+            >
+              <option value="">-- Select Driver --</option>
+              @for (driver of drivers(); track driver.id) {
+                <option [value]="driver.id" [disabled]="driver.isLicenceExpired">
+                  {{ driver.displayName }} ({{ driver.employeeNo }})
+                  {{ driver.isLicenceExpired ? ' [Licence Expired]' : '' }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="assign-vehicle">{{ 'DISPATCH.FIELD_VEHICLE' | i18n }} *</label>
+            <select id="assign-vehicle" class="input-control" [(ngModel)]="assignForm.vehicleId">
+              <option value="">-- Select Vehicle --</option>
+              @for (veh of vehicles(); track veh.id) {
+                <option [value]="veh.id">{{ veh.rego }} - {{ veh.make }} {{ veh.model }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="assign-scheduled">{{ 'DISPATCH.FIELD_SCHEDULED_FOR' | i18n }}</label>
+            <input
+              id="assign-scheduled"
+              type="datetime-local"
+              class="input-control"
+              [(ngModel)]="assignForm.scheduledFor"
+            />
+          </div>
+
+          @if (areaWarning()) {
+            <div class="form-field">
+              <div class="warning-box">
+                <nim-icon name="alert-triangle" [size]="16" />
+                <span>{{ 'DISPATCH.AREA_WARNING_MESSAGE' | i18n }} ({{ areaWarning() }})</span>
+              </div>
+              <label class="checkbox-label" style="margin-top: 0.5rem">
+                <input type="checkbox" [(ngModel)]="assignForm.overrideAreaWarning" />
+                <span>{{ 'DISPATCH.FIELD_OVERRIDE_WARNING' | i18n }}</span>
+              </label>
+            </div>
+          }
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeAssignModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !assignForm.driverId || !assignForm.vehicleId"
+            (click)="submitAssignTask()"
+          >
+            {{ 'DISPATCH.ACTION_ASSIGN' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Start Task Dialog -->
+  @if (isStartModalOpen() && selectedTask()) {
+    <div class="dialog-backdrop" (click)="closeStartModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DISPATCH.MODAL_START_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeStartModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+          <div class="form-field">
+            <label for="start-time">{{ 'COMMON.TIME' | i18n }}</label>
+            <input id="start-time" type="datetime-local" class="input-control" [(ngModel)]="startForm.startedAt" />
+          </div>
+          <div class="form-field">
+            <label for="start-odo">{{ 'DISPATCH.FIELD_START_ODOMETER' | i18n }}</label>
+            <input
+              id="start-odo"
+              type="number"
+              step="0.1"
+              class="input-control"
+              [(ngModel)]="startForm.startOdometerKm"
+              placeholder="e.g. 12500.5"
+            />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeStartModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="submitStartTask()">
+            {{ 'DISPATCH.ACTION_START' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Complete Task Dialog -->
+  @if (isCompleteModalOpen() && selectedTask()) {
+    <div class="dialog-backdrop" (click)="closeCompleteModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DISPATCH.MODAL_COMPLETE_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeCompleteModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+          <div class="form-field">
+            <label for="complete-time">{{ 'COMMON.TIME' | i18n }}</label>
+            <input id="complete-time" type="datetime-local" class="input-control" [(ngModel)]="completeForm.completedAt" />
+          </div>
+          <div class="form-field">
+            <label for="complete-dist">{{ 'DISPATCH.FIELD_ACTUAL_DISTANCE' | i18n }}</label>
+            <input
+              id="complete-dist"
+              type="number"
+              step="0.1"
+              class="input-control"
+              [(ngModel)]="completeForm.actualDistanceKm"
+              placeholder="e.g. 28.0"
+            />
+          </div>
+          <div class="form-field">
+            <label for="complete-odo">{{ 'DISPATCH.FIELD_END_ODOMETER' | i18n }}</label>
+            <input
+              id="complete-odo"
+              type="number"
+              step="0.1"
+              class="input-control"
+              [(ngModel)]="completeForm.endOdometerKm"
+              placeholder="e.g. 12528.5"
+            />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeCompleteModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="submitCompleteTask()">
+            {{ 'DISPATCH.ACTION_COMPLETE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Cancel Task Dialog -->
+  @if (isCancelModalOpen() && selectedTask()) {
+    <div class="dialog-backdrop" (click)="closeCancelModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DISPATCH.MODAL_CANCEL_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeCancelModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+          <p>{{ 'DISPATCH.CANCEL_CONFIRM_MSG' | i18n }}</p>
+          <div class="form-field">
+            <label for="cancel-reason">{{ 'DISPATCH.FIELD_CANCEL_REASON' | i18n }} *</label>
+            <textarea
+              id="cancel-reason"
+              class="input-control"
+              [(ngModel)]="cancelReason"
+              placeholder="Enter cancellation reason..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeCancelModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            style="background: #dc2626"
+            [disabled]="isSubmitting() || !cancelReason.trim()"
+            (click)="submitCancelTask()"
+          >
+            {{ 'DISPATCH.ACTION_CANCEL' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Task Details Dialog -->
+  @if (isDetailsModalOpen() && selectedTask()) {
+    <div class="dialog-backdrop" (click)="closeDetailsModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'DISPATCH.MODAL_DETAILS_TITLE' | i18n }} ({{ selectedTask()!.ref || selectedTask()!.id }})</h3>
+          <button type="button" class="btn-close" (click)="closeDetailsModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          <div class="details-grid">
+            <div class="detail-group">
+              <h4>Overview</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_TITLE' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.title }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_AREA' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.areaName }} ({{ selectedTask()!.areaCode }})</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.TABLE_PRIORITY' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.priority }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.TABLE_STATUS' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.status }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Assignment</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_DRIVER' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.driverName || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_VEHICLE' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.vehicleRego || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_SCHEDULED_FOR' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.scheduledFor | localeDate: 'medium' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Timeline</h4>
+              <div class="detail-row">
+                <span class="detail-label">Acknowledged At</span>
+                <span class="detail-val">{{ (selectedTask()!.acknowledgedAt | localeDate: 'medium') || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Started At</span>
+                <span class="detail-val">{{ (selectedTask()!.startedAt | localeDate: 'medium') || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Completed At</span>
+                <span class="detail-val">{{ (selectedTask()!.completedAt | localeDate: 'medium') || '-' }}</span>
+              </div>
+              @if (selectedTask()!.cancelledAt) {
+                <div class="detail-row">
+                  <span class="detail-label">Cancelled At</span>
+                  <span class="detail-val">{{ selectedTask()!.cancelledAt | localeDate: 'medium' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Cancel Reason</span>
+                  <span class="detail-val">{{ selectedTask()!.cancellationReason || '-' }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="detail-group">
+              <h4>Distance & Mileage</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_PLANNED_DISTANCE' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.plannedDistanceKm ? selectedTask()!.plannedDistanceKm + ' km' : '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_ACTUAL_DISTANCE' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.actualDistanceKm ? selectedTask()!.actualDistanceKm + ' km' : '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_START_ODOMETER' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.startOdometerKm ? selectedTask()!.startOdometerKm + ' km' : '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'DISPATCH.FIELD_END_ODOMETER' | i18n }}</span>
+                <span class="detail-val">{{ selectedTask()!.endOdometerKm ? selectedTask()!.endOdometerKm + ' km' : '-' }}</span>
+              </div>
+            </div>
+
+            @if (selectedTask()!.description) {
+              <div class="detail-group full-width">
+                <h4>{{ 'DISPATCH.FIELD_DESCRIPTION' | i18n }}</h4>
+                <p style="margin: 0; font-size: 0.8125rem; color: #334155">{{ selectedTask()!.description }}</p>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-primary" (click)="closeDetailsModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
