@@ -111,19 +111,24 @@ tasks:
     deps: [test:server, test:web]
 
   test:server:
-    desc: 跑 .NET 全部测试
+    desc: 跑 .NET 全部测试（排除挂钟时序测试）
     cmds:
-      - dotnet test {{.SLN}} --nologo
+      - dotnet test {{.SLN}} --nologo --filter "Category!=Timing"
 
   test:unit:
     desc: 只跑 .NET 单元测试（跳过需要容器的集成测试）
     cmds:
-      - dotnet test {{.SLN}} --nologo --filter "FullyQualifiedName!~Integration"
+      - dotnet test {{.SLN}} --nologo --filter "FullyQualifiedName!~Integration&Category!=Timing"
 
   test:integration:
-    desc: 跑集成测试（Testcontainers 会自行拉起 postgres）
+    desc: 跑集成测试（排除挂钟时序测试）
     cmds:
-      - dotnet test {{.SERVER}}/tests/Nimpression.Integration.Tests --nologo
+      - dotnet test {{.SERVER}}/tests/Nimpression.Integration.Tests --nologo --filter "Category!=Timing"
+
+  test:timing:
+    desc: 跑挂钟时序侧信道集成测试（要求低负载基准环境）
+    cmds:
+      - dotnet test {{.SERVER}}/tests/Nimpression.Integration.Tests --nologo --filter "Category=Timing"
 
   test:web:
     desc: 跑 Angular 单元测试
@@ -136,9 +141,9 @@ tasks:
       - "{{.PNPM}} -F {{.WEB_APP}} exec playwright test"
 
   coverage:
-    desc: 产出合并覆盖率报告
+    desc: 产出合并覆盖率报告（排除挂钟时序测试）
     cmds:
-      - dotnet test {{.SLN}} --nologo --collect:"XPlat Code Coverage" --results-directory ./artifacts/coverage
+      - dotnet test {{.SLN}} --nologo --filter "Category!=Timing" --collect:"XPlat Code Coverage" --results-directory ./artifacts/coverage
 
   # ── 数据库 ────────────────────────────────────────
   migrate:
