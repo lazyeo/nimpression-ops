@@ -1,0 +1,125 @@
+<div class="modal-backdrop" (click)="cancel()">
+  <div
+    class="modal-card"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'create-news-title'"
+  >
+    <div class="modal-header">
+      <div class="header-title-group">
+        <nim-icon name="news" [size]="22" class="title-icon" />
+        <h2 id="create-news-title" class="modal-title">{{ 'NEWS.CREATE_TITLE' | i18n }}</h2>
+      </div>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="cancel()"
+        [attr.aria-label]="'COMMON.CLOSE' | i18n"
+      >
+        <nim-icon name="check-circle" [size]="18" class="icon-hidden" />
+        <span class="close-x">&times;</span>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submitForm()" class="modal-body">
+      @if (errorMessage()) {
+        <div class="alert-error" role="alert">
+          <nim-icon name="alert-triangle" [size]="18" />
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <div class="form-group">
+        <label for="news-title" class="form-label">
+          {{ 'NEWS.FORM_TITLE' | i18n }} <span class="req">*</span>
+        </label>
+        <input
+          id="news-title"
+          type="text"
+          formControlName="title"
+          class="form-input"
+          [placeholder]="'NEWS.FORM_TITLE_PLACEHOLDER' | i18n"
+        />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <span class="field-error">{{ 'COMMON.REQUIRED' | i18n }}</span>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="news-audience" class="form-label">
+            {{ 'NEWS.FORM_AUDIENCE' | i18n }} <span class="req">*</span>
+          </label>
+          <select id="news-audience" formControlName="audience" class="form-select">
+            <option [value]="1">{{ 'NEWS.AUDIENCE_ALL' | i18n }}</option>
+            <option [value]="2">{{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}</option>
+            <option [value]="3">{{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}</option>
+          </select>
+        </div>
+
+        <div class="form-group flex-1 checkbox-group">
+          <label class="checkbox-label" for="news-pinned">
+            <input id="news-pinned" type="checkbox" formControlName="pinned" class="form-checkbox" />
+            <span>{{ 'NEWS.FORM_PINNED' | i18n }}</span>
+          </label>
+          <small class="help-text">{{ 'NEWS.FORM_PINNED_HINT' | i18n }}</small>
+        </div>
+      </div>
+
+      <div class="bilingual-notice">
+        <nim-icon name="clock" [size]="16" />
+        <span>{{ 'NEWS.BILINGUAL_REQUIRED_NOTICE' | i18n }}</span>
+      </div>
+
+      <div class="form-group">
+        <label for="news-body-en" class="form-label">
+          {{ 'NEWS.FORM_BODY_EN' | i18n }} <span class="req">*</span>
+        </label>
+        <textarea
+          id="news-body-en"
+          rows="4"
+          formControlName="bodyEn"
+          class="form-textarea"
+          [placeholder]="'NEWS.FORM_BODY_EN_PLACEHOLDER' | i18n"
+        ></textarea>
+        @if (form.controls.bodyEn.touched && form.controls.bodyEn.invalid) {
+          <span class="field-error">{{ 'NEWS.BODY_EN_REQUIRED' | i18n }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="news-body-zh" class="form-label">
+          {{ 'NEWS.FORM_BODY_ZH' | i18n }} <span class="req">*</span>
+        </label>
+        <textarea
+          id="news-body-zh"
+          rows="4"
+          formControlName="bodyZh"
+          class="form-textarea"
+          [placeholder]="'NEWS.FORM_BODY_ZH_PLACEHOLDER' | i18n"
+        ></textarea>
+        @if (form.controls.bodyZh.touched && form.controls.bodyZh.invalid) {
+          <span class="field-error">{{ 'NEWS.BODY_ZH_REQUIRED' | i18n }}</span>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancel()">
+          {{ 'COMMON.CANCEL' | i18n }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+            <span>{{ 'COMMON.LOADING' | i18n }}</span>
+          } @else {
+            <span>{{ 'NEWS.PUBLISH_BUTTON' | i18n }}</span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
