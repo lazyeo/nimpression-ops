@@ -1,0 +1,685 @@
+<div class="vehicles-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2 class="page-title">{{ 'VEHICLES.TITLE' | i18n }}</h2>
+      <p class="page-subtitle">{{ 'VEHICLES.SUBTITLE' | i18n }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" (click)="loadVehicles()" [title]="'COMMON.REFRESH' | i18n">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+      @if (isAdmin()) {
+        <button type="button" class="btn-primary" (click)="openCreateModal()">
+          <nim-icon name="car" [size]="16" />
+          <span>{{ 'VEHICLES.CREATE_VEHICLE' | i18n }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Service Alert Banner -->
+  @if (serviceDueCount() > 0) {
+    <div class="alert-banner">
+      <nim-icon name="alert-triangle" [size]="18" class="alert-icon" />
+      <div class="alert-text">
+        <strong>{{ 'VEHICLES.SERVICE_ALERT_TITLE' | i18n }}:</strong>
+        {{ 'VEHICLES.SERVICE_ALERT_MSG' | i18n: { count: serviceDueCount() } }}
+      </div>
+    </div>
+  }
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="filter-item search-item">
+        <label for="veh-search">{{ 'COMMON.SEARCH' | i18n }}</label>
+        <input
+          id="veh-search"
+          type="text"
+          class="form-input"
+          [placeholder]="'VEHICLES.FILTER_SEARCH' | i18n"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="veh-status">{{ 'VEHICLES.FILTER_STATUS' | i18n }}</label>
+        <select
+          id="veh-status"
+          class="form-select"
+          [value]="selectedStatus()"
+          (change)="onStatusChange($event)"
+        >
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          <option value="Active">{{ 'VEHICLES.STATUS_ACTIVE' | i18n }}</option>
+          <option value="Maintenance">{{ 'VEHICLES.STATUS_MAINTENANCE' | i18n }}</option>
+          <option value="Inactive">{{ 'VEHICLES.STATUS_INACTIVE' | i18n }}</option>
+          <option value="Decommissioned">{{ 'VEHICLES.STATUS_DECOMMISSIONED' | i18n }}</option>
+        </select>
+      </div>
+
+      <div class="filter-item checkbox-item">
+        <label class="toggle-label">
+          <input
+            type="checkbox"
+            [checked]="serviceDueOnly()"
+            (change)="onServiceDueToggle($event)"
+          />
+          <span>{{ 'VEHICLES.FILTER_SERVICE_DUE' | i18n }}</span>
+        </label>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="btn-secondary" (click)="clearFilters()">
+          {{ 'VEHICLES.CLEAR_FILTERS' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Rendering -->
+  @if (state() === 'loading') {
+    <div class="table-card">
+      <div class="skeleton-table">
+        <div class="skeleton-header-row">
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell cell-lg"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell cell-sm"></div>
+          <div class="skeleton-cell"></div>
+        </div>
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell cell-lg"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell cell-sm"></div>
+            <div class="skeleton-cell"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (state() === 'error') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-error" />
+      <h3 class="state-title">{{ 'VEHICLES.ERROR_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ errorMessage() || ('DASHBOARD.ERRORS.LOAD_FAILED' | i18n) }}</p>
+      <button type="button" class="btn-primary" (click)="loadVehicles()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  } @else if (state() === 'forbidden') {
+    <div class="state-card">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon icon-forbidden" />
+      <h3 class="state-title">{{ 'VEHICLES.FORBIDDEN_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'VEHICLES.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  } @else if (state() === 'empty') {
+    <div class="state-card">
+      <nim-icon name="inbox" [size]="48" class="state-icon icon-empty" />
+      <h3 class="state-title">{{ 'VEHICLES.EMPTY_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'VEHICLES.EMPTY_DESC' | i18n }}</p>
+      @if (isAdmin()) {
+        <button type="button" class="btn-primary" (click)="openCreateModal()">
+          <nim-icon name="car" [size]="16" />
+          <span>{{ 'VEHICLES.CREATE_VEHICLE' | i18n }}</span>
+        </button>
+      }
+    </div>
+  } @else {
+    <!-- Table Card -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'VEHICLES.TABLE_REGO' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_MAKE_MODEL' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_YEAR' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_ODOMETER' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_SERVICE_STATUS' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_WOF_COF' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_INSURANCE' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_CURRENT_DRIVER' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_STATUS' | i18n }}</th>
+              <th>{{ 'VEHICLES.TABLE_ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (veh of vehicles(); track veh.id) {
+              <tr [class.service-due-row]="veh.isServiceDue">
+                <td>
+                  <span class="rego-plate">{{ veh.rego }}</span>
+                </td>
+                <td class="make-model-cell">
+                  <span class="vehicle-name">{{ veh.make }} {{ veh.model }}</span>
+                </td>
+                <td>{{ veh.year }}</td>
+                <td>
+                  <strong>{{ veh.odometerKm }} km</strong>
+                </td>
+                <td>
+                  @if (veh.isServiceDue) {
+                    <span class="badge badge-servicedue">
+                      <nim-icon name="alert-triangle" [size]="10" />
+                      {{ 'VEHICLES.SERVICE_DUE' | i18n }}
+                    </span>
+                  } @else {
+                    <span class="badge badge-serviceok">
+                      {{ 'VEHICLES.SERVICE_OK' | i18n }}
+                    </span>
+                  }
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem">
+                    {{ veh.distanceSinceLastServiceKm }} / {{ veh.serviceIntervalKm }} km
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size: 0.8125rem">
+                    WOF: {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
+                  </div>
+                  <div style="font-size: 0.8125rem; color: #64748b">
+                    COF: {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
+                  </div>
+                </td>
+                <td>
+                  <span>{{ (veh.insuranceExpiry | localeDate: 'short') || '-' }}</span>
+                </td>
+                <td>
+                  @if (veh.currentDriverName) {
+                    <span class="user-tag">
+                      <nim-icon name="user" [size]="14" />
+                      {{ veh.currentDriverName }}
+                    </span>
+                  } @else {
+                    <span class="unassigned-label">-</span>
+                  }
+                </td>
+                <td>
+                  <span class="badge badge-{{ veh.status.toLowerCase() }}">
+                    {{ 'VEHICLES.STATUS_' + getStatusKey(veh.status) | i18n }}
+                  </span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="action-btn btn-view" (click)="openDetailsModal(veh)">
+                      {{ 'VEHICLES.ACTION_VIEW' | i18n }}
+                    </button>
+
+                    @if (isAdmin()) {
+                      <button type="button" class="action-btn btn-edit" (click)="openEditModal(veh)">
+                        {{ 'VEHICLES.ACTION_EDIT' | i18n }}
+                      </button>
+                    }
+
+                    @if (!veh.currentDriverId) {
+                      <button type="button" class="action-btn btn-assign" (click)="openAssignModal(veh)">
+                        {{ 'VEHICLES.ACTION_ASSIGN' | i18n }}
+                      </button>
+                    } @else {
+                      <button type="button" class="action-btn btn-release" (click)="releaseVehicle(veh)">
+                        {{ 'VEHICLES.ACTION_RELEASE' | i18n }}
+                      </button>
+                    }
+
+                    @if (isAdmin()) {
+                      <button type="button" class="action-btn btn-service" (click)="openServiceModal(veh)">
+                        {{ 'VEHICLES.ACTION_RECORD_SERVICE' | i18n }}
+                      </button>
+                    }
+
+                    <button type="button" class="action-btn btn-odo" (click)="openOdometerModal(veh)">
+                      {{ 'VEHICLES.ACTION_RECORD_ODOMETER' | i18n }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-pagination">
+        <span>Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} vehicles)</span>
+        <div class="pagination-btns">
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add Vehicle Dialog (Admin only) -->
+  @if (isCreateModalOpen()) {
+    <div class="dialog-backdrop" (click)="closeCreateModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'VEHICLES.MODAL_CREATE_TITLE' | i18n }}</h3>
+          <button type="button" class="btn-close" (click)="closeCreateModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="create-rego">{{ 'VEHICLES.FIELD_REGO' | i18n }} *</label>
+              <input id="create-rego" type="text" class="input-control" [(ngModel)]="createForm.rego" placeholder="e.g. ABC123" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-vin">{{ 'VEHICLES.FIELD_VIN' | i18n }} *</label>
+              <input id="create-vin" type="text" class="input-control" [(ngModel)]="createForm.vinEnc" placeholder="17-character VIN" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-make">{{ 'VEHICLES.FIELD_MAKE' | i18n }} *</label>
+              <input id="create-make" type="text" class="input-control" [(ngModel)]="createForm.make" placeholder="e.g. Toyota" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-model">{{ 'VEHICLES.FIELD_MODEL' | i18n }} *</label>
+              <input id="create-model" type="text" class="input-control" [(ngModel)]="createForm.model" placeholder="e.g. HiAce" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-year">{{ 'VEHICLES.FIELD_YEAR' | i18n }} *</label>
+              <input id="create-year" type="number" class="input-control" [(ngModel)]="createForm.year" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-odo">{{ 'VEHICLES.FIELD_INITIAL_ODOMETER' | i18n }} *</label>
+              <input id="create-odo" type="number" step="1" class="input-control" [(ngModel)]="createForm.odometerKm" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-interval">{{ 'VEHICLES.FIELD_SERVICE_INTERVAL' | i18n }} *</label>
+              <input id="create-interval" type="number" step="500" class="input-control" [(ngModel)]="createForm.serviceIntervalKm" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-last-service">{{ 'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n }}</label>
+              <input id="create-last-service" type="number" step="1" class="input-control" [(ngModel)]="createForm.lastServiceOdometerKm" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-wof">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</label>
+              <input id="create-wof" type="date" class="input-control" [(ngModel)]="createForm.wofExpiry" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-cof">{{ 'VEHICLES.FIELD_COF_EXPIRY' | i18n }}</label>
+              <input id="create-cof" type="date" class="input-control" [(ngModel)]="createForm.cofExpiry" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-insurance">{{ 'VEHICLES.FIELD_INSURANCE_EXPIRY' | i18n }}</label>
+              <input id="create-insurance" type="date" class="input-control" [(ngModel)]="createForm.insuranceExpiry" />
+            </div>
+
+            <div class="form-field">
+              <label for="create-status">{{ 'VEHICLES.FIELD_STATUS' | i18n }}</label>
+              <select id="create-status" class="input-control" [(ngModel)]="createForm.status">
+                <option value="Active">{{ 'VEHICLES.STATUS_ACTIVE' | i18n }}</option>
+                <option value="Maintenance">{{ 'VEHICLES.STATUS_MAINTENANCE' | i18n }}</option>
+                <option value="Inactive">{{ 'VEHICLES.STATUS_INACTIVE' | i18n }}</option>
+                <option value="Decommissioned">{{ 'VEHICLES.STATUS_DECOMMISSIONED' | i18n }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !createForm.rego || !createForm.make || !createForm.model || !createForm.vinEnc"
+            (click)="submitCreateVehicle()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Vehicle Dialog (Admin only) -->
+  @if (isEditModalOpen() && selectedVehicle()) {
+    <div class="dialog-backdrop" (click)="closeEditModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'VEHICLES.MODAL_EDIT_TITLE' | i18n }} ({{ selectedVehicle()!.rego }})</h3>
+          <button type="button" class="btn-close" (click)="closeEditModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="edit-status">{{ 'VEHICLES.FIELD_STATUS' | i18n }}</label>
+            <select id="edit-status" class="input-control" [(ngModel)]="editForm.status">
+              <option value="Active">{{ 'VEHICLES.STATUS_ACTIVE' | i18n }}</option>
+              <option value="Maintenance">{{ 'VEHICLES.STATUS_MAINTENANCE' | i18n }}</option>
+              <option value="Inactive">{{ 'VEHICLES.STATUS_INACTIVE' | i18n }}</option>
+              <option value="Decommissioned">{{ 'VEHICLES.STATUS_DECOMMISSIONED' | i18n }}</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="edit-wof">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</label>
+            <input id="edit-wof" type="date" class="input-control" [(ngModel)]="editForm.wofExpiry" />
+          </div>
+
+          <div class="form-field">
+            <label for="edit-cof">{{ 'VEHICLES.FIELD_COF_EXPIRY' | i18n }}</label>
+            <input id="edit-cof" type="date" class="input-control" [(ngModel)]="editForm.cofExpiry" />
+          </div>
+
+          <div class="form-field">
+            <label for="edit-insurance">{{ 'VEHICLES.FIELD_INSURANCE_EXPIRY' | i18n }}</label>
+            <input id="edit-insurance" type="date" class="input-control" [(ngModel)]="editForm.insuranceExpiry" />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="submitEditVehicle()">
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Assign Vehicle Dialog -->
+  @if (isAssignModalOpen() && selectedVehicle()) {
+    <div class="dialog-backdrop" (click)="closeAssignModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'VEHICLES.MODAL_ASSIGN_TITLE' | i18n }} ({{ selectedVehicle()!.rego }})</h3>
+          <button type="button" class="btn-close" (click)="closeAssignModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="assign-driver">{{ 'VEHICLES.FIELD_DRIVER' | i18n }} *</label>
+            <select id="assign-driver" class="input-control" [(ngModel)]="assignForm.driverId">
+              <option value="">-- Select Driver --</option>
+              @for (driver of drivers(); track driver.id) {
+                <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="assign-time">{{ 'VEHICLES.FIELD_ASSIGNED_AT' | i18n }}</label>
+            <input id="assign-time" type="datetime-local" class="input-control" [(ngModel)]="assignForm.assignedAt" />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeAssignModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !assignForm.driverId"
+            (click)="submitAssignVehicle()"
+          >
+            {{ 'VEHICLES.ACTION_ASSIGN' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Record Service Dialog (Admin only) -->
+  @if (isServiceModalOpen() && selectedVehicle()) {
+    <div class="dialog-backdrop" (click)="closeServiceModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'VEHICLES.MODAL_SERVICE_TITLE' | i18n }} ({{ selectedVehicle()!.rego }})</h3>
+          <button type="button" class="btn-close" (click)="closeServiceModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+          <div class="form-field">
+            <label for="service-odo">{{ 'VEHICLES.FIELD_SERVICE_ODOMETER' | i18n }} *</label>
+            <input
+              id="service-odo"
+              type="number"
+              step="1"
+              class="input-control"
+              [(ngModel)]="serviceForm.serviceOdometerKm"
+            />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeServiceModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !serviceForm.serviceOdometerKm"
+            (click)="submitRecordService()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Record Odometer Reading Dialog -->
+  @if (isOdometerModalOpen() && selectedVehicle()) {
+    <div class="dialog-backdrop" (click)="closeOdometerModal()">
+      <div class="dialog-card" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'VEHICLES.MODAL_ODOMETER_TITLE' | i18n }} ({{ selectedVehicle()!.rego }})</h3>
+          <button type="button" class="btn-close" (click)="closeOdometerModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          @if (formError()) {
+            <div class="error-banner">{{ formError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="odo-driver">{{ 'VEHICLES.FIELD_DRIVER' | i18n }} *</label>
+            <select id="odo-driver" class="input-control" [(ngModel)]="odometerForm.driverId">
+              <option value="">-- Select Driver --</option>
+              @for (driver of drivers(); track driver.id) {
+                <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="odo-reading">{{ 'VEHICLES.FIELD_ODOMETER_READING' | i18n }} *</label>
+            <input
+              id="odo-reading"
+              type="number"
+              step="1"
+              class="input-control"
+              [(ngModel)]="odometerForm.readingKm"
+              [placeholder]="selectedVehicle()!.odometerKm.toString()"
+            />
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-secondary" (click)="closeOdometerModal()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting() || !odometerForm.driverId || !odometerForm.readingKm"
+            (click)="submitRecordOdometer()"
+          >
+            {{ 'COMMON.SAVE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Vehicle Details & Odometer History Modal -->
+  @if (isDetailsModalOpen() && selectedVehicleDetail()) {
+    <div class="dialog-backdrop" (click)="closeDetailsModal()">
+      <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>{{ 'VEHICLES.MODAL_DETAILS_TITLE' | i18n }} - {{ selectedVehicleDetail()!.rego }}</h3>
+          <button type="button" class="btn-close" (click)="closeDetailsModal()">✕</button>
+        </div>
+        <div class="dialog-body">
+          <div class="details-grid">
+            <div class="detail-group">
+              <h4>Vehicle Specifications</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_REGO' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.rego }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.TABLE_MAKE_MODEL' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.make }} {{ selectedVehicleDetail()!.model }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_YEAR' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.year }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_STATUS' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.status }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Service & Maintenance</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.TABLE_ODOMETER' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.odometerKm }} km</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_SERVICE_INTERVAL' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.serviceIntervalKm }} km</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.lastServiceOdometerKm }} km</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Service Status</span>
+                <span class="detail-val">
+                  @if (selectedVehicleDetail()!.isServiceDue) {
+                    <span style="color: #dc2626; font-weight: 700">{{ 'VEHICLES.SERVICE_DUE' | i18n }}</span>
+                  } @else {
+                    <span style="color: #16a34a; font-weight: 600">{{ 'VEHICLES.SERVICE_OK' | i18n }}</span>
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Compliance Expiries</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</span>
+                <span class="detail-val">{{ (selectedVehicleDetail()!.wofExpiry | localeDate: 'medium') || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_COF_EXPIRY' | i18n }}</span>
+                <span class="detail-val">{{ (selectedVehicleDetail()!.cofExpiry | localeDate: 'medium') || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_INSURANCE_EXPIRY' | i18n }}</span>
+                <span class="detail-val">{{ (selectedVehicleDetail()!.insuranceExpiry | localeDate: 'medium') || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group">
+              <h4>Active Assignment</h4>
+              <div class="detail-row">
+                <span class="detail-label">{{ 'VEHICLES.FIELD_DRIVER' | i18n }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.activeAssignment?.driverName || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Assigned At</span>
+                <span class="detail-val">{{ (selectedVehicleDetail()!.activeAssignment?.assignedAt | localeDate: 'medium') || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="detail-group full-width">
+              <h4>{{ 'VEHICLES.ODOMETER_HISTORY_TITLE' | i18n }}</h4>
+              @if (odometerReadings().length === 0) {
+                <p style="color: #94a3b8; font-size: 0.8125rem; margin: 0">
+                  {{ 'VEHICLES.NO_ODOMETER_HISTORY' | i18n }}
+                </p>
+              } @else {
+                <table class="odometer-history-table">
+                  <thead>
+                    <tr>
+                      <th>{{ 'COMMON.DATE' | i18n }}</th>
+                      <th>{{ 'VEHICLES.FIELD_ODOMETER_READING' | i18n }}</th>
+                      <th>{{ 'VEHICLES.FIELD_DRIVER' | i18n }}</th>
+                      <th>{{ 'VEHICLES.FIELD_SOURCE' | i18n }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (reading of odometerReadings(); track reading.id) {
+                      <tr>
+                        <td>{{ reading.recordedAt | localeDate: 'short' }}</td>
+                        <td><strong>{{ reading.readingKm }} km</strong></td>
+                        <td>{{ reading.driverName || '-' }}</td>
+                        <td>{{ reading.source }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button type="button" class="btn-primary" (click)="closeDetailsModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
