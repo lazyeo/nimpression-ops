@@ -1,13 +1,11 @@
-export enum NewsAudience {
-  All = 1,
-  Drivers = 2,
-  Dispatchers = 3,
-}
+import type { NewsAudience, UserRole } from '../../../../core/api/models/api-models';
+
+export type { NewsAudience } from '../../../../core/api/models/api-models';
 
 export interface NewsPostListItemDto {
   id: string;
   title: string;
-  audience: NewsAudience | number;
+  audience: NewsAudience;
   publishedAt: string;
   pinned: boolean;
   isActive: boolean;
@@ -22,7 +20,7 @@ export interface NewsPostDetailDto {
   title: string;
   bodyEn: string;
   bodyZh: string;
-  audience: NewsAudience | number;
+  audience: NewsAudience;
   publishedAt: string;
   pinned: boolean;
   isActive: boolean;
@@ -34,7 +32,7 @@ export interface CreateNewsPostRequest {
   title: string;
   bodyEn: string;
   bodyZh: string;
-  audience: number;
+  audience: NewsAudience;
   pinned?: boolean;
 }
 
@@ -49,12 +47,12 @@ export interface UnreadUserDto {
   userId: string;
   displayName: string;
   email: string;
-  role: string | number;
+  role: UserRole;
   employeeNo?: string | null;
 }
 
 export interface NewsListFilter {
-  audience?: number | null;
+  audience?: NewsAudience | null;
   isPinned?: boolean | null;
   isActive?: boolean | null;
   page?: number;

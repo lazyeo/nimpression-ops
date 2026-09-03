@@ -30,7 +30,7 @@ export class NewsCreateDialogComponent {
 
   readonly form = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
-    audience: [NewsAudience.All, [Validators.required]],
+    audience: ['All' as NewsAudience, [Validators.required]],
     pinned: [false],
     bodyEn: ['', [Validators.required]],
     bodyZh: ['', [Validators.required]],
@@ -50,7 +50,7 @@ export class NewsCreateDialogComponent {
       title: val.title || '',
       bodyEn: val.bodyEn || '',
       bodyZh: val.bodyZh || '',
-      audience: Number(val.audience),
+      audience: (val.audience || 'All') as NewsAudience,
       pinned: val.pinned ?? false,
     };
 

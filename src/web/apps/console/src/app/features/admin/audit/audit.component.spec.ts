@@ -23,7 +23,7 @@ describe('AuditComponent (Append-Only Audit Logs & CSV Export)', () => {
       actorUserId: 'u-100',
       actorRole: 1,
       beforeJson: '{"status":"Active"}',
-      afterJson: '{"status":"UnderMaintenance"}',
+      afterJson: '{"status":"Maintenance"}',
       ipAddress: '192.168.1.1',
     },
     {

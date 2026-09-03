@@ -40,7 +40,7 @@ describe('NewsCreateDialogComponent', () => {
     // Set only title and audience
     component.form.patchValue({
       title: 'Monthly Safety Briefing',
-      audience: NewsAudience.All,
+      audience: 'All',
       bodyEn: 'English body content',
       bodyZh: '', // Missing Chinese body
     });
@@ -64,7 +64,7 @@ describe('NewsCreateDialogComponent', () => {
 
     component.form.patchValue({
       title: 'Fleet Meeting',
-      audience: NewsAudience.Drivers,
+      audience: 'Drivers',
       pinned: true,
       bodyEn: 'Meeting at 9am.',
       bodyZh: 'Meeting text in Chinese.',
@@ -77,7 +77,7 @@ describe('NewsCreateDialogComponent', () => {
     expect(req.request.body.title).toBe('Fleet Meeting');
     expect(req.request.body.bodyEn).toBe('Meeting at 9am.');
     expect(req.request.body.bodyZh).toBe('Meeting text in Chinese.');
-    expect(req.request.body.audience).toBe(NewsAudience.Drivers);
+    expect(req.request.body.audience).toBe('Drivers');
     expect(req.request.body.pinned).toBe(true);
 
     req.flush({
@@ -87,7 +87,7 @@ describe('NewsCreateDialogComponent', () => {
       title: 'Fleet Meeting',
       bodyEn: 'Meeting at 9am.',
       bodyZh: 'Meeting text in Chinese.',
-      audience: NewsAudience.Drivers,
+      audience: 'Drivers',
       publishedAt: '2026-09-03T10:00:00Z',
       pinned: true,
       isActive: true,

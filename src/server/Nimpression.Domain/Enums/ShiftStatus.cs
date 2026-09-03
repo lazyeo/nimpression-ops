@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace Nimpression.Domain.Enums;
 
 /// <summary>
 /// 班次打卡状态。
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ShiftStatus
 {
     Active = 1,

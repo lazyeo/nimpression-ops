@@ -1,4 +1,5 @@
-export type IncidentSeverity = 'Minor' | 'Moderate' | 'Major' | 'Critical';
+export type { IncidentSeverity } from '../../../../core/api/models/api-models';
+import type { IncidentSeverity } from '../../../../core/api/models/api-models';
 
 export interface IncidentReportDto {
   id: string;

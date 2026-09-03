@@ -34,9 +34,9 @@
         class="filter-select"
       >
         <option value="">{{ 'COMMON.ALL' | i18n }}</option>
-        <option value="1">{{ 'NEWS.AUDIENCE_ALL' | i18n }}</option>
-        <option value="2">{{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}</option>
-        <option value="3">{{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}</option>
+        <option value="All">{{ 'NEWS.AUDIENCE_ALL' | i18n }}</option>
+        <option value="Drivers">{{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}</option>
+        <option value="Dispatchers">{{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}</option>
       </select>
     </div>
 
@@ -160,11 +160,11 @@
               </td>
               <td>
                 <span class="badge badge-audience">
-                  @if (item.audience === 1) {
+                  @if (item.audience === 'All') {
                     {{ 'NEWS.AUDIENCE_ALL' | i18n }}
-                  } @else if (item.audience === 2) {
+                  } @else if (item.audience === 'Drivers') {
                     {{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}
-                  } @else {
+                  } @else if (item.audience === 'Dispatchers') {
                     {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
                   }
                 </span>

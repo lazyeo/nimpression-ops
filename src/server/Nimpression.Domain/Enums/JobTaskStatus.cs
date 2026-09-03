@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace Nimpression.Domain.Enums;
 
 /// <summary>
 /// 派发任务生命周期状态。
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum JobTaskStatus
 {
     Draft = 1,

@@ -1,6 +1,13 @@
-export type PayPeriodStatus = 'Open' | 'Calculating' | 'Finalised' | 'Paid' | 'Voided';
-export type PayBasis = 'Hourly' | 'Trip';
-export type FineStatus = 'Submitted' | 'UnderReview' | 'Accepted' | 'Disputed' | 'Waived';
+export type {
+  PayPeriodStatus,
+  PayBasis,
+  FineStatus,
+} from '../../../../core/api/models/api-models';
+import type {
+  PayPeriodStatus,
+  PayBasis,
+  FineStatus,
+} from '../../../../core/api/models/api-models';
 
 export interface PayPeriodDto {
   id: string;

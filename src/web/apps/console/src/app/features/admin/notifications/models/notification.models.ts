@@ -1,8 +1,5 @@
-export enum PartnerKind {
-  Insurer = 1,
-  Maintenance = 2,
-  Inspection = 3,
-}
+export type { PartnerKind } from '../../../../core/api/models/api-models';
+import type { PartnerKind } from '../../../../core/api/models/api-models';
 
 export interface PartnerContactDto {
   id: string;

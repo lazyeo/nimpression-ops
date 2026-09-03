@@ -53,11 +53,11 @@
           <div class="meta-item">
             <span class="meta-label">{{ 'NEWS.COL_AUDIENCE' | i18n }}</span>
             <span class="badge badge-audience">
-              @if (newsPost()?.audience === 1) {
+              @if (newsPost()?.audience === 'All') {
                 {{ 'NEWS.AUDIENCE_ALL' | i18n }}
-              } @else if (newsPost()?.audience === 2) {
+              } @else if (newsPost()?.audience === 'Drivers') {
                 {{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}
-              } @else {
+              } @else if (newsPost()?.audience === 'Dispatchers') {
                 {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
               }
             </span>
@@ -189,7 +189,7 @@
                         <td class="cell-email">{{ user.email }}</td>
                         <td>
                           <span class="badge badge-role">
-                            {{ 'ROLES.' + (user.role === 1 ? 'ADMIN' : user.role === 2 ? 'DISPATCHER' : 'DRIVER') | i18n }}
+                            {{ 'ROLES.' + user.role.toUpperCase() | i18n }}
                           </span>
                         </td>
                       </tr>

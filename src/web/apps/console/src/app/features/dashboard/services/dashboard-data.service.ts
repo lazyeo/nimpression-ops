@@ -414,7 +414,7 @@ export class DashboardDataService {
   ): { fleetData: FleetUtilizationItem[]; taskDateMap: Map<string, JobTaskDto[]> } {
     const taskDateMap = new Map<string, JobTaskDto[]>();
     const totalVehiclesCount = vehicles.length || 11;
-    const maintenanceVehiclesCount = vehicles.filter((v) => v.status === 'UnderMaintenance').length;
+    const maintenanceVehiclesCount = vehicles.filter((v) => v.status === 'Maintenance').length;
 
     // Index tasks by date YYYY-MM-DD
     tasks.forEach((t) => {

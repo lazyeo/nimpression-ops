@@ -49,7 +49,7 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
         odometerKm: 45000 + i * 2500,
         serviceIntervalKm: 10000,
         lastServiceOdometerKm: 40000,
-        status: i === 10 ? 'UnderMaintenance' : 'Active',
+        status: i === 10 ? 'Maintenance' : 'Active',
       }));
 
       // 2. Synthesize 10 Drivers

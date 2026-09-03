@@ -1,4 +1,5 @@
-export type VehicleStatus = 'Active' | 'Maintenance' | 'Inactive' | 'Decommissioned';
+export type { VehicleStatus } from '../../../../core/api/models/api-models';
+import type { VehicleStatus } from '../../../../core/api/models/api-models';
 
 export interface VehicleSummaryDto {
   id: string;

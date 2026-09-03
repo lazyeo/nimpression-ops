@@ -17,7 +17,7 @@ describe('NewsComponent (Admin News & Notices)', () => {
     {
       id: 'news-1',
       title: 'Older Pinned Notice',
-      audience: NewsAudience.All,
+      audience: 'All',
       publishedAt: '2026-08-01T08:00:00Z',
       pinned: true,
       isActive: true,
@@ -27,7 +27,7 @@ describe('NewsComponent (Admin News & Notices)', () => {
     {
       id: 'news-2',
       title: 'Newer Regular Notice',
-      audience: NewsAudience.Drivers,
+      audience: 'Drivers',
       publishedAt: '2026-09-01T08:00:00Z',
       pinned: false,
       isActive: true,
@@ -121,11 +121,11 @@ describe('NewsComponent (Admin News & Notices)', () => {
     });
     fixture.detectChanges();
 
-    // Change audience filter to Drivers (2)
-    component.onAudienceFilterChange('2');
+    // Change audience filter to Drivers
+    component.onAudienceFilterChange('Drivers');
 
     const filterReq = httpMock.expectOne(
-      (r) => r.url === '/api/news' && r.params.get('audience') === '2',
+      (r) => r.url === '/api/news' && r.params.get('audience') === 'Drivers',
     );
     filterReq.flush({
       items: [mockNewsItems[1]],
@@ -136,7 +136,7 @@ describe('NewsComponent (Admin News & Notices)', () => {
     });
     fixture.detectChanges();
 
-    expect(component.selectedAudience()).toBe(2);
+    expect(component.selectedAudience()).toBe('Drivers');
     expect(component.newsList().length).toBe(1);
 
     // Change page to 2

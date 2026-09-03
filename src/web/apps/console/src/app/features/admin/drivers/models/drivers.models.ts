@@ -1,4 +1,5 @@
-export type DriverStatus = 'Active' | 'Inactive' | 'Suspended' | 'OnLeave' | 'Terminated';
+export type { DriverStatus } from '../../../../core/api/models/api-models';
+import type { DriverStatus } from '../../../../core/api/models/api-models';
 
 export interface AreaAssignmentDto {
   id: string;
