@@ -67,7 +67,6 @@
             <option value="Calculating">{{ 'PAYROLL.STATUS_CALCULATING' | i18n }}</option>
             <option value="Finalised">{{ 'PAYROLL.STATUS_FINALISED' | i18n }}</option>
             <option value="Paid">{{ 'PAYROLL.STATUS_PAID' | i18n }}</option>
-            <option value="Voided">{{ 'PAYROLL.STATUS_VOIDED' | i18n }}</option>
           </select>
         </div>
 
@@ -151,8 +150,7 @@
                           'status-open': period.status === 'Open',
                           'status-calculating': period.status === 'Calculating',
                           'status-finalised': period.status === 'Finalised',
-                          'status-paid': period.status === 'Paid',
-                          'status-voided': period.status === 'Voided'
+                          'status-paid': period.status === 'Paid'
                         }"
                       >
                         {{ 'PAYROLL.STATUS_' + period.status.toUpperCase() | i18n }}

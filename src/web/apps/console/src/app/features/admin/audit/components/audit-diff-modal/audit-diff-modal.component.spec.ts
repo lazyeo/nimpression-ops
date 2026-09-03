@@ -27,7 +27,7 @@ describe('AuditDiffModalComponent (Visual Diff Inspector)', () => {
     afterJson: JSON.stringify({
       rego: 'ABC-123',
       odometerKm: 55000,
-      status: 'UnderMaintenance',
+      status: 'Maintenance',
       serviceNotes: 'Oil changed',
     }),
     ipAddress: '10.0.0.1',

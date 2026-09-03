@@ -5,14 +5,14 @@
       <label for="filter-partner-kind" class="filter-label">{{ 'NOTIFICATIONS.FILTER_KIND' | i18n }}</label>
       <select
         id="filter-partner-kind"
-        [ngModel]="kindFilter() === null ? '' : kindFilter()?.toString()"
-        (ngModelChange)="kindFilter.set($event === '' ? null : +$event); onFilterChange()"
+        [ngModel]="kindFilter() === null ? '' : kindFilter()"
+        (ngModelChange)="kindFilter.set($event === '' ? null : $event); onFilterChange()"
         class="filter-select"
       >
         <option value="">{{ 'COMMON.ALL' | i18n }}</option>
-        <option value="1">{{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}</option>
-        <option value="2">{{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}</option>
-        <option value="3">{{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}</option>
+        <option value="Insurer">{{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}</option>
+        <option value="Maintenance">{{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}</option>
+        <option value="Inspection">{{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}</option>
       </select>
     </div>
 
@@ -107,13 +107,13 @@
               <td>
                 <span
                   class="badge badge-kind"
-                  [class.kind-insurer]="partner.kind === 1"
-                  [class.kind-maintenance]="partner.kind === 2"
-                  [class.kind-inspection]="partner.kind === 3"
+                  [class.kind-insurer]="partner.kind === 'Insurer'"
+                  [class.kind-maintenance]="partner.kind === 'Maintenance'"
+                  [class.kind-inspection]="partner.kind === 'Inspection'"
                 >
-                  @if (partner.kind === 1) {
+                  @if (partner.kind === 'Insurer') {
                     {{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}
-                  } @else if (partner.kind === 2) {
+                  } @else if (partner.kind === 'Maintenance') {
                     {{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}
                   } @else {
                     {{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}
@@ -212,9 +212,9 @@
               {{ 'NOTIFICATIONS.COL_PARTNER_KIND' | i18n }} <span class="req">*</span>
             </label>
             <select id="partner-kind-input" formControlName="kind" class="form-select">
-              <option [value]="1">{{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}</option>
-              <option [value]="2">{{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}</option>
-              <option [value]="3">{{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}</option>
+              <option value="Insurer">{{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}</option>
+              <option value="Maintenance">{{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}</option>
+              <option value="Inspection">{{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}</option>
             </select>
           </div>
 

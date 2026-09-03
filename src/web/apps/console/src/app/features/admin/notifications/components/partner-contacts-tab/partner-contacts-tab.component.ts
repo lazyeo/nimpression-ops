@@ -37,7 +37,7 @@ export class PartnerContactsTabComponent implements OnInit {
   readonly currentPage = signal(1);
 
   // Filters
-  readonly kindFilter = signal<number | null>(null);
+  readonly kindFilter = signal<PartnerKind | null>(null);
   readonly activeFilter = signal<boolean | null>(null);
   readonly searchTerm = signal<string>('');
 
@@ -53,7 +53,7 @@ export class PartnerContactsTabComponent implements OnInit {
   readonly deleting = signal(false);
 
   readonly partnerForm = this.fb.group({
-    kind: [PartnerKind.Insurer, [Validators.required]],
+    kind: ['Insurer' as PartnerKind, [Validators.required]],
     companyName: ['', [Validators.required, Validators.maxLength(150)]],
     email: ['', [Validators.required, Validators.email]],
     active: [true],
@@ -68,7 +68,7 @@ export class PartnerContactsTabComponent implements OnInit {
     this.error.set(null);
 
     const filter: PartnerContactFilter = {
-      kind: this.kindFilter() as PartnerKind | null,
+      kind: this.kindFilter(),
       active: this.activeFilter(),
       searchTerm: this.searchTerm() || null,
       page: this.currentPage(),
@@ -84,7 +84,7 @@ export class PartnerContactsTabComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.message || 'NOTIFICATIONS.PARTNERS_LOAD_FAILED');
+        this.error.set(err.message || 'NOTIFICATIONS.LOAD_PARTNERS_FAILED');
       },
     });
   }
@@ -99,7 +99,7 @@ export class PartnerContactsTabComponent implements OnInit {
     this.currentEditingId.set(null);
     this.dialogError.set(null);
     this.partnerForm.reset({
-      kind: PartnerKind.Insurer,
+      kind: 'Insurer' as PartnerKind,
       companyName: '',
       email: '',
       active: true,
@@ -138,7 +138,7 @@ export class PartnerContactsTabComponent implements OnInit {
     if (this.isEditing() && this.currentEditingId()) {
       this.notificationService
         .updatePartner(this.currentEditingId()!, {
-          kind: Number(val.kind),
+          kind: (val.kind || 'Insurer') as PartnerKind,
           companyName: val.companyName || '',
           email: val.email || '',
         })
@@ -157,7 +157,7 @@ export class PartnerContactsTabComponent implements OnInit {
     } else {
       this.notificationService
         .createPartner({
-          kind: Number(val.kind),
+          kind: (val.kind || 'Insurer') as PartnerKind,
           companyName: val.companyName || '',
           email: val.email || '',
           active: val.active ?? true,

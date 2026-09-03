@@ -52,7 +52,7 @@ export class NewsComponent implements OnInit {
   readonly pageSize = signal(20);
 
   // Filters
-  readonly selectedAudience = signal<number | null>(null);
+  readonly selectedAudience = signal<NewsAudience | null>(null);
   readonly selectedPinned = signal<boolean | null>(null);
   readonly selectedActive = signal<boolean>(true);
 
@@ -107,8 +107,7 @@ export class NewsComponent implements OnInit {
   }
 
   onAudienceFilterChange(val: string): void {
-    const num = val === '' ? null : Number(val);
-    this.selectedAudience.set(num);
+    this.selectedAudience.set(val === '' ? null : (val as NewsAudience));
     this.currentPage.set(1);
     this.loadNews();
   }

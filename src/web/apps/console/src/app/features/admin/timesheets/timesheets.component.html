@@ -107,7 +107,6 @@
           <option value="Completed">{{ 'TIMESHEETS.STATUS_COMPLETED' | i18n }}</option>
           <option value="AutoClosed">{{ 'TIMESHEETS.STATUS_AUTOCLOSED' | i18n }}</option>
           <option value="Cancelled">{{ 'TIMESHEETS.STATUS_CANCELLED' | i18n }}</option>
-          <option value="AdminCorrected">{{ 'TIMESHEETS.STATUS_CORRECTED' | i18n }}</option>
         </select>
       </div>
 
@@ -222,7 +221,7 @@
                         'status-completed': shift.status === 'Completed',
                         'status-autoclosed': shift.status === 'AutoClosed',
                         'status-cancelled': shift.status === 'Cancelled',
-                        'status-corrected': shift.status === 'AdminCorrected' || shift.adminCorrectionReason
+                        'status-corrected': !!shift.adminCorrectionReason
                       }"
                     >
                       @if (shift.adminCorrectionReason) {

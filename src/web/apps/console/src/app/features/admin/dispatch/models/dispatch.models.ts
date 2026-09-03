@@ -1,12 +1,11 @@
-export type JobTaskStatus =
-  | 'Draft'
-  | 'Assigned'
-  | 'Acknowledged'
-  | 'InProgress'
-  | 'Completed'
-  | 'Cancelled';
-
-export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+export type {
+  JobTaskStatus,
+  TaskPriority,
+} from '../../../../core/api/models/api-models';
+import type {
+  JobTaskStatus,
+  TaskPriority,
+} from '../../../../core/api/models/api-models';
 
 export interface JobTaskDetailDto {
   id: string;

@@ -1,4 +1,5 @@
-export type UserRole = 'Admin' | 'Dispatcher' | 'Driver';
+export type { UserRole } from '../api/models/api-models';
+import type { UserRole } from '../api/models/api-models';
 
 export interface AuthUser {
   id: string;

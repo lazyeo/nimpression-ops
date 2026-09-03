@@ -24,19 +24,19 @@ describe('NotificationService', () => {
   });
 
   it('fetches partner contacts with kind filter', () => {
-    service.getPartners({ kind: PartnerKind.Insurer, page: 1, pageSize: 20 }).subscribe((res) => {
+    service.getPartners({ kind: 'Insurer', page: 1, pageSize: 20 }).subscribe((res) => {
       expect(res.items.length).toBe(1);
       expect(res.items[0].companyName).toBe('AA Insurance');
     });
 
     const req = httpMock.expectOne((r) => r.url === '/api/notifications/partner-contacts');
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('kind')).toBe('1');
+    expect(req.request.params.get('kind')).toBe('Insurer');
     req.flush({
       items: [
         {
           id: 'p-1',
-          kind: PartnerKind.Insurer,
+          kind: 'Insurer',
           companyName: 'AA Insurance',
           email: 'claims@aainsurance.co.nz',
           active: true,

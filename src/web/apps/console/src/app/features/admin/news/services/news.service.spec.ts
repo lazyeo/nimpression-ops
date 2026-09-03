@@ -25,7 +25,7 @@ describe('NewsService', () => {
 
   it('fetches news list with query parameters', () => {
     service
-      .getNews({ audience: NewsAudience.Drivers, isPinned: true, page: 2, pageSize: 10 })
+      .getNews({ audience: 'Drivers', isPinned: true, page: 2, pageSize: 10 })
       .subscribe((res) => {
         expect(res.items.length).toBe(1);
         expect(res.totalCount).toBe(1);
@@ -33,7 +33,7 @@ describe('NewsService', () => {
 
     const req = httpMock.expectOne((r) => r.url === '/api/news');
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('audience')).toBe('2');
+    expect(req.request.params.get('audience')).toBe('Drivers');
     expect(req.request.params.get('isPinned')).toBe('true');
     expect(req.request.params.get('page')).toBe('2');
     expect(req.request.params.get('pageSize')).toBe('10');
@@ -43,7 +43,7 @@ describe('NewsService', () => {
         {
           id: 'n-1',
           title: 'Speed limit advisory',
-          audience: NewsAudience.Drivers,
+          audience: 'Drivers',
           publishedAt: '2026-09-01T10:00:00Z',
           pinned: true,
           isActive: true,
@@ -62,7 +62,7 @@ describe('NewsService', () => {
       title: 'Safety Policy Update',
       bodyEn: 'Please wear high-vis vests at all times.',
       bodyZh: 'In Chinese',
-      audience: NewsAudience.All,
+      audience: 'All',
       pinned: true,
     };
 
@@ -116,7 +116,7 @@ describe('NewsService', () => {
         userId: 'u-2',
         displayName: 'John Doe',
         email: 'john@example.com',
-        role: 3,
+        role: 'Driver',
         employeeNo: 'DRV001',
       },
     ]);

@@ -1,4 +1,24 @@
-export type VehicleStatus = 'Active' | 'UnderMaintenance' | 'Decommissioned';
+// Domain enums - Single Source of Truth matching C# Nimpression.Domain.Enums
+export type VehicleStatus = 'Active' | 'Maintenance' | 'Inactive' | 'Decommissioned';
+export type JobTaskStatus =
+  | 'Draft'
+  | 'Assigned'
+  | 'Acknowledged'
+  | 'InProgress'
+  | 'Completed'
+  | 'Cancelled';
+export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+export type ShiftStatus = 'Active' | 'Completed' | 'AutoClosed' | 'Cancelled';
+export type FineStatus = 'Submitted' | 'UnderReview' | 'Accepted' | 'Disputed' | 'Waived';
+export type PayPeriodStatus = 'Open' | 'Calculating' | 'Finalised' | 'Paid';
+export type PayBasis = 'Hourly' | 'Trip';
+export type DriverStatus = 'Active' | 'Inactive' | 'Suspended' | 'OnLeave' | 'Terminated';
+export type UserRole = 'Admin' | 'Dispatcher' | 'Driver';
+export type UserStatus = 'Active' | 'Inactive' | 'Suspended';
+export type IncidentSeverity = 'Minor' | 'Moderate' | 'Major' | 'Critical';
+export type DataSubjectRequestKind = 'Export' | 'Deletion' | 'Rectification';
+export type NewsAudience = 'All' | 'Drivers' | 'Dispatchers';
+export type PartnerKind = 'Insurer' | 'Maintenance' | 'Inspection';
 
 export interface VehicleDto {
   id: string;
@@ -25,10 +45,6 @@ export interface OdometerReadingDto {
   photoUrl?: string | null;
 }
 
-export type JobTaskStatus =
-  'Draft' | 'Assigned' | 'Acknowledged' | 'InProgress' | 'Completed' | 'Cancelled';
-export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
-
 export interface JobTaskDto {
   id: string;
   ref?: string | null;
@@ -51,8 +67,6 @@ export interface JobTaskDto {
   acknowledgedAt?: string | null;
 }
 
-export type ShiftStatus = 'Active' | 'Completed' | 'AutoClosed' | 'AdminCorrected';
-
 export interface TimesheetDto {
   id: string;
   driverId: string;
@@ -66,8 +80,6 @@ export interface TimesheetDto {
   status: ShiftStatus;
   createdAt: string;
 }
-
-export type FineStatus = 'Submitted' | 'UnderReview' | 'Accepted' | 'Disputed' | 'Waived';
 
 export interface FineDto {
   id: string;
@@ -84,8 +96,6 @@ export interface FineDto {
   status: FineStatus;
   ticketPhotoUrl?: string | null;
 }
-
-export type PayPeriodStatus = 'Draft' | 'Calculated' | 'Finalised' | 'Voided';
 
 export interface PayPeriodDto {
   id: string;
@@ -115,7 +125,7 @@ export interface DriverDto {
   id: string;
   displayName: string;
   employeeNo: string;
-  status: string;
+  status: DriverStatus;
 }
 
 export interface PaginatedList<T> {

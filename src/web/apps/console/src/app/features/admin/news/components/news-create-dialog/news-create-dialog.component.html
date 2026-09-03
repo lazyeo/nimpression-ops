@@ -52,9 +52,9 @@
             {{ 'NEWS.FORM_AUDIENCE' | i18n }} <span class="req">*</span>
           </label>
           <select id="news-audience" formControlName="audience" class="form-select">
-            <option [value]="1">{{ 'NEWS.AUDIENCE_ALL' | i18n }}</option>
-            <option [value]="2">{{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}</option>
-            <option [value]="3">{{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}</option>
+            <option value="All">{{ 'NEWS.AUDIENCE_ALL' | i18n }}</option>
+            <option value="Drivers">{{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}</option>
+            <option value="Dispatchers">{{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}</option>
           </select>
         </div>
 

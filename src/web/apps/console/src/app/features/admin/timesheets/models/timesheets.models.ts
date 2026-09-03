@@ -1,9 +1,5 @@
-export type ShiftStatus =
-  | 'Active'
-  | 'Completed'
-  | 'AutoClosed'
-  | 'Cancelled'
-  | 'AdminCorrected';
+export type { ShiftStatus } from '../../../../core/api/models/api-models';
+import type { ShiftStatus } from '../../../../core/api/models/api-models';
 
 export interface ShiftEntryDto {
   id: string;

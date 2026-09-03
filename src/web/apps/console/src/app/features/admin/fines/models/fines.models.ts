@@ -1,4 +1,5 @@
-export type FineStatus = 'Submitted' | 'UnderReview' | 'Accepted' | 'Disputed' | 'Waived';
+export type { FineStatus } from '../../../../core/api/models/api-models';
+import type { FineStatus } from '../../../../core/api/models/api-models';
 
 export interface FineDto {
   id: string;
