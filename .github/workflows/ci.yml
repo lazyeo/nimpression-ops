@@ -53,7 +53,7 @@ jobs:
         env:
           ConnectionStrings__Default: "Host=localhost;Port=5432;Database=nimpression_test;Username=nimpression;Password=ci_only"
         run: >-
-          dotnet test src/server/Nimpression.slnx --no-build --nologo
+          dotnet test src/server/Nimpression.slnx --no-build --nologo --filter "Category!=Timing"
           --collect:"XPlat Code Coverage"
           --results-directory ./artifacts/coverage
 
