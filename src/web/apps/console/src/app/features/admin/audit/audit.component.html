@@ -1,0 +1,261 @@
+<div class="audit-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="title-with-icon">
+        <nim-icon name="audit" [size]="24" class="header-icon" />
+        <h2 class="page-title">{{ 'AUDIT.PAGE_TITLE' | i18n }}</h2>
+      </div>
+      <p class="page-subtitle">{{ 'AUDIT.PAGE_SUBTITLE' | i18n }}</p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="exporting() || logs().length === 0"
+        (click)="exportCsv()"
+      >
+        <nim-icon name="tasks" [size]="16" />
+        <span>{{ (exporting() ? 'COMMON.LOADING' : 'AUDIT.EXPORT_CSV_BUTTON') | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Append-Only Security Notice Banner (AC: N1.2) -->
+  <div class="security-banner">
+    <nim-icon name="check-circle" [size]="20" class="banner-icon" />
+    <div class="banner-text">
+      <strong>{{ 'AUDIT.APPEND_ONLY_TITLE' | i18n }}</strong>
+      <span>{{ 'AUDIT.APPEND_ONLY_DESC' | i18n }}</span>
+    </div>
+  </div>
+
+  <!-- Filter Toolbar -->
+  <div class="filter-card">
+    <div class="filter-group">
+      <label for="filter-entity-type" class="filter-label">{{ 'AUDIT.FILTER_ENTITY_TYPE' | i18n }}</label>
+      <select
+        id="filter-entity-type"
+        [ngModel]="entityTypeFilter()"
+        (ngModelChange)="entityTypeFilter.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="Vehicle">{{ 'AUDIT.ENTITY_VEHICLE' | i18n }}</option>
+        <option value="Driver">{{ 'AUDIT.ENTITY_DRIVER' | i18n }}</option>
+        <option value="NewsPost">{{ 'AUDIT.ENTITY_NEWS' | i18n }}</option>
+        <option value="Timesheet">{{ 'AUDIT.ENTITY_TIMESHEET' | i18n }}</option>
+        <option value="PayPeriod">{{ 'AUDIT.ENTITY_PAYROLL' | i18n }}</option>
+        <option value="Fine">{{ 'AUDIT.ENTITY_FINE' | i18n }}</option>
+        <option value="EmailTemplate">{{ 'AUDIT.ENTITY_TEMPLATE' | i18n }}</option>
+        <option value="PartnerContact">{{ 'AUDIT.ENTITY_PARTNER' | i18n }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-audit-action" class="filter-label">{{ 'AUDIT.COL_ACTION' | i18n }}</label>
+      <select
+        id="filter-audit-action"
+        [ngModel]="actionFilter()"
+        (ngModelChange)="actionFilter.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+        <option value="Create">Create</option>
+        <option value="Update">Update</option>
+        <option value="Delete">Delete</option>
+        <option value="Login">Login</option>
+        <option value="Submit">Submit</option>
+        <option value="Activate">Activate</option>
+        <option value="Deactivate">Deactivate</option>
+      </select>
+    </div>
+
+    <div class="filter-group search-id-group">
+      <label for="filter-entity-id" class="filter-label">{{ 'AUDIT.COL_ENTITY_ID' | i18n }}</label>
+      <input
+        id="filter-entity-id"
+        type="text"
+        [ngModel]="entityIdFilter()"
+        (ngModelChange)="entityIdFilter.set($event); onFilterChange()"
+        [placeholder]="'AUDIT.SEARCH_ENTITY_ID_PLACEHOLDER' | i18n"
+        class="filter-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-audit-from" class="filter-label">{{ 'AUDIT.FILTER_FROM' | i18n }}</label>
+      <input
+        id="filter-audit-from"
+        type="date"
+        [ngModel]="fromDateFilter()"
+        (ngModelChange)="fromDateFilter.set($event); onFilterChange()"
+        class="filter-input date-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-audit-to" class="filter-label">{{ 'AUDIT.FILTER_TO' | i18n }}</label>
+      <input
+        id="filter-audit-to"
+        type="date"
+        [ngModel]="toDateFilter()"
+        (ngModelChange)="toDateFilter.set($event); onFilterChange()"
+        class="filter-input date-input"
+      />
+    </div>
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="btn btn-secondary btn-icon"
+        (click)="loadAuditLogs()"
+        [attr.title]="'COMMON.REFRESH' | i18n"
+      >
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- State 4: Forbidden State (403) -->
+  @if (isForbidden()) {
+    <div class="state-card forbidden-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon warning-icon" />
+      <h3 class="state-title">{{ 'COMMON.FORBIDDEN_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'AUDIT.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  }
+  <!-- State 3: Error State -->
+  @else if (error()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon error-icon" />
+      <h3 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h3>
+      <p class="state-desc">{{ error() }}</p>
+      <button type="button" class="btn btn-primary" (click)="loadAuditLogs()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+  <!-- State 1: Skeleton Loading -->
+  @else if (loading()) {
+    <div class="table-container">
+      <div class="skeleton-table-wrapper">
+        <div class="skeleton-row skeleton-header-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </div>
+    </div>
+  }
+  <!-- State 2: Empty State -->
+  @else if (logs().length === 0) {
+    <div class="state-card empty-state">
+      <nim-icon name="audit" [size]="48" class="state-icon empty-icon" />
+      <h3 class="state-title">{{ 'AUDIT.EMPTY_TITLE' | i18n }}</h3>
+      <p class="state-desc">{{ 'AUDIT.EMPTY_DESC' | i18n }}</p>
+    </div>
+  }
+  <!-- Content Table -->
+  @else {
+    <div class="table-container">
+      <table class="data-table" aria-label="Audit Logs Table">
+        <thead>
+          <tr>
+            <th class="th-time">{{ 'AUDIT.COL_OCCURRED_AT' | i18n }}</th>
+            <th class="th-action">{{ 'AUDIT.COL_ACTION' | i18n }}</th>
+            <th class="th-entity-type">{{ 'AUDIT.COL_ENTITY_TYPE' | i18n }}</th>
+            <th class="th-entity-id">{{ 'AUDIT.COL_ENTITY_ID' | i18n }}</th>
+            <th class="th-actor">{{ 'AUDIT.COL_ACTOR_ROLE' | i18n }}</th>
+            <th class="th-ip">{{ 'AUDIT.COL_IP_ADDRESS' | i18n }}</th>
+            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr (click)="openDiffModal(log)">
+              <td class="cell-time">
+                {{ log.occurredAt | localeDate: 'medium' }}
+              </td>
+              <td>
+                <span
+                  class="badge-action"
+                  [class.action-create]="log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')"
+                  [class.action-delete]="log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')"
+                  [class.action-update]="log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')"
+                >
+                  {{ log.action }}
+                </span>
+              </td>
+              <td>
+                <span class="badge-entity">{{ log.entityType }}</span>
+              </td>
+              <td class="cell-id">
+                <span class="code-id">{{ log.entityId }}</span>
+              </td>
+              <td>
+                <span class="badge-role">
+                  {{ log.actorRole ? ('ROLES.' + (log.actorRole === 1 || log.actorRole === 'Admin' ? 'ADMIN' : log.actorRole === 2 || log.actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
+                </span>
+              </td>
+              <td class="cell-ip">
+                <span class="text-ip">{{ log.ipAddress || '-' }}</span>
+              </td>
+              <td class="cell-actions" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="btn-row-action"
+                  (click)="openDiffModal(log)"
+                  [attr.title]="'AUDIT.VIEW_DIFF_TOOLTIP' | i18n"
+                >
+                  <nim-icon name="target" [size]="14" />
+                  <span>{{ 'AUDIT.VIEW_DIFF_BUTTON' | i18n }}</span>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          <span>{{ 'AUDIT.TOTAL_RECORDS' | i18n: { count: totalCount() } }}</span>
+        </div>
+        <div class="pagination-controls">
+          <button
+            type="button"
+            class="btn-page"
+            [disabled]="currentPage() <= 1"
+            (click)="goToPage(currentPage() - 1)"
+            [attr.aria-label]="'COMMON.PREV_PAGE' | i18n"
+          >
+            &lt;
+          </button>
+          <span class="page-number">{{ currentPage() }} / {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="btn-page"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+            [attr.aria-label]="'COMMON.NEXT_PAGE' | i18n"
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Diff Inspector Modal -->
+  @if (selectedEventForDiff(); as ev) {
+    <nim-audit-diff-modal
+      [event]="ev"
+      (closeModal)="closeDiffModal()"
+    />
+  }
+</div>
