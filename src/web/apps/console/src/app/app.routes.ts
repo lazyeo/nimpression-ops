@@ -46,33 +46,25 @@ export const routes: Routes = [
         path: 'dispatch',
         data: { labelKey: 'NAV.DISPATCH', icon: 'dispatch' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/dispatch/dispatch.component').then((m) => m.DispatchComponent),
       },
       {
         path: 'drivers',
         data: { labelKey: 'NAV.DRIVERS', icon: 'drivers' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/drivers/drivers.component').then((m) => m.DriversComponent),
       },
       {
         path: 'vehicles',
         data: { labelKey: 'NAV.VEHICLES', icon: 'vehicles' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/vehicles/vehicles.component').then((m) => m.VehiclesComponent),
       },
       {
         path: 'areas',
         data: { labelKey: 'NAV.AREAS', icon: 'areas' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/areas/areas.component').then((m) => m.AreasComponent),
       },
       {
         path: 'timesheets',
