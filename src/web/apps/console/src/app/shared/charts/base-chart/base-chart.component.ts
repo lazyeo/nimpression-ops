@@ -31,6 +31,7 @@ import { ChartSkeletonComponent, ChartSkeletonType } from '../skeletons/chart-sk
 import { ChartThemeConfig, LIGHT_THEME } from '../theme/chart-theme';
 
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
+import { IconComponent } from '../../components/icon/icon.component';
 
 // Register standard ECharts components
 echarts.use([
@@ -53,10 +54,8 @@ echarts.use([
 @Component({
   selector: 'nim-base-chart',
   standalone: true,
-  imports: [CommonModule, NgxEchartsDirective, ChartSkeletonComponent, I18nPipe],
-  providers: [
-    provideEchartsCore({ echarts: () => import('echarts') }),
-  ],
+  imports: [CommonModule, NgxEchartsDirective, ChartSkeletonComponent, I18nPipe, IconComponent],
+  providers: [provideEchartsCore({ echarts: () => import('echarts') })],
   templateUrl: './base-chart.component.html',
   styleUrl: './base-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

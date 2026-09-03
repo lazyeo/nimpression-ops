@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildPayrollComparisonOptions, DriverPayrollComparisonItem } from './payroll-comparison-options';
+import {
+  buildPayrollComparisonOptions,
+  DriverPayrollComparisonItem,
+} from './payroll-comparison-options';
 import { LIGHT_THEME, DARK_THEME } from '../theme/chart-theme';
 
 describe('PayrollComparisonOptions Pure Function (F14.6)', () => {

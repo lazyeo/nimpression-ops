@@ -4,13 +4,21 @@
       <div class="title-row">
         <span class="badge-tag">F14.6</span>
         <h3 class="card-title">{{ 'CHARTS.PAYROLL_COMPARISON.TITLE' | i18n }}</h3>
-        <span class="period-pill">{{ (currentPeriodLabel() | i18n) }} vs {{ (previousPeriodLabel() | i18n) }}</span>
+        <span class="period-pill"
+          >{{ currentPeriodLabel() | i18n }} vs {{ previousPeriodLabel() | i18n }}</span
+        >
       </div>
       <p class="card-subtitle">{{ 'CHARTS.PAYROLL_COMPARISON.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
-        📷 {{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}
+      <button
+        type="button"
+        class="btn-action-icon"
+        (click)="exportPng()"
+        [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n"
+      >
+        <nim-icon name="camera" [size]="14" />
+        <span>{{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}</span>
       </button>
     </div>
   </div>

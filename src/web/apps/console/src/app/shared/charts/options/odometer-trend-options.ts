@@ -1,8 +1,14 @@
 import { EChartsOption } from 'echarts';
-import { ChartThemeConfig, CHART_PALETTE, SEMANTIC_COLORS, ACCESSIBILITY_MARKERS, LIGHT_THEME } from '../theme/chart-theme';
+import {
+  ChartThemeConfig,
+  CHART_PALETTE,
+  SEMANTIC_COLORS,
+  ACCESSIBILITY_MARKERS,
+  LIGHT_THEME,
+} from '../theme/chart-theme';
 
 export interface VehicleOdometerPoint {
-  date: string;       // 'YYYY-MM-DD'
+  date: string; // 'YYYY-MM-DD'
   odometerKm: number; // Cumulative km
 }
 
@@ -61,7 +67,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
 
   // Extract unique sorted list of all dates across all vehicles
   const dateSet = new Set<string>();
-  data.forEach(v => v.readings.forEach(r => dateSet.add(r.date)));
+  data.forEach((v) => v.readings.forEach((r) => dateSet.add(r.date)));
   const allDates = Array.from(dateSet).sort();
 
   const seriesList: NonNullable<EChartsOption['series']> = [];
@@ -69,11 +75,15 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
   data.forEach((vehicle, idx) => {
     const color = CHART_PALETTE[idx % CHART_PALETTE.length];
     const markerSymbol = ACCESSIBILITY_MARKERS.shapes[idx % ACCESSIBILITY_MARKERS.shapes.length];
-    const lineStyleType = ACCESSIBILITY_MARKERS.lineStyles[Math.floor(idx / ACCESSIBILITY_MARKERS.shapes.length) % ACCESSIBILITY_MARKERS.lineStyles.length];
+    const lineStyleType =
+      ACCESSIBILITY_MARKERS.lineStyles[
+        Math.floor(idx / ACCESSIBILITY_MARKERS.shapes.length) %
+          ACCESSIBILITY_MARKERS.lineStyles.length
+      ];
 
     // Map readings by date
     const readingMap = new Map<string, number>();
-    vehicle.readings.forEach(r => readingMap.set(r.date, r.odometerKm));
+    vehicle.readings.forEach((r) => readingMap.set(r.date, r.odometerKm));
 
     const linePoints: Array<[string, number]> = [];
     const markPointData: Array<{
@@ -84,7 +94,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
       label: { color: string; fontSize: number; fontWeight: 'bold' };
     }> = [];
 
-    allDates.forEach(date => {
+    allDates.forEach((date) => {
       if (readingMap.has(date)) {
         const km = readingMap.get(date)!;
         linePoints.push([date, km]);
@@ -109,25 +119,28 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
     });
 
     // MarkLine for vehicle's maintenance threshold
-    const markLineData = vehicle.maintenanceThresholdKm > 0
-      ? [
-          {
-            name: `${vehicle.rego}`,
-            yAxis: vehicle.maintenanceThresholdKm,
-            lineStyle: {
-              color: SEMANTIC_COLORS.danger,
-              type: 'dashed' as const,
-              width: 1.5,
+    const markLineData =
+      vehicle.maintenanceThresholdKm > 0
+        ? [
+            {
+              name: `${vehicle.rego}`,
+              yAxis: vehicle.maintenanceThresholdKm,
+              lineStyle: {
+                color: SEMANTIC_COLORS.danger,
+                type: 'dashed' as const,
+                width: 1.5,
+              },
+              label: {
+                formatter: isMobile
+                  ? '{b}'
+                  : `${vehicle.rego} (${vehicle.maintenanceThresholdKm} km)`,
+                position: 'insideEndTop' as const,
+                color: SEMANTIC_COLORS.danger,
+                fontSize: 10,
+              },
             },
-            label: {
-              formatter: isMobile ? '{b}' : `${vehicle.rego} (${vehicle.maintenanceThresholdKm} km)`,
-              position: 'insideEndTop' as const,
-              color: SEMANTIC_COLORS.danger,
-              fontSize: 10,
-            },
-          },
-        ]
-      : [];
+          ]
+        : [];
 
     seriesList.push({
       name: vehicle.rego,
@@ -150,10 +163,13 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
         symbolSize: isMobile ? 32 : 40,
         data: markPointData,
       },
-      markLine: idx === 0 || vehicle.isDueForService ? {
-        symbol: ['none', 'none'],
-        data: markLineData,
-      } : undefined,
+      markLine:
+        idx === 0 || vehicle.isDueForService
+          ? {
+              symbol: ['none', 'none'],
+              data: markLineData,
+            }
+          : undefined,
     });
   });
 
@@ -176,10 +192,10 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
         const date = items[0].value[0];
         let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">${date} ${odometerRecordTitleText}</div>`;
 
-        items.forEach(it => {
+        items.forEach((it) => {
           const rego = it.seriesName;
           const km = it.value[1];
-          const vehicle = data.find(v => v.rego === rego);
+          const vehicle = data.find((v) => v.rego === rego);
           const threshold = vehicle?.maintenanceThresholdKm ?? 0;
           const isOver = km >= threshold;
 
@@ -194,7 +210,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
       },
     },
     legend: {
-      data: data.map(v => v.rego),
+      data: data.map((v) => v.rego),
       top: 8,
       type: data.length > 6 ? 'scroll' : 'plain',
       textStyle: {
@@ -211,7 +227,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
     },
     xAxis: {
       type: 'category',
-      data: allDates.map(d => (isMobile ? d.substring(5) : d)),
+      data: allDates.map((d) => (isMobile ? d.substring(5) : d)),
       axisLine: {
         lineStyle: {
           color: theme.borderColor,
@@ -220,7 +236,9 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
       axisLabel: {
         color: theme.textSecondaryColor,
         fontSize: isMobile ? 10 : 12,
-        interval: isMobile ? Math.max(1, Math.floor(allDates.length / 6)) : Math.max(0, Math.floor(allDates.length / 12)),
+        interval: isMobile
+          ? Math.max(1, Math.floor(allDates.length / 6))
+          : Math.max(0, Math.floor(allDates.length / 12)),
         rotate: isMobile ? 45 : 0,
       },
     },

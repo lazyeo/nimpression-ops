@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { OfflineQueueService } from './offline-queue.service';
 import { I18nPipe } from '../i18n/i18n.pipe';
 import { LocaleDatePipe } from '../i18n/locale-date.pipe';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'nim-offline-status',
   standalone: true,
-  imports: [CommonModule, I18nPipe],
+  imports: [CommonModule, I18nPipe, IconComponent],
   templateUrl: './offline-status.component.html',
   styleUrl: './offline-status.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

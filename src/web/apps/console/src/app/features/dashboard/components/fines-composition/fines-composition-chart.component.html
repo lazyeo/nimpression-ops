@@ -7,18 +7,37 @@
         @if (selectedCategory()) {
           <span class="active-filter-badge">
             {{ 'CHARTS.FINES_COMPOSITION.FILTERED_BY' | i18n: { category: selectedCategory()! } }}
-            <button type="button" class="btn-clear-tag" (click)="clearFilter()" [title]="'CHARTS.FINES_COMPOSITION.CLEAR_FILTER' | i18n">✕</button>
+            <button
+              type="button"
+              class="btn-clear-tag"
+              (click)="clearFilter()"
+              [title]="'CHARTS.FINES_COMPOSITION.CLEAR_FILTER' | i18n"
+            >
+              ✕
+            </button>
           </span>
         }
       </div>
       <p class="card-subtitle">{{ 'CHARTS.FINES_COMPOSITION.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportDoughnutPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
-        📷 {{ 'CHARTS.FINES_COMPOSITION.EXPORT_DOUGHNUT' | i18n }}
+      <button
+        type="button"
+        class="btn-action-icon"
+        (click)="exportDoughnutPng()"
+        [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n"
+      >
+        <nim-icon name="camera" [size]="14" />
+        <span>{{ 'CHARTS.FINES_COMPOSITION.EXPORT_DOUGHNUT' | i18n }}</span>
       </button>
-      <button type="button" class="btn-action-icon" (click)="exportRankingPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
-        📷 {{ 'CHARTS.FINES_COMPOSITION.EXPORT_RANKING' | i18n }}
+      <button
+        type="button"
+        class="btn-action-icon"
+        (click)="exportRankingPng()"
+        [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n"
+      >
+        <nim-icon name="camera" [size]="14" />
+        <span>{{ 'CHARTS.FINES_COMPOSITION.EXPORT_RANKING' | i18n }}</span>
       </button>
     </div>
   </div>

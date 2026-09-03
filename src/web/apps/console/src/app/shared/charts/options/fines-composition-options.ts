@@ -1,5 +1,10 @@
 import { EChartsOption } from 'echarts';
-import { ChartThemeConfig, CHART_PALETTE, SEMANTIC_COLORS, LIGHT_THEME } from '../theme/chart-theme';
+import {
+  ChartThemeConfig,
+  CHART_PALETTE,
+  SEMANTIC_COLORS,
+  LIGHT_THEME,
+} from '../theme/chart-theme';
 
 export interface FineCategoryStat {
   category: string;
@@ -129,7 +134,7 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
           <div style="font-size:12px;margin:2px 0;">${totalAmountLabel}: <strong>$${p.value.toLocaleString()}</strong></div>
           <div style="font-size:12px;margin:2px 0;">${finesCountLabel}: <strong>${p.data.count}</strong></div>
           <div style="font-size:12px;margin:2px 0;">${shareLabel}: <strong>${p.data.percentage.toFixed(1)}%</strong></div>
-          <div style="font-size:11px;color:${theme.textMutedColor};margin-top:4px;font-style:italic;">💡 ${doughnutHintText}</div>
+          <div style="font-size:11px;color:${theme.textMutedColor};margin-top:4px;font-style:italic;">${doughnutHintText}</div>
         `;
       },
     },
@@ -142,7 +147,7 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
         fontSize: isMobile ? 11 : 12,
       },
       formatter: (name: string) => {
-        const item = data.find(d => d.category === name);
+        const item = data.find((d) => d.category === name);
         return item ? `${name} ($${item.totalAmount})` : name;
       },
     },
@@ -198,7 +203,8 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
 
   const rankingNoDataText = labels.rankingNoData || 'No fine ranking data available';
   const rankingTitleText = labels.rankingTitle || 'Fine Amount Ranking TOP 10';
-  const rankingTitleFilteredText = labels.rankingTitleFiltered || `[${selectedCategory}] Ranking TOP 10`;
+  const rankingTitleFilteredText =
+    labels.rankingTitleFiltered || `[${selectedCategory}] Ranking TOP 10`;
   const driverLabel = labels.driverText || 'Driver';
   const vehicleLabel = labels.vehicleText || 'Vehicle';
   const reasonLabel = labels.reasonText || 'Reason';
@@ -209,7 +215,7 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
 
   // Filter by selected category if provided
   const filteredData = selectedCategory
-    ? data.filter(d => d.category === selectedCategory)
+    ? data.filter((d) => d.category === selectedCategory)
     : data;
 
   // Sort by amount ascending so largest appears at the top of the horizontal bar chart
@@ -218,7 +224,9 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
   if (sorted.length === 0) {
     return {
       title: {
-        text: selectedCategory ? (labels.rankingFilteredNoData || `Category "${selectedCategory}" has no ranking data`) : rankingNoDataText,
+        text: selectedCategory
+          ? labels.rankingFilteredNoData || `Category "${selectedCategory}" has no ranking data`
+          : rankingNoDataText,
         left: 'center',
         top: 'middle',
         textStyle: {
@@ -230,8 +238,8 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
     };
   }
 
-  const yLabels = sorted.map(d => `${d.vehicleRego} (${d.driverName || unassignedLabel})`);
-  const values = sorted.map(d => d.amount);
+  const yLabels = sorted.map((d) => `${d.vehicleRego} (${d.driverName || unassignedLabel})`);
+  const values = sorted.map((d) => d.amount);
 
   const option: EChartsOption = {
     backgroundColor: 'transparent',

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildTimesheetHeatmapOptions, TimesheetHeatmapCell, WEEKDAYS, HOURS } from './timesheet-heatmap-options';
+import {
+  buildTimesheetHeatmapOptions,
+  TimesheetHeatmapCell,
+  WEEKDAYS,
+  HOURS,
+} from './timesheet-heatmap-options';
 import { LIGHT_THEME, DARK_THEME } from '../theme/chart-theme';
 
 describe('TimesheetHeatmapOptions Pure Function (F14.2)', () => {

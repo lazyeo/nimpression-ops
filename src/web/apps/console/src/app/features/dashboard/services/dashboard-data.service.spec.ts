@@ -17,11 +17,7 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        DashboardDataService,
-        provideHttpClient(),
-        provideHttpClientTesting(),
-      ],
+      providers: [DashboardDataService, provideHttpClient(), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(DashboardDataService);
@@ -138,7 +134,7 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
       }
 
       // 4. Synthesize Payslips for Current & Previous Pay Period (10 drivers each)
-      const currentPayslips: PayslipDto[] = drivers.map(d => ({
+      const currentPayslips: PayslipDto[] = drivers.map((d) => ({
         id: `cur-ps-${d.id}`,
         payPeriodId: 'cur-period',
         driverId: d.id,
@@ -154,7 +150,7 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
         status: 'Finalised',
       }));
 
-      const previousPayslips: PayslipDto[] = drivers.map(d => ({
+      const previousPayslips: PayslipDto[] = drivers.map((d) => ({
         id: `prev-ps-${d.id}`,
         payPeriodId: 'prev-period',
         driverId: d.id,
@@ -213,7 +209,9 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
 
       // Assert duration is strictly < 500ms (Hard requirement F14.8)
       expect(latestMeasure.duration).toBeLessThan(500);
-      console.log(`[F14.8 Performance Benchmark] Render duration for 90d x 11v x 10d: ${latestMeasure.duration.toFixed(2)}ms (Limit: 500ms)`);
+      console.log(
+        `[F14.8 Performance Benchmark] Render duration for 90d x 11v x 10d: ${latestMeasure.duration.toFixed(2)}ms (Limit: 500ms)`,
+      );
     });
   });
 });

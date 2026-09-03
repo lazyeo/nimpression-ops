@@ -25,7 +25,8 @@ export interface OdometerReadingDto {
   photoUrl?: string | null;
 }
 
-export type JobTaskStatus = 'Draft' | 'Assigned' | 'Acknowledged' | 'InProgress' | 'Completed' | 'Cancelled';
+export type JobTaskStatus =
+  'Draft' | 'Assigned' | 'Acknowledged' | 'InProgress' | 'Completed' | 'Cancelled';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
 export interface JobTaskDto {

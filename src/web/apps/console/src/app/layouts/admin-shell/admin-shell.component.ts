@@ -7,6 +7,7 @@ import { I18nPipe } from '../../core/i18n/i18n.pipe';
 import { RealtimeService } from '../../core/realtime/realtime.service';
 import { OfflineStatusComponent } from '../../core/offline/offline-status.component';
 import { SupportedLang } from '../../core/models/i18n.models';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 interface NavItem {
   path: string;
@@ -24,6 +25,7 @@ interface NavItem {
     RouterLinkActive,
     I18nPipe,
     OfflineStatusComponent,
+    IconComponent,
   ],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.scss',
@@ -36,18 +38,18 @@ export class AdminShellComponent implements OnInit {
   private readonly router = inject(Router);
 
   readonly navItems: NavItem[] = [
-    { path: '/admin/dashboard', labelKey: 'NAV.DASHBOARD', icon: '📊' },
-    { path: '/admin/dispatch', labelKey: 'NAV.DISPATCH', icon: '🚚' },
-    { path: '/admin/drivers', labelKey: 'NAV.DRIVERS', icon: '👥' },
-    { path: '/admin/vehicles', labelKey: 'NAV.VEHICLES', icon: '🚛' },
-    { path: '/admin/areas', labelKey: 'NAV.AREAS', icon: '🗺️' },
-    { path: '/admin/timesheets', labelKey: 'NAV.TIMESHEETS', icon: '⏱️' },
-    { path: '/admin/payroll', labelKey: 'NAV.PAYROLL', icon: '💰' },
-    { path: '/admin/incidents', labelKey: 'NAV.INCIDENTS', icon: '🚨' },
-    { path: '/admin/fines', labelKey: 'NAV.FINES', icon: '📄' },
-    { path: '/admin/news', labelKey: 'NAV.NEWS', icon: '📢' },
-    { path: '/admin/notifications', labelKey: 'NAV.NOTIFICATIONS', icon: '🔔' },
-    { path: '/admin/audit', labelKey: 'NAV.AUDIT', icon: '📋' },
+    { path: '/admin/dashboard', labelKey: 'NAV.DASHBOARD', icon: 'dashboard' },
+    { path: '/admin/dispatch', labelKey: 'NAV.DISPATCH', icon: 'dispatch' },
+    { path: '/admin/drivers', labelKey: 'NAV.DRIVERS', icon: 'drivers' },
+    { path: '/admin/vehicles', labelKey: 'NAV.VEHICLES', icon: 'vehicles' },
+    { path: '/admin/areas', labelKey: 'NAV.AREAS', icon: 'areas' },
+    { path: '/admin/timesheets', labelKey: 'NAV.TIMESHEETS', icon: 'timesheets' },
+    { path: '/admin/payroll', labelKey: 'NAV.PAYROLL', icon: 'payroll' },
+    { path: '/admin/incidents', labelKey: 'NAV.INCIDENTS', icon: 'incidents' },
+    { path: '/admin/fines', labelKey: 'NAV.FINES', icon: 'fines' },
+    { path: '/admin/news', labelKey: 'NAV.NEWS', icon: 'news' },
+    { path: '/admin/notifications', labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
+    { path: '/admin/audit', labelKey: 'NAV.AUDIT', icon: 'audit' },
   ];
 
   ngOnInit(): void {

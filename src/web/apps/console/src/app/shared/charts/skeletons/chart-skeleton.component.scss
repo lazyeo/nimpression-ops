@@ -155,10 +155,20 @@
     border-radius: 4px;
     animation: skeleton-shimmer 1.5s ease-in-out infinite;
 
-    &.tier-1 { width: 90%; }
-    &.tier-2 { width: 75%; }
-    &.tier-3 { width: 60%; }
-    &.tier-4 { width: 45%; }
-    &.tier-5 { width: 30%; }
+    &.tier-1 {
+      width: 90%;
+    }
+    &.tier-2 {
+      width: 75%;
+    }
+    &.tier-3 {
+      width: 60%;
+    }
+    &.tier-4 {
+      width: 45%;
+    }
+    &.tier-5 {
+      width: 30%;
+    }
   }
 }

@@ -7,6 +7,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { SupportedLang } from '../../../core/models/i18n.models';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface DriverProfileDto {
   id: string;
@@ -23,7 +24,14 @@ export interface DriverProfileDto {
 @Component({
   selector: 'nim-driver-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, I18nPipe, LocaleDatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    I18nPipe,
+    LocaleDatePipe,
+    IconComponent,
+  ],
   templateUrl: './driver-profile.component.html',
   styleUrl: './driver-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

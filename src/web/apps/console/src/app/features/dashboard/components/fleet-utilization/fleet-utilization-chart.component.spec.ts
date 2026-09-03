@@ -29,7 +29,7 @@ describe('FleetUtilizationChartComponent', () => {
 
   it('should emit dayClick event on chart click', () => {
     let clickedDate = '';
-    component.dayClick.subscribe(date => {
+    component.dayClick.subscribe((date) => {
       clickedDate = date;
     });
 

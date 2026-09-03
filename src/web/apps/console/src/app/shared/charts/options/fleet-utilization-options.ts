@@ -2,10 +2,10 @@ import { EChartsOption } from 'echarts';
 import { ChartThemeConfig, SEMANTIC_COLORS, LIGHT_THEME } from '../theme/chart-theme';
 
 export interface FleetUtilizationItem {
-  date: string;         // 'YYYY-MM-DD'
-  inTransit: number;    // Vehicles actively on jobs
-  idle: number;         // Active vehicles with no active job
-  maintenance: number;  // Vehicles under maintenance
+  date: string; // 'YYYY-MM-DD'
+  inTransit: number; // Vehicles actively on jobs
+  idle: number; // Active vehicles with no active job
+  maintenance: number; // Vehicles under maintenance
   totalVehicles: number;
   tasksCount: number;
 }
@@ -62,13 +62,13 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
     };
   }
 
-  const dates = data.map(d => {
+  const dates = data.map((d) => {
     return isMobile ? d.date.substring(5) : d.date;
   });
 
-  const inTransitData = data.map(d => d.inTransit);
-  const idleData = data.map(d => d.idle);
-  const maintenanceData = data.map(d => d.maintenance);
+  const inTransitData = data.map((d) => d.inTransit);
+  const idleData = data.map((d) => d.idle);
+  const maintenanceData = data.map((d) => d.maintenance);
 
   const option: EChartsOption = {
     backgroundColor: 'transparent',
@@ -99,8 +99,8 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
 
         let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:4px;">${dateStr} ${statusTitleText}</div>`;
         html += `<div style="font-size:12px;margin-bottom:4px;color:${theme.textSecondaryColor};">${tasksCountLabel}: <strong>${item?.tasksCount ?? 0}</strong> | ${rateLabel}: <strong>${utilRate}%</strong></div>`;
-        
-        items.forEach(it => {
+
+        items.forEach((it) => {
           html += `
             <div style="display:flex;justify-content:space-between;align-items:center;margin:3px 0;gap:12px;">
               <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${it.color};margin-right:6px;"></span>${it.seriesName}</span>
@@ -108,7 +108,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
             </div>
           `;
         });
-        html += `<div style="font-size:11px;color:${theme.textMutedColor};margin-top:6px;font-style:italic;">💡 ${drilldownHintText}</div>`;
+        html += `<div style="font-size:11px;color:${theme.textMutedColor};margin-top:6px;font-style:italic;">${drilldownHintText}</div>`;
         return html;
       },
     },
@@ -142,7 +142,9 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
       axisLabel: {
         color: theme.textSecondaryColor,
         fontSize: isMobile ? 10 : 12,
-        interval: isMobile ? Math.max(1, Math.floor(data.length / 8)) : Math.max(0, Math.floor(data.length / 15)),
+        interval: isMobile
+          ? Math.max(1, Math.floor(data.length / 8))
+          : Math.max(0, Math.floor(data.length / 15)),
         rotate: isMobile ? 45 : 0,
       },
       axisTick: {

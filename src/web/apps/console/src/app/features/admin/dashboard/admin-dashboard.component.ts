@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface DashboardMetricsDto {
   activeDispatches: number;
@@ -15,7 +16,7 @@ export interface DashboardMetricsDto {
 @Component({
   selector: 'nim-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, I18nPipe, LocaleNumberPipe],
+  imports: [CommonModule, I18nPipe, LocaleNumberPipe, IconComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

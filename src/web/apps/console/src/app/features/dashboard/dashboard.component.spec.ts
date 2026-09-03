@@ -20,11 +20,7 @@ describe('DashboardComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
-      providers: [
-        DashboardDataService,
-        provideHttpClient(),
-        provideHttpClientTesting(),
-      ],
+      providers: [DashboardDataService, provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);

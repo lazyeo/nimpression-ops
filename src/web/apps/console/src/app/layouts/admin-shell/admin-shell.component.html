@@ -2,7 +2,7 @@
   <!-- Desktop Sidebar -->
   <aside class="admin-sidebar">
     <div class="sidebar-brand">
-      <span class="brand-icon">🚛</span>
+      <nim-icon name="truck" [size]="28" class="brand-icon" />
       <div class="brand-text">
         <h1 class="brand-name">{{ 'COMMON.APP_TITLE' | i18n }}</h1>
         <small class="brand-sub">{{ 'COMMON.SUBTITLE' | i18n }}</small>
@@ -14,7 +14,7 @@
         @for (item of navItems; track item.path) {
           <li class="nav-item">
             <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">{{ item.icon }}</span>
+              <nim-icon [name]="item.icon" [size]="18" class="nav-icon" />
               <span class="nav-label">{{ item.labelKey | i18n }}</span>
             </a>
           </li>

@@ -7,19 +7,20 @@
       (click)="loadPayslips()"
       [title]="'COMMON.REFRESH' | i18n"
     >
-      🔄
+      <nim-icon name="refresh" [size]="16" />
     </button>
   </div>
 
   @if (isUsingCache()) {
     <div class="cached-banner">
-      <span>💾 {{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
+      <nim-icon name="cloud-offline" [size]="14" />
+      <span>{{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
     </div>
   }
 
   @if (payslips().length === 0 && !isLoading()) {
     <div class="empty-card">
-      <span class="empty-icon">💵</span>
+      <nim-icon name="payslips" [size]="36" class="empty-icon" />
       <p>{{ 'COMMON.NO_DATA' | i18n }}</p>
     </div>
   } @else {

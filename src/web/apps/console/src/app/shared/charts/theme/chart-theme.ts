@@ -1,6 +1,6 @@
 /**
  * Okabe-Ito Colorblind Safe Palette and WCAG AA Contrast Utilities
- * 
+ *
  * Okabe-Ito is the recognized standard 8-color palette designed to be distinguishable
  * across common forms of color vision deficiency (deuteranopia, protanopia, tritanopia).
  */
@@ -44,29 +44,29 @@ export const OKABE_ITO_PALETTE = {
  * Ordered series palette derived from Okabe-Ito for multi-series charts.
  */
 export const CHART_PALETTE: string[] = [
-  OKABE_ITO_PALETTE.blue,          // #0072B2
-  OKABE_ITO_PALETTE.orange,        // #E69F00
-  OKABE_ITO_PALETTE.bluishGreen,   // #009E73
-  OKABE_ITO_PALETTE.vermilion,     // #D55E00
-  OKABE_ITO_PALETTE.skyBlue,       // #56B4E9
+  OKABE_ITO_PALETTE.blue, // #0072B2
+  OKABE_ITO_PALETTE.orange, // #E69F00
+  OKABE_ITO_PALETTE.bluishGreen, // #009E73
+  OKABE_ITO_PALETTE.vermilion, // #D55E00
+  OKABE_ITO_PALETTE.skyBlue, // #56B4E9
   OKABE_ITO_PALETTE.reddishPurple, // #CC79A7
-  OKABE_ITO_PALETTE.yellow,        // #F0E442
-  OKABE_ITO_PALETTE.black,         // #000000
+  OKABE_ITO_PALETTE.yellow, // #F0E442
+  OKABE_ITO_PALETTE.black, // #000000
 ];
 
 /**
  * Semantic categorical colors for fleet status, fine categories, etc.
  */
 export const SEMANTIC_COLORS = {
-  inTransit: OKABE_ITO_PALETTE.blue,          // #0072B2
-  idle: OKABE_ITO_PALETTE.skyBlue,            // #56B4E9
-  maintenance: OKABE_ITO_PALETTE.vermilion,   // #D55E00 (Warning/Alert)
-  success: OKABE_ITO_PALETTE.bluishGreen,     // #009E73
-  warning: OKABE_ITO_PALETTE.orange,          // #E69F00
-  danger: OKABE_ITO_PALETTE.vermilion,        // #D55E00
-  info: OKABE_ITO_PALETTE.blue,               // #0072B2
-  accent: OKABE_ITO_PALETTE.reddishPurple,    // #CC79A7
-  highlight: OKABE_ITO_PALETTE.yellow,        // #F0E442
+  inTransit: OKABE_ITO_PALETTE.blue, // #0072B2
+  idle: OKABE_ITO_PALETTE.skyBlue, // #56B4E9
+  maintenance: OKABE_ITO_PALETTE.vermilion, // #D55E00 (Warning/Alert)
+  success: OKABE_ITO_PALETTE.bluishGreen, // #009E73
+  warning: OKABE_ITO_PALETTE.orange, // #E69F00
+  danger: OKABE_ITO_PALETTE.vermilion, // #D55E00
+  info: OKABE_ITO_PALETTE.blue, // #0072B2
+  accent: OKABE_ITO_PALETTE.reddishPurple, // #CC79A7
+  highlight: OKABE_ITO_PALETTE.yellow, // #F0E442
 } as const;
 
 /**
@@ -85,14 +85,14 @@ export const LIGHT_THEME: ChartThemeConfig = {
   name: 'light',
   backgroundColor: '#FFFFFF',
   cardBackgroundColor: '#F8FAFC',
-  textColor: '#0F172A',              // Slate 900 (Contrast ~15.9:1 against #FFFFFF)
-  textSecondaryColor: '#334155',     // Slate 700 (Contrast ~8.5:1 against #FFFFFF)
-  textMutedColor: '#64748B',         // Slate 500 (Contrast ~4.6:1 against #FFFFFF)
-  borderColor: '#E2E8F0',            // Slate 200
-  splitLineColor: '#F1F5F9',         // Slate 100
+  textColor: '#0F172A', // Slate 900 (Contrast ~15.9:1 against #FFFFFF)
+  textSecondaryColor: '#334155', // Slate 700 (Contrast ~8.5:1 against #FFFFFF)
+  textMutedColor: '#64748B', // Slate 500 (Contrast ~4.6:1 against #FFFFFF)
+  borderColor: '#E2E8F0', // Slate 200
+  splitLineColor: '#F1F5F9', // Slate 100
   tooltipBackgroundColor: 'rgba(15, 23, 42, 0.92)', // Slate 900
   tooltipBorderColor: '#334155',
-  tooltipTextColor: '#F8FAFC',       // Slate 50 (Contrast > 14:1)
+  tooltipTextColor: '#F8FAFC', // Slate 50 (Contrast > 14:1)
   palette: CHART_PALETTE,
 };
 
@@ -101,16 +101,16 @@ export const LIGHT_THEME: ChartThemeConfig = {
  */
 export const DARK_THEME: ChartThemeConfig = {
   name: 'dark',
-  backgroundColor: '#0F172A',        // Slate 900
-  cardBackgroundColor: '#1E293B',    // Slate 800
-  textColor: '#F8FAFC',              // Slate 50 (Contrast ~15.8:1 against #0F172A)
-  textSecondaryColor: '#CBD5E1',     // Slate 300 (Contrast ~11.1:1 against #0F172A)
-  textMutedColor: '#94A3B8',         // Slate 400 (Contrast ~6.3:1 against #0F172A)
-  borderColor: '#334155',            // Slate 700
-  splitLineColor: '#1E293B',         // Slate 800
+  backgroundColor: '#0F172A', // Slate 900
+  cardBackgroundColor: '#1E293B', // Slate 800
+  textColor: '#F8FAFC', // Slate 50 (Contrast ~15.8:1 against #0F172A)
+  textSecondaryColor: '#CBD5E1', // Slate 300 (Contrast ~11.1:1 against #0F172A)
+  textMutedColor: '#94A3B8', // Slate 400 (Contrast ~6.3:1 against #0F172A)
+  borderColor: '#334155', // Slate 700
+  splitLineColor: '#1E293B', // Slate 800
   tooltipBackgroundColor: 'rgba(30, 41, 59, 0.95)', // Slate 800
   tooltipBorderColor: '#475569',
-  tooltipTextColor: '#F8FAFC',       // Slate 50
+  tooltipTextColor: '#F8FAFC', // Slate 50
   palette: CHART_PALETTE,
 };
 
@@ -124,7 +124,10 @@ export function hexToRgb(hex: string): RgbColor {
   }
   let fullHex = cleaned;
   if (cleaned.length === 3) {
-    fullHex = cleaned.split('').map(c => c + c).join('');
+    fullHex = cleaned
+      .split('')
+      .map((c) => c + c)
+      .join('');
   }
   const r = parseInt(fullHex.substring(0, 2), 16);
   const g = parseInt(fullHex.substring(2, 4), 16);
@@ -159,7 +162,10 @@ export function calculateRelativeLuminance(color: string | RgbColor): number {
  * Calculates the WCAG 2.1 contrast ratio between two colors:
  * Contrast = (L1 + 0.05) / (L2 + 0.05) where L1 >= L2.
  */
-export function calculateContrastRatio(color1: string | RgbColor, color2: string | RgbColor): number {
+export function calculateContrastRatio(
+  color1: string | RgbColor,
+  color2: string | RgbColor,
+): number {
   const lum1 = calculateRelativeLuminance(color1);
   const lum2 = calculateRelativeLuminance(color2);
   const lighter = Math.max(lum1, lum2);

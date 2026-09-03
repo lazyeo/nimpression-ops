@@ -60,7 +60,9 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
     const opt = buildOdometerTrendOptions({ data: mockData });
     const series = opt.series as Array<{
       name: string;
-      markPoint: { data: Array<{ name: string; coord: [string, number]; itemStyle: { color: string } }> };
+      markPoint: {
+        data: Array<{ name: string; coord: [string, number]; itemStyle: { color: string } }>;
+      };
       markLine?: { data: Array<{ name: string; yAxis: number }> };
     }>;
 

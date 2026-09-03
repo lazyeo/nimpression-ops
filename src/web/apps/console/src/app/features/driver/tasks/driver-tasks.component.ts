@@ -5,6 +5,7 @@ import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { OfflineCacheService } from '../../../core/offline/offline-cache.service';
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface DriverTaskItem {
   id: string;
@@ -19,7 +20,7 @@ export interface DriverTaskItem {
 @Component({
   selector: 'nim-driver-tasks',
   standalone: true,
-  imports: [CommonModule, I18nPipe, LocaleDatePipe],
+  imports: [CommonModule, I18nPipe, LocaleDatePipe, IconComponent],
   templateUrl: './driver-tasks.component.html',
   styleUrl: './driver-tasks.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

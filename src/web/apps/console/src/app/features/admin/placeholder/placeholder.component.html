@@ -1,0 +1,20 @@
+<div class="placeholder-container">
+  <div class="placeholder-card">
+    <div class="icon-wrapper">
+      <nim-icon [name]="iconName()" [size]="48" class="placeholder-icon" />
+    </div>
+
+    <div class="content-wrapper">
+      <span class="status-pill">{{ 'ADMIN.PLACEHOLDER_STATUS' | i18n }}</span>
+      <h2 class="module-title">{{ labelKey() | i18n }}</h2>
+      <p class="module-desc">{{ 'ADMIN.PLACEHOLDER_DESC' | i18n }}</p>
+    </div>
+
+    <div class="actions-wrapper">
+      <a routerLink="/admin/dashboard" class="btn-return">
+        <nim-icon name="dashboard" [size]="16" />
+        <span>{{ 'ADMIN.RETURN_DASHBOARD' | i18n }}</span>
+      </a>
+    </div>
+  </div>
+</div>

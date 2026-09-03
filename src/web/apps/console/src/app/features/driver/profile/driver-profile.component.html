@@ -5,7 +5,8 @@
 
   @if (saveSuccess()) {
     <div class="alert-success">
-      <span>✓ {{ 'DRIVER.PROFILE_UPDATED' | i18n }}</span>
+      <nim-icon name="check-circle" [size]="16" />
+      <span>{{ 'DRIVER.PROFILE_UPDATED' | i18n }}</span>
     </div>
   }
 

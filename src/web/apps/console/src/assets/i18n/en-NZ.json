@@ -150,7 +150,11 @@
     "UNRESOLVED_FINES": "Unresolved Fines",
     "QUICK_ACTIONS": "Quick Actions",
     "RECENT_ALERTS": "Recent Alerts",
-    "SYSTEM_STATUS": "System Status"
+    "SYSTEM_STATUS": "System Status",
+    "PLACEHOLDER_TITLE": "Under Construction",
+    "PLACEHOLDER_STATUS": "Planned for Subsequent Wave",
+    "PLACEHOLDER_DESC": "This module is planned for a subsequent development wave. The navigation shell and route structures are established and ready for integration.",
+    "RETURN_DASHBOARD": "Return to Dashboard"
   },
   "LANG": {
     "LABEL": "Language",
@@ -240,7 +244,7 @@
     },
     "FINES_COMPOSITION": {
       "TITLE": "Traffic Fines Composition & Ranking",
-      "SUBTITLE": "Violation reason breakdown ↔ Right-side fine amount ranking (click doughnut sector to filter)",
+      "SUBTITLE": "Violation reason breakdown | Right-side fine amount ranking (click doughnut sector to filter)",
       "FILTERED_BY": "Filtered: {category}",
       "CLEAR_FILTER": "Clear filter",
       "EXPORT_DOUGHNUT": "Doughnut Chart",

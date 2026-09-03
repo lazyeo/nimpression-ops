@@ -19,6 +19,7 @@ import { PayrollComparisonChartComponent } from './components/payroll-comparison
 import { TaskDrilldownDialogComponent } from './components/task-drilldown-dialog/task-drilldown-dialog.component';
 
 import { I18nPipe } from '../../core/i18n/i18n.pipe';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'nim-dashboard',
@@ -33,6 +34,7 @@ import { I18nPipe } from '../../core/i18n/i18n.pipe';
     TaskFunnelChartComponent,
     PayrollComparisonChartComponent,
     TaskDrilldownDialogComponent,
+    IconComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -67,7 +69,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   readonly maintenanceDueCount = computed(() => {
     const odometerList = this.dataService.odometerTrends();
-    return odometerList.filter(v => v.isDueForService).length;
+    return odometerList.filter((v) => v.isDueForService).length;
   });
 
   readonly totalFineAmount = computed(() => {
@@ -78,7 +80,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly overallTaskConversion = computed(() => {
     const stages = this.dataService.taskFunnel();
     if (stages.length === 0) return 0;
-    const completed = stages.find(s => s.stage === 'Completed');
+    const completed = stages.find((s) => s.stage === 'Completed');
     return completed ? completed.overallConversionRate : 0;
   });
 

@@ -36,7 +36,7 @@
         (click)="openQueueModal()"
         [title]="'OFFLINE.STATUS_SYNCED' | i18n"
       >
-        <span class="check-icon">✓</span>
+        <nim-icon name="check-circle" [size]="14" class="check-icon" />
         <span class="status-label">{{ 'OFFLINE.STATUS_SYNCED' | i18n }}</span>
       </button>
     }
@@ -47,7 +47,7 @@
         (click)="openQueueModal()"
         [title]="'OFFLINE.STATUS_ONLINE' | i18n"
       >
-        <span class="check-icon">✓</span>
+        <nim-icon name="check-circle" [size]="14" class="check-icon" />
         <span class="status-label">{{ 'OFFLINE.STATUS_ONLINE' | i18n }}</span>
       </button>
     }
@@ -61,7 +61,7 @@
       (click)="openQueueModal()"
       [title]="'OFFLINE.SYNC_FAILED_MSG' | i18n: { count: offlineQueue.failedCount() }"
     >
-      <span class="warning-icon">⚠️</span>
+      <nim-icon name="alert-triangle" [size]="16" class="warning-icon" />
       <span class="warning-count">{{ offlineQueue.failedCount() }}</span>
     </button>
   }

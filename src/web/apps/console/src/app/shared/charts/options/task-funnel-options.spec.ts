@@ -4,11 +4,46 @@ import { LIGHT_THEME, DARK_THEME } from '../theme/chart-theme';
 
 describe('TaskFunnelOptions Pure Function (F14.5)', () => {
   const mockStages: TaskFunnelStageData[] = [
-    { stage: 'Draft', stageName: 'Draft', count: 100, conversionRate: 100.0, overallConversionRate: 100.0, avgStayMinutes: 12 },
-    { stage: 'Assigned', stageName: 'Assigned', count: 90, conversionRate: 90.0, overallConversionRate: 90.0, avgStayMinutes: 24 },
-    { stage: 'Acknowledged', stageName: 'Acknowledged', count: 85, conversionRate: 94.4, overallConversionRate: 85.0, avgStayMinutes: 45 },
-    { stage: 'InProgress', stageName: 'In Progress', count: 80, conversionRate: 94.1, overallConversionRate: 80.0, avgStayMinutes: 135 },
-    { stage: 'Completed', stageName: 'Completed', count: 76, conversionRate: 95.0, overallConversionRate: 76.0, avgStayMinutes: 0 },
+    {
+      stage: 'Draft',
+      stageName: 'Draft',
+      count: 100,
+      conversionRate: 100.0,
+      overallConversionRate: 100.0,
+      avgStayMinutes: 12,
+    },
+    {
+      stage: 'Assigned',
+      stageName: 'Assigned',
+      count: 90,
+      conversionRate: 90.0,
+      overallConversionRate: 90.0,
+      avgStayMinutes: 24,
+    },
+    {
+      stage: 'Acknowledged',
+      stageName: 'Acknowledged',
+      count: 85,
+      conversionRate: 94.4,
+      overallConversionRate: 85.0,
+      avgStayMinutes: 45,
+    },
+    {
+      stage: 'InProgress',
+      stageName: 'In Progress',
+      count: 80,
+      conversionRate: 94.1,
+      overallConversionRate: 80.0,
+      avgStayMinutes: 135,
+    },
+    {
+      stage: 'Completed',
+      stageName: 'Completed',
+      count: 76,
+      conversionRate: 95.0,
+      overallConversionRate: 76.0,
+      avgStayMinutes: 0,
+    },
   ];
 
   it('should format durations cleanly into minutes and hours', () => {
