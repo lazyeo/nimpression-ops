@@ -70,33 +70,31 @@ export const routes: Routes = [
         path: 'timesheets',
         data: { labelKey: 'NAV.TIMESHEETS', icon: 'timesheets' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
+          import('./features/admin/timesheets/timesheets.component').then(
+            (m) => m.TimesheetsComponent,
           ),
       },
       {
         path: 'payroll',
         data: { labelKey: 'NAV.PAYROLL', icon: 'payroll' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
+          import('./features/admin/payroll/payroll.component').then(
+            (m) => m.PayrollComponent,
           ),
       },
       {
         path: 'incidents',
         data: { labelKey: 'NAV.INCIDENTS', icon: 'incidents' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
+          import('./features/admin/incidents/incidents.component').then(
+            (m) => m.IncidentsComponent,
           ),
       },
       {
         path: 'fines',
         data: { labelKey: 'NAV.FINES', icon: 'fines' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/fines/fines.component').then((m) => m.FinesComponent),
       },
       {
         path: 'news',

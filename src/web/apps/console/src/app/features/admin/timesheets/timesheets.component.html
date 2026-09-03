@@ -1,0 +1,458 @@
+<div class="timesheets-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-group">
+      <h1 class="page-title">{{ 'TIMESHEETS.TITLE' | i18n }}</h1>
+      <p class="page-subtitle">{{ 'TIMESHEETS.SUBTITLE' | i18n }}</p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="action-btn btn-refresh"
+        (click)="applyFilters()"
+        [disabled]="isLoading()"
+        [title]="'COMMON.REFRESH' | i18n"
+      >
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.REFRESH' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 403 Forbidden State -->
+  @if (isForbidden()) {
+    <div class="state-card forbidden-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon warning" />
+      <h2 class="state-title">{{ 'ADMIN.FORBIDDEN_TITLE' | i18n }}</h2>
+      <p class="state-desc">{{ 'ADMIN.FORBIDDEN_DESC' | i18n }}</p>
+    </div>
+  }
+
+  <!-- Error State with Retry -->
+  @else if (hasError()) {
+    <div class="state-card error-state">
+      <nim-icon name="alert-triangle" [size]="48" class="state-icon danger" />
+      <h2 class="state-title">{{ 'COMMON.ERROR' | i18n }}</h2>
+      <p class="state-desc">{{ errorMessage() || ('DASHBOARD.ERRORS.LOAD_FAILED' | i18n) }}</p>
+      <button type="button" class="action-btn btn-primary retry-btn" (click)="loadTimesheets()">
+        <nim-icon name="refresh" [size]="16" />
+        <span>{{ 'COMMON.RETRY' | i18n }}</span>
+      </button>
+    </div>
+  }
+
+  <!-- Normal Content & Skeletons -->
+  @else {
+    <!-- Summary KPIs -->
+    <div class="summary-section">
+      <h2 class="section-title">{{ 'TIMESHEETS.SUMMARY_TITLE' | i18n }}</h2>
+      <div class="kpi-grid">
+        @if (isSummaryLoading() && !summary()) {
+          <div class="kpi-card skeleton" *ngFor="let i of [1, 2, 3, 4, 5]">
+            <div class="skeleton-line sm"></div>
+            <div class="skeleton-line lg"></div>
+          </div>
+        } @else {
+          <div class="kpi-card">
+            <span class="kpi-label">{{ 'TIMESHEETS.TOTAL_SHIFTS' | i18n }}</span>
+            <span class="kpi-val">{{ summary()?.totalShifts || 0 }}</span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ 'TIMESHEETS.TOTAL_PAYABLE_HOURS' | i18n }}</span>
+            <span class="kpi-val">{{ summary()?.totalPayableHours || 0 | localeNumber: 1 : 2 }} hrs</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ 'TIMESHEETS.ORDINARY_HOURS' | i18n }}</span>
+            <span class="kpi-val">{{ summary()?.totalOrdinaryHours || 0 | localeNumber: 1 : 2 }} hrs</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ 'TIMESHEETS.OVERTIME_HOURS' | i18n }}</span>
+            <span class="kpi-val">{{ summary()?.totalOvertimeHours || 0 | localeNumber: 1 : 2 }} hrs</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ 'TIMESHEETS.BREAK_MINUTES' | i18n }}</span>
+            <span class="kpi-val">{{ summary()?.totalBreakMinutes || 0 }} mins</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-card">
+      <div class="filter-group">
+        <label for="driver-filter" class="filter-label">{{ 'TIMESHEETS.FILTER_DRIVER' | i18n }}</label>
+        <select
+          id="driver-filter"
+          class="form-control"
+          [ngModel]="selectedDriverId()"
+          (ngModelChange)="selectedDriverId.set($event)"
+        >
+          <option value="">{{ 'TIMESHEETS.FILTER_ALL_DRIVERS' | i18n }}</option>
+          @for (d of drivers(); track d.id) {
+            <option [value]="d.id">{{ d.displayName }} ({{ d.employeeNo }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="status-filter" class="filter-label">{{ 'TIMESHEETS.FILTER_STATUS' | i18n }}</label>
+        <select
+          id="status-filter"
+          class="form-control"
+          [ngModel]="selectedStatus()"
+          (ngModelChange)="selectedStatus.set($event)"
+        >
+          <option value="">{{ 'TIMESHEETS.FILTER_ALL_STATUSES' | i18n }}</option>
+          <option value="Active">{{ 'TIMESHEETS.STATUS_ACTIVE' | i18n }}</option>
+          <option value="Completed">{{ 'TIMESHEETS.STATUS_COMPLETED' | i18n }}</option>
+          <option value="AutoClosed">{{ 'TIMESHEETS.STATUS_AUTOCLOSED' | i18n }}</option>
+          <option value="Cancelled">{{ 'TIMESHEETS.STATUS_CANCELLED' | i18n }}</option>
+          <option value="AdminCorrected">{{ 'TIMESHEETS.STATUS_CORRECTED' | i18n }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="from-date" class="filter-label">{{ 'TIMESHEETS.FILTER_FROM' | i18n }}</label>
+        <input
+          type="date"
+          id="from-date"
+          class="form-control"
+          [ngModel]="fromDate()"
+          (ngModelChange)="fromDate.set($event)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="to-date" class="filter-label">{{ 'TIMESHEETS.FILTER_TO' | i18n }}</label>
+        <input
+          type="date"
+          id="to-date"
+          class="form-control"
+          [ngModel]="toDate()"
+          (ngModelChange)="toDate.set($event)"
+        />
+      </div>
+
+      <div class="filter-buttons">
+        <button type="button" class="btn-filter btn-primary" (click)="applyFilters()">
+          <nim-icon name="target" [size]="14" />
+          <span>{{ 'TIMESHEETS.FILTER_APPLY' | i18n }}</span>
+        </button>
+        <button type="button" class="btn-filter btn-secondary" (click)="resetFilters()">
+          <span>{{ 'TIMESHEETS.FILTER_RESET' | i18n }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Table or Skeleton or Empty State -->
+    <div class="table-container">
+      @if (isLoading()) {
+        <!-- Skeleton Loading State -->
+        <div class="skeleton-table">
+          <div class="skeleton-row header">
+            <div class="skeleton-cell" *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8]"></div>
+          </div>
+          <div class="skeleton-row" *ngFor="let r of [1, 2, 3, 4, 5, 6]">
+            <div class="skeleton-cell" *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8]"></div>
+          </div>
+        </div>
+      } @else if (timesheets().length === 0) {
+        <!-- Empty State -->
+        <div class="state-card empty-state">
+          <nim-icon name="timesheets" [size]="56" class="state-icon muted" />
+          <h2 class="state-title">{{ 'TIMESHEETS.EMPTY_TITLE' | i18n }}</h2>
+          <p class="state-desc">{{ 'TIMESHEETS.EMPTY_DESC' | i18n }}</p>
+          <button type="button" class="action-btn btn-secondary" (click)="resetFilters()">
+            <span>{{ 'TIMESHEETS.FILTER_RESET' | i18n }}</span>
+          </button>
+        </div>
+      } @else {
+        <!-- Loaded Table -->
+        <div class="responsive-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ 'TIMESHEETS.COL_DRIVER' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_DATE' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_CLOCK_IN' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_CLOCK_OUT' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_BREAK' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_DURATION' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_PAYABLE' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_STATUS' | i18n }}</th>
+                <th>{{ 'TIMESHEETS.COL_LOCATION' | i18n }}</th>
+                <th class="actions-col">{{ 'COMMON.ACTIONS' | i18n }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (shift of timesheets(); track shift.id) {
+                <tr>
+                  <td class="driver-cell">
+                    <span class="driver-name">{{ shift.driverName || 'Driver ' + shift.driverId.substring(0, 8) }}</span>
+                  </td>
+                  <td>{{ shift.attributedDate || (shift.clockInAt | localeDate: 'short') }}</td>
+                  <td>{{ shift.clockInAt | localeDate: 'short' }}</td>
+                  <td>
+                    @if (shift.clockOutAt) {
+                      {{ shift.clockOutAt | localeDate: 'short' }}
+                    } @else {
+                      <span class="badge badge-active">{{ 'TIMESHEETS.STATUS_ACTIVE' | i18n }}</span>
+                    }
+                  </td>
+                  <td>{{ shift.breakMinutes }}m</td>
+                  <td>
+                    @if (shift.rawDurationHours !== null && shift.rawDurationHours !== undefined) {
+                      {{ shift.rawDurationHours | localeNumber: 1 : 2 }}h
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td class="payable-cell">
+                    @if (shift.payableHours !== null && shift.payableHours !== undefined) {
+                      <strong>{{ shift.payableHours | localeNumber: 1 : 2 }}h</strong>
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td>
+                    <span
+                      class="status-badge"
+                      [ngClass]="{
+                        'status-active': shift.status === 'Active',
+                        'status-completed': shift.status === 'Completed',
+                        'status-autoclosed': shift.status === 'AutoClosed',
+                        'status-cancelled': shift.status === 'Cancelled',
+                        'status-corrected': shift.status === 'AdminCorrected' || shift.adminCorrectionReason
+                      }"
+                    >
+                      @if (shift.adminCorrectionReason) {
+                        {{ 'TIMESHEETS.STATUS_CORRECTED' | i18n }}
+                      } @else {
+                        {{ 'TIMESHEETS.STATUS_' + shift.status.toUpperCase() | i18n }}
+                      }
+                    </span>
+                  </td>
+                  <td>
+                    @if (shift.locationUnavailable) {
+                      <span class="gps-badge no-gps" [title]="'TIMESHEETS.GPS_UNAVAILABLE' | i18n">
+                        <nim-icon name="cloud-offline" [size]="14" />
+                        <span>{{ 'TIMESHEETS.GPS_UNAVAILABLE' | i18n }}</span>
+                      </span>
+                    } @else {
+                      <span class="gps-badge has-gps" [title]="'TIMESHEETS.GPS_RECORDED' | i18n">
+                        <nim-icon name="target" [size]="14" />
+                        <span>{{ 'TIMESHEETS.GPS_RECORDED' | i18n }}</span>
+                      </span>
+                    }
+                  </td>
+                  <td class="actions-cell">
+                    <button
+                      type="button"
+                      class="icon-action-btn view-btn"
+                      (click)="viewDetails(shift)"
+                      [title]="'COMMON.DETAILS' | i18n"
+                    >
+                      <nim-icon name="tasks" [size]="16" />
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-action-btn edit-btn"
+                      (click)="openCorrectModal(shift)"
+                      [title]="'TIMESHEETS.DIALOG_CORRECT_TITLE' | i18n"
+                    >
+                      <nim-icon name="wrench" [size]="16" />
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+          <span class="page-info">
+            Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+          </span>
+          <div class="pagination-controls">
+            <button
+              type="button"
+              class="page-btn"
+              [disabled]="currentPage() <= 1"
+              (click)="goToPage(currentPage() - 1)"
+            >
+              Prev
+            </button>
+            <span class="current-page-num">{{ currentPage() }}</span>
+            <button
+              type="button"
+              class="page-btn"
+              [disabled]="currentPage() >= totalPages()"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Shift Details Dialog Modal -->
+  @if (isDetailsModalOpen() && selectedShift()) {
+    <div class="modal-backdrop" (click)="closeDetailsModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="timesheets" [size]="20" />
+            <h3 class="modal-title">{{ 'TIMESHEETS.DIALOG_DETAILS_TITLE' | i18n }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeDetailsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="details-grid">
+            <div class="detail-item">
+              <label>{{ 'TIMESHEETS.COL_DRIVER' | i18n }}</label>
+              <span>{{ selectedShift()?.driverName || selectedShift()?.driverId }}</span>
+            </div>
+            <div class="detail-item">
+              <label>{{ 'TIMESHEETS.COL_DATE' | i18n }}</label>
+              <span>{{ selectedShift()?.attributedDate }}</span>
+            </div>
+            <div class="detail-item">
+              <label>{{ 'TIMESHEETS.COL_CLOCK_IN' | i18n }}</label>
+              <span>{{ selectedShift()?.clockInAt | localeDate: 'medium' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>{{ 'TIMESHEETS.COL_CLOCK_OUT' | i18n }}</label>
+              <span>{{ selectedShift()?.clockOutAt ? (selectedShift()?.clockOutAt | localeDate: 'medium') : ('TIMESHEETS.STATUS_ACTIVE' | i18n) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>{{ 'TIMESHEETS.COL_BREAK' | i18n }}</label>
+              <span>{{ selectedShift()?.breakMinutes }} minutes</span>
+            </div>
+            <div class="detail-item">
+              <label>{{ 'TIMESHEETS.COL_PAYABLE' | i18n }}</label>
+              <strong>{{ selectedShift()?.payableHours | localeNumber: 1 : 2 }} hours</strong>
+            </div>
+            <div class="detail-item full-width">
+              <label>{{ 'TIMESHEETS.COL_LOCATION' | i18n }}</label>
+              @if (selectedShift()?.locationUnavailable) {
+                <span class="text-muted">{{ 'TIMESHEETS.GPS_UNAVAILABLE' | i18n }}</span>
+              } @else {
+                <span>In: ({{ selectedShift()?.clockInLat }}, {{ selectedShift()?.clockInLng }}) | Out: ({{ selectedShift()?.clockOutLat || '-' }}, {{ selectedShift()?.clockOutLng || '-' }})</span>
+              }
+            </div>
+            @if (selectedShift()?.note) {
+              <div class="detail-item full-width">
+                <label>Note</label>
+                <p class="shift-note">{{ selectedShift()?.note }}</p>
+              </div>
+            }
+            @if (selectedShift()?.adminCorrectionReason) {
+              <div class="detail-item full-width audit-box">
+                <label class="audit-title">{{ 'TIMESHEETS.CORRECTION_HISTORY' | i18n }}</label>
+                <p><strong>{{ 'TIMESHEETS.REASON_LABEL' | i18n }}:</strong> {{ selectedShift()?.adminCorrectionReason }}</p>
+                <p><small>{{ 'TIMESHEETS.CORRECTED_AT' | i18n }}: {{ selectedShift()?.correctedAt | localeDate: 'short' }}</small></p>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeDetailsModal()">
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Admin Correction Dialog Modal -->
+  @if (isCorrectModalOpen() && correctingShift()) {
+    <div class="modal-backdrop" (click)="closeCorrectModal()">
+      <div class="modal-dialog modal-form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <nim-icon name="wrench" [size]="20" />
+            <h3 class="modal-title">{{ 'TIMESHEETS.DIALOG_CORRECT_TITLE' | i18n }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeCorrectModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-desc">{{ 'TIMESHEETS.DIALOG_CORRECT_SUB' | i18n }}</p>
+
+          @if (correctionError()) {
+            <div class="alert-box alert-danger">{{ correctionError() }}</div>
+          }
+          @if (correctionSuccess()) {
+            <div class="alert-box alert-success">{{ 'TIMESHEETS.CORRECTION_SUCCESS' | i18n }}</div>
+          }
+
+          <div class="form-group">
+            <label class="form-label">{{ 'TIMESHEETS.ORIGINAL_IN' | i18n }}</label>
+            <input type="text" class="form-control readonly" readonly [value]="correctingShift()?.clockInAt | localeDate: 'medium'" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'TIMESHEETS.NEW_CLOCK_IN' | i18n }} *</label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              [(ngModel)]="correctionClockIn"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'TIMESHEETS.NEW_CLOCK_OUT' | i18n }}</label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              [(ngModel)]="correctionClockOut"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'TIMESHEETS.NEW_BREAK_MINS' | i18n }} *</label>
+            <input
+              type="number"
+              min="0"
+              class="form-control"
+              [(ngModel)]="correctionBreakMinutes"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'TIMESHEETS.REASON_LABEL' | i18n }} *</label>
+            <textarea
+              class="form-control textarea"
+              rows="3"
+              [(ngModel)]="correctionReason"
+              [placeholder]="'TIMESHEETS.REASON_PLACEHOLDER' | i18n"
+              required
+            ></textarea>
+            <small class="help-text">{{ 'TIMESHEETS.REASON_REQUIRED' | i18n }}</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-dialog btn-secondary" (click)="closeCorrectModal()" [disabled]="isSubmittingCorrection()">
+            {{ 'COMMON.CANCEL' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn-dialog btn-primary"
+            (click)="submitCorrection()"
+            [disabled]="isSubmittingCorrection() || !correctionReason.trim() || !correctionClockIn"
+          >
+            @if (isSubmittingCorrection()) {
+              <span>{{ 'TIMESHEETS.SAVING' | i18n }}</span>
+            } @else {
+              <span>{{ 'TIMESHEETS.SAVE_CORRECTION' | i18n }}</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
