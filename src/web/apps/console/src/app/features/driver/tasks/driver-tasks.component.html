@@ -7,21 +7,22 @@
       (click)="loadTasks()"
       [title]="'COMMON.REFRESH' | i18n"
     >
-      🔄
+      <nim-icon name="refresh" [size]="16" />
     </button>
   </div>
 
   <!-- Offline Cached View Banner -->
   @if (isUsingCache()) {
     <div class="cached-banner">
-      <span>💾 {{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
+      <nim-icon name="cloud-offline" [size]="14" />
+      <span>{{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
     </div>
   }
 
   <!-- Task List -->
   @if (tasks().length === 0 && !isLoading()) {
     <div class="empty-card">
-      <span class="empty-icon">📋</span>
+      <nim-icon name="tasks" [size]="36" class="empty-icon" />
       <p>{{ 'DRIVER.NO_TASKS' | i18n }}</p>
     </div>
   } @else {
@@ -53,8 +54,13 @@
           </div>
 
           <div class="card-meta">
-            <span class="meta-item">🚛 {{ task.vehiclePlate }}</span>
-            <span class="meta-item">🕒 {{ task.scheduledTime | localeDate: 'short' }}</span>
+            <span class="meta-item"
+              ><nim-icon name="truck" [size]="14" /> {{ task.vehiclePlate }}</span
+            >
+            <span class="meta-item"
+              ><nim-icon name="clock" [size]="14" />
+              {{ task.scheduledTime | localeDate: 'short' }}</span
+            >
           </div>
 
           <!-- Driver Action Touch Buttons (>= 44x44px) -->

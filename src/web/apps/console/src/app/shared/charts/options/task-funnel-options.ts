@@ -5,9 +5,9 @@ export interface TaskFunnelStageData {
   stage: 'Draft' | 'Assigned' | 'Acknowledged' | 'InProgress' | 'Completed';
   stageName: string;
   count: number;
-  conversionRate: number;     // Conversion % from previous stage (100% for first stage)
+  conversionRate: number; // Conversion % from previous stage (100% for first stage)
   overallConversionRate: number; // Conversion % from initial Draft stage
-  avgStayMinutes: number;     // Average duration spent in this state in minutes
+  avgStayMinutes: number; // Average duration spent in this state in minutes
 }
 
 export interface TaskFunnelLabels {
@@ -72,11 +72,11 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
 
   // Okabe-Ito gradient colors from Draft to Completed
   const funnelColors = [
-    OKABE_ITO_PALETTE.skyBlue,       // Draft: #56B4E9
-    OKABE_ITO_PALETTE.blue,          // Assigned: #0072B2
-    OKABE_ITO_PALETTE.orange,        // Acknowledged: #E69F00
+    OKABE_ITO_PALETTE.skyBlue, // Draft: #56B4E9
+    OKABE_ITO_PALETTE.blue, // Assigned: #0072B2
+    OKABE_ITO_PALETTE.orange, // Acknowledged: #E69F00
     OKABE_ITO_PALETTE.reddishPurple, // InProgress: #CC79A7
-    OKABE_ITO_PALETTE.bluishGreen,   // Completed: #009E73
+    OKABE_ITO_PALETTE.bluishGreen, // Completed: #009E73
   ];
 
   const seriesData = data.map((item, idx) => {
@@ -122,12 +122,12 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
           <div style="font-size:12px;margin:2px 0;">${stageCountLabel}: <strong>${stage.count}</strong></div>
           <div style="font-size:12px;margin:2px 0;">${prevConversionLabel}: <strong>${stage.conversionRate.toFixed(1)}%</strong></div>
           <div style="font-size:12px;margin:2px 0;">${overallConversionLabel}: <strong>${stage.overallConversionRate.toFixed(1)}%</strong></div>
-          <div style="font-size:12px;margin:2px 0;color:${OKABE_ITO_PALETTE.orange};">⏳ ${avgDurationLabel}: <strong>${durationStr}</strong></div>
+          <div style="font-size:12px;margin:2px 0;color:${OKABE_ITO_PALETTE.orange};">${avgDurationLabel}: <strong>${durationStr}</strong></div>
         `;
       },
     },
     legend: {
-      data: data.map(d => d.stageName),
+      data: data.map((d) => d.stageName),
       top: 6,
       textStyle: {
         color: theme.textColor,
@@ -144,7 +144,7 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
         bottom: 24,
         width: isMobile ? '90%' : '76%',
         min: 0,
-        max: Math.max(...data.map(d => d.count), 1),
+        max: Math.max(...data.map((d) => d.count), 1),
         minSize: '18%',
         maxSize: '100%',
         sort: 'none', // Keep logical workflow order (Draft -> Completed)

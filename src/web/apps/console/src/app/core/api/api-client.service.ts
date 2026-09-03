@@ -20,20 +20,31 @@ export class ApiClientService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api';
 
-  getVehicles(params?: { search?: string; status?: string; serviceDueOnly?: boolean; page?: number; pageSize?: number }): Observable<PaginatedList<VehicleDto>> {
+  getVehicles(params?: {
+    search?: string;
+    status?: string;
+    serviceDueOnly?: boolean;
+    page?: number;
+    pageSize?: number;
+  }): Observable<PaginatedList<VehicleDto>> {
     let httpParams = new HttpParams();
     if (params?.search) httpParams = httpParams.set('search', params.search);
     if (params?.status) httpParams = httpParams.set('status', params.status);
-    if (params?.serviceDueOnly !== undefined) httpParams = httpParams.set('serviceDueOnly', params.serviceDueOnly);
+    if (params?.serviceDueOnly !== undefined)
+      httpParams = httpParams.set('serviceDueOnly', params.serviceDueOnly);
     if (params?.page) httpParams = httpParams.set('page', params.page);
     if (params?.pageSize) httpParams = httpParams.set('pageSize', params.pageSize);
 
-    return this.http.get<PaginatedList<VehicleDto>>(`${this.baseUrl}/vehicles`, { params: httpParams });
+    return this.http.get<PaginatedList<VehicleDto>>(`${this.baseUrl}/vehicles`, {
+      params: httpParams,
+    });
   }
 
   getOdometerReadings(vehicleId: string, limit: number = 50): Observable<OdometerReadingDto[]> {
     const params = new HttpParams().set('limit', limit);
-    return this.http.get<OdometerReadingDto[]>(`${this.baseUrl}/vehicles/${vehicleId}/odometer`, { params });
+    return this.http.get<OdometerReadingDto[]>(`${this.baseUrl}/vehicles/${vehicleId}/odometer`, {
+      params,
+    });
   }
 
   getJobTasks(params?: {
@@ -54,7 +65,9 @@ export class ApiClientService {
     if (params?.page) httpParams = httpParams.set('page', params.page);
     if (params?.pageSize) httpParams = httpParams.set('pageSize', params.pageSize);
 
-    return this.http.get<PaginatedList<JobTaskDto>>(`${this.baseUrl}/dispatch/tasks`, { params: httpParams });
+    return this.http.get<PaginatedList<JobTaskDto>>(`${this.baseUrl}/dispatch/tasks`, {
+      params: httpParams,
+    });
   }
 
   getTimesheets(params?: {
@@ -73,7 +86,9 @@ export class ApiClientService {
     if (params?.page) httpParams = httpParams.set('page', params.page);
     if (params?.pageSize) httpParams = httpParams.set('pageSize', params.pageSize);
 
-    return this.http.get<PaginatedList<TimesheetDto>>(`${this.baseUrl}/timesheets`, { params: httpParams });
+    return this.http.get<PaginatedList<TimesheetDto>>(`${this.baseUrl}/timesheets`, {
+      params: httpParams,
+    });
   }
 
   getFines(params?: {
@@ -97,7 +112,13 @@ export class ApiClientService {
     return this.http.get<PaginatedList<FineDto>>(`${this.baseUrl}/fines`, { params: httpParams });
   }
 
-  getPayPeriods(params?: { fromDate?: string; toDate?: string; status?: string; page?: number; pageSize?: number }): Observable<PaginatedList<PayPeriodDto>> {
+  getPayPeriods(params?: {
+    fromDate?: string;
+    toDate?: string;
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }): Observable<PaginatedList<PayPeriodDto>> {
     let httpParams = new HttpParams();
     if (params?.fromDate) httpParams = httpParams.set('fromDate', params.fromDate);
     if (params?.toDate) httpParams = httpParams.set('toDate', params.toDate);
@@ -105,7 +126,9 @@ export class ApiClientService {
     if (params?.page) httpParams = httpParams.set('page', params.page);
     if (params?.pageSize) httpParams = httpParams.set('pageSize', params.pageSize);
 
-    return this.http.get<PaginatedList<PayPeriodDto>>(`${this.baseUrl}/payroll/periods`, { params: httpParams });
+    return this.http.get<PaginatedList<PayPeriodDto>>(`${this.baseUrl}/payroll/periods`, {
+      params: httpParams,
+    });
   }
 
   getPayPeriodPayslips(periodId: string): Observable<PayslipDto[]> {
@@ -117,6 +140,8 @@ export class ApiClientService {
     if (params?.page) httpParams = httpParams.set('page', params.page);
     if (params?.pageSize) httpParams = httpParams.set('pageSize', params.pageSize);
 
-    return this.http.get<PaginatedList<DriverDto>>(`${this.baseUrl}/drivers`, { params: httpParams });
+    return this.http.get<PaginatedList<DriverDto>>(`${this.baseUrl}/drivers`, {
+      params: httpParams,
+    });
   }
 }

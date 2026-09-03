@@ -29,12 +29,12 @@
     <div class="shift-actions">
       @if (currentShift().status === 'NOT_STARTED' || currentShift().status === 'COMPLETED') {
         <button type="button" class="btn-shift-action btn-clockin" (click)="clockIn()">
-          <span class="action-icon">🟢</span>
+          <span class="action-icon"><nim-icon name="play" [size]="18" /></span>
           <span>{{ 'DRIVER.CLOCK_IN' | i18n }}</span>
         </button>
       } @else {
         <button type="button" class="btn-shift-action btn-break" (click)="toggleBreak()">
-          <span class="action-icon">☕</span>
+          <span class="action-icon"><nim-icon name="coffee" [size]="18" /></span>
           <span>
             {{
               (currentShift().status === 'ON_BREAK' ? 'DRIVER.END_BREAK' : 'DRIVER.START_BREAK')
@@ -44,7 +44,7 @@
         </button>
 
         <button type="button" class="btn-shift-action btn-clockout" (click)="clockOut()">
-          <span class="action-icon">🔴</span>
+          <span class="action-icon"><nim-icon name="stop" [size]="18" /></span>
           <span>{{ 'DRIVER.CLOCK_OUT' | i18n }}</span>
         </button>
       }

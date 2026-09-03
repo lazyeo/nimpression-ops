@@ -150,11 +150,11 @@ scanHtmlFiles();
 scanTsFiles();
 
 if (hasErrors) {
-  console.error('\n❌ [i18n-scanner] FAILED: Found ' + errors.length + ' i18n violation(s):');
+  console.error('\n[i18n-scanner] FAILED: Found ' + errors.length + ' i18n violation(s):');
   errors.forEach((err, i) => console.error(`  ${i + 1}. ${err}`));
   console.error('\nBuild aborted due to i18n violations.\n');
   process.exit(1);
 } else {
-  console.log('✅ [i18n-scanner] PASSED: All translation keys are symmetrical and no hardcoded Chinese characters found.\n');
+  console.log('[i18n-scanner] PASSED: All translation keys are symmetrical and no hardcoded Chinese characters found.\n');
   process.exit(0);
 }

@@ -2,10 +2,10 @@ import { EChartsOption } from 'echarts';
 import { ChartThemeConfig, OKABE_ITO_PALETTE, LIGHT_THEME } from '../theme/chart-theme';
 
 export interface TimesheetHeatmapCell {
-  dayOfWeek: number;    // 0 = Monday, 6 = Sunday
-  hour: number;         // 0 - 23
-  totalHours: number;   // Total worked hours in this slot
-  driverCount: number;  // Number of active drivers
+  dayOfWeek: number; // 0 = Monday, 6 = Sunday
+  hour: number; // 0 - 23
+  totalHours: number; // Total worked hours in this slot
+  driverCount: number; // Number of active drivers
   isOvertimePeak: boolean; // Flagged if heavily clustered during non-standard hours
 }
 
@@ -38,7 +38,8 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
   const { data, theme = LIGHT_THEME, isMobile = false, labels = {} } = params;
 
   const noDataText = labels.noData || 'No timesheet heatmap data available';
-  const weekdaysList = labels.weekdays && labels.weekdays.length === 7 ? labels.weekdays : DEFAULT_WEEKDAYS;
+  const weekdaysList =
+    labels.weekdays && labels.weekdays.length === 7 ? labels.weekdays : DEFAULT_WEEKDAYS;
   const activeDriversLabel = labels.activeDrivers || 'Active Drivers';
   const totalHoursLabel = labels.totalHours || 'Total Hours';
   const peakOvertimeLabel = labels.peakOvertime || 'Peak Overtime Cluster';
@@ -62,10 +63,10 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
   }
 
   // Find maximum totalHours to dynamically scale the visual map
-  const maxHours = Math.max(...data.map(d => d.totalHours), 1);
+  const maxHours = Math.max(...data.map((d) => d.totalHours), 1);
 
   // ECharts heatmap data format: [hourIndex, dayIndex, totalHours, driverCount, isOvertimePeak]
-  const seriesData = data.map(d => [
+  const seriesData = data.map((d) => [
     d.hour,
     d.dayOfWeek,
     Math.round(d.totalHours * 10) / 10,
@@ -93,10 +94,10 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
         const timeRange = `${hour.toString().padStart(2, '0')}:00 - ${nextHour.toString().padStart(2, '0')}:00`;
 
         let html = `<div style="font-weight:600;margin-bottom:4px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">${weekday} ${timeRange}</div>`;
-        html += `<div style="font-size:12px;margin:2px 0;">👥 ${activeDriversLabel}: <strong>${drivers}</strong></div>`;
-        html += `<div style="font-size:12px;margin:2px 0;">⏱️ ${totalHoursLabel}: <strong>${totalHrs} h</strong></div>`;
+        html += `<div style="font-size:12px;margin:2px 0;">${activeDriversLabel}: <strong>${drivers}</strong></div>`;
+        html += `<div style="font-size:12px;margin:2px 0;">${totalHoursLabel}: <strong>${totalHrs} h</strong></div>`;
         if (isOt) {
-          html += `<div style="font-size:11px;color:${OKABE_ITO_PALETTE.vermilion};font-weight:bold;margin-top:4px;">⚠️ ${peakOvertimeLabel}</div>`;
+          html += `<div style="font-size:11px;color:${OKABE_ITO_PALETTE.vermilion};font-weight:bold;margin-top:4px;">${peakOvertimeLabel}</div>`;
         }
         return html;
       },
@@ -156,9 +157,10 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       },
       inRange: {
         // Okabe-Ito compliant continuous gradient from neutral sky-tint to Okabe-Ito Blue to Vermilion
-        color: theme.name === 'dark'
-          ? ['#1E293B', '#0284C7', '#0072B2', '#D55E00']
-          : ['#F1F5F9', '#BAE6FD', '#0072B2', '#D55E00'],
+        color:
+          theme.name === 'dark'
+            ? ['#1E293B', '#0284C7', '#0072B2', '#D55E00']
+            : ['#F1F5F9', '#BAE6FD', '#0072B2', '#D55E00'],
       },
     },
     series: [

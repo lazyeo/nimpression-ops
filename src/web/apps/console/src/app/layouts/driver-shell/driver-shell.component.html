@@ -51,7 +51,7 @@
     <div class="bottom-nav-inner">
       @for (item of bottomNavItems; track item.path) {
         <a [routerLink]="item.path" routerLinkActive="active" class="bottom-nav-link">
-          <span class="bottom-nav-icon">{{ item.icon }}</span>
+          <nim-icon [name]="item.icon" [size]="20" class="bottom-nav-icon" />
           <span class="bottom-nav-label">{{ item.labelKey | i18n }}</span>
         </a>
       }

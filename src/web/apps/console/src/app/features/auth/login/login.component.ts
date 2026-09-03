@@ -6,11 +6,12 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { SupportedLang } from '../../../core/models/i18n.models';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'nim-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, I18nPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, I18nPipe, IconComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

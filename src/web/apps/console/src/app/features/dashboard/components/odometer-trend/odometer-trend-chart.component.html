@@ -8,8 +8,14 @@
       <p class="card-subtitle">{{ 'CHARTS.ODOMETER_TREND.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-action-icon" (click)="exportPng()" [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n">
-        📷 {{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}
+      <button
+        type="button"
+        class="btn-action-icon"
+        (click)="exportPng()"
+        [title]="'CHARTS.COMMON.EXPORT_PNG_TITLE' | i18n"
+      >
+        <nim-icon name="camera" [size]="14" />
+        <span>{{ 'CHARTS.COMMON.EXPORT_PNG' | i18n }}</span>
       </button>
     </div>
   </div>

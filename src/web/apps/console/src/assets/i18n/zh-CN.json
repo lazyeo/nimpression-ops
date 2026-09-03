@@ -143,14 +143,18 @@
     "PROFILE_UPDATED": "个人资料修改成功"
   },
   "ADMIN": {
-    "DASHBOARD_TITLE": "运营综合概览",
-    "ACTIVE_DISPATCHES": "进行中运单",
-    "ONLINE_DRIVERS": "在岗司机",
-    "PENDING_INCIDENTS": "待处理事故",
-    "UNRESOLVED_FINES": "待处理罚单",
+    "DASHBOARD_TITLE": "运营数据总览",
+    "ACTIVE_DISPATCHES": "运行中调度",
+    "ONLINE_DRIVERS": "在线司机",
+    "PENDING_INCIDENTS": "待处理事件",
+    "UNRESOLVED_FINES": "未决罚单",
     "QUICK_ACTIONS": "快捷操作",
-    "RECENT_ALERTS": "预警提醒",
-    "SYSTEM_STATUS": "系统运行状态"
+    "RECENT_ALERTS": "最新预警",
+    "SYSTEM_STATUS": "系统运行状态",
+    "PLACEHOLDER_TITLE": "模块建设中",
+    "PLACEHOLDER_STATUS": "后续波次规划交付",
+    "PLACEHOLDER_DESC": "该业务模块规划在后续开发波次中交付。导航外壳与路由结构已就绪，当前为占位状态。",
+    "RETURN_DASHBOARD": "返回总览看板"
   },
   "LANG": {
     "LABEL": "语言设置",
@@ -240,7 +244,7 @@
     },
     "FINES_COMPOSITION": {
       "TITLE": "交通罚单构成与金额排行",
-      "SUBTITLE": "环形图违章原因分类占比 ↔ 右侧金额排行条形图（点击环形扇区联动筛选）",
+      "SUBTITLE": "环形图违章原因分类占比 | 右侧金额排行条形图（点击环形扇区联动筛选）",
       "FILTERED_BY": "已筛选: {category}",
       "CLEAR_FILTER": "清除筛选",
       "EXPORT_DOUGHNUT": "环形图",

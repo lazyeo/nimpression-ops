@@ -18,7 +18,7 @@
 
     @if (errorMessage()) {
       <div class="alert-error" role="alert">
-        <span class="alert-icon">⚠️</span>
+        <nim-icon name="alert-triangle" [size]="18" class="alert-icon" />
         <span class="alert-text">{{ errorMessage() }}</span>
       </div>
     }

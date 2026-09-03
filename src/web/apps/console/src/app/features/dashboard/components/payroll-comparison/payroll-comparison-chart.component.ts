@@ -5,11 +5,12 @@ import { BaseChartComponent } from '../../../../shared/charts/base-chart/base-ch
 import { ChartThemeConfig } from '../../../../shared/charts/theme/chart-theme';
 
 import { I18nPipe } from '../../../../core/i18n/i18n.pipe';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'nim-payroll-comparison-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartComponent, I18nPipe],
+  imports: [CommonModule, BaseChartComponent, I18nPipe, IconComponent],
   templateUrl: './payroll-comparison-chart.component.html',
   styleUrl: './payroll-comparison-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

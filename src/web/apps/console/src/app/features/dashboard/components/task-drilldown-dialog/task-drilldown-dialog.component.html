@@ -3,19 +3,28 @@
     <div class="dialog-card" (click)="$event.stopPropagation()">
       <div class="dialog-header">
         <div class="header-title-group">
-          <span class="header-icon">📅</span>
+          <nim-icon name="calendar" [size]="20" class="header-icon" />
           <div>
             <h3>{{ 'CHARTS.DRILLDOWN_MODAL.TITLE' | i18n: { date: date() } }}</h3>
-            <p class="subtitle">{{ 'CHARTS.DRILLDOWN_MODAL.SUBTITLE' | i18n: { count: tasks().length } }}</p>
+            <p class="subtitle">
+              {{ 'CHARTS.DRILLDOWN_MODAL.SUBTITLE' | i18n: { count: tasks().length } }}
+            </p>
           </div>
         </div>
-        <button type="button" class="btn-close" (click)="onClose()" [attr.aria-label]="'CHARTS.DRILLDOWN_MODAL.CLOSE' | i18n">✕</button>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="onClose()"
+          [attr.aria-label]="'CHARTS.DRILLDOWN_MODAL.CLOSE' | i18n"
+        >
+          ✕
+        </button>
       </div>
 
       <div class="dialog-body">
         @if (tasks().length === 0) {
           <div class="empty-state">
-            <span class="empty-icon">📭</span>
+            <nim-icon name="inbox" [size]="36" class="empty-icon" />
             <p>{{ 'CHARTS.DRILLDOWN_MODAL.NO_TASKS' | i18n }}</p>
           </div>
         } @else {
@@ -41,14 +50,20 @@
                     <td class="cell-title">{{ task.title }}</td>
                     <td class="cell-driver">
                       @if (task.driverName) {
-                        <span class="driver-tag">👤 {{ task.driverName }}</span>
+                        <span class="driver-tag">
+                          <nim-icon name="user" [size]="14" /> {{ task.driverName }}
+                        </span>
                       } @else {
-                        <span class="unassigned-text">{{ 'CHARTS.DRILLDOWN_MODAL.UNASSIGNED' | i18n }}</span>
+                        <span class="unassigned-text">{{
+                          'CHARTS.DRILLDOWN_MODAL.UNASSIGNED' | i18n
+                        }}</span>
                       }
                     </td>
                     <td class="cell-vehicle">
                       @if (task.vehicleRego) {
-                        <span class="vehicle-tag">🚗 {{ task.vehicleRego }}</span>
+                        <span class="vehicle-tag">
+                          <nim-icon name="car" [size]="14" /> {{ task.vehicleRego }}
+                        </span>
                       } @else {
                         <span class="unassigned-text">-</span>
                       }
@@ -62,7 +77,11 @@
                       {{ task.scheduledFor ? task.scheduledFor.substring(11, 16) : '-' }}
                     </td>
                     <td class="cell-distance">
-                      {{ task.actualDistanceKm || task.plannedDistanceKm ? (task.actualDistanceKm || task.plannedDistanceKm) + ' km' : '-' }}
+                      {{
+                        task.actualDistanceKm || task.plannedDistanceKm
+                          ? (task.actualDistanceKm || task.plannedDistanceKm) + ' km'
+                          : '-'
+                      }}
                     </td>
                   </tr>
                 }
@@ -73,7 +92,9 @@
       </div>
 
       <div class="dialog-footer">
-        <button type="button" class="btn-primary" (click)="onClose()">{{ 'CHARTS.DRILLDOWN_MODAL.CLOSE' | i18n }}</button>
+        <button type="button" class="btn-primary" (click)="onClose()">
+          {{ 'CHARTS.DRILLDOWN_MODAL.CLOSE' | i18n }}
+        </button>
       </div>
     </div>
   </div>

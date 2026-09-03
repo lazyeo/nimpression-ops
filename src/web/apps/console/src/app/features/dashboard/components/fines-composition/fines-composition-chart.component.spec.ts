@@ -25,7 +25,7 @@ describe('FinesCompositionChartComponent', () => {
 
   it('should create component and handle sector click for category filtering', () => {
     let selected: string | null = null;
-    component.categorySelect.subscribe(cat => {
+    component.categorySelect.subscribe((cat) => {
       selected = cat;
     });
 
@@ -38,7 +38,7 @@ describe('FinesCompositionChartComponent', () => {
     fixture.detectChanges();
 
     let selected: string | null = 'init';
-    component.categorySelect.subscribe(cat => {
+    component.categorySelect.subscribe((cat) => {
       selected = cat;
     });
 

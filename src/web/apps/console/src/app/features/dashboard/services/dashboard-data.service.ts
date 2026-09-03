@@ -205,8 +205,12 @@ export class DashboardDataService {
   readonly payrollComparisonOptions = computed(() => {
     return buildPayrollComparisonOptions({
       data: this.payrollComparison(),
-      currentPeriodLabel: this.currentPeriodLabel().startsWith('CHARTS.') ? this.i18n.t(this.currentPeriodLabel()) : this.currentPeriodLabel(),
-      previousPeriodLabel: this.previousPeriodLabel().startsWith('CHARTS.') ? this.i18n.t(this.previousPeriodLabel()) : this.previousPeriodLabel(),
+      currentPeriodLabel: this.currentPeriodLabel().startsWith('CHARTS.')
+        ? this.i18n.t(this.currentPeriodLabel())
+        : this.currentPeriodLabel(),
+      previousPeriodLabel: this.previousPeriodLabel().startsWith('CHARTS.')
+        ? this.i18n.t(this.previousPeriodLabel())
+        : this.previousPeriodLabel(),
       theme: this.theme(),
       isMobile: this.isMobile(),
       labels: {
@@ -251,29 +255,29 @@ export class DashboardDataService {
     // Fetch vehicles, tasks, timesheets, fines, pay periods concurrently
     forkJoin({
       vehiclesRes: this.api.getVehicles({ pageSize: 100 }).pipe(
-        catchError(err => {
+        catchError((err) => {
           throw new Error(`Failed to load vehicles: ${err.message || err.statusText}`);
-        })
+        }),
       ),
       tasksRes: this.api.getJobTasks({ pageSize: 1000 }).pipe(
-        catchError(err => {
+        catchError((err) => {
           throw new Error(`Failed to load tasks: ${err.message || err.statusText}`);
-        })
+        }),
       ),
       timesheetsRes: this.api.getTimesheets({ pageSize: 1000 }).pipe(
-        catchError(err => {
+        catchError((err) => {
           throw new Error(`Failed to load timesheets: ${err.message || err.statusText}`);
-        })
+        }),
       ),
       finesRes: this.api.getFines({ pageSize: 500 }).pipe(
-        catchError(err => {
+        catchError((err) => {
           throw new Error(`Failed to load fines: ${err.message || err.statusText}`);
-        })
+        }),
       ),
       periodsRes: this.api.getPayPeriods({ pageSize: 10 }).pipe(
-        catchError(err => {
+        catchError((err) => {
           throw new Error(`Failed to load pay periods: ${err.message || err.statusText}`);
-        })
+        }),
       ),
     }).subscribe({
       next: ({ vehiclesRes, tasksRes, timesheetsRes, finesRes, periodsRes }) => {
@@ -289,8 +293,12 @@ export class DashboardDataService {
 
         if (currPeriod) {
           const payslipRequests = {
-            currPayslips: this.api.getPayPeriodPayslips(currPeriod.id).pipe(catchError(() => of([]))),
-            prevPayslips: prevPeriod ? this.api.getPayPeriodPayslips(prevPeriod.id).pipe(catchError(() => of([]))) : of([]),
+            currPayslips: this.api
+              .getPayPeriodPayslips(currPeriod.id)
+              .pipe(catchError(() => of([]))),
+            prevPayslips: prevPeriod
+              ? this.api.getPayPeriodPayslips(prevPeriod.id).pipe(catchError(() => of([])))
+              : of([]),
           };
 
           forkJoin(payslipRequests).subscribe({
@@ -307,7 +315,7 @@ export class DashboardDataService {
               });
               this.loading.set(false);
             },
-            error: err => {
+            error: (err) => {
               this.error.set(err.message || 'DASHBOARD.ERRORS.LOAD_FAILED');
               this.loading.set(false);
             },
@@ -324,7 +332,7 @@ export class DashboardDataService {
           this.loading.set(false);
         }
       },
-      error: err => {
+      error: (err) => {
         this.error.set(err.message || 'DASHBOARD.ERRORS.NETWORK_FAILED');
         this.loading.set(false);
       },
@@ -339,7 +347,16 @@ export class DashboardDataService {
       performance.mark('dashboard-render-start');
     }
 
-    const { vehicles, tasks, timesheets, fines, currentPayslips, previousPayslips, currentPeriod, previousPeriod } = payload;
+    const {
+      vehicles,
+      tasks,
+      timesheets,
+      fines,
+      currentPayslips,
+      previousPayslips,
+      currentPeriod,
+      previousPeriod,
+    } = payload;
 
     // 1. Fleet Utilization (F14.1) — Last 30 days
     const { fleetData, taskDateMap } = this.aggregateFleetUtilization(vehicles, tasks);
@@ -393,14 +410,14 @@ export class DashboardDataService {
 
   aggregateFleetUtilization(
     vehicles: VehicleDto[],
-    tasks: JobTaskDto[]
+    tasks: JobTaskDto[],
   ): { fleetData: FleetUtilizationItem[]; taskDateMap: Map<string, JobTaskDto[]> } {
     const taskDateMap = new Map<string, JobTaskDto[]>();
     const totalVehiclesCount = vehicles.length || 11;
-    const maintenanceVehiclesCount = vehicles.filter(v => v.status === 'UnderMaintenance').length;
+    const maintenanceVehiclesCount = vehicles.filter((v) => v.status === 'UnderMaintenance').length;
 
     // Index tasks by date YYYY-MM-DD
-    tasks.forEach(t => {
+    tasks.forEach((t) => {
       const dateStr = (t.scheduledFor || t.createdAt || '').substring(0, 10);
       if (dateStr) {
         if (!taskDateMap.has(dateStr)) {
@@ -419,9 +436,12 @@ export class DashboardDataService {
       const dateStr = d.toISOString().substring(0, 10);
 
       const dayTasks = taskDateMap.get(dateStr) || [];
-      const activeVehicleIds = new Set(dayTasks.map(t => t.vehicleId).filter(Boolean));
-      
-      const inTransit = Math.min(activeVehicleIds.size, totalVehiclesCount - maintenanceVehiclesCount);
+      const activeVehicleIds = new Set(dayTasks.map((t) => t.vehicleId).filter(Boolean));
+
+      const inTransit = Math.min(
+        activeVehicleIds.size,
+        totalVehiclesCount - maintenanceVehiclesCount,
+      );
       const idle = Math.max(0, totalVehiclesCount - maintenanceVehiclesCount - inTransit);
       const maintenance = maintenanceVehiclesCount;
 
@@ -442,13 +462,15 @@ export class DashboardDataService {
     // 7 weekdays (0 = Mon, 6 = Sun) x 24 hours
     const grid: Array<{ totalMins: number; driverSet: Set<string> }> = Array.from(
       { length: 7 * 24 },
-      () => ({ totalMins: 0, driverSet: new Set<string>() })
+      () => ({ totalMins: 0, driverSet: new Set<string>() }),
     );
 
-    timesheets.forEach(ts => {
+    timesheets.forEach((ts) => {
       if (!ts.clockInAt) return;
       const inDate = new Date(ts.clockInAt);
-      const outDate = ts.clockOutAt ? new Date(ts.clockOutAt) : new Date(inDate.getTime() + (ts.netWorkMinutes || 480) * 60000);
+      const outDate = ts.clockOutAt
+        ? new Date(ts.clockOutAt)
+        : new Date(inDate.getTime() + (ts.netWorkMinutes || 480) * 60000);
 
       // Map JS getDay() (0=Sun, 1=Mon, ..., 6=Sat) to (0=Mon, 1=Tue, ..., 6=Sun)
       const jsDay = inDate.getDay();
@@ -477,7 +499,7 @@ export class DashboardDataService {
         const item = grid[cellIdx];
         const totalHours = Math.round((item.totalMins / 60) * 10) / 10;
         const driverCount = item.driverSet.size;
-        
+
         // Overtime peak: Outside standard 8:00 - 17:00 or weekends with >= 3 drivers
         const isOutsideHours = hour < 8 || hour >= 18 || day >= 5;
         const isOvertimePeak = isOutsideHours && (driverCount >= 2 || totalHours >= 4);
@@ -497,20 +519,21 @@ export class DashboardDataService {
 
   aggregateOdometerTrends(
     vehicles: VehicleDto[],
-    readingsMap?: Record<string, OdometerReadingDto[]>
+    readingsMap?: Record<string, OdometerReadingDto[]>,
   ): VehicleOdometerSeriesData[] {
-    return vehicles.map(v => {
-      const readings = readingsMap && readingsMap[v.id]
-        ? readingsMap[v.id].map(r => ({
-            date: r.recordedAt.substring(0, 10),
-            odometerKm: r.readingKm,
-          }))
-        : [
-            { date: '2026-08-01', odometerKm: Math.max(0, v.odometerKm - 2400) },
-            { date: '2026-08-10', odometerKm: Math.max(0, v.odometerKm - 1600) },
-            { date: '2026-08-20', odometerKm: Math.max(0, v.odometerKm - 750) },
-            { date: '2026-08-30', odometerKm: v.odometerKm },
-          ];
+    return vehicles.map((v) => {
+      const readings =
+        readingsMap && readingsMap[v.id]
+          ? readingsMap[v.id].map((r) => ({
+              date: r.recordedAt.substring(0, 10),
+              odometerKm: r.readingKm,
+            }))
+          : [
+              { date: '2026-08-01', odometerKm: Math.max(0, v.odometerKm - 2400) },
+              { date: '2026-08-10', odometerKm: Math.max(0, v.odometerKm - 1600) },
+              { date: '2026-08-20', odometerKm: Math.max(0, v.odometerKm - 750) },
+              { date: '2026-08-30', odometerKm: v.odometerKm },
+            ];
 
       const lastService = v.lastServiceOdometerKm || 0;
       const interval = v.serviceIntervalKm || 10000;
@@ -529,11 +552,14 @@ export class DashboardDataService {
     });
   }
 
-  aggregateFines(fines: FineDto[]): { categories: FineCategoryStat[]; rankings: FineRankingItem[] } {
+  aggregateFines(fines: FineDto[]): {
+    categories: FineCategoryStat[];
+    rankings: FineRankingItem[];
+  } {
     const catMap = new Map<string, { count: number; totalAmount: number }>();
     const totalAllAmount = fines.reduce((sum, f) => sum + f.amount, 0);
 
-    fines.forEach(f => {
+    fines.forEach((f) => {
       const cat = f.reason || 'Other';
       const existing = catMap.get(cat) || { count: 0, totalAmount: 0 };
       catMap.set(cat, {
@@ -549,7 +575,7 @@ export class DashboardDataService {
       percentage: totalAllAmount > 0 ? (stat.totalAmount / totalAllAmount) * 100 : 0,
     }));
 
-    const rankings: FineRankingItem[] = fines.map(f => ({
+    const rankings: FineRankingItem[] = fines.map((f) => ({
       id: f.id,
       reference: f.reference,
       category: f.reason || 'Other',
@@ -564,12 +590,14 @@ export class DashboardDataService {
 
   aggregateTaskFunnel(tasks: JobTaskDto[]): TaskFunnelStageData[] {
     const totalCreated = tasks.length || 100;
-    
+
     // Status counts
-    const assignedTasks = tasks.filter(t => t.status !== 'Draft');
-    const ackedTasks = tasks.filter(t => ['Acknowledged', 'InProgress', 'Completed'].includes(t.status));
-    const inProgressTasks = tasks.filter(t => ['InProgress', 'Completed'].includes(t.status));
-    const completedTasks = tasks.filter(t => t.status === 'Completed');
+    const assignedTasks = tasks.filter((t) => t.status !== 'Draft');
+    const ackedTasks = tasks.filter((t) =>
+      ['Acknowledged', 'InProgress', 'Completed'].includes(t.status),
+    );
+    const inProgressTasks = tasks.filter((t) => ['InProgress', 'Completed'].includes(t.status));
+    const completedTasks = tasks.filter((t) => t.status === 'Completed');
 
     const counts = {
       Draft: totalCreated,
@@ -608,7 +636,8 @@ export class DashboardDataService {
         stage: 'InProgress',
         stageName: this.i18n.t('CHARTS.TASK_FUNNEL.STAGES.IN_PROGRESS'),
         count: counts.InProgress,
-        conversionRate: counts.Acknowledged > 0 ? (counts.InProgress / counts.Acknowledged) * 100 : 0,
+        conversionRate:
+          counts.Acknowledged > 0 ? (counts.InProgress / counts.Acknowledged) * 100 : 0,
         overallConversionRate: counts.Draft > 0 ? (counts.InProgress / counts.Draft) * 100 : 0,
         avgStayMinutes: 120,
       },
@@ -627,16 +656,16 @@ export class DashboardDataService {
 
   aggregatePayroll(current: PayslipDto[], previous: PayslipDto[]): DriverPayrollComparisonItem[] {
     const prevMap = new Map<string, PayslipDto>();
-    previous.forEach(p => prevMap.set(p.driverId, p));
+    previous.forEach((p) => prevMap.set(p.driverId, p));
 
     const driverIdSet = new Set<string>();
-    current.forEach(p => driverIdSet.add(p.driverId));
-    previous.forEach(p => driverIdSet.add(p.driverId));
+    current.forEach((p) => driverIdSet.add(p.driverId));
+    previous.forEach((p) => driverIdSet.add(p.driverId));
 
     const result: DriverPayrollComparisonItem[] = [];
 
-    driverIdSet.forEach(driverId => {
-      const cur = current.find(p => p.driverId === driverId);
+    driverIdSet.forEach((driverId) => {
+      const cur = current.find((p) => p.driverId === driverId);
       const prev = prevMap.get(driverId);
 
       const driverName = cur?.driverName || prev?.driverName || 'Driver';
@@ -647,8 +676,21 @@ export class DashboardDataService {
       const curHolHours = cur?.holidayHours || 0;
       const curGross = cur?.grossPay || 0;
 
-      const curRegPay = curGross > 0 ? Math.round(curGross * (curRegHours / Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2))) : 0;
-      const curOtPay = curGross > 0 ? Math.round(curGross * ((curOtHours * 1.5) / Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2))) : 0;
+      const curRegPay =
+        curGross > 0
+          ? Math.round(
+              curGross *
+                (curRegHours / Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2)),
+            )
+          : 0;
+      const curOtPay =
+        curGross > 0
+          ? Math.round(
+              curGross *
+                ((curOtHours * 1.5) /
+                  Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2)),
+            )
+          : 0;
       const curHolPay = Math.max(0, curGross - curRegPay - curOtPay);
 
       const prevRegHours = prev?.regularHours || 0;
@@ -656,8 +698,21 @@ export class DashboardDataService {
       const prevHolHours = prev?.holidayHours || 0;
       const prevGross = prev?.grossPay || 0;
 
-      const prevRegPay = prevGross > 0 ? Math.round(prevGross * (prevRegHours / Math.max(1, prevRegHours + prevOtHours * 1.5 + prevHolHours * 2))) : 0;
-      const prevOtPay = prevGross > 0 ? Math.round(prevGross * ((prevOtHours * 1.5) / Math.max(1, prevRegHours + prevOtHours * 1.5 + prevHolHours * 2))) : 0;
+      const prevRegPay =
+        prevGross > 0
+          ? Math.round(
+              prevGross *
+                (prevRegHours / Math.max(1, prevRegHours + prevOtHours * 1.5 + prevHolHours * 2)),
+            )
+          : 0;
+      const prevOtPay =
+        prevGross > 0
+          ? Math.round(
+              prevGross *
+                ((prevOtHours * 1.5) /
+                  Math.max(1, prevRegHours + prevOtHours * 1.5 + prevHolHours * 2)),
+            )
+          : 0;
       const prevHolPay = Math.max(0, prevGross - prevRegPay - prevOtPay);
 
       result.push({

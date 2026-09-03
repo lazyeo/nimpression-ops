@@ -56,14 +56,21 @@ describe('ChartTheme and WCAG AA Accessibility Contrast Verification', () => {
     it('should verify primary text vs card background exceeds 4.5:1', () => {
       const ratio = calculateContrastRatio(LIGHT_THEME.textColor, LIGHT_THEME.cardBackgroundColor);
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect(passesWcagAANormalText(LIGHT_THEME.textColor, LIGHT_THEME.cardBackgroundColor)).toBe(true);
+      expect(passesWcagAANormalText(LIGHT_THEME.textColor, LIGHT_THEME.cardBackgroundColor)).toBe(
+        true,
+      );
     });
 
     it('should verify secondary text vs background exceeds 4.5:1', () => {
-      const ratio = calculateContrastRatio(LIGHT_THEME.textSecondaryColor, LIGHT_THEME.backgroundColor);
+      const ratio = calculateContrastRatio(
+        LIGHT_THEME.textSecondaryColor,
+        LIGHT_THEME.backgroundColor,
+      );
       // Slate 700 (#334155) on #FFFFFF
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect(passesWcagAANormalText(LIGHT_THEME.textSecondaryColor, LIGHT_THEME.backgroundColor)).toBe(true);
+      expect(
+        passesWcagAANormalText(LIGHT_THEME.textSecondaryColor, LIGHT_THEME.backgroundColor),
+      ).toBe(true);
       expect(ratio).toBeGreaterThan(8); // Measured: ~8.5:1
     });
 
@@ -71,7 +78,9 @@ describe('ChartTheme and WCAG AA Accessibility Contrast Verification', () => {
       const ratio = calculateContrastRatio(LIGHT_THEME.textMutedColor, LIGHT_THEME.backgroundColor);
       // Slate 500 (#64748B) on #FFFFFF
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect(passesWcagAANormalText(LIGHT_THEME.textMutedColor, LIGHT_THEME.backgroundColor)).toBe(true);
+      expect(passesWcagAANormalText(LIGHT_THEME.textMutedColor, LIGHT_THEME.backgroundColor)).toBe(
+        true,
+      );
     });
 
     it('should verify tooltip text vs tooltip background exceeds 4.5:1', () => {
@@ -95,15 +104,22 @@ describe('ChartTheme and WCAG AA Accessibility Contrast Verification', () => {
       const ratio = calculateContrastRatio(DARK_THEME.textColor, DARK_THEME.cardBackgroundColor);
       // Slate 50 (#F8FAFC) on Slate 800 (#1E293B)
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect(passesWcagAANormalText(DARK_THEME.textColor, DARK_THEME.cardBackgroundColor)).toBe(true);
+      expect(passesWcagAANormalText(DARK_THEME.textColor, DARK_THEME.cardBackgroundColor)).toBe(
+        true,
+      );
       expect(ratio).toBeGreaterThan(11);
     });
 
     it('should verify secondary text vs dark background exceeds 4.5:1', () => {
-      const ratio = calculateContrastRatio(DARK_THEME.textSecondaryColor, DARK_THEME.backgroundColor);
+      const ratio = calculateContrastRatio(
+        DARK_THEME.textSecondaryColor,
+        DARK_THEME.backgroundColor,
+      );
       // Slate 300 (#CBD5E1) on Slate 900 (#0F172A)
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect(passesWcagAANormalText(DARK_THEME.textSecondaryColor, DARK_THEME.backgroundColor)).toBe(true);
+      expect(
+        passesWcagAANormalText(DARK_THEME.textSecondaryColor, DARK_THEME.backgroundColor),
+      ).toBe(true);
       expect(ratio).toBeGreaterThan(10); // Measured: ~11.1:1
     });
 
@@ -111,7 +127,9 @@ describe('ChartTheme and WCAG AA Accessibility Contrast Verification', () => {
       const ratio = calculateContrastRatio(DARK_THEME.textMutedColor, DARK_THEME.backgroundColor);
       // Slate 400 (#94A3B8) on Slate 900 (#0F172A)
       expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect(passesWcagAANormalText(DARK_THEME.textMutedColor, DARK_THEME.backgroundColor)).toBe(true);
+      expect(passesWcagAANormalText(DARK_THEME.textMutedColor, DARK_THEME.backgroundColor)).toBe(
+        true,
+      );
       expect(ratio).toBeGreaterThan(6); // Measured: ~6.3:1
     });
 
@@ -126,13 +144,13 @@ describe('ChartTheme and WCAG AA Accessibility Contrast Verification', () => {
     it('should verify all 8 Okabe-Ito standard colors exist and are valid hex colors', () => {
       const colors = Object.values(OKABE_ITO_PALETTE);
       expect(colors).toHaveLength(8);
-      colors.forEach(color => {
+      colors.forEach((color) => {
         expect(() => hexToRgb(color)).not.toThrow();
       });
     });
 
     it('should verify every series color in CHART_PALETTE has sufficient graphical contrast or text readability', () => {
-      CHART_PALETTE.forEach(color => {
+      CHART_PALETTE.forEach((color) => {
         const textColor = getContrastingTextColor(color);
         const contrastOnColor = calculateContrastRatio(textColor, color);
         // Labels inside chart bars/donuts must be readable with contrast >= 4.5:1
@@ -149,7 +167,10 @@ describe('ChartTheme and WCAG AA Accessibility Contrast Verification', () => {
       Object.entries(SEMANTIC_COLORS).forEach(([key, color]) => {
         const textChoice = getContrastingTextColor(color);
         const contrast = calculateContrastRatio(textChoice, color);
-        expect(contrast, `Semantic color "${key}" (${color}) must support high-contrast text >= 4.5:1`).toBeGreaterThanOrEqual(4.5);
+        expect(
+          contrast,
+          `Semantic color "${key}" (${color}) must support high-contrast text >= 4.5:1`,
+        ).toBeGreaterThanOrEqual(4.5);
       });
     });
   });

@@ -1,7 +1,7 @@
 <div class="dashboard-page">
   <div class="metrics-grid">
     <div class="metric-card">
-      <div class="metric-icon icon-dispatch">🚚</div>
+      <div class="metric-icon icon-dispatch"><nim-icon name="dispatch" [size]="24" /></div>
       <div class="metric-info">
         <span class="metric-label">{{ 'ADMIN.ACTIVE_DISPATCHES' | i18n }}</span>
         <strong class="metric-val">{{ metrics().activeDispatches | localeNumber }}</strong>
@@ -9,7 +9,7 @@
     </div>
 
     <div class="metric-card">
-      <div class="metric-icon icon-drivers">👥</div>
+      <div class="metric-icon icon-drivers"><nim-icon name="drivers" [size]="24" /></div>
       <div class="metric-info">
         <span class="metric-label">{{ 'ADMIN.ONLINE_DRIVERS' | i18n }}</span>
         <strong class="metric-val">{{ metrics().onlineDrivers | localeNumber }}</strong>
@@ -17,7 +17,7 @@
     </div>
 
     <div class="metric-card">
-      <div class="metric-icon icon-incidents">🚨</div>
+      <div class="metric-icon icon-incidents"><nim-icon name="incidents" [size]="24" /></div>
       <div class="metric-info">
         <span class="metric-label">{{ 'ADMIN.PENDING_INCIDENTS' | i18n }}</span>
         <strong class="metric-val">{{ metrics().pendingIncidents | localeNumber }}</strong>
@@ -25,7 +25,7 @@
     </div>
 
     <div class="metric-card">
-      <div class="metric-icon icon-fines">📄</div>
+      <div class="metric-icon icon-fines"><nim-icon name="fines" [size]="24" /></div>
       <div class="metric-info">
         <span class="metric-label">{{ 'ADMIN.UNRESOLVED_FINES' | i18n }}</span>
         <strong class="metric-val">{{ metrics().unresolvedFines | localeNumber }}</strong>

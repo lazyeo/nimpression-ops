@@ -39,8 +39,8 @@ export interface PayrollComparisonLabels {
 
 export interface PayrollComparisonOptionsParams {
   data: DriverPayrollComparisonItem[];
-  currentPeriodLabel?: string;   // e.g. '2026-08-11 ~ 08-24'
-  previousPeriodLabel?: string;  // e.g. '2026-07-28 ~ 08-10'
+  currentPeriodLabel?: string; // e.g. '2026-08-11 ~ 08-24'
+  previousPeriodLabel?: string; // e.g. '2026-07-28 ~ 08-10'
   theme?: ChartThemeConfig;
   isMobile?: boolean;
   labels?: PayrollComparisonLabels;
@@ -49,7 +49,9 @@ export interface PayrollComparisonOptionsParams {
 /**
  * Pure function to construct ECharts options for F14.6 Payroll Comparison (Grouped Stacked Bar).
  */
-export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsParams): EChartsOption {
+export function buildPayrollComparisonOptions(
+  params: PayrollComparisonOptionsParams,
+): EChartsOption {
   const {
     data,
     currentPeriodLabel,
@@ -90,26 +92,26 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
     };
   }
 
-  const driverNames = data.map(d => `${d.driverName}`);
+  const driverNames = data.map((d) => `${d.driverName}`);
 
   // Series data arrays
-  const currRegular = data.map(d => d.currentPeriod.regularPay);
-  const currOvertime = data.map(d => d.currentPeriod.overtimePay);
-  const currHoliday = data.map(d => d.currentPeriod.holidayPay);
+  const currRegular = data.map((d) => d.currentPeriod.regularPay);
+  const currOvertime = data.map((d) => d.currentPeriod.overtimePay);
+  const currHoliday = data.map((d) => d.currentPeriod.holidayPay);
 
-  const prevRegular = data.map(d => d.previousPeriod.regularPay);
-  const prevOvertime = data.map(d => d.previousPeriod.overtimePay);
-  const prevHoliday = data.map(d => d.previousPeriod.holidayPay);
+  const prevRegular = data.map((d) => d.previousPeriod.regularPay);
+  const prevOvertime = data.map((d) => d.previousPeriod.overtimePay);
+  const prevHoliday = data.map((d) => d.previousPeriod.holidayPay);
 
   // Distinct Okabe-Ito colors:
   const colors = {
-    currRegular: OKABE_ITO_PALETTE.blue,          // #0072B2
-    currOvertime: OKABE_ITO_PALETTE.orange,       // #E69F00
-    currHoliday: OKABE_ITO_PALETTE.bluishGreen,   // #009E73
+    currRegular: OKABE_ITO_PALETTE.blue, // #0072B2
+    currOvertime: OKABE_ITO_PALETTE.orange, // #E69F00
+    currHoliday: OKABE_ITO_PALETTE.bluishGreen, // #009E73
 
-    prevRegular: '#6BAED6',                       // Lightened Blue / Sky tint
-    prevOvertime: '#FDAE6B',                      // Lightened Orange
-    prevHoliday: '#74C476',                       // Lightened Green
+    prevRegular: '#6BAED6', // Lightened Blue / Sky tint
+    prevOvertime: '#FDAE6B', // Lightened Orange
+    prevHoliday: '#74C476', // Lightened Green
   };
 
   const option: EChartsOption = {
@@ -143,14 +145,14 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
           </div>
           
           <div style="margin-bottom:6px;">
-            <div style="font-weight:600;color:${OKABE_ITO_PALETTE.skyBlue};">📅 ${currLabel} ($${currTotal.toLocaleString()})</div>
+            <div style="font-weight:600;color:${OKABE_ITO_PALETTE.skyBlue};">${currLabel} ($${currTotal.toLocaleString()})</div>
             <div style="font-size:12px;padding-left:8px;">• ${regularPayLabel}: $${item.currentPeriod.regularPay.toLocaleString()} (${item.currentPeriod.regularHours}h)</div>
             <div style="font-size:12px;padding-left:8px;">• ${overtimePayLabel}: $${item.currentPeriod.overtimePay.toLocaleString()} (${item.currentPeriod.overtimeHours}h)</div>
             <div style="font-size:12px;padding-left:8px;">• ${holidayPayLabel}: $${item.currentPeriod.holidayPay.toLocaleString()} (${item.currentPeriod.holidayHours}h)</div>
           </div>
 
           <div style="margin-bottom:6px;">
-            <div style="font-weight:600;color:${theme.textSecondaryColor};">📅 ${prevLabel} ($${prevTotal.toLocaleString()})</div>
+            <div style="font-weight:600;color:${theme.textSecondaryColor};">${prevLabel} ($${prevTotal.toLocaleString()})</div>
             <div style="font-size:12px;padding-left:8px;">• ${regularPayLabel}: $${item.previousPeriod.regularPay.toLocaleString()} (${item.previousPeriod.regularHours}h)</div>
             <div style="font-size:12px;padding-left:8px;">• ${overtimePayLabel}: $${item.previousPeriod.overtimePay.toLocaleString()} (${item.previousPeriod.overtimeHours}h)</div>
             <div style="font-size:12px;padding-left:8px;">• ${holidayPayLabel}: $${item.previousPeriod.holidayPay.toLocaleString()} (${item.previousPeriod.holidayHours}h)</div>
@@ -164,8 +166,12 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
     },
     legend: {
       data: [
-        currRegularName, currOvertimeName, currHolidayName,
-        prevRegularName, prevOvertimeName, prevHolidayName,
+        currRegularName,
+        currOvertimeName,
+        currHolidayName,
+        prevRegularName,
+        prevOvertimeName,
+        prevHolidayName,
       ],
       top: 6,
       textStyle: {
@@ -195,7 +201,7 @@ export function buildPayrollComparisonOptions(params: PayrollComparisonOptionsPa
         color: theme.textSecondaryColor,
         fontSize: isMobile ? 10 : 12,
         interval: 0,
-        rotate: isMobile ? 45 : (driverNames.length > 8 ? 30 : 0),
+        rotate: isMobile ? 45 : driverNames.length > 8 ? 30 : 0,
       },
     },
     yAxis: {

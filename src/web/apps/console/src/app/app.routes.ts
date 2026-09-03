@@ -7,8 +7,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [loginGuard],
-    children: [],
+    redirectTo: 'auth/login',
   },
   {
     path: 'auth',
@@ -45,79 +44,90 @@ export const routes: Routes = [
       },
       {
         path: 'dispatch',
+        data: { labelKey: 'NAV.DISPATCH', icon: 'dispatch' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'drivers',
+        data: { labelKey: 'NAV.DRIVERS', icon: 'drivers' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'vehicles',
+        data: { labelKey: 'NAV.VEHICLES', icon: 'vehicles' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'areas',
+        data: { labelKey: 'NAV.AREAS', icon: 'areas' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'timesheets',
+        data: { labelKey: 'NAV.TIMESHEETS', icon: 'timesheets' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'payroll',
+        data: { labelKey: 'NAV.PAYROLL', icon: 'payroll' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'incidents',
+        data: { labelKey: 'NAV.INCIDENTS', icon: 'incidents' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'fines',
+        data: { labelKey: 'NAV.FINES', icon: 'fines' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'news',
+        data: { labelKey: 'NAV.NEWS', icon: 'news' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'notifications',
+        data: { labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
       {
         path: 'audit',
+        data: { labelKey: 'NAV.AUDIT', icon: 'audit' },
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
-            (m) => m.AdminDashboardComponent,
+          import('./features/admin/placeholder/placeholder.component').then(
+            (m) => m.PlaceholderComponent,
           ),
       },
     ],

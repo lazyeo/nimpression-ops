@@ -6,6 +6,7 @@ import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { OfflineCacheService } from '../../../core/offline/offline-cache.service';
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface ShiftStatusDto {
   id?: string;
@@ -17,7 +18,7 @@ export interface ShiftStatusDto {
 @Component({
   selector: 'nim-driver-shifts',
   standalone: true,
-  imports: [CommonModule, I18nPipe, LocaleDatePipe, LocaleNumberPipe],
+  imports: [CommonModule, I18nPipe, LocaleDatePipe, LocaleNumberPipe, IconComponent],
   templateUrl: './driver-shifts.component.html',
   styleUrl: './driver-shifts.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -4,22 +4,44 @@ import { LIGHT_THEME, DARK_THEME, SEMANTIC_COLORS } from '../theme/chart-theme';
 
 describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
   const mockData: FleetUtilizationItem[] = [
-    { date: '2026-08-01', inTransit: 7, idle: 3, maintenance: 1, totalVehicles: 11, tasksCount: 14 },
-    { date: '2026-08-02', inTransit: 8, idle: 2, maintenance: 1, totalVehicles: 11, tasksCount: 16 },
+    {
+      date: '2026-08-01',
+      inTransit: 7,
+      idle: 3,
+      maintenance: 1,
+      totalVehicles: 11,
+      tasksCount: 14,
+    },
+    {
+      date: '2026-08-02',
+      inTransit: 8,
+      idle: 2,
+      maintenance: 1,
+      totalVehicles: 11,
+      tasksCount: 16,
+    },
     { date: '2026-08-03', inTransit: 5, idle: 4, maintenance: 2, totalVehicles: 11, tasksCount: 9 },
   ];
 
   it('should return empty state title when data is empty', () => {
     const option = buildFleetUtilizationOptions({ data: [] });
     expect(option.title).toBeDefined();
-    expect((option.title as { text: string }).text).toContain('No fleet utilization data available');
+    expect((option.title as { text: string }).text).toContain(
+      'No fleet utilization data available',
+    );
   });
 
   it('should generate 3 stacked bar series with Okabe-Ito semantic colors', () => {
     const option = buildFleetUtilizationOptions({ data: mockData, theme: LIGHT_THEME });
     expect(option.series).toHaveLength(3);
-    const series = option.series as Array<{ name: string; type: string; stack: string; data: number[]; itemStyle?: { color: string } }>;
-    
+    const series = option.series as Array<{
+      name: string;
+      type: string;
+      stack: string;
+      data: number[];
+      itemStyle?: { color: string };
+    }>;
+
     expect(series[0].name).toBe('In Transit');
     expect(series[0].stack).toBe('vehicles');
     expect(series[0].data).toEqual([7, 8, 5]);
@@ -75,7 +97,13 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
     const formatted = tooltip.formatter([
       { name: '2026-08-01', seriesName: 'In Transit', value: 7, color: '#0072B2', dataIndex: 0 },
       { name: '2026-08-01', seriesName: 'Idle', value: 3, color: '#56B4E9', dataIndex: 0 },
-      { name: '2026-08-01', seriesName: 'Under Maintenance', value: 1, color: '#D55E00', dataIndex: 0 },
+      {
+        name: '2026-08-01',
+        seriesName: 'Under Maintenance',
+        value: 1,
+        color: '#D55E00',
+        dataIndex: 0,
+      },
     ]);
     expect(formatted).toContain('2026-08-01 Fleet Status');
     expect(formatted).toContain('Tasks: <strong>14</strong>');

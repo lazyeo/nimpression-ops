@@ -15,10 +15,42 @@ describe('FinesCompositionOptions Pure Function (F14.4)', () => {
   ];
 
   const mockRanking: FineRankingItem[] = [
-    { id: 'f1', reference: 'F-101', category: 'Speeding', vehicleRego: 'ABC123', driverName: 'John', amount: 350, issuedOn: '2026-08-10' },
-    { id: 'f2', reference: 'F-102', category: 'Red Light', vehicleRego: 'XYZ789', driverName: 'Alice', amount: 400, issuedOn: '2026-08-12' },
-    { id: 'f3', reference: 'F-103', category: 'Speeding', vehicleRego: 'ABC123', driverName: 'John', amount: 600, issuedOn: '2026-08-15' },
-    { id: 'f4', reference: 'F-104', category: 'Parking', vehicleRego: 'DEF456', driverName: 'Bob', amount: 150, issuedOn: '2026-08-18' },
+    {
+      id: 'f1',
+      reference: 'F-101',
+      category: 'Speeding',
+      vehicleRego: 'ABC123',
+      driverName: 'John',
+      amount: 350,
+      issuedOn: '2026-08-10',
+    },
+    {
+      id: 'f2',
+      reference: 'F-102',
+      category: 'Red Light',
+      vehicleRego: 'XYZ789',
+      driverName: 'Alice',
+      amount: 400,
+      issuedOn: '2026-08-12',
+    },
+    {
+      id: 'f3',
+      reference: 'F-103',
+      category: 'Speeding',
+      vehicleRego: 'ABC123',
+      driverName: 'John',
+      amount: 600,
+      issuedOn: '2026-08-15',
+    },
+    {
+      id: 'f4',
+      reference: 'F-104',
+      category: 'Parking',
+      vehicleRego: 'DEF456',
+      driverName: 'Bob',
+      amount: 150,
+      issuedOn: '2026-08-18',
+    },
   ];
 
   describe('Doughnut Chart Options', () => {
@@ -38,10 +70,12 @@ describe('FinesCompositionOptions Pure Function (F14.4)', () => {
 
     it('should highlight selected category with thicker border', () => {
       const opt = buildFineDoughnutOptions({ data: mockCategories, selectedCategory: 'Speeding' });
-      const series = (opt.series as Array<{ data: Array<{ name: string; itemStyle: { borderWidth: number } }> }>)[0];
+      const series = (
+        opt.series as Array<{ data: Array<{ name: string; itemStyle: { borderWidth: number } }> }>
+      )[0];
 
-      const speeding = series.data.find(d => d.name === 'Speeding');
-      const parking = series.data.find(d => d.name === 'Parking');
+      const speeding = series.data.find((d) => d.name === 'Speeding');
+      const parking = series.data.find((d) => d.name === 'Parking');
 
       expect(speeding?.itemStyle.borderWidth).toBe(3);
       expect(parking?.itemStyle.borderWidth).toBe(1.5);
@@ -51,7 +85,10 @@ describe('FinesCompositionOptions Pure Function (F14.4)', () => {
   describe('Linked Ranking Bar Chart Options', () => {
     it('should filter ranking items when selectedCategory is provided', () => {
       const allOpt = buildFineRankingBarOptions({ data: mockRanking });
-      const filteredOpt = buildFineRankingBarOptions({ data: mockRanking, selectedCategory: 'Speeding' });
+      const filteredOpt = buildFineRankingBarOptions({
+        data: mockRanking,
+        selectedCategory: 'Speeding',
+      });
 
       const allSeries = (allOpt.series as Array<{ data: number[] }>)[0];
       const filteredSeries = (filteredOpt.series as Array<{ data: number[] }>)[0];

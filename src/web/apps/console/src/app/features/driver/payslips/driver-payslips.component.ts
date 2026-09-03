@@ -7,6 +7,7 @@ import { LocaleCurrencyPipe } from '../../../core/i18n/locale-currency.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { OfflineCacheService } from '../../../core/offline/offline-cache.service';
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface DriverPayslipItem {
   id: string;
@@ -23,7 +24,14 @@ export interface DriverPayslipItem {
 @Component({
   selector: 'nim-driver-payslips',
   standalone: true,
-  imports: [CommonModule, I18nPipe, LocaleDatePipe, LocaleCurrencyPipe, LocaleNumberPipe],
+  imports: [
+    CommonModule,
+    I18nPipe,
+    LocaleDatePipe,
+    LocaleCurrencyPipe,
+    LocaleNumberPipe,
+    IconComponent,
+  ],
   templateUrl: './driver-payslips.component.html',
   styleUrl: './driver-payslips.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

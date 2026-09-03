@@ -101,9 +101,9 @@ tasks:
       - dotnet build {{.SLN}} --nologo
 
   build:web:
-    desc: 构建 Angular 应用
+    desc: 构建 Angular 应用（含 i18n 与 emoji 扫描守卫）
     cmds:
-      - "{{.PNPM}} -F {{.WEB_APP}} exec ng build"
+      - "{{.PNPM}} -F {{.WEB_APP}} run build"
 
   # ── 测试 ──────────────────────────────────────────
   test:

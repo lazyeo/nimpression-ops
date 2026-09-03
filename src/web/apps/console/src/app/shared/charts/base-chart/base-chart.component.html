@@ -5,15 +5,17 @@
     </div>
   } @else if (error()) {
     <div class="state-overlay error-state">
-      <div class="error-icon">⚠️</div>
+      <div class="error-icon"><nim-icon name="alert-triangle" [size]="36" /></div>
       <div class="error-title">{{ 'CHARTS.COMMON.ERROR' | i18n }}</div>
       <div class="error-message">{{ error() }}</div>
-      <button type="button" class="btn-retry" (click)="onRetry()">{{ 'CHARTS.COMMON.RETRY' | i18n }}</button>
+      <button type="button" class="btn-retry" (click)="onRetry()">
+        {{ 'CHARTS.COMMON.RETRY' | i18n }}
+      </button>
     </div>
   } @else if (isEmpty() || !options()) {
     <div class="state-overlay empty-state">
-      <div class="empty-icon">📊</div>
-      <div class="empty-text">{{ (emptyText() || 'CHARTS.COMMON.NO_DATA') | i18n }}</div>
+      <div class="empty-icon"><nim-icon name="dashboard" [size]="36" /></div>
+      <div class="empty-text">{{ emptyText() || 'CHARTS.COMMON.NO_DATA' | i18n }}</div>
     </div>
   } @else {
     <div
