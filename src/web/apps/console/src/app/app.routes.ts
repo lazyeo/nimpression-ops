@@ -110,25 +110,21 @@ export const routes: Routes = [
         path: 'news',
         data: { labelKey: 'NAV.NEWS', icon: 'news' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/news/news.component').then((m) => m.NewsComponent),
       },
       {
         path: 'notifications',
         data: { labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
+          import('./features/admin/notifications/notifications.component').then(
+            (m) => m.NotificationsComponent,
           ),
       },
       {
         path: 'audit',
         data: { labelKey: 'NAV.AUDIT', icon: 'audit' },
         loadComponent: () =>
-          import('./features/admin/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent,
-          ),
+          import('./features/admin/audit/audit.component').then((m) => m.AuditComponent),
       },
     ],
   },
