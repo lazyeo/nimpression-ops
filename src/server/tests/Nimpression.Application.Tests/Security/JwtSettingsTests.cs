@@ -73,7 +73,7 @@ public class JwtSettingsTests
         // Arrange
         var settings = new JwtSettings
         {
-            Secret = "NimpressionSecureSuperSecretKeyForJwtSigningMustBeAtLeast32BytesLong!"
+            Secret = "dev-only-insecure-jwt-secret-never-use-in-production-0000"
         };
 
         // Act

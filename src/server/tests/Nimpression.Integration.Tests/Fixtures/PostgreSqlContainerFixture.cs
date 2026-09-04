@@ -25,7 +25,7 @@ public class PostgreSqlContainerFixture : IAsyncLifetime
         if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("Jwt__Secret")) &&
             string.IsNullOrEmpty(Environment.GetEnvironmentVariable("Jwt:Secret")))
         {
-            Environment.SetEnvironmentVariable("Jwt__Secret", "NimpressionSecureSuperSecretKeyForJwtSigningMustBeAtLeast32BytesLong!");
+            Environment.SetEnvironmentVariable("Jwt__Secret", "dev-only-insecure-jwt-secret-never-use-in-production-0000");
         }
         await Container.StartAsync();
     }
