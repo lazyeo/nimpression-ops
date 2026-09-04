@@ -1,0 +1,11 @@
+<span
+  class="nim-status-badge badge-{{ resolvedVariant() }} size-{{ size() }}"
+  [class.has-icon]="!!icon()"
+>
+  @if (icon()) {
+    <nim-icon [name]="icon()!" [size]="iconSize()" aria-hidden="true" />
+  }
+  <span class="badge-content">
+    <ng-content>{{ displayLabel() }}</ng-content>
+  </span>
+</span>
