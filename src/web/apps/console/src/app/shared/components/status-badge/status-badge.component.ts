@@ -18,7 +18,7 @@ import {
 } from '../../../core/api/models/api-models';
 import { IconComponent } from '../icon/icon.component';
 
-export type DomainStatus =
+export type BadgeDomainStatus =
   | VehicleStatus
   | JobTaskStatus
   | TaskPriority
@@ -32,8 +32,33 @@ export type DomainStatus =
   | IncidentSeverity
   | DataSubjectRequestKind
   | NewsAudience
-  | PartnerKind
-  | string;
+  | PartnerKind;
+
+export type ExtraBadgeStatus =
+  | 'Overdue'
+  | 'Expired'
+  | 'ExpiringSoon'
+  | 'ServiceDue'
+  | 'ServiceOk'
+  | 'InsurerNotified'
+  | 'InsurerStandard'
+  | 'TopUpApplied'
+  | 'TopUpNone'
+  | 'HourlyApplied'
+  | 'TripApplied'
+  | 'ZeroDeduction'
+  | 'Online'
+  | 'Offline'
+  | 'Synced'
+  | 'Syncing'
+  | 'Sent'
+  | 'Failed'
+  | 'Passed'
+  | 'Standard'
+  | 'NoGps'
+  | 'HasGps';
+
+export type BadgeStatus = BadgeDomainStatus | ExtraBadgeStatus;
 
 export type BadgeVariant =
   | 'success'
@@ -46,70 +71,102 @@ export type BadgeVariant =
 
 export type BadgeSize = 'sm' | 'md' | 'lg';
 
-const VARIANT_LOOKUP: Record<string, BadgeVariant> = {
-  // Success (Green)
+export const VARIANT_LOOKUP: Record<BadgeStatus, BadgeVariant> = {
+  // VehicleStatus
   Active: 'success',
-  Completed: 'success',
-  Accepted: 'success',
-  Finalised: 'success',
-  Paid: 'success',
-  All: 'success',
-  Online: 'success',
-  Synced: 'success',
-  Sent: 'success',
-  Passed: 'success',
-
-  // Warning (Amber / Yellow)
   Maintenance: 'warning',
+  Inactive: 'danger',
+  Decommissioned: 'neutral',
+
+  // JobTaskStatus
+  Draft: 'neutral',
   Assigned: 'warning',
   Acknowledged: 'warning',
-  UnderReview: 'warning',
-  Calculating: 'warning',
-  Suspended: 'warning',
-  OnLeave: 'warning',
-  Moderate: 'warning',
+  InProgress: 'info',
+  Completed: 'success',
+  Cancelled: 'danger',
+
+  // TaskPriority
+  Low: 'neutral',
+  Medium: 'info',
   High: 'warning',
   Urgent: 'warning',
-  Syncing: 'warning',
-  Inspection: 'warning',
-  ExpiringSoon: 'warning',
 
-  // Danger (Red)
-  Inactive: 'danger',
-  Cancelled: 'danger',
-  Disputed: 'danger',
-  Terminated: 'danger',
-  Critical: 'danger',
-  Major: 'danger',
-  Offline: 'danger',
-  Failed: 'danger',
-  Expired: 'danger',
+  // ShiftStatus (Active, Completed, Cancelled already mapped)
+  AutoClosed: 'neutral',
 
-  // Info (Sky / Blue)
-  InProgress: 'info',
+  // FineStatus
   Submitted: 'info',
-  Medium: 'info',
+  UnderReview: 'warning',
+  Accepted: 'success',
+  Disputed: 'danger',
+  Waived: 'neutral',
+
+  // PayPeriodStatus
+  Open: 'neutral',
+  Calculating: 'warning',
+  Finalised: 'success',
+  Paid: 'success',
+
+  // PayBasis
   Hourly: 'info',
   Trip: 'info',
+
+  // DriverStatus (Active, Inactive already mapped)
+  Suspended: 'warning',
+  OnLeave: 'warning',
+  Terminated: 'danger',
+
+  // UserRole
+  Admin: 'neutral',
   Dispatcher: 'info',
-  Drivers: 'info',
+  Driver: 'info',
+
+  // UserStatus (Active, Inactive, Suspended already mapped)
+
+  // IncidentSeverity
+  Minor: 'neutral',
+  Moderate: 'warning',
+  Major: 'danger',
+  Critical: 'danger',
+
+  // DataSubjectRequestKind
   Export: 'info',
   Deletion: 'info',
-  Insurer: 'info',
-  Notified: 'info',
-
-  // Neutral (Slate / Gray)
-  Draft: 'neutral',
-  Decommissioned: 'neutral',
-  AutoClosed: 'neutral',
-  Waived: 'neutral',
-  Open: 'neutral',
-  Low: 'neutral',
-  Minor: 'neutral',
   Rectification: 'neutral',
-  Admin: 'neutral',
+
+  // NewsAudience (All, Drivers, Dispatchers)
+  All: 'success',
+  Drivers: 'info',
+  Dispatchers: 'info',
+
+  // PartnerKind (Insurer, Maintenance, Inspection)
+  Insurer: 'info',
+  Inspection: 'warning',
+
+  // Extra UI / Template statuses
+  Overdue: 'warning',
+  Expired: 'danger',
+  ExpiringSoon: 'warning',
+  ServiceDue: 'danger',
+  ServiceOk: 'success',
+  InsurerNotified: 'success',
+  InsurerStandard: 'neutral',
+  TopUpApplied: 'warning',
+  TopUpNone: 'neutral',
+  HourlyApplied: 'success',
+  TripApplied: 'success',
+  ZeroDeduction: 'success',
+  Online: 'success',
+  Offline: 'danger',
+  Synced: 'success',
+  Syncing: 'warning',
+  Sent: 'success',
+  Failed: 'danger',
+  Passed: 'success',
   Standard: 'neutral',
-  Driver: 'info',
+  NoGps: 'neutral',
+  HasGps: 'success',
 };
 
 @Component({
@@ -121,7 +178,7 @@ const VARIANT_LOOKUP: Record<string, BadgeVariant> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatusBadgeComponent {
-  readonly status = input<DomainStatus | ''>('');
+  readonly status = input<BadgeStatus | (string & {}) | ''>('');
   readonly variant = input<BadgeVariant | undefined>(undefined);
   readonly size = input<BadgeSize>('md');
   readonly label = input<string | undefined>(undefined);
@@ -133,7 +190,13 @@ export class StatusBadgeComponent {
     if (explicit) return explicit;
     const s = this.status();
     if (!s) return 'neutral';
-    return VARIANT_LOOKUP[s] ?? 'neutral';
+    if (Object.prototype.hasOwnProperty.call(VARIANT_LOOKUP, s)) {
+      return VARIANT_LOOKUP[s as BadgeStatus];
+    }
+    console.error(
+      `[StatusBadgeComponent] Unrecognized status value: "${s}". Not mapped in VARIANT_LOOKUP. Rendering 'danger' alert per CLAUDE.md 2.3.`,
+    );
+    return 'danger';
   });
 
   readonly displayLabel = computed<string>(() => {

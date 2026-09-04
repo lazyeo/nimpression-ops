@@ -69,4 +69,14 @@ describe('StatusBadgeComponent', () => {
     const badgeEl = fixture.nativeElement.querySelector('.nim-status-badge');
     expect(badgeEl.textContent.trim()).toBe('Custom Active Label');
   });
+
+  it('logs console.error and falls back to danger variant for unknown status without explicit variant', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    fixture.componentRef.setInput('status', 'CompletelyUnknownStatus');
+    fixture.detectChanges();
+
+    expect(errorSpy).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.nim-status-badge').classList.contains('badge-danger')).toBe(true);
+    errorSpy.mockRestore();
+  });
 });

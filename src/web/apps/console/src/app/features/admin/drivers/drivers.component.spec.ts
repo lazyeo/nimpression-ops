@@ -7,6 +7,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DriversComponent } from './drivers.component';
 import { DriversService } from './services/drivers.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { DriverDetailDto, DriverSummaryDto, PaginatedResult } from './models/drivers.models';
 
 describe('DriversComponent', () => {
@@ -41,9 +42,9 @@ describe('DriversComponent', () => {
       daysUntilLicenceExpiry: 120,
       status: 'Active',
       hiredOn: '2025-01-15',
-      hourlyRate: 34.0,
-      perTripRate: 16.0,
-      perKmRate: 0.8,
+      hourlyRate: 34.5,
+      perTripRate: 50.0,
+      perKmRate: 1.2,
       assignedAreaNames: ['Auckland Central'],
       activeAreaIds: ['area-1'],
     },
@@ -70,11 +71,11 @@ describe('DriversComponent', () => {
 
   const mockDetail: DriverDetailDto = {
     ...mockDrivers[0],
-    hourlyRateAmount: 34.0,
+    hourlyRateAmount: 34.5,
     hourlyRateCurrency: 'NZD',
-    perTripRateAmount: 16.0,
+    perTripRateAmount: 50.0,
     perTripRateCurrency: 'NZD',
-    perKmRateAmount: 0.8,
+    perKmRateAmount: 1.2,
     perKmRateCurrency: 'NZD',
     phone: '+64 21 000 1111',
     address: '10 Queen St, Auckland',
@@ -125,10 +126,22 @@ describe('DriversComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        I18nService,
         { provide: DriversService, useValue: driversServiceMock },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
+
+    const i18n = TestBed.inject(I18nService);
+    i18n.setDictionary('en-NZ', {
+      COMMON: {
+        UNITS: {
+          PER_HR: '/hr',
+          PER_TRIP: '/trip',
+          PER_KM: '/km',
+        },
+      },
+    });
 
     fixture = TestBed.createComponent(DriversComponent);
     component = fixture.componentInstance;
@@ -145,7 +158,8 @@ describe('DriversComponent', () => {
     expect(compiled.querySelectorAll('tbody tr').length).toBe(2);
     expect(compiled.textContent).toContain('Alex Mercer');
     expect(compiled.textContent).toContain('DRV-1001');
-    expect(compiled.textContent).toContain('$34');
+    expect(compiled.textContent).toContain('$34.5/hr');
+    expect(compiled.textContent).toContain('$50/trip | $1.2/km');
   });
 
   it('should render empty state when drivers list is empty', () => {

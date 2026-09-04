@@ -7,6 +7,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { VehiclesComponent } from './vehicles.component';
 import { VehiclesService } from './services/vehicles.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { PaginatedResult, VehicleDetailDto, VehicleSummaryDto } from './models/vehicles.models';
 
 describe('VehiclesComponent', () => {
@@ -124,10 +125,21 @@ describe('VehiclesComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        I18nService,
         { provide: VehiclesService, useValue: vehiclesServiceMock },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
+
+    const i18n = TestBed.inject(I18nService);
+    i18n.setDictionary('en-NZ', {
+      COMMON: {
+        UNITS: {
+          KM: 'km',
+          SLASH_KM: '/km',
+        },
+      },
+    });
 
     fixture = TestBed.createComponent(VehiclesComponent);
     component = fixture.componentInstance;
@@ -144,7 +156,7 @@ describe('VehiclesComponent', () => {
     expect(compiled.querySelectorAll('tbody tr').length).toBe(2);
     expect(compiled.textContent).toContain('ABC123');
     expect(compiled.textContent).toContain('XYZ999');
-    expect(compiled.textContent).toContain('32000');
+    expect(compiled.textContent).toContain('32000 km');
   });
 
   it('should render empty state when no vehicles are found', () => {
