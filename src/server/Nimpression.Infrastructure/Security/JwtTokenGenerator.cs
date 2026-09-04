@@ -12,11 +12,20 @@ namespace Nimpression.Infrastructure.Security;
 /// <summary>
 /// JWT 访问令牌与刷新令牌生成器。
 /// </summary>
-public sealed class JwtTokenGenerator(
-    IOptions<JwtSettings> jwtOptions,
-    IDateTimeProvider? dateTimeProvider = null) : IJwtTokenGenerator
+public sealed class JwtTokenGenerator : IJwtTokenGenerator
 {
-    private readonly JwtSettings _settings = jwtOptions.Value;
+    private readonly JwtSettings _settings;
+    private readonly IDateTimeProvider? _dateTimeProvider;
+
+    public JwtTokenGenerator(
+        IOptions<JwtSettings> jwtOptions,
+        IDateTimeProvider? dateTimeProvider = null)
+    {
+        ArgumentNullException.ThrowIfNull(jwtOptions);
+        _settings = jwtOptions.Value;
+        _settings.Validate();
+        _dateTimeProvider = dateTimeProvider;
+    }
 
     public (string Token, int ExpiresInSeconds) GenerateAccessToken(
         Guid userId,
@@ -24,7 +33,7 @@ public sealed class JwtTokenGenerator(
         string role,
         string displayName)
     {
-        var now = dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
+        var now = _dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
         var expiresAt = now.AddMinutes(_settings.AccessTokenLifetimeMinutes);
         var expiresInSeconds = (int)(expiresAt - now).TotalSeconds;
 
@@ -63,7 +72,7 @@ public sealed class JwtTokenGenerator(
 
     public (string RawToken, string TokenHash, DateTimeOffset ExpiresAt) GenerateRefreshToken(string? ipAddress)
     {
-        var now = dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
+        var now = _dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
         var expiresAt = now.AddDays(_settings.RefreshTokenLifetimeDays);
 
         var randomBytes = new byte[64];
