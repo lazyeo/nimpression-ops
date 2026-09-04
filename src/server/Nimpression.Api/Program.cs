@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 using Nimpression.Api.Endpoints;
 using Nimpression.Application;
 using Nimpression.Infrastructure;
+using Nimpression.Infrastructure.Diagnostics;
 using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Persistence.Migrations;
 using Nimpression.Infrastructure.Persistence.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +33,27 @@ builder.Services.AddScoped<Nimpression.Application.Features.Realtime.Abstraction
 
 var app = builder.Build();
 
+// 迁移模式：不启动 Web 服务器，执行完数据库迁移即退出。
+// 生产环境通过独立子命令执行迁移，支持容器编排的 Pre-deploy / Init 任务。
+if (args.Contains("migrate", StringComparer.OrdinalIgnoreCase))
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await DatabaseMigrator.MigrateAsync(dbContext);
+        Console.WriteLine("Database migration completed successfully.");
+        return;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Database migration failed: {ex.Message}");
+        Console.Error.WriteLine(ex.ToString());
+        Environment.Exit(1);
+        return;
+    }
+}
+
 // 种子模式：不启动 Web 服务器，灌完数据即退出。
 // 放在 Build 之后、中间件之前，好复用完整的 DI 容器。
 if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))
@@ -54,7 +77,25 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+app.MapGet("/health", async (AppDbContext dbContext, CancellationToken ct) =>
+{
+    var (isHealthy, details) = await DatabaseSchemaHealthCheck.CheckAsync(dbContext, ct);
+    if (!isHealthy)
+    {
+        return Results.Json(new
+        {
+            status = "unhealthy",
+            database = "unhealthy",
+            reason = details
+        }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    return Results.Ok(new
+    {
+        status = "healthy",
+        database = "healthy"
+    });
+})
    .WithName("HealthCheck")
    .WithTags("Diagnostics");
 

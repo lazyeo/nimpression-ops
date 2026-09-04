@@ -150,7 +150,7 @@ tasks:
   migrate:
     desc: 把迁移应用到本地数据库
     cmds:
-      - dotnet ef database update --project {{.SERVER}}/Nimpression.Infrastructure --startup-project {{.SERVER}}/Nimpression.Api
+      - dotnet run --project {{.SERVER}}/Nimpression.Api -- migrate
 
   migrate:add:
     desc: 新增迁移（task migrate:add -- AddDriversTable）
