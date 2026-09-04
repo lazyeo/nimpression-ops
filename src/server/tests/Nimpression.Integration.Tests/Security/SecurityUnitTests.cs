@@ -54,7 +54,10 @@ public class SecurityUnitTests
     [Fact]
     public void JwtTokenGenerator_GenerateRefreshToken_GeneratesUniqueRandomTokenAndHash()
     {
-        var options = Options.Create(new JwtSettings());
+        var options = Options.Create(new JwtSettings
+        {
+            Secret = "SuperSecretKeyForTestingJwtTokenGenerationMustBeLongEnough123!"
+        });
         var dateTimeProvider = Substitute.For<IDateTimeProvider>();
         var now = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
         dateTimeProvider.UtcNow.Returns(now);
