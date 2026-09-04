@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N-Impression Logistics Platform Manual &amp; Architecture Reference</title>
+  <style>
+    /* ==========================================================================
+       Design Tokens & CSS Variables (Dual-Mode: Light / Dark)
+       Zero External Dependencies - Pure Native CSS
+       ========================================================================== */
+    :root, [data-theme="light"] {
+      --bg-app: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-muted: #e2e8f0;
+      --bg-card: #ffffff;
+      --bg-hover: #f8fafc;
+      --bg-active: #f1f5f9;
+      --bg-code: #0f172a;
+      --text-code: #f8fafc;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-inverse: #ffffff;
+      --border-subtle: #f1f5f9;
+      --border-default: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --color-primary: #0284c7;
+      --color-primary-hover: #0369a1;
+      --color-primary-subtle: #f0f9ff;
+      --color-primary-text: #0369a1;
+      --color-success: #16a34a;
+      --color-success-subtle: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-warning: #d97706;
+      --color-warning-subtle: #fffbeb;
+      --color-warning-text: #92400e;
+      --color-danger: #dc2626;
+      --color-danger-subtle: #fef2f2;
+      --color-danger-text: #991b1b;
+      --color-info: #0284c7;
+      --color-info-subtle: #f0f9ff;
+      --color-info-text: #0369a1;
+      --color-neutral: #475569;
+      --color-neutral-subtle: #f1f5f9;
+      --badge-success-bg: #dcfce7;
+      --badge-success-text: #166534;
+      --badge-success-border: #bbf7d0;
+      --badge-warning-bg: #fef3c7;
+      --badge-warning-text: #92400e;
+      --badge-warning-border: #fde68a;
+      --badge-danger-bg: #fee2e2;
+      --badge-danger-text: #991b1b;
+      --badge-danger-border: #fecaca;
+      --badge-info-bg: #e0f2fe;
+      --badge-info-text: #075985;
+      --badge-info-border: #bae6fd;
+      --badge-neutral-bg: #f1f5f9;
+      --badge-neutral-text: #475569;
+      --badge-neutral-border: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sidebar-width: 280px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg-app: #090d16;
+        --bg-surface: #0f172a;
+        --bg-subtle: #1e293b;
+        --bg-muted: #334155;
+        --bg-card: #0f172a;
+        --bg-hover: #1e293b;
+        --bg-active: #334155;
+        --bg-code: #020617;
+        --text-code: #f1f5f9;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --text-inverse: #0f172a;
+        --border-subtle: #1e293b;
+        --border-default: #334155;
+        --border-strong: #475569;
+        --color-primary: #38bdf8;
+        --color-primary-hover: #0284c7;
+        --color-primary-subtle: rgba(56, 189, 248, 0.15);
+        --color-primary-text: #7dd3fc;
+        --color-success: #4ade80;
+        --color-success-subtle: rgba(74, 222, 128, 0.15);
+        --color-success-text: #86efac;
+        --color-warning: #fbbf24;
+        --color-warning-subtle: rgba(251, 191, 36, 0.15);
+        --color-warning-text: #fde68a;
+        --color-danger: #f87171;
+        --color-danger-subtle: rgba(248, 113, 113, 0.15);
+        --color-danger-text: #fca5a5;
+        --color-info: #60a5fa;
+        --color-info-subtle: rgba(96, 165, 250, 0.15);
+        --color-info-text: #93c5fd;
+        --color-neutral: #94a3b8;
+        --color-neutral-subtle: rgba(148, 163, 184, 0.15);
+        --badge-success-bg: rgba(34, 197, 94, 0.18);
+        --badge-success-text: #86efac;
+        --badge-success-border: rgba(34, 197, 94, 0.35);
+        --badge-warning-bg: rgba(245, 158, 11, 0.18);
+        --badge-warning-text: #fde68a;
+        --badge-warning-border: rgba(245, 158, 11, 0.35);
+        --badge-danger-bg: rgba(239, 68, 68, 0.18);
+        --badge-danger-text: #fca5a5;
+        --badge-danger-border: rgba(239, 68, 68, 0.35);
+        --badge-info-bg: rgba(56, 189, 248, 0.18);
+        --badge-info-text: #7dd3fc;
+        --badge-info-border: rgba(56, 189, 248, 0.35);
+        --badge-neutral-bg: rgba(148, 163, 184, 0.18);
+        --badge-neutral-text: #cbd5e1;
+        --badge-neutral-border: rgba(148, 163, 184, 0.3);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    [data-theme="dark"] {
+      --bg-app: #090d16;
+      --bg-surface: #0f172a;
+      --bg-subtle: #1e293b;
+      --bg-muted: #334155;
+      --bg-card: #0f172a;
+      --bg-hover: #1e293b;
+      --bg-active: #334155;
+      --bg-code: #020617;
+      --text-code: #f1f5f9;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-inverse: #0f172a;
+      --border-subtle: #1e293b;
+      --border-default: #334155;
+      --border-strong: #475569;
+      --color-primary: #38bdf8;
+      --color-primary-hover: #0284c7;
+      --color-primary-subtle: rgba(56, 189, 248, 0.15);
+      --color-primary-text: #7dd3fc;
+      --color-success: #4ade80;
+      --color-success-subtle: rgba(74, 222, 128, 0.15);
+      --color-success-text: #86efac;
+      --color-warning: #fbbf24;
+      --color-warning-subtle: rgba(251, 191, 36, 0.15);
+      --color-warning-text: #fde68a;
+      --color-danger: #f87171;
+      --color-danger-subtle: rgba(248, 113, 113, 0.15);
+      --color-danger-text: #fca5a5;
+      --color-info: #60a5fa;
+      --color-info-subtle: rgba(96, 165, 250, 0.15);
+      --color-info-text: #93c5fd;
+      --color-neutral: #94a3b8;
+      --color-neutral-subtle: rgba(148, 163, 184, 0.15);
+      --badge-success-bg: rgba(34, 197, 94, 0.18);
+      --badge-success-text: #86efac;
+      --badge-success-border: rgba(34, 197, 94, 0.35);
+      --badge-warning-bg: rgba(245, 158, 11, 0.18);
+      --badge-warning-text: #fde68a;
+      --badge-warning-border: rgba(245, 158, 11, 0.35);
+      --badge-danger-bg: rgba(239, 68, 68, 0.18);
+      --badge-danger-text: #fca5a5;
+      --badge-danger-border: rgba(239, 68, 68, 0.35);
+      --badge-info-bg: rgba(56, 189, 248, 0.18);
+      --badge-info-text: #7dd3fc;
+      --badge-info-border: rgba(56, 189, 248, 0.35);
+      --badge-neutral-bg: rgba(148, 163, 184, 0.18);
+      --badge-neutral-text: #cbd5e1;
+      --badge-neutral-border: rgba(148, 163, 184, 0.3);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ==========================================================================
+       Global Reset & Base Typography
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: var(--font-family);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background-color: var(--bg-app);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Header */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 0 24px;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-default);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .brand-logo-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--color-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-btn, .back-login-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: 1px solid var(--border-default);
+      background-color: var(--bg-subtle);
+      color: var(--text-primary);
+    }
+
+    .theme-toggle-btn:hover, .back-login-btn:hover {
+      background-color: var(--bg-muted);
+      border-color: var(--border-strong);
+    }
+
+    .back-login-btn {
+      background-color: var(--color-primary-subtle);
+      color: var(--color-primary-text);
+      border-color: var(--color-primary);
+    }
+
+    .back-login-btn:hover {
+      background-color: var(--color-primary);
+      color: #ffffff;
+    }
+
+    /* Layout Wrapper */
+    .layout-container {
+      display: flex;
+      flex: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Sticky Sidebar Navigation */
+    .sidebar-toc {
+      width: var(--sidebar-width);
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      padding: 24px 16px;
+      border-right: 1px solid var(--border-default);
+      background-color: var(--bg-surface);
+      flex-shrink: 0;
+    }
+
+    .toc-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-left: 8px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .toc-link:hover {
+      background-color: var(--bg-subtle);
+      color: var(--color-primary-text);
+    }
+
+    .toc-link.active {
+      background-color: var(--color-primary-subtle);
+      color: var(--color-primary-text);
+      font-weight: 600;
+    }
+
+    /* Main Article Content */
+    .main-article {
+      flex: 1;
+      padding: 36px 48px 80px;
+      max-width: 960px;
+    }
+
+    /* Section & Headings */
+    .doc-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border-subtle);
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-primary-text);
+      background-color: var(--color-primary-subtle);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    h1.doc-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .doc-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+
+    /* Cards & Grids */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .info-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .info-card.highlight {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary-subtle);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Callouts & Banners */
+    .callout {
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      margin: 20px 0;
+      display: flex;
+      gap: 14px;
+      border-left: 4px solid;
+    }
+
+    .callout.info {
+      background-color: var(--color-info-subtle);
+      border-color: var(--color-info);
+      color: var(--text-primary);
+    }
+
+    .callout.warning {
+      background-color: var(--color-warning-subtle);
+      border-color: var(--color-warning);
+      color: var(--text-primary);
+    }
+
+    .callout.success {
+      background-color: var(--color-success-subtle);
+      border-color: var(--color-success);
+      color: var(--text-primary);
+    }
+
+    .callout.danger {
+      background-color: var(--color-danger-subtle);
+      border-color: var(--color-danger);
+      color: var(--text-primary);
+    }
+
+    .callout-icon {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+    }
+
+    .callout.info .callout-icon { color: var(--color-info); }
+    .callout.warning .callout-icon { color: var(--color-warning); }
+    .callout.success .callout-icon { color: var(--color-success); }
+    .callout.danger .callout-icon { color: var(--color-danger); }
+
+    .callout-body {
+      flex: 1;
+      font-size: 0.95rem;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      background-color: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background-color: var(--bg-subtle);
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: var(--bg-hover);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge-success {
+      background-color: var(--badge-success-bg);
+      color: var(--badge-success-text);
+      border-color: var(--badge-success-border);
+    }
+
+    .badge-warning {
+      background-color: var(--badge-warning-bg);
+      color: var(--badge-warning-text);
+      border-color: var(--badge-warning-border);
+    }
+
+    .badge-danger {
+      background-color: var(--badge-danger-bg);
+      color: var(--badge-danger-text);
+      border-color: var(--badge-danger-border);
+    }
+
+    .badge-info {
+      background-color: var(--badge-info-bg);
+      color: var(--badge-info-text);
+      border-color: var(--badge-info-border);
+    }
+
+    .badge-neutral {
+      background-color: var(--badge-neutral-bg);
+      color: var(--badge-neutral-text);
+      border-color: var(--badge-neutral-border);
+    }
+
+    /* Diagram Container */
+    .diagram-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      margin: 24px 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .diagram-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .diagram-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .svg-diagram {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: var(--font-mono);
+    }
+
+    code:not(pre code) {
+      background-color: var(--bg-subtle);
+      color: var(--color-primary-text);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85em;
+      border: 1px solid var(--border-default);
+    }
+
+    pre {
+      background-color: var(--bg-code);
+      color: var(--text-code);
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      margin: 16px 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    /* SVG Diagram Styling */
+    .diag-bg { fill: var(--bg-surface); }
+    .diag-box { rx: 8px; ry: 8px; stroke-width: 1.5; }
+    .diag-box-primary { fill: var(--color-primary-subtle); stroke: var(--color-primary); }
+    .diag-box-success { fill: var(--color-success-subtle); stroke: var(--color-success); }
+    .diag-box-warning { fill: var(--color-warning-subtle); stroke: var(--color-warning); }
+    .diag-box-danger { fill: var(--color-danger-subtle); stroke: var(--color-danger); }
+    .diag-box-neutral { fill: var(--bg-subtle); stroke: var(--border-strong); }
+    .diag-text-title { font-size: 12px; font-weight: 700; fill: var(--text-primary); }
+    .diag-text-desc { font-size: 10px; font-weight: 400; fill: var(--text-secondary); }
+    .diag-arrow { stroke: var(--border-strong); stroke-width: 2; fill: none; marker-end: url(#arrow-head); }
+    .diag-arrow-accent { stroke: var(--color-primary); stroke-width: 2; fill: none; marker-end: url(#arrow-head-accent); }
+
+    /* Print Styles */
+    @media print {
+      .top-header, .sidebar-toc, .theme-toggle-btn, .back-login-btn {
+        display: none !important;
+      }
+      .layout-container {
+        display: block !important;
+        max-width: 100% !important;
+      }
+      .main-article {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .doc-section {
+        page-break-inside: avoid;
+        margin-bottom: 32px !important;
+      }
+      .diagram-card, .table-container, .info-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar-toc {
+        display: none;
+      }
+      .main-article {
+        padding: 24px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation Bar -->
+  <header class="top-header">
+    <a href="#" class="brand-wrap">
+      <svg class="brand-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span>N-Impression Logistics</span>
+    </a>
+    <div class="header-actions">
+      <button type="button" class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="theme-label">Theme</span>
+      </button>
+      <a href="/login" class="back-login-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+        </svg>
+        <span>Return to Login</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Global SVG Arrow Markers Definition -->
+  <svg width="0" height="0" style="position:absolute;visibility:hidden;">
+    <defs>
+      <marker id="arrow-head" viewBox="0 0 10 10" refX="6" refY="5" width="6" height="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--border-strong)" />
+      </marker>
+      <marker id="arrow-head-accent" viewBox="0 0 10 10" refX="6" refY="5" width="6" height="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--color-primary)" />
+      </marker>
+    </defs>
+  </svg>
+
+  <div class="layout-container">
+    <!-- Sticky Sidebar Table of Contents -->
+    <nav class="sidebar-toc" aria-label="Table of Contents">
+      <div class="toc-title">Platform Documentation</div>
+      <ul class="toc-list">
+        <li><a href="#section-overview" class="toc-link">1. Overview &amp; Background</a></li>
+        <li><a href="#section-modules" class="toc-link">2. System Modules &amp; Roles</a></li>
+        <li><a href="#section-dispatch" class="toc-link">3. Real-Time Dispatch Lifecycle</a></li>
+        <li><a href="#section-payroll" class="toc-link">4. Dual-Basis Payroll &amp; Compliance</a></li>
+        <li><a href="#section-fines" class="toc-link">5. NZ Wages Protection Act &amp; Fines</a></li>
+        <li><a href="#section-privacy-audit" class="toc-link">6. Privacy DSR &amp; Tamper-Proof Audit</a></li>
+        <li><a href="#section-architecture" class="toc-link">7. Technical Architecture &amp; Outbox</a></li>
+        <li><a href="#section-guards" class="toc-link">8. Engineering Quality &amp; Guards</a></li>
+        <li><a href="#section-accounts" class="toc-link">9. Demo Test Credentials</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-article">
+      <!-- Title Header -->
+      <div class="doc-section">
+        <span class="section-tag">System Manual &bull; V2.0</span>
+        <h1 class="doc-title">N-Impression Logistics Operations Manual &amp; Architecture Reference</h1>
+        <p class="doc-subtitle">A comprehensive, end-to-end operational and engineering reference for administrators, dispatchers, drivers, and technical auditors.</p>
+        
+        <div class="callout info">
+          <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <div class="callout-body">
+            <div class="callout-title">Jurisdiction &amp; Regulatory Alignment</div>
+            This platform operates under New Zealand transport, privacy, and employment legislation, specifically complying with the <strong>NZ Employment Relations Act 2000</strong>, <strong>Minimum Wage Order 2024 ($23.15/hr statutory floor)</strong>, <strong>Wages Protection Act 1983</strong>, and the <strong>Privacy Act 2020</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapter 1: Overview & Business Background -->
+      <section id="section-overview" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 1</span>
+          <h2>Platform Overview &amp; Business Context</h2>
+        </div>
+        <p><strong>N-Impression Logistics Ltd</strong> is a specialized commercial road transport and urban freight delivery operator based in Auckland, New Zealand. The platform serves as the mission-critical digital backbone connecting fleet operations, real-time dispatching, driver field workflows, and automated payroll reconciliation.</p>
+        
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              Fleet &amp; Compliance Management
+            </div>
+            <p>Automates tracking of Vehicle COF/WOF renewals, Rego expirations, and Road User Charges (RUC) distance milestones to eliminate heavy vehicle downtime and non-compliance fines.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Dual-Basis Statutory Payroll
+            </div>
+            <p>Calculates remuneration across both Hourly and Trip-rate bases, automatically adopting the higher gross and guaranteeing compliance with the statutory $23.15/hr minimum wage floor.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Real-time Invalidation Sync
+            </div>
+            <p>Low-latency SignalR event distribution notifies dispatchers and drivers of live operational updates with zero stale-state drift through lightweight cache invalidation signals.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 2: Complete Function Map & Roles -->
+      <section id="section-modules" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 2</span>
+          <h2>Complete Module Map &amp; Role Hierarchy</h2>
+        </div>
+        <p>The platform organizes functionality across 11 management modules and a dedicated mobile-responsive Driver Portal, structured around 3 distinct security roles:</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Module Name</th>
+                <th>Primary Role Access</th>
+                <th>Core Responsibilities &amp; Domain Boundaries</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Dashboard</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Aggregates real-time fleet utilization, task funnel progression, active alerts, and 90-day financial trends.</td>
+              </tr>
+              <tr>
+                <td><strong>Vehicles</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Fleet registry, maintenance status tracking, COF/WOF certificate expiry schedules, and RUC distance tracking.</td>
+              </tr>
+              <tr>
+                <td><strong>Drivers</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Driver profiles, Class 2/4/5 licensing verification, medical endorsements, contact information, and operational area assignments.</td>
+              </tr>
+              <tr>
+                <td><strong>Dispatch Board</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Live delivery task creation, driver-vehicle assignment, priority management (Urgent/High/Medium/Low), and live status tracking.</td>
+              </tr>
+              <tr>
+                <td><strong>Timesheets</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Clock-in/out event reviews, mandatory unpaid break deductions, shift duration validation, and dispatcher approval workflows.</td>
+              </tr>
+              <tr>
+                <td><strong>Payroll Engine</strong></td>
+                <td><span class="badge badge-danger">Admin Only</span></td>
+                <td>Fortnightly pay period lifecycle (Draft &rarr; Calculating &rarr; Finalised &rarr; Paid), dual-basis calculation engine, statutory minimum wage top-up, and immutable period locking.</td>
+              </tr>
+              <tr>
+                <td><strong>Fines &amp; Infringements</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Traffic camera and toll notice registration, driver dispute submissions, manager review, and statutory zero-deduction compliance enforcement.</td>
+              </tr>
+              <tr>
+                <td><strong>Safety Incidents</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>On-road incident logging, severity categorization (Critical, Major, Moderate, Minor), insurer notification tracking, and photo attachments.</td>
+              </tr>
+              <tr>
+                <td><strong>Operational Areas</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Territory zoning (North Shore, West Auckland, Central, South Auckland), coverage intervals, and conflict prevention.</td>
+              </tr>
+              <tr>
+                <td><strong>News &amp; Broadcasts</strong></td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Internal company announcements, safety policy updates, driver read-receipt telemetry, and pinned notices.</td>
+              </tr>
+              <tr>
+                <td><strong>Notifications &amp; Integrations</strong></td>
+                <td><span class="badge badge-danger">Admin Only</span></td>
+                <td>Email outbox health inspection, automated compliance expiry scanners, email template management, and external dispatch partner contacts.</td>
+              </tr>
+              <tr>
+                <td><strong>Audit &amp; Privacy (DSR)</strong></td>
+                <td><span class="badge badge-danger">Admin Only</span></td>
+                <td>PostgreSQL trigger-enforced immutable ledger of all system mutations, visual entity diff inspection, and GDPR/NZ Privacy Act Data Subject Requests.</td>
+              </tr>
+              <tr>
+                <td><strong>Driver Portal</strong></td>
+                <td><span class="badge badge-success">Driver</span></td>
+                <td>Mobile touch interface for shift clocking, assigned task acknowledgement and progression, historical payslip inspection, and personal profile management.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Chapter 3: Real-Time Dispatch Lifecycle -->
+      <section id="section-dispatch" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 3</span>
+          <h2>Real-Time Dispatch Lifecycle &amp; State Machine</h2>
+        </div>
+        <p>Delivery tasks follow a deterministic state machine strictly audited at every transition. The architecture leverages SignalR to broadcast cache-invalidation pulses, prompting client instances to refresh without data payload overhead.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            Dispatch State Machine &amp; Invalidation Flow
+          </div>
+          
+          <svg class="svg-diagram" viewBox="0 0 840 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- Box 1: Draft / Unassigned -->
+            <rect x="20" y="70" width="140" height="60" class="diag-box diag-box-neutral" />
+            <text x="90" y="95" text-anchor="middle" class="diag-text-title">1. UNASSIGNED</text>
+            <text x="90" y="112" text-anchor="middle" class="diag-text-desc">Task created by Dispatch</text>
+
+            <!-- Arrow 1 -> 2 -->
+            <line x1="160" y1="100" x2="210" y2="100" class="diag-arrow" />
+
+            <!-- Box 2: Assigned -->
+            <rect x="210" y="70" width="140" height="60" class="diag-box diag-box-warning" />
+            <text x="280" y="95" text-anchor="middle" class="diag-text-title">2. ASSIGNED</text>
+            <text x="280" y="112" text-anchor="middle" class="diag-text-desc">Driver &amp; Vehicle bound</text>
+
+            <!-- Arrow 2 -> 3 -->
+            <line x1="350" y1="100" x2="400" y2="100" class="diag-arrow" />
+
+            <!-- Box 3: In Progress -->
+            <rect x="400" y="70" width="140" height="60" class="diag-box diag-box-primary" />
+            <text x="470" y="95" text-anchor="middle" class="diag-text-title">3. IN PROGRESS</text>
+            <text x="470" y="112" text-anchor="middle" class="diag-text-desc">Driver on transit route</text>
+
+            <!-- Arrow 3 -> 4 -->
+            <line x1="540" y1="100" x2="590" y2="100" class="diag-arrow" />
+
+            <!-- Box 4: Completed -->
+            <rect x="590" y="70" width="140" height="60" class="diag-box diag-box-success" />
+            <text x="660" y="95" text-anchor="middle" class="diag-text-title">4. COMPLETED</text>
+            <text x="660" y="112" text-anchor="middle" class="diag-text-desc">Proof of Delivery logged</text>
+
+            <!-- Outbox & SignalR Event Loop -->
+            <path d="M 660 130 L 660 180 L 90 180 L 90 130" class="diag-arrow-accent" stroke-dasharray="4" />
+            <rect x="290" y="160" width="260" height="36" rx="6" fill="var(--bg-card)" stroke="var(--color-primary)" />
+            <text x="420" y="182" text-anchor="middle" font-size="11" font-weight="600" fill="var(--color-primary-text)">
+              Outbox Event &rarr; SignalR Broadcast ("TasksUpdated")
+            </text>
+          </svg>
+        </div>
+
+        <h3>Operational Step-by-Step Flow:</h3>
+        <ol style="padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Task Creation:</strong> Dispatcher specifies pickup and destination addresses, target time windows, and cargo priority.</li>
+          <li><strong>Resource Allocation:</strong> System validates driver operational area assignments and vehicle availability before binding.</li>
+          <li><strong>Driver Acknowledgment:</strong> Driver receives instant notification on mobile terminal and confirms readiness.</li>
+          <li><strong>Real-time Telemetry:</strong> Vehicle odometers and delivery timestamps are captured upon arrival and final drop-off.</li>
+          <li><strong>Immutable Audit Logging:</strong> Every state change writes an audit record and triggers asynchronous Outbox dispatch.</li>
+        </ol>
+      </section>
+
+      <!-- Chapter 4: Dual-Basis Payroll & Minimum Wage Floor -->
+      <section id="section-payroll" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 4</span>
+          <h2>Dual-Basis Payroll &amp; Statutory Floor Engine</h2>
+        </div>
+        <p>Under the NZ employment framework and company collective agreements, driver remuneration is governed by a <strong>Dual-Basis Engine</strong> implemented in <code>PayrollCalculatorV2.cs</code>. The system evaluates both an hourly timesheet basis and a per-trip piecerate basis, always remunerating the employee at whichever gross figure is higher.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Dual-Basis Calculation &amp; Statutory Floor Decision Tree
+          </div>
+
+          <svg class="svg-diagram" viewBox="0 0 840 300" xmlns="http://www.w3.org/2000/svg">
+            <!-- Left Branch: Hourly Basis -->
+            <rect x="40" y="30" width="220" height="80" class="diag-box diag-box-primary" />
+            <text x="150" y="55" text-anchor="middle" class="diag-text-title">A. HOURLY BASIS</text>
+            <text x="150" y="75" text-anchor="middle" class="diag-text-desc">Regular (1.0x) + OT (1.5x)</text>
+            <text x="150" y="92" text-anchor="middle" class="diag-text-desc">+ Public Holiday (2.0x)</text>
+
+            <!-- Right Branch: Trip Basis -->
+            <rect x="580" y="30" width="220" height="80" class="diag-box diag-box-primary" />
+            <text x="690" y="55" text-anchor="middle" class="diag-text-title">B. TRIP BASIS</text>
+            <text x="690" y="75" text-anchor="middle" class="diag-text-desc">Completed Trips &times; $TripRate</text>
+            <text x="690" y="92" text-anchor="middle" class="diag-text-desc">+ Distance &times; $KmRate</text>
+
+            <!-- Central Comparison Node -->
+            <path d="M 150 110 L 150 160 L 350 160" class="diag-arrow" />
+            <path d="M 690 110 L 690 160 L 490 160" class="diag-arrow" />
+            <polygon points="420,135 490,160 420,185 350,160" fill="var(--bg-subtle)" stroke="var(--color-primary)" stroke-width="2" />
+            <text x="420" y="164" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-primary)">Max(A, B)</text>
+
+            <!-- Statutory Floor Node -->
+            <line x1="420" y1="185" x2="420" y2="225" class="diag-arrow-accent" />
+            <rect x="270" y="225" width="300" height="60" class="diag-box diag-box-success" />
+            <text x="420" y="248" text-anchor="middle" class="diag-text-title">NZ Statutory Floor Protection</text>
+            <text x="420" y="268" text-anchor="middle" class="diag-text-desc">Floor = Total Hours &times; $23.15/hr &rarr; Auto Top-up</text>
+          </svg>
+        </div>
+
+        <div class="callout success">
+          <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div class="callout-body">
+            <div class="callout-title">Statutory Floor Guarantee: $23.15/hr</div>
+            If a driver on Trip Basis experiences traffic delays resulting in an effective hourly wage below the NZ statutory minimum ($23.15/hr as codified in <code>StatutoryMinimumWageRate</code>), the system automatically injects a <strong>Minimum Wage Top-up</strong> line item to guarantee full legal compliance.
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 5: NZ Wages Protection Act & Fines -->
+      <section id="section-fines" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 5</span>
+          <h2>NZ Wages Protection Act 1983 &amp; Traffic Fines</h2>
+        </div>
+        <p>A critical architectural feature of N-Impression Logistics is the strict separation between <strong>Traffic Infringement Notices</strong> and <strong>Employee Payroll Deductions</strong>.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Traffic Fine Handling &amp; Wage Protection Flow
+          </div>
+
+          <svg class="svg-diagram" viewBox="0 0 840 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Box 1: Infringement Received -->
+            <rect x="30" y="60" width="180" height="70" class="diag-box diag-box-danger" />
+            <text x="120" y="88" text-anchor="middle" class="diag-text-title">1. INFRINGEMENT</text>
+            <text x="120" y="106" text-anchor="middle" class="diag-text-desc">NZ Police / AT Notice</text>
+
+            <line x1="210" y1="95" x2="270" y2="95" class="diag-arrow" />
+
+            <!-- Box 2: Fine Domain Module -->
+            <rect x="270" y="60" width="220" height="70" class="diag-box diag-box-warning" />
+            <text x="380" y="88" text-anchor="middle" class="diag-text-title">2. DRIVER DISPUTE / REVIEW</text>
+            <text x="380" y="106" text-anchor="middle" class="diag-text-desc">Internal Dispute Workflow</text>
+
+            <line x1="490" y1="95" x2="550" y2="95" class="diag-arrow-accent" />
+
+            <!-- Box 3: Separate Fines Partition on Payslip -->
+            <rect x="550" y="50" width="260" height="90" class="diag-box diag-box-success" />
+            <text x="680" y="80" text-anchor="middle" class="diag-text-title">3. PAYSLIP TRANSPARENCY</text>
+            <text x="680" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="var(--color-success-text)">$0.00 Wage Deduction</text>
+            <text x="680" y="118" text-anchor="middle" class="diag-text-desc">Wages Protection Act 1983 Compliant</text>
+          </svg>
+        </div>
+
+        <div class="callout warning">
+          <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div class="callout-body">
+            <div class="callout-title">Legal Constraint: Zero Wage Deduction ($0.00)</div>
+            Section 4 of the <em>NZ Wages Protection Act 1983</em> strictly prohibits employers from making unilateral deductions from an employee's wages for traffic fines without explicit, uncoerced prior written consent. The platform renders a dedicated <strong>Fines Partition</strong> on payslips for informational transparency while enforcing exactly <strong>$0.00 deduction</strong> against net pay.
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 6: Privacy DSR & Append-Only Audit -->
+      <section id="section-privacy-audit" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 6</span>
+          <h2>Privacy Act 2020 DSR &amp; Tamper-Proof Audit</h2>
+        </div>
+        <p>Enterprise data governance is anchored on two cryptographic and database-level invariants: hardware-accelerated <strong>AES-256-GCM encryption</strong> for Personally Identifiable Information (PII) and an <strong>append-only PostgreSQL trigger</strong> on the audit ledger.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Cryptographic Storage &amp; Immutable Audit Architecture
+          </div>
+
+          <svg class="svg-diagram" viewBox="0 0 840 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- Driver / PII Input -->
+            <rect x="30" y="50" width="180" height="60" class="diag-box diag-box-neutral" />
+            <text x="120" y="75" text-anchor="middle" class="diag-text-title">Driver PII Input</text>
+            <text x="120" y="93" text-anchor="middle" class="diag-text-desc">IRD, Bank, Phone, Address</text>
+
+            <line x1="210" y1="80" x2="280" y2="80" class="diag-arrow-accent" />
+
+            <!-- AES-256-GCM Encryption Layer -->
+            <rect x="280" y="40" width="220" height="80" class="diag-box diag-box-primary" />
+            <text x="390" y="68" text-anchor="middle" class="diag-text-title">AES-256-GCM Cryptography</text>
+            <text x="390" y="88" text-anchor="middle" class="diag-text-desc">Authenticated Encryption</text>
+            <text x="390" y="104" text-anchor="middle" font-size="10" font-family="monospace" fill="var(--color-primary-text)">enc:v1:IV:Cipher:Tag</text>
+
+            <line x1="500" y1="80" x2="570" y2="80" class="diag-arrow" />
+
+            <!-- Database & Append-Only Trigger -->
+            <rect x="570" y="40" width="240" height="140" class="diag-box diag-box-success" />
+            <text x="690" y="68" text-anchor="middle" class="diag-text-title">PostgreSQL Audit Ledger</text>
+            <text x="690" y="88" text-anchor="middle" class="diag-text-desc">Table: "AuditEvents"</text>
+            
+            <rect x="590" y="110" width="200" height="50" rx="4" fill="var(--badge-danger-bg)" stroke="var(--color-danger)" />
+            <text x="690" y="130" text-anchor="middle" font-size="10" font-weight="700" fill="var(--color-danger-text)">DB TRIGGER BLOCK</text>
+            <text x="690" y="146" text-anchor="middle" font-size="9" fill="var(--color-danger-text)">REJECTS UPDATE / DELETE</text>
+          </svg>
+        </div>
+
+        <h3>Data Subject Requests (DSR) &amp; Right-to-be-Forgotten</h3>
+        <p>In adherence to Principle 6 (Access) and Principle 7 (Correction) of the <em>NZ Privacy Act 2020</em>:</p>
+        <ul style="padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Data Export:</strong> Generates a machine-readable JSON archive containing all decrypted profile data, timesheet records, delivery history, and payslips.</li>
+          <li><strong>Pseudonymisation / Deletion:</strong> Irreversibly replaces personal names, phone numbers, and IRD details with cryptographic hashes while preserving anonymized trip distance metrics for statutory transport reporting.</li>
+        </ul>
+      </section>
+
+      <!-- Chapter 7: Technical Architecture & Clean Architecture -->
+      <section id="section-architecture" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 7</span>
+          <h2>Technical Architecture &amp; Outbox Pattern</h2>
+        </div>
+        <p>The backend application is engineered using <strong>Clean Architecture</strong>, <strong>CQRS with MediatR</strong>, and <strong>ASP.NET Core 9</strong> running atop PostgreSQL.</p>
+
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="card-title">1. Domain Layer</div>
+            <p>Pure enterprise entities, value objects, domain events, and business invariants with zero external package dependencies.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-title">2. Application Layer (CQRS)</div>
+            <p>MediatR commands and queries, fluent validation pipelines, business handlers, and cross-cutting transaction decorators.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-title">3. Infrastructure Layer</div>
+            <p>EF Core 9 PostgreSQL DbContext, Outbox worker dispatchers, AES-256 encryption providers, and SMTP email services.</p>
+          </div>
+          <div class="info-card">
+            <div class="card-title">4. Web API &amp; SignalR Hub</div>
+            <p>RESTful controllers, JWT Bearer authentication, role-based authorization filters, and real-time WebSocket push hubs.</p>
+          </div>
+        </div>
+
+        <h3>Guaranteed Message Delivery: The Outbox Pattern</h3>
+        <p>To prevent distributed transaction failures between the relational database and external notification brokers, domain events are written atomically into the <code>OutboxMessages</code> table within the same database transaction. A dedicated background worker continuously polls and processes pending events with exponential backoff retries.</p>
+      </section>
+
+      <!-- Chapter 8: Engineering Quality & Build Guards -->
+      <section id="section-guards" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 8</span>
+          <h2>Engineering Quality &amp; Four Build-Time Guards</h2>
+        </div>
+        <p>To eliminate runtime regressions and maintain pristine software quality, the repository enforces <strong>4 Automated Build-Time Guards</strong> integrated into the CI pipeline:</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Guard Name</th>
+                <th>Script Location</th>
+                <th>Target Invariant &amp; Enforcement Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Enum Contract Guard</strong></td>
+                <td><code>scripts/check-enum-contract.mjs</code></td>
+                <td>Verifies 100% strict member parity between C# backend domain enums and TypeScript frontend models. Prevents silent contract drift.</td>
+              </tr>
+              <tr>
+                <td><strong>i18n Whitelist Guard</strong></td>
+                <td><code>scripts/check-i18n.mjs</code></td>
+                <td>Scans all HTML templates ensuring 100% of visible text nodes pass through the <code>| i18n</code> localization pipe or carry explicit <code>data-no-i18n</code> annotations.</td>
+              </tr>
+              <tr>
+                <td><strong>Emoji Prohibition Guard</strong></td>
+                <td><code>scripts/check-emoji.mjs</code></td>
+                <td>Enforces Project Standard 3.5: zero emoji characters in UI templates, scripts, or translations. Mandates clean inline SVGs.</td>
+              </tr>
+              <tr>
+                <td><strong>DI Lifetime Verification</strong></td>
+                <td><code>TestStartup / Unit Tests</code></td>
+                <td>Validates ASP.NET Core service registration graph during test bootstrap to prevent runtime Scoped/Transient resolution crashes.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Chapter 9: Demo Test Credentials -->
+      <section id="section-accounts" class="doc-section">
+        <div class="section-header">
+          <span class="section-tag">Chapter 9</span>
+          <h2>Demo Seed Credentials &amp; Verification Matrix</h2>
+        </div>
+        <p>The development and staging environments are pre-seeded with three verified personas representing each operational tier:</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Seed Email (Username)</th>
+                <th>Password</th>
+                <th>Persona Details</th>
+                <th>Accessible Operational Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-danger">Admin</span></td>
+                <td><code>admin@nimpression-logistics.co.nz</code></td>
+                <td><code>AdminPass123!</code></td>
+                <td>Sarah Connor (General Manager)</td>
+                <td>Full system access across all 11 admin modules, payroll finalization, DSR deletion, and append-only audit trail inspection.</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-info">Dispatcher</span></td>
+                <td><code>dispatch.north@nimpression-logistics.co.nz</code></td>
+                <td><code>DispatchPass123!</code></td>
+                <td>Dave Miller (North Dispatcher)</td>
+                <td>Operational fleet tracking, dispatch assignment, timesheet approval, driver rosters, and broadcast notices.</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-success">Driver</span></td>
+                <td><code>liam.smith@nimpression-logistics.co.nz</code></td>
+                <td><code>DriverPass123!</code></td>
+                <td>Liam Smith (DRV-001)</td>
+                <td>Driver mobile portal: shift clock-in/out, task acknowledgment, historical payslip view, and personal profile management.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Pure Inline Theme Switcher Script -->
+  <script>
+    function getPreferredTheme() {
+      const saved = localStorage.getItem('nim-manual-theme');
+      if (saved) return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('nim-manual-theme', theme);
+      const label = document.getElementById('theme-label');
+      if (label) {
+        label.textContent = theme === 'dark' ? 'Dark' : 'Light';
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+    }
+
+    // Initialize Theme
+    applyTheme(getPreferredTheme());
+
+    // Highlight active link on scroll
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('.doc-section');
+      const links = document.querySelectorAll('.toc-link');
+      let currentSectionId = '';
+
+      sections.forEach(section => {
+        const top = section.offsetTop - 120;
+        if (window.scrollY >= top) {
+          currentSectionId = section.getAttribute('id');
+        }
+      });
+
+      links.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + currentSectionId) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
