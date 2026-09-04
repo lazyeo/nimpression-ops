@@ -12,6 +12,7 @@ import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { AreaLookupOption, DriversService } from './services/drivers.service';
 import {
   DriverDetailDto,
@@ -26,7 +27,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-drivers',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, SlicePipe, IconComponent],
+  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, SlicePipe, IconComponent, StatusBadgeComponent],
   templateUrl: './drivers.component.html',
   styleUrl: './drivers.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

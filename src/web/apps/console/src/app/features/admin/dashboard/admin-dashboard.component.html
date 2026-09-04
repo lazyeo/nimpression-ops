@@ -39,7 +39,9 @@
       <div class="status-rows">
         <div class="status-row">
           <span>{{ 'COMMON.STATUS' | i18n }}</span>
-          <span class="badge-online">{{ 'COMMON.OK' | i18n }}</span>
+          <nim-status-badge variant="success" size="sm">
+            <span>{{ 'COMMON.OK' | i18n }}</span>
+          </nim-status-badge>
         </div>
         <div class="status-row">
           <span>{{ 'ADMIN.RECENT_ALERTS' | i18n }}</span>

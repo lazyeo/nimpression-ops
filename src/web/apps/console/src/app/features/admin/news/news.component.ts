@@ -19,6 +19,7 @@ import {
   NewsPostListItemDto,
   PagedResult,
 } from './models/news.models';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { NewsCreateDialogComponent } from './components/news-create-dialog/news-create-dialog.component';
 import { NewsDetailModalComponent } from './components/news-detail-modal/news-detail-modal.component';
 
@@ -31,6 +32,7 @@ import { NewsDetailModalComponent } from './components/news-detail-modal/news-de
     I18nPipe,
     LocaleDatePipe,
     IconComponent,
+    StatusBadgeComponent,
     NewsCreateDialogComponent,
     NewsDetailModalComponent,
   ],

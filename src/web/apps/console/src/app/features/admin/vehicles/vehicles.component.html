@@ -172,14 +172,13 @@
                 </td>
                 <td>
                   @if (veh.isServiceDue) {
-                    <span class="badge badge-servicedue">
-                      <nim-icon name="alert-triangle" [size]="10" />
+                    <nim-status-badge status="ServiceDue" variant="danger" icon="alert-triangle">
                       {{ 'VEHICLES.SERVICE_DUE' | i18n }}
-                    </span>
+                    </nim-status-badge>
                   } @else {
-                    <span class="badge badge-serviceok">
+                    <nim-status-badge status="ServiceOk" variant="success">
                       {{ 'VEHICLES.SERVICE_OK' | i18n }}
-                    </span>
+                    </nim-status-badge>
                   }
                   <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem">
                     {{ veh.distanceSinceLastServiceKm }} {{ 'COMMON.UNITS.SLASH_KM' | i18n }} {{ veh.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}
@@ -207,9 +206,9 @@
                   }
                 </td>
                 <td>
-                  <span class="badge badge-{{ veh.status.toLowerCase() }}">
+                  <nim-status-badge [status]="veh.status">
                     {{ 'VEHICLES.STATUS_' + getStatusKey(veh.status) | i18n }}
-                  </span>
+                  </nim-status-badge>
                 </td>
                 <td>
                   <div class="row-actions">

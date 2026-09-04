@@ -182,21 +182,19 @@
                 <td>
                   <div>{{ driver.licenceExpiry | localeDate: 'medium' }}</div>
                   @if (driver.isLicenceExpired) {
-                    <span class="badge licence-expired">
-                      <nim-icon name="alert-triangle" [size]="10" />
+                    <nim-status-badge status="Expired" variant="danger" icon="alert-triangle">
                       {{ 'DRIVERS.LICENCE_EXPIRED' | i18n }}
-                    </span>
+                    </nim-status-badge>
                   } @else if (driver.isLicenceExpiringSoon) {
-                    <span class="badge licence-warning">
-                      <nim-icon name="clock" [size]="10" />
+                    <nim-status-badge status="ExpiringSoon" variant="warning" icon="clock">
                       {{ 'DRIVERS.LICENCE_EXPIRING_SOON' | i18n: { days: driver.daysUntilLicenceExpiry } }}
-                    </span>
+                    </nim-status-badge>
                   }
                 </td>
                 <td>
-                  <span class="badge badge-{{ driver.status.toLowerCase() }}">
+                  <nim-status-badge [status]="driver.status">
                     {{ 'DRIVERS.STATUS_' + getStatusKey(driver.status) | i18n }}
-                  </span>
+                  </nim-status-badge>
                 </td>
                 <td class="rate-cell">
                   <div class="rate-line">${{ driver.hourlyRate }}{{ 'COMMON.UNITS.PER_HR' | i18n }}</div>

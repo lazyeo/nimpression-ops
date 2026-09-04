@@ -121,11 +121,12 @@ const VARIANT_LOOKUP: Record<string, BadgeVariant> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatusBadgeComponent {
-  readonly status = input.required<DomainStatus>();
+  readonly status = input<DomainStatus | ''>('');
   readonly variant = input<BadgeVariant | undefined>(undefined);
   readonly size = input<BadgeSize>('md');
   readonly label = input<string | undefined>(undefined);
   readonly icon = input<string | undefined>(undefined);
+  readonly dot = input<boolean>(false);
 
   readonly resolvedVariant = computed<BadgeVariant>(() => {
     const explicit = this.variant();

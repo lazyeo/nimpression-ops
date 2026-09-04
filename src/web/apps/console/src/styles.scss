@@ -3,8 +3,8 @@
    Integrated with Design Tokens and Dual-Theme System
    ========================================================================== */
 
-@import './styles/tokens.scss';
-@import './styles/theme.scss';
+@use './styles/tokens' as *;
+@use './styles/theme' as *;
 
 *, *::before, *::after {
   box-sizing: border-box;

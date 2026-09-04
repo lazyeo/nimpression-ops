@@ -12,6 +12,7 @@ import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { AreasService, DriverOption } from './services/areas.service';
 import {
   AreaAssignmentDto,
@@ -24,7 +25,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-areas',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent],
+  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent, StatusBadgeComponent],
   templateUrl: './areas.component.html',
   styleUrl: './areas.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

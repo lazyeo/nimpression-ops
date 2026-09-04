@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuditService } from './services/audit.service';
 import { AuditEventDto, AuditLogFilter, PagedResult } from './models/audit.models';
@@ -24,6 +25,7 @@ import { AuditDiffModalComponent } from './components/audit-diff-modal/audit-dif
     I18nPipe,
     LocaleDatePipe,
     IconComponent,
+    StatusBadgeComponent,
     AuditDiffModalComponent,
   ],
   templateUrl: './audit.component.html',

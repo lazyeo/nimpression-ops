@@ -1,7 +1,11 @@
 <span
   class="nim-status-badge badge-{{ resolvedVariant() }} size-{{ size() }}"
   [class.has-icon]="!!icon()"
+  [class.has-dot]="dot()"
 >
+  @if (dot()) {
+    <span class="badge-dot" aria-hidden="true"></span>
+  }
   @if (icon()) {
     <nim-icon [name]="icon()!" [size]="iconSize()" aria-hidden="true" />
   }

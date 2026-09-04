@@ -13,6 +13,7 @@ import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { DriverLookupOption, VehiclesService } from './services/vehicles.service';
 import {
   OdometerReadingDto,
@@ -27,7 +28,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-vehicles',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent],
+  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent, StatusBadgeComponent],
   templateUrl: './vehicles.component.html',
   styleUrl: './vehicles.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

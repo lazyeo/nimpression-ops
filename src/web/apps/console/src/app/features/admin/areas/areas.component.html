@@ -135,9 +135,9 @@
                   <strong>{{ getAreaDriverCount(area.id) }}</strong>
                 </td>
                 <td>
-                  <span class="badge" [ngClass]="area.isActive ? 'badge-active' : 'badge-inactive'">
+                  <nim-status-badge [status]="area.isActive ? 'Active' : 'Inactive'">
                     {{ (area.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n }}
-                  </span>
+                  </nim-status-badge>
                 </td>
                 <td>
                   <div class="row-actions">
@@ -376,9 +376,9 @@
                     <td>{{ asg.effectiveFrom | localeDate: 'short' }}</td>
                     <td>{{ (asg.effectiveTo | localeDate: 'short') || '-' }}</td>
                     <td>
-                      <span class="badge" [ngClass]="asg.isActive ? 'badge-active' : 'badge-inactive'">
+                      <nim-status-badge [status]="asg.isActive ? 'Active' : 'Inactive'">
                         {{ (asg.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n }}
-                      </span>
+                      </nim-status-badge>
                     </td>
                     <td>
                       @if (asg.isActive && !asg.effectiveTo) {

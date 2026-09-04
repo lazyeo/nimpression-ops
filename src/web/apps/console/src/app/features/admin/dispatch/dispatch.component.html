@@ -228,19 +228,18 @@
                   <span>{{ task.scheduledFor | localeDate: 'short' }}</span>
                 </td>
                 <td>
-                  <span class="badge priority-{{ task.priority.toLowerCase() }}">
+                  <nim-status-badge [status]="task.priority">
                     {{ 'DISPATCH.PRIORITY_' + task.priority.toUpperCase() | i18n }}
-                  </span>
+                  </nim-status-badge>
                 </td>
                 <td>
-                  <span class="badge badge-{{ task.status.toLowerCase() }}">
+                  <nim-status-badge [status]="task.status">
                     {{ 'DISPATCH.STATUS_' + getStatusKey(task.status) | i18n }}
-                  </span>
+                  </nim-status-badge>
                   @if (isTaskOverdueUnacknowledged(task)) {
-                    <div class="badge badge-alert">
-                      <nim-icon name="clock" [size]="10" />
+                    <nim-status-badge status="Overdue" variant="warning" icon="clock">
                       {{ 'DISPATCH.OVERDUE_ALERT' | i18n }}
-                    </div>
+                    </nim-status-badge>
                   }
                 </td>
                 <td>

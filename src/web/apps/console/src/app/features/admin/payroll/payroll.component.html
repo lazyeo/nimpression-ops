@@ -144,17 +144,9 @@
                       <strong>{{ period.startsOn }} ~ {{ period.endsOn }}</strong>
                     </td>
                     <td>
-                      <span
-                        class="status-badge"
-                        [ngClass]="{
-                          'status-open': period.status === 'Open',
-                          'status-calculating': period.status === 'Calculating',
-                          'status-finalised': period.status === 'Finalised',
-                          'status-paid': period.status === 'Paid'
-                        }"
-                      >
+                      <nim-status-badge [status]="period.status">
                         {{ 'PAYROLL.STATUS_' + period.status.toUpperCase() | i18n }}
-                      </span>
+                      </nim-status-badge>
                     </td>
                     <td>{{ period.payslipCount }}</td>
                     <td>{{ period.finalisedAt ? (period.finalisedAt | localeDate: 'short') : '-' }}</td>
@@ -327,23 +319,19 @@
                       <strong>{{ slip.grossPay | localeCurrency: slip.currency }}</strong>
                     </td>
                     <td>
-                      <span
-                        class="basis-badge"
-                        [ngClass]="slip.basisUsed === 'Hourly' ? 'basis-hourly' : 'basis-trip'"
-                      >
+                      <nim-status-badge [status]="slip.basisUsed" [variant]="slip.basisUsed === 'Hourly' ? 'info' : 'purple'">
                         {{ (slip.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n }}
-                      </span>
+                      </nim-status-badge>
                     </td>
                     <td>
                       @if (slip.minimumWageTopUp) {
-                        <span class="topup-badge topup-applied" [title]="'PAYROLL.MIN_WAGE_NOTICE' | i18n">
-                          <nim-icon name="alert-triangle" [size]="12" />
-                          <span>{{ 'PAYROLL.TOPUP_APPLIED' | i18n }}</span>
-                        </span>
+                        <nim-status-badge status="TopUpApplied" variant="warning" icon="alert-triangle" [title]="'PAYROLL.MIN_WAGE_NOTICE' | i18n">
+                          {{ 'PAYROLL.TOPUP_APPLIED' | i18n }}
+                        </nim-status-badge>
                       } @else {
-                        <span class="topup-badge topup-none">
+                        <nim-status-badge status="TopUpNone" variant="neutral">
                           {{ 'PAYROLL.TOPUP_NONE' | i18n }}
-                        </span>
+                        </nim-status-badge>
                       }
                     </td>
                     <td class="actions-cell">
@@ -429,7 +417,9 @@
                 <div class="basis-card-header">
                   <h4>{{ 'PAYROLL.HOURS_BASIS_CARD' | i18n }}</h4>
                   @if (activePayslip()?.basisUsed === 'Hourly') {
-                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_HOURLY' | i18n }} {{ 'PAYROLL.APPLIED_BADGE' | i18n }}</span>
+                    <nim-status-badge status="HourlyApplied" variant="success">
+                      {{ 'PAYROLL.BASIS_HOURLY' | i18n }} {{ 'PAYROLL.APPLIED_BADGE' | i18n }}
+                    </nim-status-badge>
                   }
                 </div>
                 <div class="basis-card-body">
@@ -457,7 +447,9 @@
                 <div class="basis-card-header">
                   <h4>{{ 'PAYROLL.TRIP_BASIS_CARD' | i18n }}</h4>
                   @if (activePayslip()?.basisUsed === 'Trip') {
-                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_TRIP' | i18n }} {{ 'PAYROLL.APPLIED_BADGE' | i18n }}</span>
+                    <nim-status-badge status="TripApplied" variant="success">
+                      {{ 'PAYROLL.BASIS_TRIP' | i18n }} {{ 'PAYROLL.APPLIED_BADGE' | i18n }}
+                    </nim-status-badge>
                   }
                 </div>
                 <div class="basis-card-body">
@@ -609,7 +601,9 @@
                   <nim-icon name="fines" [size]="20" />
                   <h4>{{ 'PAYROLL.FINES_PARTITION_TITLE' | i18n }}</h4>
                 </div>
-                <span class="zero-deduction-badge">{{ 'PAYROLL.ZERO_WAGE_DEDUCTION' | i18n }}</span>
+                <nim-status-badge class="zero-deduction-badge" status="ZeroDeduction" variant="success">
+                  {{ 'PAYROLL.ZERO_WAGE_DEDUCTION' | i18n }}
+                </nim-status-badge>
               </div>
 
               <!-- Mandatory Legal Disclaimer Banner -->
@@ -639,7 +633,7 @@
                         <td>{{ f.authority }}</td>
                         <td>{{ f.issuedOn }}</td>
                         <td class="fine-amount-cell">{{ f.amount | localeCurrency: f.currency }}</td>
-                        <td><span class="fine-status-badge">{{ f.status }}</span></td>
+                        <td><nim-status-badge [status]="f.status" /></td>
                         <td>{{ f.reason }}</td>
                       </tr>
                     }

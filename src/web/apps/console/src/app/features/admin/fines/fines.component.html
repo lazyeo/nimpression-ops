@@ -198,18 +198,9 @@
                   <td><span class="rego-badge">{{ fine.vehicleRego }}</span></td>
                   <td class="amount-cell">{{ fine.amount | localeCurrency: fine.currency }}</td>
                   <td>
-                    <span
-                      class="status-badge"
-                      [ngClass]="{
-                        'status-submitted': fine.status === 'Submitted',
-                        'status-under-review': fine.status === 'UnderReview',
-                        'status-accepted': fine.status === 'Accepted',
-                        'status-disputed': fine.status === 'Disputed',
-                        'status-waived': fine.status === 'Waived'
-                      }"
-                    >
+                    <nim-status-badge [status]="fine.status">
                       {{ 'FINES.STATUS_' + fine.status.replace(' ', '_').toUpperCase() | i18n }}
-                    </span>
+                    </nim-status-badge>
                   </td>
                   <td class="actions-cell">
                     <!-- View Details Action -->
