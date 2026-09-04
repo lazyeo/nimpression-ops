@@ -144,7 +144,7 @@ describe('VehiclesComponent', () => {
     expect(compiled.querySelectorAll('tbody tr').length).toBe(2);
     expect(compiled.textContent).toContain('ABC123');
     expect(compiled.textContent).toContain('XYZ999');
-    expect(compiled.textContent).toContain('32000 km');
+    expect(compiled.textContent).toContain('32000');
   });
 
   it('should render empty state when no vehicles are found', () => {

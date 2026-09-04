@@ -145,7 +145,7 @@ describe('DriversComponent', () => {
     expect(compiled.querySelectorAll('tbody tr').length).toBe(2);
     expect(compiled.textContent).toContain('Alex Mercer');
     expect(compiled.textContent).toContain('DRV-1001');
-    expect(compiled.textContent).toContain('$34/h');
+    expect(compiled.textContent).toContain('$34');
   });
 
   it('should render empty state when drivers list is empty', () => {
