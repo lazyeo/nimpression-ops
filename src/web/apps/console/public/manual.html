@@ -1129,6 +1129,24 @@
 
         <h3>Guaranteed Message Delivery: The Outbox Pattern</h3>
         <p>To prevent distributed transaction failures between the relational database and external notification brokers, domain events are written atomically into the <code>OutboxMessages</code> table within the same database transaction. A dedicated background worker continuously polls and processes pending events with exponential backoff retries.</p>
+
+        <h3>Distributed Migration Protection via PostgreSQL Advisory Locks</h3>
+        <p>In containerized cloud environments where multiple application instances scale horizontally and spin up concurrently, database schema migrations present a high risk of concurrency collisions. To guarantee mutual exclusion, the deployment pipeline executes schema migrations under a <strong>PostgreSQL Distributed Advisory Lock</strong> (<code>pg_advisory_lock</code> / <code>pg_try_advisory_lock</code>).</p>
+        <p>The first booting container acquires the session-level advisory lock, safely applies pending EF Core migrations to completion, and releases the lock. Co-booting replica instances detect the active lock, await schema convergence, and proceed directly to service handling without duplicate DDL execution or catalog deadlocks.</p>
+
+        <h3>Deterministic Timezone Architecture: <code>Pacific/Auckland</code></h3>
+        <p>Accurate time tracking is the foundational pillar of the entire dispatch and remuneration engine. In compliance with NZ statutory standards, both the PostgreSQL database container (<code>TZ=Pacific/Auckland</code>, <code>PGTZ=Pacific/Auckland</code> in <code>docker-compose.yml</code>) and the backend .NET runtime (via <code>NzTimeZone.cs</code> wrapping <code>TimeZoneInfo.FindSystemTimeZoneById("Pacific/Auckland")</code>) are strictly pinned to <strong><code>Pacific/Auckland</code></strong>.</p>
+        
+        <div class="callout warning">
+          <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <div class="callout-body">
+            <div class="callout-title">Why UTC Execution Silently Corrupts Payroll</div>
+            New Zealand observes Daylight Saving Time (DST), transitioning between NZST (UTC+12) and NZDT (UTC+13) resulting in 23-hour and 25-hour calendar days. If the system or database defaults to UTC, midnight shift attributions and fortnightly pay period start/end boundaries will silently drift across calendar days. This would produce corrupted daily overtime (1.5x) and public holiday (2.0x) calculations without throwing any runtime exceptions. Pinning all database queries and time math to <code>Pacific/Auckland</code> guarantees deterministic legal compliance.
+          </div>
+        </div>
       </section>
 
       <!-- Chapter 8: Engineering Quality & Build Guards -->
@@ -1178,42 +1196,96 @@
       <section id="section-accounts" class="doc-section">
         <div class="section-header">
           <span class="section-tag">Chapter 9</span>
-          <h2>Demo Seed Credentials &amp; Verification Matrix</h2>
+          <h2>Demo Seed Credentials &amp; Role Visibility Matrix</h2>
         </div>
-        <p>The development and staging environments are pre-seeded with three verified personas representing each operational tier:</p>
+        <p>The development and staging databases are pre-populated via <code>DatabaseSeeder</code> and <code>SeedConstants</code> with verified personas across all three security tiers. All seeded accounts share the standardized demonstration password:</p>
+        
+        <div class="callout info">
+          <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <div class="callout-body">
+            <div class="callout-title">Standard Demonstration Password</div>
+            <code>Passw0rd!demo</code> (hashed using BCrypt workFactor 12 as defined in <code>SeedConstants.DefaultPasswordHash</code>).
+          </div>
+        </div>
 
         <div class="table-container">
           <table>
             <thead>
               <tr>
                 <th>Role</th>
-                <th>Seed Email (Username)</th>
-                <th>Password</th>
+                <th>Account Email</th>
                 <th>Persona Details</th>
-                <th>Accessible Operational Scope</th>
+                <th>Accessible Modules &amp; Capabilities (What They See)</th>
+                <th>Restricted Actions &amp; Boundaries (What They CANNOT See)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><span class="badge badge-danger">Admin</span></td>
-                <td><code>admin@nimpression-logistics.co.nz</code></td>
-                <td><code>AdminPass123!</code></td>
-                <td>Sarah Connor (General Manager)</td>
-                <td>Full system access across all 11 admin modules, payroll finalization, DSR deletion, and append-only audit trail inspection.</td>
+                <td><code>admin@nimpression.co.nz</code></td>
+                <td><strong>Sarah Connor</strong><br>General Manager</td>
+                <td>
+                  <ul style="padding-left: 16px; margin: 0; font-size: 0.85rem; line-height: 1.5;">
+                    <li>Full access across all 11 Admin modules</li>
+                    <li>Finalise &amp; permanently lock payroll periods (irreversible financial action)</li>
+                    <li>Execute Privacy Act DSR data deletions and pseudonymisation</li>
+                    <li>Inspect PostgreSQL append-only audit trail and entity JSON diffs</li>
+                    <li>Configure email templates, partner contacts, and compliance scan rules</li>
+                  </ul>
+                </td>
+                <td>
+                  <span class="badge badge-neutral">Restricted</span> Driver mobile shift clocking UI (accessed via dedicated driver credentials).
+                </td>
               </tr>
               <tr>
                 <td><span class="badge badge-info">Dispatcher</span></td>
-                <td><code>dispatch.north@nimpression-logistics.co.nz</code></td>
-                <td><code>DispatchPass123!</code></td>
-                <td>Dave Miller (North Dispatcher)</td>
-                <td>Operational fleet tracking, dispatch assignment, timesheet approval, driver rosters, and broadcast notices.</td>
+                <td>
+                  <code>dispatch.north@nimpression.co.nz</code><br>
+                  <code>dispatch.south@nimpression.co.nz</code>
+                </td>
+                <td>
+                  <strong>Dave Miller</strong> (North)<br>
+                  <strong>Emma Watson</strong> (South)
+                </td>
+                <td>
+                  <ul style="padding-left: 16px; margin: 0; font-size: 0.85rem; line-height: 1.5;">
+                    <li>Operational Dispatch board: create tasks, assign vehicles and drivers</li>
+                    <li>Fleet registry: track vehicle maintenance, WOF/COF, Rego, and RUC</li>
+                    <li>Driver management: review licenses, endorsements, and area intervals</li>
+                    <li>Timesheet approvals: review clock-in/out timestamps and approve shifts</li>
+                    <li>Log on-road safety incidents and record traffic infringements</li>
+                    <li>Post company broadcast news and announcements</li>
+                  </ul>
+                </td>
+                <td>
+                  <span class="badge badge-danger">Prohibited</span> CANNOT finalise or lock payroll periods; CANNOT execute DSR deletions; CANNOT view system audit log or email outbox credentials.
+                </td>
               </tr>
               <tr>
                 <td><span class="badge badge-success">Driver</span></td>
-                <td><code>liam.smith@nimpression-logistics.co.nz</code></td>
-                <td><code>DriverPass123!</code></td>
-                <td>Liam Smith (DRV-001)</td>
-                <td>Driver mobile portal: shift clock-in/out, task acknowledgment, historical payslip view, and personal profile management.</td>
+                <td>
+                  <code>liam.smith@nimpression.co.nz</code> (DRV-001)<br>
+                  <code>noah.jones@nimpression.co.nz</code> (DRV-002)
+                </td>
+                <td>
+                  <strong>Liam Smith</strong> (Class 4)<br>
+                  <strong>Noah Jones</strong> (Class 4)
+                </td>
+                <td>
+                  <ul style="padding-left: 16px; margin: 0; font-size: 0.85rem; line-height: 1.5;">
+                    <li>Touch-friendly Driver Portal (Mobile &amp; Desktop)</li>
+                    <li>Shifts: Clock-in, log mandatory unpaid breaks, and clock-out</li>
+                    <li>Tasks: Receive live dispatch orders, acknowledge, and mark completed</li>
+                    <li>Payslips: View gross pay, dual-basis breakdown, and $0.00 fine deduction breakdown</li>
+                    <li>Profile: View personal details and request DSR personal data export</li>
+                  </ul>
+                </td>
+                <td>
+                  <span class="badge badge-danger">Prohibited</span> Entire Admin Console is inaccessible. Cannot view other drivers' timesheets, wages, company-wide finances, or fleet management tables.
+                </td>
               </tr>
             </tbody>
           </table>
