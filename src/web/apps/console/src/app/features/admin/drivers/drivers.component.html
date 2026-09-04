@@ -199,8 +199,8 @@
                   </span>
                 </td>
                 <td class="rate-cell">
-                  <div class="rate-line">${{ driver.hourlyRate }}/h</div>
-                  <div class="rate-line">${{ driver.perTripRate }}/trip | ${{ driver.perKmRate }}/km</div>
+                  <div class="rate-line">${{ driver.hourlyRate }}{{ 'COMMON.UNITS.PER_HR' | i18n }}</div>
+                  <div class="rate-line">${{ driver.perTripRate }}{{ 'COMMON.UNITS.PER_TRIP' | i18n }} | ${{ driver.perKmRate }}{{ 'COMMON.UNITS.PER_KM' | i18n }}</div>
                 </td>
                 <td>
                   <div class="area-tags">
@@ -243,7 +243,7 @@
 
       <!-- Pagination -->
       <div class="table-pagination">
-        <span>Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} drivers)</span>
+        <span>{{ 'COMMON.PAGE_INFO_DRIVERS' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}</span>
         <div class="pagination-btns">
           <button
             type="button"
@@ -251,7 +251,7 @@
             [disabled]="currentPage() <= 1"
             (click)="goToPage(currentPage() - 1)"
           >
-            Prev
+            {{ 'COMMON.PREV' | i18n }}
           </button>
           <button
             type="button"
@@ -259,7 +259,7 @@
             [disabled]="currentPage() >= totalPages()"
             (click)="goToPage(currentPage() + 1)"
           >
-            Next
+            {{ 'COMMON.NEXT' | i18n }}
           </button>
         </div>
       </div>
@@ -282,27 +282,27 @@
           <div class="form-grid">
             <div class="form-field">
               <label for="create-name">{{ 'DRIVERS.FIELD_DISPLAY_NAME' | i18n }} *</label>
-              <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.displayName" placeholder="e.g. John Smith" />
+              <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.displayName" [placeholder]="'DRIVERS.PLACEHOLDER_NAME' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-email">{{ 'DRIVERS.FIELD_EMAIL' | i18n }} *</label>
-              <input id="create-email" type="email" class="input-control" [(ngModel)]="createForm.email" placeholder="john.smith@example.co.nz" />
+              <input id="create-email" type="email" class="input-control" [(ngModel)]="createForm.email" [placeholder]="'DRIVERS.PLACEHOLDER_EMAIL' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-empno">{{ 'DRIVERS.FIELD_EMPLOYEE_NO' | i18n }} *</label>
-              <input id="create-empno" type="text" class="input-control" [(ngModel)]="createForm.employeeNo" placeholder="e.g. DRV-1001" />
+              <input id="create-empno" type="text" class="input-control" [(ngModel)]="createForm.employeeNo" [placeholder]="'DRIVERS.PLACEHOLDER_EMPLOYEE_NO' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-pwd">{{ 'DRIVERS.FIELD_PASSWORD' | i18n }}</label>
-              <input id="create-pwd" type="password" class="input-control" [(ngModel)]="createForm.password" placeholder="Default: Initial@123" />
+              <input id="create-pwd" type="password" class="input-control" [(ngModel)]="createForm.password" [placeholder]="'DRIVERS.FIELD_PASSWORD_PLACEHOLDER' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-lic-class">{{ 'DRIVERS.FIELD_LICENCE_CLASS' | i18n }} *</label>
-              <input id="create-lic-class" type="text" class="input-control" [(ngModel)]="createForm.licenceClass" placeholder="Class 2 Heavy Rigid" />
+              <input id="create-lic-class" type="text" class="input-control" [(ngModel)]="createForm.licenceClass" [placeholder]="'DRIVERS.PLACEHOLDER_LICENCE_CLASS' | i18n" />
             </div>
 
             <div class="form-field">
@@ -317,7 +317,7 @@
 
             <div class="form-field">
               <label for="create-phone">{{ 'DRIVERS.FIELD_PHONE' | i18n }} *</label>
-              <input id="create-phone" type="text" class="input-control" [(ngModel)]="createForm.phone" placeholder="+64 21 123 4567" />
+              <input id="create-phone" type="text" class="input-control" [(ngModel)]="createForm.phone" [placeholder]="'DRIVERS.PLACEHOLDER_PHONE' | i18n" />
             </div>
 
             <div class="form-field">
@@ -337,12 +337,12 @@
 
             <div class="form-field">
               <label for="create-emergency">{{ 'DRIVERS.FIELD_EMERGENCY_CONTACT' | i18n }} *</label>
-              <input id="create-emergency" type="text" class="input-control" [(ngModel)]="createForm.emergencyContact" placeholder="Jane Smith - 021 987 6543" />
+              <input id="create-emergency" type="text" class="input-control" [(ngModel)]="createForm.emergencyContact" [placeholder]="'DRIVERS.PLACEHOLDER_EMERGENCY' | i18n" />
             </div>
 
             <div class="form-field full-width">
               <label for="create-address">{{ 'DRIVERS.FIELD_ADDRESS' | i18n }} *</label>
-              <input id="create-address" type="text" class="input-control" [(ngModel)]="createForm.address" placeholder="12 Queen Street, Auckland" />
+              <input id="create-address" type="text" class="input-control" [(ngModel)]="createForm.address" [placeholder]="'DRIVERS.PLACEHOLDER_ADDRESS' | i18n" />
             </div>
 
             <div class="form-field full-width">
@@ -533,7 +533,7 @@
               type="text"
               class="input-control"
               [(ngModel)]="deactivateReason"
-              placeholder="e.g. Voluntary resignation, contract ended"
+              [placeholder]="'DRIVERS.PLACEHOLDER_DEACTIVATE_REASON' | i18n"
             />
           </div>
         </div>
@@ -566,7 +566,7 @@
         <div class="dialog-body">
           <div class="details-grid">
             <div class="detail-group">
-              <h4>Employment</h4>
+              <h4>{{ 'DRIVERS.SECTION_EMPLOYMENT' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_EMPLOYEE_NO' | i18n }}</span>
                 <span class="detail-val">{{ selectedDriverDetail()!.employeeNo }}</span>
@@ -590,7 +590,7 @@
             </div>
 
             <div class="detail-group">
-              <h4>Licence & Compliance</h4>
+              <h4>{{ 'DRIVERS.SECTION_COMPLIANCE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_LICENCE_CLASS' | i18n }}</span>
                 <span class="detail-val">{{ selectedDriverDetail()!.licenceClass }}</span>
@@ -600,7 +600,7 @@
                 <span class="detail-val">{{ selectedDriverDetail()!.licenceExpiry | localeDate: 'medium' }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Status</span>
+                <span class="detail-label">{{ 'DRIVERS.SECTION_STATUS' | i18n }}</span>
                 <span class="detail-val">
                   @if (selectedDriverDetail()!.isLicenceExpired) {
                     <span style="color: #dc2626; font-weight: 700">{{ 'DRIVERS.LICENCE_EXPIRED' | i18n }}</span>
@@ -616,23 +616,23 @@
             </div>
 
             <div class="detail-group">
-              <h4>Rate Cards (NZD)</h4>
+              <h4>{{ 'DRIVERS.SECTION_RATE_CARDS' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_HOURLY_RATE' | i18n }}</span>
-                <span class="detail-val">${{ selectedDriverDetail()!.hourlyRateAmount }} / hr</span>
+                <span class="detail-val">${{ selectedDriverDetail()!.hourlyRateAmount }} {{ 'COMMON.UNITS.PER_HR' | i18n }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_PER_TRIP_RATE' | i18n }}</span>
-                <span class="detail-val">${{ selectedDriverDetail()!.perTripRateAmount }} / trip</span>
+                <span class="detail-val">${{ selectedDriverDetail()!.perTripRateAmount }} {{ 'COMMON.UNITS.PER_TRIP' | i18n }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_PER_KM_RATE' | i18n }}</span>
-                <span class="detail-val">${{ selectedDriverDetail()!.perKmRateAmount }} / km</span>
+                <span class="detail-val">${{ selectedDriverDetail()!.perKmRateAmount }} {{ 'COMMON.UNITS.PER_KM' | i18n }}</span>
               </div>
             </div>
 
             <div class="detail-group">
-              <h4>Contact Information</h4>
+              <h4>{{ 'DRIVERS.SECTION_CONTACT' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_PHONE' | i18n }}</span>
                 <span class="detail-val">{{ selectedDriverDetail()!.phone }}</span>
@@ -648,13 +648,13 @@
             </div>
 
             <div class="detail-group full-width">
-              <h4>Assigned Areas</h4>
+              <h4>{{ 'DRIVERS.SECTION_ASSIGNED_AREAS' | i18n }}</h4>
               <div class="area-tags">
                 @for (assignment of selectedDriverDetail()!.areaAssignments; track assignment.id) {
                   <span class="area-chip">{{ assignment.areaName }} ({{ assignment.areaCode }})</span>
                 }
                 @if (selectedDriverDetail()!.areaAssignments.length === 0) {
-                  <span style="color: #94a3b8">No assigned operational areas</span>
+                  <span style="color: #94a3b8">{{ 'DRIVERS.NO_ASSIGNED_AREAS' | i18n }}</span>
                 }
               </div>
             </div>

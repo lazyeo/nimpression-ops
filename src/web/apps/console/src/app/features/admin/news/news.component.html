@@ -130,7 +130,7 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" aria-label="News and Notices List">
+      <table class="data-table" [attr.aria-label]="'NEWS.LIST_ARIA_LABEL' | i18n">
         <thead>
           <tr>
             <th class="th-pin">{{ 'NEWS.COL_PIN' | i18n }}</th>

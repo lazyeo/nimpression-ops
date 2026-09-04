@@ -47,7 +47,7 @@
   </main>
 
   <!-- Mobile Bottom Navigation (Single-hand reachable, touch target >= 44px) -->
-  <nav class="driver-bottom-nav" aria-label="Driver Navigation">
+  <nav class="driver-bottom-nav" [attr.aria-label]="'NAV.DRIVER_NAV' | i18n">
     <div class="bottom-nav-inner">
       @for (item of bottomNavItems; track item.path) {
         <a [routerLink]="item.path" routerLinkActive="active" class="bottom-nav-link">

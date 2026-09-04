@@ -62,13 +62,13 @@
         class="filter-select"
       >
         <option value="">{{ 'COMMON.ALL' | i18n }}</option>
-        <option value="Create">Create</option>
-        <option value="Update">Update</option>
-        <option value="Delete">Delete</option>
-        <option value="Login">Login</option>
-        <option value="Submit">Submit</option>
-        <option value="Activate">Activate</option>
-        <option value="Deactivate">Deactivate</option>
+        <option value="Create">{{ 'AUDIT.ACTION_CREATE' | i18n }}</option>
+        <option value="Update">{{ 'AUDIT.ACTION_UPDATE' | i18n }}</option>
+        <option value="Delete">{{ 'AUDIT.ACTION_DELETE' | i18n }}</option>
+        <option value="Login">{{ 'AUDIT.ACTION_LOGIN' | i18n }}</option>
+        <option value="Submit">{{ 'AUDIT.ACTION_SUBMIT' | i18n }}</option>
+        <option value="Activate">{{ 'AUDIT.ACTION_ACTIVATE' | i18n }}</option>
+        <option value="Deactivate">{{ 'AUDIT.ACTION_DEACTIVATE' | i18n }}</option>
       </select>
     </div>
 
@@ -163,7 +163,7 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" aria-label="Audit Logs Table">
+      <table class="data-table" [attr.aria-label]="'AUDIT.TABLE_ARIA_LABEL' | i18n">
         <thead>
           <tr>
             <th class="th-time">{{ 'AUDIT.COL_OCCURRED_AT' | i18n }}</th>

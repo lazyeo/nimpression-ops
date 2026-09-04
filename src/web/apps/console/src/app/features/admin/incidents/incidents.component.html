@@ -238,7 +238,7 @@
         <!-- Pagination -->
         <div class="pagination-bar">
           <span class="page-info">
-            Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+            {{ 'COMMON.PAGE_INFO_INCIDENTS' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
           </span>
           <div class="pagination-controls">
             <button
@@ -247,7 +247,7 @@
               [disabled]="currentPage() <= 1"
               (click)="goToPage(currentPage() - 1)"
             >
-              Prev
+              {{ 'COMMON.PREV' | i18n }}
             </button>
             <span class="current-page-num">{{ currentPage() }}</span>
             <button
@@ -256,7 +256,7 @@
               [disabled]="currentPage() >= totalPages()"
               (click)="goToPage(currentPage() + 1)"
             >
-              Next
+              {{ 'COMMON.NEXT' | i18n }}
             </button>
           </div>
         </div>
@@ -397,7 +397,7 @@
           <div class="form-group">
             <label class="form-label">{{ 'INCIDENTS.FILTER_DRIVER' | i18n }}</label>
             <select class="form-control" [(ngModel)]="newDriverId">
-              <option value="">Select driver (optional)</option>
+              <option value="">{{ 'INCIDENTS.SELECT_DRIVER_OPTIONAL' | i18n }}</option>
               @for (d of drivers(); track d.id) {
                 <option [value]="d.id">{{ d.displayName }} ({{ d.employeeNo }})</option>
               }
@@ -407,7 +407,7 @@
           <div class="form-group">
             <label class="form-label">{{ 'INCIDENTS.FILTER_VEHICLE' | i18n }} *</label>
             <select class="form-control" [(ngModel)]="newVehicleId" required>
-              <option value="">Select vehicle *</option>
+              <option value="">{{ 'INCIDENTS.SELECT_VEHICLE_REQUIRED' | i18n }}</option>
               @for (v of vehicles(); track v.id) {
                 <option [value]="v.id">{{ v.rego }} ({{ v.make }} {{ v.model }})</option>
               }
@@ -425,7 +425,7 @@
               type="text"
               class="form-control"
               [(ngModel)]="newLocation"
-              placeholder="e.g. State Highway 1, Penrose / Hobson St & Victoria St"
+              [placeholder]="'INCIDENTS.PLACEHOLDER_LOCATION' | i18n"
               required
             />
           </div>
@@ -462,12 +462,12 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Scene Photo Keys (comma-separated, optional)</label>
+            <label class="form-label">{{ 'INCIDENTS.SCENE_PHOTO_KEYS_OPTIONAL' | i18n }}</label>
             <input
               type="text"
               class="form-control"
               [(ngModel)]="newPhotoKeys"
-              placeholder="incidents/front.jpg, incidents/rear.jpg"
+              [placeholder]="'INCIDENTS.PLACEHOLDER_PHOTO_KEYS' | i18n"
             />
           </div>
         </div>

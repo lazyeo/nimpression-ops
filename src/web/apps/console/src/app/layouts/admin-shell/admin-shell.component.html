@@ -9,7 +9,7 @@
       </div>
     </div>
 
-    <nav class="sidebar-nav" aria-label="Main Navigation">
+    <nav class="sidebar-nav" [attr.aria-label]="'NAV.MAIN_NAV' | i18n">
       <ul class="nav-list">
         @for (item of navItems; track item.path) {
           <li class="nav-item">

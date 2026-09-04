@@ -168,7 +168,7 @@
                 </td>
                 <td>{{ veh.year }}</td>
                 <td>
-                  <strong>{{ veh.odometerKm }} km</strong>
+                  <strong>{{ veh.odometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong>
                 </td>
                 <td>
                   @if (veh.isServiceDue) {
@@ -182,15 +182,15 @@
                     </span>
                   }
                   <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem">
-                    {{ veh.distanceSinceLastServiceKm }} / {{ veh.serviceIntervalKm }} km
+                    {{ veh.distanceSinceLastServiceKm }} {{ 'COMMON.UNITS.SLASH_KM' | i18n }} {{ veh.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}
                   </div>
                 </td>
                 <td>
                   <div style="font-size: 0.8125rem">
-                    WOF: {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
+                    {{ 'VEHICLES.WOF_LABEL' | i18n }} {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
                   </div>
                   <div style="font-size: 0.8125rem; color: #64748b">
-                    COF: {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
+                    {{ 'VEHICLES.COF_LABEL' | i18n }} {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
                   </div>
                 </td>
                 <td>
@@ -252,7 +252,7 @@
 
       <!-- Pagination -->
       <div class="table-pagination">
-        <span>Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} vehicles)</span>
+        <span>{{ 'COMMON.PAGE_INFO_VEHICLES' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}</span>
         <div class="pagination-btns">
           <button
             type="button"
@@ -260,7 +260,7 @@
             [disabled]="currentPage() <= 1"
             (click)="goToPage(currentPage() - 1)"
           >
-            Prev
+            {{ 'COMMON.PREV' | i18n }}
           </button>
           <button
             type="button"
@@ -268,7 +268,7 @@
             [disabled]="currentPage() >= totalPages()"
             (click)="goToPage(currentPage() + 1)"
           >
-            Next
+            {{ 'COMMON.NEXT' | i18n }}
           </button>
         </div>
       </div>
@@ -291,22 +291,22 @@
           <div class="form-grid">
             <div class="form-field">
               <label for="create-rego">{{ 'VEHICLES.FIELD_REGO' | i18n }} *</label>
-              <input id="create-rego" type="text" class="input-control" [(ngModel)]="createForm.rego" placeholder="e.g. ABC123" />
+              <input id="create-rego" type="text" class="input-control" [(ngModel)]="createForm.rego" [placeholder]="'VEHICLES.PLACEHOLDER_REGO' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-vin">{{ 'VEHICLES.FIELD_VIN' | i18n }} *</label>
-              <input id="create-vin" type="text" class="input-control" [(ngModel)]="createForm.vinEnc" placeholder="17-character VIN" />
+              <input id="create-vin" type="text" class="input-control" [(ngModel)]="createForm.vinEnc" [placeholder]="'VEHICLES.PLACEHOLDER_VIN' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-make">{{ 'VEHICLES.FIELD_MAKE' | i18n }} *</label>
-              <input id="create-make" type="text" class="input-control" [(ngModel)]="createForm.make" placeholder="e.g. Toyota" />
+              <input id="create-make" type="text" class="input-control" [(ngModel)]="createForm.make" [placeholder]="'VEHICLES.PLACEHOLDER_MAKE' | i18n" />
             </div>
 
             <div class="form-field">
               <label for="create-model">{{ 'VEHICLES.FIELD_MODEL' | i18n }} *</label>
-              <input id="create-model" type="text" class="input-control" [(ngModel)]="createForm.model" placeholder="e.g. HiAce" />
+              <input id="create-model" type="text" class="input-control" [(ngModel)]="createForm.model" [placeholder]="'VEHICLES.PLACEHOLDER_MODEL' | i18n" />
             </div>
 
             <div class="form-field">
@@ -438,7 +438,7 @@
           <div class="form-field">
             <label for="assign-driver">{{ 'VEHICLES.FIELD_DRIVER' | i18n }} *</label>
             <select id="assign-driver" class="input-control" [(ngModel)]="assignForm.driverId">
-              <option value="">-- Select Driver --</option>
+              <option value="">{{ 'VEHICLES.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
                 <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
               }
@@ -523,7 +523,7 @@
           <div class="form-field">
             <label for="odo-driver">{{ 'VEHICLES.FIELD_DRIVER' | i18n }} *</label>
             <select id="odo-driver" class="input-control" [(ngModel)]="odometerForm.driverId">
-              <option value="">-- Select Driver --</option>
+              <option value="">{{ 'VEHICLES.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
                 <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
               }
@@ -570,7 +570,7 @@
         <div class="dialog-body">
           <div class="details-grid">
             <div class="detail-group">
-              <h4>Vehicle Specifications</h4>
+              <h4>{{ 'VEHICLES.SECTION_SPECS' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_REGO' | i18n }}</span>
                 <span class="detail-val">{{ selectedVehicleDetail()!.rego }}</span>
@@ -590,21 +590,21 @@
             </div>
 
             <div class="detail-group">
-              <h4>Service & Maintenance</h4>
+              <h4>{{ 'VEHICLES.SECTION_MAINTENANCE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.TABLE_ODOMETER' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.odometerKm }} km</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.odometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_SERVICE_INTERVAL' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.serviceIntervalKm }} km</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.lastServiceOdometerKm }} km</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.lastServiceOdometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Service Status</span>
+                <span class="detail-label">{{ 'VEHICLES.SERVICE_STATUS' | i18n }}</span>
                 <span class="detail-val">
                   @if (selectedVehicleDetail()!.isServiceDue) {
                     <span style="color: #dc2626; font-weight: 700">{{ 'VEHICLES.SERVICE_DUE' | i18n }}</span>
@@ -616,7 +616,7 @@
             </div>
 
             <div class="detail-group">
-              <h4>Compliance Expiries</h4>
+              <h4>{{ 'VEHICLES.SECTION_COMPLIANCE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</span>
                 <span class="detail-val">{{ (selectedVehicleDetail()!.wofExpiry | localeDate: 'medium') || '-' }}</span>
@@ -632,13 +632,13 @@
             </div>
 
             <div class="detail-group">
-              <h4>Active Assignment</h4>
+              <h4>{{ 'VEHICLES.SECTION_ASSIGNMENT' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_DRIVER' | i18n }}</span>
                 <span class="detail-val">{{ selectedVehicleDetail()!.activeAssignment?.driverName || '-' }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Assigned At</span>
+                <span class="detail-label">{{ 'VEHICLES.ASSIGNED_AT' | i18n }}</span>
                 <span class="detail-val">{{ (selectedVehicleDetail()!.activeAssignment?.assignedAt | localeDate: 'medium') || '-' }}</span>
               </div>
             </div>
@@ -663,7 +663,7 @@
                     @for (reading of odometerReadings(); track reading.id) {
                       <tr>
                         <td>{{ reading.recordedAt | localeDate: 'short' }}</td>
-                        <td><strong>{{ reading.readingKm }} km</strong></td>
+                        <td><strong>{{ reading.readingKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong></td>
                         <td>{{ reading.driverName || '-' }}</td>
                         <td>{{ reading.source }}</td>
                       </tr>

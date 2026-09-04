@@ -59,19 +59,19 @@
           </div>
           <div class="kpi-card highlight">
             <span class="kpi-label">{{ 'TIMESHEETS.TOTAL_PAYABLE_HOURS' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalPayableHours || 0 | localeNumber: 1 : 2 }} hrs</span>
+            <span class="kpi-val">{{ summary()?.totalPayableHours || 0 | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">{{ 'TIMESHEETS.ORDINARY_HOURS' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalOrdinaryHours || 0 | localeNumber: 1 : 2 }} hrs</span>
+            <span class="kpi-val">{{ summary()?.totalOrdinaryHours || 0 | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">{{ 'TIMESHEETS.OVERTIME_HOURS' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalOvertimeHours || 0 | localeNumber: 1 : 2 }} hrs</span>
+            <span class="kpi-val">{{ summary()?.totalOvertimeHours || 0 | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">{{ 'TIMESHEETS.BREAK_MINUTES' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalBreakMinutes || 0 }} mins</span>
+            <span class="kpi-val">{{ summary()?.totalBreakMinutes || 0 }} {{ 'COMMON.UNITS.MINS' | i18n }}</span>
           </div>
         }
       </div>
@@ -198,17 +198,17 @@
                       <span class="badge badge-active">{{ 'TIMESHEETS.STATUS_ACTIVE' | i18n }}</span>
                     }
                   </td>
-                  <td>{{ shift.breakMinutes }}m</td>
+                  <td>{{ shift.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
                   <td>
                     @if (shift.rawDurationHours !== null && shift.rawDurationHours !== undefined) {
-                      {{ shift.rawDurationHours | localeNumber: 1 : 2 }}h
+                      {{ shift.rawDurationHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}
                     } @else {
                       -
                     }
                   </td>
                   <td class="payable-cell">
                     @if (shift.payableHours !== null && shift.payableHours !== undefined) {
-                      <strong>{{ shift.payableHours | localeNumber: 1 : 2 }}h</strong>
+                      <strong>{{ shift.payableHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong>
                     } @else {
                       -
                     }
@@ -271,7 +271,7 @@
         <!-- Pagination -->
         <div class="pagination-bar">
           <span class="page-info">
-            Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+            {{ 'COMMON.PAGE_INFO_TIMESHEETS' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
           </span>
           <div class="pagination-controls">
             <button
@@ -280,7 +280,7 @@
               [disabled]="currentPage() <= 1"
               (click)="goToPage(currentPage() - 1)"
             >
-              Prev
+              {{ 'COMMON.PREV' | i18n }}
             </button>
             <span class="current-page-num">{{ currentPage() }}</span>
             <button
@@ -289,7 +289,7 @@
               [disabled]="currentPage() >= totalPages()"
               (click)="goToPage(currentPage() + 1)"
             >
-              Next
+              {{ 'COMMON.NEXT' | i18n }}
             </button>
           </div>
         </div>
@@ -328,23 +328,23 @@
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_BREAK' | i18n }}</label>
-              <span>{{ selectedShift()?.breakMinutes }} minutes</span>
+              <span>{{ selectedShift()?.breakMinutes }} {{ 'COMMON.UNITS.MINUTES' | i18n }}</span>
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_PAYABLE' | i18n }}</label>
-              <strong>{{ selectedShift()?.payableHours | localeNumber: 1 : 2 }} hours</strong>
+              <strong>{{ selectedShift()?.payableHours | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HOURS' | i18n }}</strong>
             </div>
             <div class="detail-item full-width">
               <label>{{ 'TIMESHEETS.COL_LOCATION' | i18n }}</label>
               @if (selectedShift()?.locationUnavailable) {
                 <span class="text-muted">{{ 'TIMESHEETS.GPS_UNAVAILABLE' | i18n }}</span>
               } @else {
-                <span>In: ({{ selectedShift()?.clockInLat }}, {{ selectedShift()?.clockInLng }}) | Out: ({{ selectedShift()?.clockOutLat || '-' }}, {{ selectedShift()?.clockOutLng || '-' }})</span>
+                <span>{{ 'TIMESHEETS.LOCATION_NOTE' | i18n: { inLat: selectedShift()?.clockInLat ?? '-', inLng: selectedShift()?.clockInLng ?? '-', outLat: selectedShift()?.clockOutLat ?? '-', outLng: selectedShift()?.clockOutLng ?? '-' } }}</span>
               }
             </div>
             @if (selectedShift()?.note) {
               <div class="detail-item full-width">
-                <label>Note</label>
+                <label>{{ 'TIMESHEETS.NOTE_LABEL' | i18n }}</label>
                 <p class="shift-note">{{ selectedShift()?.note }}</p>
               </div>
             }

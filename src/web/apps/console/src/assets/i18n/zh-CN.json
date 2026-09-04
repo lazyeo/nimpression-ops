@@ -28,7 +28,42 @@
     "ALL": "全部",
     "FORBIDDEN_TITLE": "无访问权限",
     "PREV_PAGE": "上一页",
-    "NEXT_PAGE": "下一页"
+    "NEXT_PAGE": "下一页",
+    "VS": "对比",
+    "PREV": "上一页",
+    "NEXT": "下一页",
+    "PAGINATION_PAGE_OF": "第 {page} 页，共 {total} 页（共 {count} 项）",
+    "PAGINATION_PAGE_OF_SIMPLE": "第 {page} 页，共 {total} 页",
+    "PAGINATION_TOTAL_ITEMS": "共 {total} 条记录（第 {page} / {pages} 页）",
+    "PAGINATION_TOTAL_VEHICLES": "第 {page} 页，共 {total} 页（共 {count} 辆车）",
+    "PAGINATION_TOTAL_AREAS": "第 {page} 页，共 {total} 页（共 {count} 个区域）",
+    "SELECT_DRIVER": "-- 请选择司机 --",
+    "SELECT_DRIVER_OPTIONAL": "选择司机（可选）",
+    "SELECT_VEHICLE": "-- 请选择车辆 --",
+    "SELECT_VEHICLE_REQUIRED": "选择关联车辆 *",
+    "SELECT_AREA": "-- 请选择运营区域 --",
+    "PHOTO_KEY_OPTIONAL": "照片对象键（可选）",
+    "UNITS": {
+      "HOURS": "小时",
+      "MINUTES": "分钟",
+      "HRS": "小时",
+      "MINS": "分钟",
+      "H": "小时",
+      "M": "分",
+      "KM": "公里",
+      "SLASH_KM": "/ 公里",
+      "PER_HR": "/小时",
+      "PER_TRIP": "/趟",
+      "PER_KM": "/公里",
+      "TRIPS": "趟"
+    },
+    "PAGE_INFO_TASKS": "第 {page} 页，共 {total} 页（共 {count} 个任务）",
+    "PAGE_INFO_DRIVERS": "第 {page} 页，共 {total} 页（共 {count} 名司机）",
+    "PAGE_INFO_FINES": "第 {page} 页，共 {total} 页（共 {count} 笔罚单）",
+    "PAGE_INFO_INCIDENTS": "第 {page} 页，共 {total} 页（共 {count} 起事故）",
+    "PAGE_INFO_TIMESHEETS": "第 {page} 页，共 {total} 页（共 {count} 条工时）",
+    "PAGE_INFO_PAYROLL": "第 {page} 页，共 {total} 页（共 {count} 个薪期）",
+    "PAGE_INFO_AUDIT": "第 {page} 页，共 {total} 页（共 {count} 条审计记录）"
   },
   "NAV": {
     "DASHBOARD": "运营大盘",
@@ -48,7 +83,9 @@
     "SHIFTS": "工时打卡",
     "PAYSLIPS": "工资条",
     "PROFILE": "个人中心",
-    "LOGOUT": "退出登录"
+    "LOGOUT": "退出登录",
+    "MAIN_NAV": "主导航",
+    "DRIVER_NAV": "司机导航"
   },
   "AUTH": {
     "LOGIN_TITLE": "登录 Nimpression 运营中台",
@@ -68,7 +105,8 @@
     "CURRENT_PASSWORD": "当前密码",
     "NEW_PASSWORD": "新密码",
     "CONFIRM_NEW_PASSWORD": "确认新密码",
-    "PASSWORD_CHANGED_SUCCESS": "密码修改成功"
+    "PASSWORD_CHANGED_SUCCESS": "密码修改成功",
+    "PLATFORM_MANUAL": "平台使用说明书与架构规范"
   },
   "ROLES": {
     "ADMIN": "系统管理员",
@@ -388,7 +426,7 @@
     "FIELD_DRIVER": "指派司机",
     "FIELD_VEHICLE": "执行车辆",
     "FIELD_DESCRIPTION": "任务描述 / 备注",
-    "FIELD_CANCEL_REASON": "取消原因说明",
+    "FIELD_CANCEL_REASON": "取消原因",
     "FIELD_OVERRIDE_WARNING": "确认越过跨区域派单警告",
     "AREA_WARNING_MESSAGE": "所选司机在计划日期未分配至该区域，如需强行派单请勾选越过警告。",
     "CANCEL_CONFIRM_MSG": "确认要取消此项派单任务吗？请填写取消原因。",
@@ -402,7 +440,29 @@
     "SUCCESS_ACKNOWLEDGED": "任务确认成功",
     "SUCCESS_STARTED": "任务已开始执行",
     "SUCCESS_COMPLETED": "任务已顺利完成",
-    "SUCCESS_CANCELLED": "任务已取消"
+    "SUCCESS_CANCELLED": "任务已取消",
+    "SEARCH_PLACEHOLDER": "例：#ORD-9921, 奥克兰至惠灵顿专线",
+    "FIELD_NOTES_PLACEHOLDER": "可选路线详情或交接说明...",
+    "SELECT_DRIVER": "-- 请选择司机 --",
+    "SELECT_VEHICLE": "-- 请选择车辆 --",
+    "SELECT_AREA": "-- 请选择运营区域 --",
+    "TIMELINE_TITLE": "时间线",
+    "FIELD_ACKNOWLEDGED_AT": "接单确认时间",
+    "FIELD_STARTED_AT": "开始执行时间",
+    "FIELD_COMPLETED_AT": "任务完成时间",
+    "FIELD_CANCELLED_AT": "取消时间",
+    "PLACEHOLDER_TITLE": "例：早班大宗货物配送",
+    "PLACEHOLDER_DISTANCE": "例：25.5",
+    "PLACEHOLDER_INSTRUCTIONS": "可选特殊送达指示...",
+    "PLACEHOLDER_START_KM": "例：12500.5",
+    "PLACEHOLDER_ACTUAL_KM": "例：28.0",
+    "PLACEHOLDER_END_KM": "例：12528.5",
+    "PLACEHOLDER_CANCEL_REASON": "请输入取消原因...",
+    "OPTIONAL_DRIVER": "-- 可选司机 --",
+    "OPTIONAL_VEHICLE": "-- 可选车辆 --",
+    "SECTION_OVERVIEW": "概览",
+    "SECTION_ASSIGNMENT": "分配详情",
+    "SECTION_MILEAGE": "里程与距离"
   },
   "DRIVERS": {
     "TITLE": "司机人员管理",
@@ -469,7 +529,24 @@
     "SUCCESS_CREATED": "司机档案创建成功",
     "SUCCESS_UPDATED": "司机档案更新成功",
     "SUCCESS_DEACTIVATED": "司机已成功停用",
-    "SUCCESS_AVATAR": "司机头像上传成功"
+    "SUCCESS_AVATAR": "司机头像上传成功",
+    "SECTION_EMPLOYMENT": "雇佣信息",
+    "SECTION_COMPLIANCE": "驾照与合规",
+    "SECTION_STATUS": "状态",
+    "SECTION_RATE_CARDS": "结算单价（新西兰元）",
+    "SECTION_CONTACT": "联系方式",
+    "SECTION_ASSIGNED_AREAS": "所属运营区域",
+    "NO_ASSIGNED_AREAS": "未分配运营区域",
+    "PLACEHOLDER_NAME": "例：张三",
+    "PLACEHOLDER_EMPLOYEE_NO": "例：DRV-001",
+    "PLACEHOLDER_EMAIL": "例：john@nimpression.co.nz",
+    "PLACEHOLDER_PHONE": "021 123 4567",
+    "PLACEHOLDER_EMERGENCY": "例：李四 (021 987 6543)",
+    "PLACEHOLDER_ADDRESS": "123 Queen St, Auckland",
+    "PLACEHOLDER_SEARCH": "按姓名、工号、邮箱搜索司机...",
+    "PLACEHOLDER_LICENCE_CLASS": "2类重型货车驾照 (Class 2)",
+    "PLACEHOLDER_DEACTIVATE_REASON": "例：自愿离职、合同期满",
+    "FIELD_PASSWORD_PLACEHOLDER": "默认密码：Initial@123"
   },
   "VEHICLES": {
     "TITLE": "车辆资产管理",
@@ -543,7 +620,22 @@
     "SUCCESS_SERVICE": "保养记录录入成功",
     "SUCCESS_ODOMETER": "里程读数录入成功",
     "ODOMETER_HISTORY_TITLE": "历史里程读数记录",
-    "NO_ODOMETER_HISTORY": "暂无里程读数记录。"
+    "NO_ODOMETER_HISTORY": "暂无里程读数记录。",
+    "PLACEHOLDER_REGO": "例：ABC123",
+    "PLACEHOLDER_VIN": "17位车架号 (VIN)",
+    "PLACEHOLDER_MAKE": "例：Toyota",
+    "PLACEHOLDER_MODEL": "例：HiAce",
+    "SELECT_DRIVER": "-- 请选择司机 --",
+    "SECTION_SPECS": "车辆规格参数",
+    "SECTION_MAINTENANCE": "维保与保养",
+    "SERVICE_STATUS": "维保状态",
+    "COMPLIANCE_EXPIRIES": "合规到期提醒",
+    "ACTIVE_ASSIGNMENT": "当前执乘分配",
+    "ASSIGNED_AT": "分配时间",
+    "WOF_LABEL": "WOF：",
+    "COF_LABEL": "COF：",
+    "COF": "COF",
+    "WOF": "WOF"
   },
   "AREAS": {
     "TITLE": "运营区域管理",
@@ -595,7 +687,11 @@
     "SUCCESS_DELETED": "运营区域已成功删除",
     "SUCCESS_ASSIGNED": "司机区域分配成功",
     "SUCCESS_ENDED": "司机区域分配已结束",
-    "NO_ASSIGNMENTS": "当前区域暂无司机分配记录。"
+    "NO_ASSIGNMENTS": "当前区域暂无司机分配记录。",
+    "PLACEHOLDER_CODE": "例：AKL-CBD",
+    "PLACEHOLDER_NAME": "例：奥克兰中央商务区",
+    "PLACEHOLDER_DESC": "可选区域描述...",
+    "SELECT_DRIVER": "-- 请选择司机 --"
   },
   "TIMESHEETS": {
     "TITLE": "工时打卡管理",
@@ -648,7 +744,10 @@
     "CORRECTED_BY": "更正人",
     "CORRECTED_AT": "更正时间",
     "EMPTY_TITLE": "暂无班次打卡记录",
-    "EMPTY_DESC": "在所选时间范围和筛选条件下未找到任何班次打卡记录。"
+    "EMPTY_DESC": "在所选时间范围和筛选条件下未找到任何班次打卡记录。",
+    "IN_OUT_SUMMARY": "签到：({inLat}, {inLng}) | 签退：({outLat}, {outLng})",
+    "NOTE_LABEL": "备注",
+    "LOCATION_NOTE": "签到：({inLat}, {inLng}) | 签退：({outLat}, {outLng})"
   },
   "PAYROLL": {
     "TITLE": "薪资周期与工资单管理",
@@ -721,7 +820,42 @@
     "FINES_LEGAL_BANNER": "依据新西兰《Wages Protection Act 1983》（工资保护法），未经雇员事先书面明确同意，雇主不得从工资中扣除任何罚款。下表罚单仅作为合规信息独立分区展示，绝不从本期工资中扣除任何金额（扣除金额为 $0.00）。",
     "NO_FINES_IN_PERIOD": "本薪资周期内该司机无任何交通罚单记录。",
     "EMPTY_PERIODS_TITLE": "暂无薪资周期",
-    "EMPTY_PERIODS_DESC": "点击上方“新建薪资周期”开始双周薪资核算流程。"
+    "EMPTY_PERIODS_DESC": "点击上方“新建薪资周期”开始双周薪资核算流程。",
+    "ZERO_WAGE_DEDUCTION": "$0.00 工资扣除",
+    "NO_PAYSLIPS_YET": "暂未计算工资单",
+    "NO_PAYSLIPS_DESC": "请点击上方的计算 / 试算按钮计算该周期的司机收入。",
+    "GROSS_PAY_CALCULATED": "应发工资（结算口径：{basis}）",
+    "APPLIED_BADGE": "（已采用）",
+    "ORDINARY_HOURS_LABEL": "标准工时：",
+    "OVERTIME_HOURS_LABEL": "加班工时：",
+    "HOLIDAY_HOURS_LABEL": "法定节假日工时：",
+    "COMPLETED_TRIPS_LABEL": "完成趟次：",
+    "TOTAL_DISTANCE_LABEL": "总里程：",
+    "SNAPSHOTS_LABEL": "计件 / 计程快照：",
+    "NO_SHIFTS_LINKED": "该工资单无关联班次记录。",
+    "NO_TASKS_LINKED": "该工资单无关联派单记录。",
+    "NO_LINES_RECORDED": "暂无明细计算项记录。",
+    "STATUS_SUMMARY": "状态：{status} | 工资单数量：{count}",
+    "TABLE_NOTICE_REF": "通知单号",
+    "TABLE_AUTHORITY": "处罚机构",
+    "TABLE_ISSUED_ON": "开具日期",
+    "TABLE_AMOUNT": "金额",
+    "TABLE_STATUS": "状态",
+    "TABLE_REASON": "处罚事由",
+    "TABLE_BASIS": "口径",
+    "TABLE_KIND": "类别",
+    "TABLE_DESCRIPTION": "说明",
+    "TABLE_RATE": "单价",
+    "TABLE_QTY": "数量 / 工时 / 里程",
+    "TABLE_TASK_REF": "任务编号",
+    "TABLE_TITLE": "标题",
+    "TABLE_COMPLETED_AT": "完成时间",
+    "TABLE_DISTANCE": "里程",
+    "TABLE_CLOCK_IN": "签到时间",
+    "TABLE_CLOCK_OUT": "签退时间",
+    "TABLE_BREAK": "休息时长",
+    "TABLE_PAYABLE_HOURS": "计薪工时",
+    "MIN_WAGE_TOPUP_RATE_PLACEHOLDER": "例：23.15"
   },
   "FINES": {
     "TITLE": "交通罚单审核管理",
@@ -778,7 +912,15 @@
     "REVIEWED_AT": "审核时间",
     "REVIEW_NOTE": "审核备注",
     "EMPTY_TITLE": "暂无交通罚单记录",
-    "EMPTY_DESC": "在当前筛选条件下未找到任何交通罚单记录。"
+    "EMPTY_DESC": "在当前筛选条件下未找到任何交通罚单记录。",
+    "PLACEHOLDER_AUTHORITY": "例：新西兰交通局、奥克兰交通局、警方",
+    "PLACEHOLDER_REF": "例：TKT-2026-9901",
+    "PLACEHOLDER_AMOUNT": "例：150.00",
+    "PLACEHOLDER_TICKET_KEY": "fines/sample-ticket-key.jpg",
+    "PLACEHOLDER_NOTES": "输入申诉理由或复核说明...",
+    "SELECT_DRIVER_OPTIONAL": "选择司机（可选）",
+    "SELECT_VEHICLE_REQUIRED": "选择关联车辆 *",
+    "PHOTO_KEY_OPTIONAL": "照片对象键（可选）"
   },
   "INCIDENTS": {
     "TITLE": "事故报告与理赔管理",
@@ -820,7 +962,12 @@
     "PHOTOS_SECTION": "现场照片证据（{count}）",
     "NO_PHOTOS": "该事故报告未附加现场照片。",
     "EMPTY_TITLE": "暂无事故记录",
-    "EMPTY_DESC": "在当前筛选条件和时间范围内未找到任何事故记录。"
+    "EMPTY_DESC": "在当前筛选条件和时间范围内未找到任何事故记录。",
+    "PLACEHOLDER_LOCATION": "例：1号国道 Penrose 段 / Hobson St 与 Victoria St 路口",
+    "PLACEHOLDER_PHOTO_KEYS": "incidents/front.jpg, incidents/rear.jpg",
+    "SELECT_DRIVER_OPTIONAL": "选择司机（可选）",
+    "SELECT_VEHICLE_REQUIRED": "选择关联车辆 *",
+    "SCENE_PHOTO_KEYS_OPTIONAL": "现场照片对象键（逗号分隔，可选）"
   },
   "NEWS": {
     "PAGE_TITLE": "新闻公告",
@@ -883,7 +1030,9 @@
     "SEARCH_UNREAD_PLACEHOLDER": "搜索未读人员...",
     "ALL_READ_TITLE": "已全员阅读",
     "ALL_READ_DESC": "受众范围内的所有活跃用户均已确认阅读该公告。",
-    "TOTAL_COUNT": "共 {count} 条公告"
+    "TOTAL_COUNT": "共 {count} 条公告",
+    "LIST_LABEL": "新闻与公告列表",
+    "LIST_ARIA_LABEL": "新闻通知列表"
   },
   "NOTIFICATIONS": {
     "PAGE_TITLE": "通知与邮件系统",
@@ -985,7 +1134,17 @@
     "SCANNING_BUTTON": "正在扫描车队档案...",
     "SCAN_SUCCESS_TITLE": "合规到期扫描已完成",
     "SCAN_SUCCESS_DESC": "车队合规档案已全部扫描完毕，符合到期预警条件的邮件已自动进入 Outbox 发送队列。",
-    "SCAN_FAILED": "合规到期扫描失败"
+    "SCAN_FAILED": "合规到期扫描失败",
+    "LIST_LABEL": "通知列表",
+    "EMAIL_LOGS_LIST_LABEL": "邮件发送日志列表",
+    "EMAIL_TEMPLATES_LIST_LABEL": "邮件模板列表",
+    "PARTNER_CONTACTS_LIST_LABEL": "外部合作伙伴通讯录列表",
+    "TEMPLATE_TYPES": {
+      "SERVICE_DUE_REMINDER": "车辆保养到期提醒",
+      "COMPLIANCE_EXPIRY_WARNING": "合规证件到期预警",
+      "INCIDENT_NOTIFICATION": "事故情况通报",
+      "FINE_ACCEPTED_NOTICE": "罚单已确认通知"
+    }
   },
   "AUDIT": {
     "PAGE_TITLE": "审计日志",
@@ -1035,6 +1194,14 @@
     "ENTITY_PAYROLL": "薪酬周期 (PayPeriod)",
     "ENTITY_FINE": "交通罚单 (Fine)",
     "ENTITY_TEMPLATE": "邮件模板 (EmailTemplate)",
-    "ENTITY_PARTNER": "伙伴联系人 (PartnerContact)"
+    "ENTITY_PARTNER": "伙伴联系人 (PartnerContact)",
+    "ACTION_CREATE": "创建",
+    "ACTION_UPDATE": "更新",
+    "ACTION_DELETE": "删除",
+    "ACTION_LOGIN": "登录",
+    "ACTION_SUBMIT": "提交",
+    "ACTION_ACTIVATE": "激活",
+    "ACTION_DEACTIVATE": "停用",
+    "TABLE_ARIA_LABEL": "审计日志表格"
   }
 }

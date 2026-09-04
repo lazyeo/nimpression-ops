@@ -283,7 +283,7 @@
         <!-- Pagination -->
         <div class="pagination-bar">
           <span class="page-info">
-            Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+            {{ 'COMMON.PAGE_INFO_FINES' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
           </span>
           <div class="pagination-controls">
             <button
@@ -292,7 +292,7 @@
               [disabled]="currentPage() <= 1"
               (click)="goToPage(currentPage() - 1)"
             >
-              Prev
+              {{ 'COMMON.PREV' | i18n }}
             </button>
             <span class="current-page-num">{{ currentPage() }}</span>
             <button
@@ -301,7 +301,7 @@
               [disabled]="currentPage() >= totalPages()"
               (click)="goToPage(currentPage() + 1)"
             >
-              Next
+              {{ 'COMMON.NEXT' | i18n }}
             </button>
           </div>
         </div>
@@ -437,7 +437,7 @@
           <div class="form-group">
             <label class="form-label">{{ 'FINES.DRIVER_SELECT' | i18n }}</label>
             <select class="form-control" [(ngModel)]="newDriverId">
-              <option value="">Select driver (optional)</option>
+              <option value="">{{ 'FINES.SELECT_DRIVER_OPTIONAL' | i18n }}</option>
               @for (d of drivers(); track d.id) {
                 <option [value]="d.id">{{ d.displayName }} ({{ d.employeeNo }})</option>
               }
@@ -447,7 +447,7 @@
           <div class="form-group">
             <label class="form-label">{{ 'FINES.VEHICLE_SELECT' | i18n }} *</label>
             <select class="form-control" [(ngModel)]="newVehicleId" required>
-              <option value="">Select vehicle *</option>
+              <option value="">{{ 'FINES.SELECT_VEHICLE_REQUIRED' | i18n }}</option>
               @for (v of vehicles(); track v.id) {
                 <option [value]="v.id">{{ v.rego }} ({{ v.make }} {{ v.model }})</option>
               }
@@ -465,7 +465,7 @@
               type="text"
               class="form-control"
               [(ngModel)]="newAuthority"
-              placeholder="e.g. NZTA, Auckland Transport, Police"
+              [placeholder]="'FINES.PLACEHOLDER_AUTHORITY' | i18n"
               required
             />
           </div>
@@ -476,7 +476,7 @@
               type="text"
               class="form-control"
               [(ngModel)]="newReference"
-              placeholder="e.g. TKT-2026-9901"
+              [placeholder]="'FINES.PLACEHOLDER_REF' | i18n"
               required
             />
           </div>
@@ -489,7 +489,7 @@
               step="1"
               class="form-control"
               [(ngModel)]="newAmount"
-              placeholder="e.g. 150.00"
+              [placeholder]="'FINES.PLACEHOLDER_AMOUNT' | i18n"
               required
             />
           </div>
@@ -506,12 +506,12 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">{{ 'FINES.PHOTO_UPLOAD_LABEL' | i18n }} Key (Optional)</label>
+            <label class="form-label">{{ 'FINES.PHOTO_UPLOAD_LABEL' | i18n }} {{ 'FINES.PHOTO_KEY_OPTIONAL' | i18n }}</label>
             <input
               type="text"
               class="form-control"
               [(ngModel)]="newPhotoKey"
-              placeholder="fines/sample-ticket-key.jpg"
+              [placeholder]="'FINES.PLACEHOLDER_TICKET_KEY' | i18n"
             />
           </div>
         </div>
@@ -570,7 +570,7 @@
               rows="4"
               [ngModel]="reviewNote()"
               (ngModelChange)="reviewNote.set($event)"
-              placeholder="Enter justification / review notes..."
+              [placeholder]="'FINES.PLACEHOLDER_NOTES' | i18n"
               [required]="reviewMode() !== 'accept'"
             ></textarea>
             @if (reviewMode() !== 'accept') {

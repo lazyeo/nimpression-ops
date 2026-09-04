@@ -219,7 +219,7 @@
           <!-- Pagination -->
           <div class="pagination-bar">
             <span class="page-info">
-              Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+              {{ 'COMMON.PAGE_INFO_PAYROLL' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
             </span>
             <div class="pagination-controls">
               <button
@@ -228,7 +228,7 @@
                 [disabled]="currentPage() <= 1"
                 (click)="goToPage(currentPage() - 1)"
               >
-                Prev
+                {{ 'COMMON.PREV' | i18n }}
               </button>
               <span class="current-page-num">{{ currentPage() }}</span>
               <button
@@ -237,7 +237,7 @@
                 [disabled]="currentPage() >= totalPages()"
                 (click)="goToPage(currentPage() + 1)"
               >
-                Next
+                {{ 'COMMON.NEXT' | i18n }}
               </button>
             </div>
           </div>
@@ -259,7 +259,7 @@
             {{ selectedPeriod()?.startsOn }} ~ {{ selectedPeriod()?.endsOn }} ({{ 'PAYROLL.TAB_PAYSLIPS' | i18n }})
           </h1>
           <p class="page-subtitle">
-            Status: {{ selectedPeriod()?.status }} | Payslips: {{ periodPayslips().length }}
+            {{ 'PAYROLL.STATUS_SUMMARY' | i18n: { status: selectedPeriod()?.status || '', count: periodPayslips().length } }}
           </p>
         </div>
         <div class="header-actions">
@@ -300,8 +300,8 @@
         } @else if (periodPayslips().length === 0) {
           <div class="state-card empty-state">
             <nim-icon name="payslips" [size]="56" class="state-icon muted" />
-            <h2 class="state-title">No Payslips Calculated Yet</h2>
-            <p class="state-desc">Click Calculate / Trial above to compute driver earnings for this period.</p>
+            <h2 class="state-title">{{ 'PAYROLL.NO_PAYSLIPS_YET' | i18n }}</h2>
+            <p class="state-desc">{{ 'PAYROLL.NO_PAYSLIPS_DESC' | i18n }}</p>
           </div>
         } @else {
           <div class="responsive-table-wrapper">
@@ -393,7 +393,7 @@
               <div class="hero-left">
                 <span class="hero-label">{{ 'PAYROLL.PAYSLIP_SUMMARY_CARD' | i18n }}</span>
                 <span class="hero-gross">{{ activePayslip()?.grossPay | localeCurrency: activePayslip()?.currency }}</span>
-                <span class="hero-sub">{{ activePayslip()?.currency }} Gross Pay (Calculated: {{ activePayslip()?.calculatedAt | localeDate: 'short' }})</span>
+                <span class="hero-sub">{{ 'PAYROLL.GROSS_PAY_CALCULATED' | i18n: { basis: (activePayslip()?.calculatedAt | localeDate: 'short') || '' } }}</span>
               </div>
               <div class="hero-right">
                 <div class="basis-callout" [ngClass]="activePayslip()?.basisUsed === 'Hourly' ? 'callout-hourly' : 'callout-trip'">
@@ -429,21 +429,21 @@
                 <div class="basis-card-header">
                   <h4>{{ 'PAYROLL.HOURS_BASIS_CARD' | i18n }}</h4>
                   @if (activePayslip()?.basisUsed === 'Hourly') {
-                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_HOURLY' | i18n }} (Applied)</span>
+                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_HOURLY' | i18n }} {{ 'PAYROLL.APPLIED_BADGE' | i18n }}</span>
                   }
                 </div>
                 <div class="basis-card-body">
                   <div class="basis-row">
-                    <span>Ordinary Hours:</span>
-                    <strong>{{ activePayslip()?.ordinaryHours | localeNumber: 1 : 2 }}h @ {{ activePayslip()?.hourlyRateSnapshot | localeCurrency: activePayslip()?.currency }}/h</strong>
+                    <span>{{ 'PAYROLL.ORDINARY_HOURS_LABEL' | i18n }}</span>
+                    <strong>{{ activePayslip()?.ordinaryHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }} @ {{ activePayslip()?.hourlyRateSnapshot | localeCurrency: activePayslip()?.currency }}/{{ 'COMMON.UNITS.H' | i18n }}</strong>
                   </div>
                   <div class="basis-row">
-                    <span>Overtime Hours:</span>
-                    <strong>{{ activePayslip()?.overtimeHours | localeNumber: 1 : 2 }}h</strong>
+                    <span>{{ 'PAYROLL.OVERTIME_HOURS_LABEL' | i18n }}</span>
+                    <strong>{{ activePayslip()?.overtimeHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong>
                   </div>
                   <div class="basis-row">
-                    <span>Holiday Hours:</span>
-                    <strong>{{ activePayslip()?.holidayHours | localeNumber: 1 : 2 }}h</strong>
+                    <span>{{ 'PAYROLL.HOLIDAY_HOURS_LABEL' | i18n }}</span>
+                    <strong>{{ activePayslip()?.holidayHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong>
                   </div>
                   <div class="basis-row subtotal">
                     <span>{{ 'PAYROLL.HOURS_GROSS_TOTAL' | i18n }}:</span>
@@ -457,20 +457,20 @@
                 <div class="basis-card-header">
                   <h4>{{ 'PAYROLL.TRIP_BASIS_CARD' | i18n }}</h4>
                   @if (activePayslip()?.basisUsed === 'Trip') {
-                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_TRIP' | i18n }} (Applied)</span>
+                    <span class="basis-active-badge">{{ 'PAYROLL.BASIS_TRIP' | i18n }} {{ 'PAYROLL.APPLIED_BADGE' | i18n }}</span>
                   }
                 </div>
                 <div class="basis-card-body">
                   <div class="basis-row">
-                    <span>Completed Trips:</span>
-                    <strong>{{ activePayslip()?.completedTripCount }} trips @ {{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }}/trip</strong>
+                    <span>{{ 'PAYROLL.COMPLETED_TRIPS_LABEL' | i18n }}</span>
+                    <strong>{{ activePayslip()?.completedTripCount }} {{ 'COMMON.UNITS.TRIPS' | i18n }} @ {{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }}{{ 'COMMON.UNITS.PER_TRIP' | i18n }}</strong>
                   </div>
                   <div class="basis-row">
-                    <span>Total Distance:</span>
-                    <strong>{{ activePayslip()?.totalDistanceKm | localeNumber: 1 : 1 }} km @ {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}/km</strong>
+                    <span>{{ 'PAYROLL.TOTAL_DISTANCE_LABEL' | i18n }}</span>
+                    <strong>{{ activePayslip()?.totalDistanceKm | localeNumber: 1 : 1 }} {{ 'COMMON.UNITS.KM' | i18n }} @ {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}{{ 'COMMON.UNITS.PER_KM' | i18n }}</strong>
                   </div>
                   <div class="basis-row">
-                    <span>Per Trip / Km Snapshots:</span>
+                    <span>{{ 'PAYROLL.SNAPSHOTS_LABEL' | i18n }}</span>
                     <small>{{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }} / {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}</small>
                   </div>
                   <div class="basis-row subtotal">
@@ -515,16 +515,16 @@
               <div class="trace-content">
                 @if (activeTraceTab() === 'shifts') {
                   @if (!activePayslip()?.shiftDetails || activePayslip()?.shiftDetails?.length === 0) {
-                    <p class="empty-trace">No shift records linked to this payslip.</p>
+                    <p class="empty-trace">{{ 'PAYROLL.NO_SHIFTS_LINKED' | i18n }}</p>
                   } @else {
                     <table class="nested-table">
                       <thead>
                         <tr>
-                          <th>Date</th>
-                          <th>Clock In</th>
-                          <th>Clock Out</th>
-                          <th>Break</th>
-                          <th>Payable Hours</th>
+                          <th>{{ 'PAYROLL.COL_DATE' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_CLOCK_IN' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_CLOCK_OUT' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_BREAK' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_PAYABLE_HOURS' | i18n }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -532,9 +532,9 @@
                           <tr>
                             <td>{{ s.attributedDate }}</td>
                             <td>{{ s.clockInAt | localeDate: 'short' }}</td>
-                            <td>{{ s.clockOutAt ? (s.clockOutAt | localeDate: 'short') : 'Ongoing' }}</td>
-                            <td>{{ s.breakMinutes }}m</td>
-                            <td><strong>{{ s.payableHours | localeNumber: 1 : 2 }}h</strong></td>
+                            <td>{{ s.clockOutAt ? (s.clockOutAt | localeDate: 'short') : ('TIMESHEETS.STATUS_ACTIVE' | i18n) }}</td>
+                            <td>{{ s.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
+                            <td><strong>{{ s.payableHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong></td>
                           </tr>
                         }
                       </tbody>
@@ -544,15 +544,15 @@
 
                 @if (activeTraceTab() === 'trips') {
                   @if (!activePayslip()?.tripDetails || activePayslip()?.tripDetails?.length === 0) {
-                    <p class="empty-trace">No completed dispatch tasks linked to this payslip.</p>
+                    <p class="empty-trace">{{ 'PAYROLL.NO_TASKS_LINKED' | i18n }}</p>
                   } @else {
                     <table class="nested-table">
                       <thead>
                         <tr>
-                          <th>Task Ref</th>
-                          <th>Title</th>
-                          <th>Completed At</th>
-                          <th>Distance</th>
+                          <th>{{ 'PAYROLL.TABLE_TASK_REF' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_TITLE' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_COMPLETED_AT' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_DISTANCE' | i18n }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -561,7 +561,7 @@
                             <td><strong>{{ t.ref }}</strong></td>
                             <td>{{ t.title }}</td>
                             <td>{{ t.completedAt | localeDate: 'short' }}</td>
-                            <td>{{ t.effectiveDistanceKm ? (t.effectiveDistanceKm | localeNumber: 1 : 1) + ' km' : '-' }}</td>
+                            <td>{{ t.effectiveDistanceKm ? (t.effectiveDistanceKm | localeNumber: 1 : 1) + ' ' + ('COMMON.UNITS.KM' | i18n) : '-' }}</td>
                           </tr>
                         }
                       </tbody>
@@ -571,17 +571,17 @@
 
                 @if (activeTraceTab() === 'lines') {
                   @if (!activePayslip()?.lines || activePayslip()?.lines?.length === 0) {
-                    <p class="empty-trace">No calculation line details recorded.</p>
+                    <p class="empty-trace">{{ 'PAYROLL.NO_LINES_RECORDED' | i18n }}</p>
                   } @else {
                     <table class="nested-table">
                       <thead>
                         <tr>
-                          <th>Basis</th>
-                          <th>Kind</th>
-                          <th>Description</th>
-                          <th>Rate</th>
-                          <th>Qty / Hours / Dist</th>
-                          <th>Amount</th>
+                          <th>{{ 'PAYROLL.TABLE_BASIS' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_KIND' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_DESCRIPTION' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_RATE' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_QTY' | i18n }}</th>
+                          <th>{{ 'PAYROLL.TABLE_AMOUNT' | i18n }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -591,7 +591,7 @@
                             <td>{{ l.kind }}</td>
                             <td>{{ l.description }}</td>
                             <td>{{ l.rate | localeCurrency: l.currency }}</td>
-                            <td>{{ l.hours ? (l.hours | localeNumber: 1 : 2) + 'h' : (l.distance ? (l.distance | localeNumber: 1 : 1) + 'km' : (l.qty || '-')) }}</td>
+                            <td>{{ l.hours ? (l.hours | localeNumber: 1 : 2) + ('COMMON.UNITS.H' | i18n) : (l.distance ? (l.distance | localeNumber: 1 : 1) + ('COMMON.UNITS.KM' | i18n) : (l.qty || '-')) }}</td>
                             <td><strong>{{ l.amount | localeCurrency: l.currency }}</strong></td>
                           </tr>
                         }
@@ -609,7 +609,7 @@
                   <nim-icon name="fines" [size]="20" />
                   <h4>{{ 'PAYROLL.FINES_PARTITION_TITLE' | i18n }}</h4>
                 </div>
-                <span class="zero-deduction-badge">$0.00 Wage Deduction</span>
+                <span class="zero-deduction-badge">{{ 'PAYROLL.ZERO_WAGE_DEDUCTION' | i18n }}</span>
               </div>
 
               <!-- Mandatory Legal Disclaimer Banner -->
@@ -624,12 +624,12 @@
                 <table class="nested-table fines-table">
                   <thead>
                     <tr>
-                      <th>Notice Ref</th>
-                      <th>Authority</th>
-                      <th>Issued On</th>
-                      <th>Amount</th>
-                      <th>Status</th>
-                      <th>Reason</th>
+                      <th>{{ 'PAYROLL.TABLE_NOTICE_REF' | i18n }}</th>
+                      <th>{{ 'PAYROLL.TABLE_AUTHORITY' | i18n }}</th>
+                      <th>{{ 'PAYROLL.TABLE_ISSUED_ON' | i18n }}</th>
+                      <th>{{ 'PAYROLL.TABLE_AMOUNT' | i18n }}</th>
+                      <th>{{ 'PAYROLL.TABLE_STATUS' | i18n }}</th>
+                      <th>{{ 'PAYROLL.TABLE_REASON' | i18n }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -728,7 +728,7 @@
               min="0"
               class="form-control"
               [(ngModel)]="calcMinHourlyWage"
-              placeholder="e.g. 23.15"
+              [placeholder]="'PAYROLL.MIN_WAGE_TOPUP_RATE_PLACEHOLDER' | i18n"
             />
           </div>
         </div>

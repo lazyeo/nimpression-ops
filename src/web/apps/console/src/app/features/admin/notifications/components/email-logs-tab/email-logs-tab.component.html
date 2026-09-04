@@ -70,10 +70,10 @@
         class="filter-select"
       >
         <option value="">{{ 'COMMON.ALL' | i18n }}</option>
-        <option value="SERVICE_DUE_REMINDER">SERVICE_DUE_REMINDER</option>
-        <option value="COMPLIANCE_EXPIRY_WARNING">COMPLIANCE_EXPIRY_WARNING</option>
-        <option value="INCIDENT_NOTIFICATION">INCIDENT_NOTIFICATION</option>
-        <option value="FINE_ACCEPTED_NOTICE">FINE_ACCEPTED_NOTICE</option>
+        <option value="SERVICE_DUE_REMINDER">{{ 'NOTIFICATIONS.TEMPLATE_TYPES.SERVICE_DUE_REMINDER' | i18n }}</option>
+        <option value="COMPLIANCE_EXPIRY_WARNING">{{ 'NOTIFICATIONS.TEMPLATE_TYPES.COMPLIANCE_EXPIRY_WARNING' | i18n }}</option>
+        <option value="INCIDENT_NOTIFICATION">{{ 'NOTIFICATIONS.TEMPLATE_TYPES.INCIDENT_NOTIFICATION' | i18n }}</option>
+        <option value="FINE_ACCEPTED_NOTICE">{{ 'NOTIFICATIONS.TEMPLATE_TYPES.FINE_ACCEPTED_NOTICE' | i18n }}</option>
       </select>
     </div>
 
@@ -138,7 +138,7 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" aria-label="Email Logs List">
+      <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.EMAIL_LOGS_LIST_LABEL' | i18n">
         <thead>
           <tr>
             <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>

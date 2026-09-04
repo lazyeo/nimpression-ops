@@ -163,7 +163,7 @@
 
       <!-- Pagination -->
       <div class="table-pagination">
-        <span>Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} areas)</span>
+        <span>{{ 'COMMON.PAGINATION_TOTAL_AREAS' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}</span>
         <div class="pagination-btns">
           <button
             type="button"
@@ -171,7 +171,7 @@
             [disabled]="currentPage() <= 1"
             (click)="goToPage(currentPage() - 1)"
           >
-            Prev
+            {{ 'COMMON.PREV' | i18n }}
           </button>
           <button
             type="button"
@@ -179,7 +179,7 @@
             [disabled]="currentPage() >= totalPages()"
             (click)="goToPage(currentPage() + 1)"
           >
-            Next
+            {{ 'COMMON.NEXT' | i18n }}
           </button>
         </div>
       </div>
@@ -201,17 +201,17 @@
 
           <div class="form-field">
             <label for="create-code">{{ 'AREAS.FIELD_CODE' | i18n }} *</label>
-            <input id="create-code" type="text" class="input-control" [(ngModel)]="createForm.code" placeholder="e.g. AKL-CBD" />
+            <input id="create-code" type="text" class="input-control" [(ngModel)]="createForm.code" [placeholder]="'AREAS.PLACEHOLDER_CODE' | i18n" />
           </div>
 
           <div class="form-field">
             <label for="create-name">{{ 'AREAS.FIELD_NAME' | i18n }} *</label>
-            <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.name" placeholder="e.g. Auckland Central Business District" />
+            <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.name" [placeholder]="'AREAS.PLACEHOLDER_NAME' | i18n" />
           </div>
 
           <div class="form-field">
             <label for="create-desc">{{ 'AREAS.FIELD_DESCRIPTION' | i18n }}</label>
-            <textarea id="create-desc" class="input-control" [(ngModel)]="createForm.description" placeholder="Optional area description..."></textarea>
+            <textarea id="create-desc" class="input-control" [(ngModel)]="createForm.description" [placeholder]="'AREAS.PLACEHOLDER_DESC' | i18n"></textarea>
           </div>
 
           <div class="form-field">
@@ -306,7 +306,7 @@
           <div class="form-field">
             <label for="assign-driver">{{ 'AREAS.FIELD_DRIVER' | i18n }} *</label>
             <select id="assign-driver" class="input-control" [(ngModel)]="assignForm.driverId">
-              <option value="">-- Select Driver --</option>
+              <option value="">{{ 'AREAS.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
                 <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
               }

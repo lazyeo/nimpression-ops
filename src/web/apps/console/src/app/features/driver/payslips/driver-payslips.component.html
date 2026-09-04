@@ -55,11 +55,11 @@
             </div>
             <div class="breakdown-item">
               <small>{{ 'DRIVER.TOTAL_HOURS' | i18n }}</small>
-              <span>{{ slip.totalHours | localeNumber: 1 : 1 }} hrs</span>
+              <span>{{ slip.totalHours | localeNumber: 1 : 1 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
             </div>
             <div class="breakdown-item">
               <small>{{ 'DRIVER.HOURLY_RATE' | i18n }}</small>
-              <span>{{ slip.hourlyRate | localeCurrency: slip.currency }}/hr</span>
+              <span>{{ slip.hourlyRate | localeCurrency: slip.currency }}{{ 'COMMON.UNITS.PER_HR' | i18n }}</span>
             </div>
           </div>
         </div>
