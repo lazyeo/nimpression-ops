@@ -55,6 +55,15 @@ public static class DependencyInjection
 
         var jwtSettings = configuration.GetSection(Nimpression.Infrastructure.Security.JwtSettings.SectionName).Get<Nimpression.Infrastructure.Security.JwtSettings>()
             ?? new Nimpression.Infrastructure.Security.JwtSettings();
+        if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
+        {
+            jwtSettings.Secret = Environment.GetEnvironmentVariable("Jwt__Secret")
+                ?? Environment.GetEnvironmentVariable("JWT_SECRET")
+                ?? configuration["Jwt:Secret"]
+                ?? string.Empty;
+        }
+
+        jwtSettings.Validate();
         var key = System.Text.Encoding.UTF8.GetBytes(jwtSettings.Secret);
 
         services.AddAuthentication(options =>

@@ -8,7 +8,8 @@
       "applicationUrl": "http://localhost:5080",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ENCRYPTION_KEY": "k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s="
+        "ENCRYPTION_KEY": "k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s=",
+        "Jwt__Secret": "dev-only-insecure-jwt-secret-never-use-in-production-0000"
       }
     },
     "https": {
@@ -18,7 +19,8 @@
       "applicationUrl": "https://localhost:7022;http://localhost:5080",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ENCRYPTION_KEY": "k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s="
+        "ENCRYPTION_KEY": "k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s=",
+        "Jwt__Secret": "dev-only-insecure-jwt-secret-never-use-in-production-0000"
       }
     }
   }

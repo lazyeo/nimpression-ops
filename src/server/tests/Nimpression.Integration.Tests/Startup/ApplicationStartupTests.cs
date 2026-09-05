@@ -54,6 +54,51 @@ public sealed class ApplicationStartupTests : IAsyncLifetime, IDisposable
     {
         var response = await _client.GetAsync("/health");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("healthy");
+    }
+
+    [Fact]
+    public async Task HealthCheck_WhenDatabaseIsUnmigrated_ReturnsServiceUnavailable_WithDiagnostics()
+    {
+        var dbName = $"unmigrated_{Guid.NewGuid():N}";
+        await using (var adminContext = _fixture.CreateDbContext())
+        {
+            var conn = adminContext.Database.GetDbConnection();
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"CREATE DATABASE \"{dbName}\";";
+            await cmd.ExecuteNonQueryAsync();
+            await conn.CloseAsync();
+        }
+
+        try
+        {
+            var unmigratedConnStr = new Npgsql.NpgsqlConnectionStringBuilder(_fixture.ConnectionString)
+            {
+                Database = dbName
+            }.ConnectionString;
+
+            using var unmigratedFactory = new ApplicationStartupTestAppFactory(unmigratedConnStr);
+            using var client = unmigratedFactory.CreateClient();
+
+            var response = await client.GetAsync("/health");
+
+            response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+            var content = await response.Content.ReadAsStringAsync();
+            content.Should().Contain("unhealthy");
+            content.Should().Contain("pending migration");
+        }
+        finally
+        {
+            await using var adminContext = _fixture.CreateDbContext();
+            var conn = adminContext.Database.GetDbConnection();
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"DROP DATABASE IF EXISTS \"{dbName}\" WITH (FORCE);";
+            await cmd.ExecuteNonQueryAsync();
+            await conn.CloseAsync();
+        }
     }
 
     [Fact]

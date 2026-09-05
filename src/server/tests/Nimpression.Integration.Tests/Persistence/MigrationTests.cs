@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using Nimpression.Infrastructure.Persistence.Migrations;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
 
@@ -21,7 +22,7 @@ public class MigrationTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await using var context = _fixture.CreateDbContext();
-        await context.Database.MigrateAsync();
+        await DatabaseMigrator.MigrateAsync(context);
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -49,6 +50,24 @@ public class MigrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DatabaseMigrator_ConcurrentExecution_SucceedsUnderAdvisoryLock()
+    {
+        // Arrange
+        await using var context1 = _fixture.CreateDbContext();
+        await using var context2 = _fixture.CreateDbContext();
+
+        // Act: Execute two migrations concurrently to test advisory lock protection
+        var task1 = DatabaseMigrator.MigrateAsync(context1);
+        var task2 = DatabaseMigrator.MigrateAsync(context2);
+
+        await Task.WhenAll(task1, task2);
+
+        // Assert: Database schema remains valid and intact
+        var appliedMigrations = await context1.Database.GetAppliedMigrationsAsync();
+        appliedMigrations.Should().Contain(m => m.Contains("InitialSchema"));
+    }
+
+    [Fact]
     public async Task Migrate_Down_RollsBackCleanly_AndCanReapplyUp()
     {
         // Arrange
@@ -62,11 +81,12 @@ public class MigrationTests : IAsyncLifetime
         var appliedAfterRollback = await context.Database.GetAppliedMigrationsAsync();
         appliedAfterRollback.Should().BeEmpty();
 
-        // Act: Re-apply migration Up
-        await migrator.MigrateAsync();
+        // Act: Re-apply migration Up via DatabaseMigrator
+        await DatabaseMigrator.MigrateAsync(context);
 
         // Assert: Migration reapplied successfully
         var appliedAfterReapply = await context.Database.GetAppliedMigrationsAsync();
         appliedAfterReapply.Should().Contain(m => m.Contains("InitialSchema"));
     }
 }
+
