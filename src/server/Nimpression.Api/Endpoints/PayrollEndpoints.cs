@@ -1,3 +1,4 @@
+using System.Globalization;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
@@ -162,6 +163,43 @@ public sealed class PayrollEndpoints : IEndpointModule
         .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
         .WithName("GetMyPayslips")
         .WithSummary("司机端查询本人已定版工资单历史");
+
+        // 司机端专用本人历史工资单列表查询（适配 DriverPayslipItem 契约）
+        group.MapGet("/my-payslips", async (
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var query = new GetDriverPayslipsQuery(
+                DriverId: null,
+                FromDate: null,
+                ToDate: null,
+                Page: 1,
+                PageSize: 100);
+
+            var result = await sender.Send(query, ct);
+            if (!result.IsSuccess)
+            {
+                return result.ToHttpResult();
+            }
+
+            var items = result.Value.Items.Select(p => new
+            {
+                id = p.Id,
+                payPeriod = $"{p.PeriodStartsOn:yyyy-MM-dd} ~ {p.PeriodEndsOn:yyyy-MM-dd}",
+                payDate = p.PeriodEndsOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                grossPay = p.GrossPay,
+                netPay = p.GrossPay,
+                deductions = 0.0m,
+                totalHours = p.OrdinaryHours + p.OvertimeHours + p.HolidayHours,
+                hourlyRate = p.HourlyRateSnapshot > 0 ? p.HourlyRateSnapshot : 35.0m,
+                currency = p.Currency ?? "NZD"
+            }).ToList();
+
+            return Results.Ok(items);
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("GetMyPayslipsLegacy")
+        .WithSummary("司机端查询本人已定版工资单列表（适配数组响应）");
 
         // 管理端按司机查询工资单历史
         group.MapGet("/drivers/{driverId:guid}/payslips", async (
