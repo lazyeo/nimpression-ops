@@ -16,6 +16,7 @@ namespace Nimpression.Infrastructure.Idempotency;
 /// </summary>
 public sealed class IdempotencyService(
     AppDbContext dbContext,
+    IUnitOfWork unitOfWork,
     IDateTimeProvider dateTimeProvider) : IIdempotencyService
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -37,7 +38,7 @@ public sealed class IdempotencyService(
 
         var requestHash = ComputePayloadHash(requestPayload);
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
         try
         {
             // 1. 同事务内直接尝试插入幂等记录占位（由主键唯一约束原子性判重，杜绝 TOCTOU）
@@ -49,23 +50,24 @@ public sealed class IdempotencyService(
                 dateTimeProvider.UtcNow);
 
             await dbContext.IdempotencyRecords.AddAsync(record, cancellationToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             // 2. 占位成功（首次执行者）：执行业务逻辑
             var result = await action();
             if (!result.IsSuccess)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await unitOfWork.RollbackAsync(cancellationToken);
                 return result;
             }
 
             // 3. 业务成功：提交事务（业务变更与幂等记录原子落库）
-            await transaction.CommitAsync(cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
             return result;
         }
         catch (Exception ex) when (DbExceptionHelper.IsUniqueConstraintViolation(ex))
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await unitOfWork.RollbackAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
 
             // 唯一约束冲突（23505）：说明该 Key 已被首次请求处理
             var existing = await dbContext.IdempotencyRecords.AsNoTracking()
@@ -87,6 +89,11 @@ public sealed class IdempotencyService(
 
             throw;
         }
+        catch
+        {
+            await unitOfWork.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task<Result<TResponse>> ExecuteAsync<TResponse>(
@@ -102,7 +109,7 @@ public sealed class IdempotencyService(
 
         var requestHash = ComputePayloadHash(requestPayload);
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
         try
         {
             var record = new IdempotencyRecord(
@@ -113,26 +120,27 @@ public sealed class IdempotencyService(
                 dateTimeProvider.UtcNow);
 
             await dbContext.IdempotencyRecords.AddAsync(record, cancellationToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             var result = await action();
             if (!result.IsSuccess)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await unitOfWork.RollbackAsync(cancellationToken);
                 return result;
             }
 
             var responseJson = JsonSerializer.Serialize(result.Value, SerializerOptions);
             var entry = dbContext.Entry(record);
             entry.Property(r => r.ResponseJson).CurrentValue = responseJson;
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await transaction.CommitAsync(cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
             return result;
         }
         catch (Exception ex) when (DbExceptionHelper.IsUniqueConstraintViolation(ex))
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await unitOfWork.RollbackAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
 
             var existing = await dbContext.IdempotencyRecords.AsNoTracking()
                 .FirstOrDefaultAsync(r => r.Key == key, cancellationToken);
@@ -150,6 +158,11 @@ public sealed class IdempotencyService(
                     $"Idempotency key '{key}' was already used with a different request payload.");
             }
 
+            throw;
+        }
+        catch
+        {
+            await unitOfWork.RollbackAsync(cancellationToken);
             throw;
         }
     }

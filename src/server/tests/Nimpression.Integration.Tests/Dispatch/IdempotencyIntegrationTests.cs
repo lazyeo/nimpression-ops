@@ -1,9 +1,17 @@
 using System.Globalization;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Nimpression.Api.Endpoints;
 using Nimpression.Application.Common.Abstractions;
 using Nimpression.Application.Common.Results;
 using Nimpression.Application.Features.Dispatch.Commands.AcknowledgeJobTask;
+using Nimpression.Application.Features.Identity.DTOs;
 using Nimpression.Domain.Entities.Area;
 using Nimpression.Domain.Entities.Dispatch;
 using Nimpression.Domain.Entities.Driver;
@@ -14,6 +22,7 @@ using Nimpression.Domain.ValueObjects;
 using Nimpression.Infrastructure.Idempotency;
 using Nimpression.Infrastructure.Persistence;
 using Nimpression.Infrastructure.Persistence.Repositories;
+using Nimpression.Infrastructure.Security;
 using Nimpression.Integration.Tests.Fixtures;
 using Xunit;
 
@@ -136,13 +145,15 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
         await using var context1 = _fixture.CreateDbContext();
         await using var context2 = _fixture.CreateDbContext();
 
-        var idempotencyService1 = new IdempotencyService(context1, dtProvider);
-        var idempotencyService2 = new IdempotencyService(context2, dtProvider);
+        var uow1 = new UnitOfWork(context1);
+        var uow2 = new UnitOfWork(context2);
 
-        async Task<Result> ExecuteRequestAsync(AppDbContext ctx, IdempotencyService svc)
+        var idempotencyService1 = new IdempotencyService(context1, uow1, dtProvider);
+        var idempotencyService2 = new IdempotencyService(context2, uow2, dtProvider);
+
+        async Task<Result> ExecuteRequestAsync(AppDbContext ctx, IUnitOfWork uow, IdempotencyService svc)
         {
             var repo = new JobTaskRepository(ctx);
-            var uow = new UnitOfWork(ctx);
             var handler = new AcknowledgeJobTaskCommandHandler(repo, uow, driverUser, dtProvider);
 
             return await svc.ExecuteAsync(
@@ -157,8 +168,8 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         // Act: 通过 Task.WhenAll 并发提交两个请求
         var results = await Task.WhenAll(
-            ExecuteRequestAsync(context1, idempotencyService1),
-            ExecuteRequestAsync(context2, idempotencyService2));
+            ExecuteRequestAsync(context1, uow1, idempotencyService1),
+            ExecuteRequestAsync(context2, uow2, idempotencyService2));
 
         // Assert:
         // 1. 两个请求对外均返回成功
@@ -209,9 +220,9 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         // 第一次请求：Payload A
         await using var context1 = _fixture.CreateDbContext();
-        var svc1 = new IdempotencyService(context1, dtProvider);
-        var repo1 = new JobTaskRepository(context1);
         var uow1 = new UnitOfWork(context1);
+        var svc1 = new IdempotencyService(context1, uow1, dtProvider);
+        var repo1 = new JobTaskRepository(context1);
         var handler1 = new AcknowledgeJobTaskCommandHandler(repo1, uow1, driverUser, dtProvider);
 
         var result1 = await svc1.ExecuteAsync(
@@ -223,9 +234,9 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         // 第二次请求：同 Key，但 Payload 变为 Payload B
         await using var context2 = _fixture.CreateDbContext();
-        var svc2 = new IdempotencyService(context2, dtProvider);
-        var repo2 = new JobTaskRepository(context2);
         var uow2 = new UnitOfWork(context2);
+        var svc2 = new IdempotencyService(context2, uow2, dtProvider);
+        var repo2 = new JobTaskRepository(context2);
         var handler2 = new AcknowledgeJobTaskCommandHandler(repo2, uow2, driverUser, dtProvider);
 
         var result2 = await svc2.ExecuteAsync(
@@ -270,9 +281,9 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         // 第一次执行
         await using var context1 = _fixture.CreateDbContext();
-        var svc1 = new IdempotencyService(context1, dtProvider);
-        var repo1 = new JobTaskRepository(context1);
         var uow1 = new UnitOfWork(context1);
+        var svc1 = new IdempotencyService(context1, uow1, dtProvider);
+        var repo1 = new JobTaskRepository(context1);
         var handler1 = new AcknowledgeJobTaskCommandHandler(repo1, uow1, driverUser, dtProvider);
 
         var result1 = await svc1.ExecuteAsync(
@@ -289,9 +300,9 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         // 第二次重放
         await using var context2 = _fixture.CreateDbContext();
-        var svc2 = new IdempotencyService(context2, dtProvider);
-        var repo2 = new JobTaskRepository(context2);
         var uow2 = new UnitOfWork(context2);
+        var svc2 = new IdempotencyService(context2, uow2, dtProvider);
+        var repo2 = new JobTaskRepository(context2);
         var handler2 = new AcknowledgeJobTaskCommandHandler(repo2, uow2, driverUser, dtProvider);
 
         var result2 = await svc2.ExecuteAsync(
@@ -310,6 +321,224 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
     #endregion
 
+    #region HTTP End-to-End Idempotency & Transaction Regression Tests (W17)
+
+    /// <summary>
+    /// W17 / R2: 通过 HTTP 创建任务成功返回 201 Created（而非 500 This NpgsqlTransaction has completed）。
+    /// 验证任务与幂等记录在同一事务内原子落库。
+    /// </summary>
+    [Fact]
+    public async Task W17_Http_CreateJobTask_WithClientRequestId_Returns201Created_AndPersistsTaskAndIdempotencyRecord()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var (user, driver, vehicle, area) = await SeedBaseEntitiesAsync();
+
+        var dispatcherId = Guid.NewGuid();
+        var dispatcherEmail = TestDataFactory.CreateEmail("disp_w17");
+        var password = "SecurePassword123!";
+        var hasher = new PasswordHasher();
+        var dispatcher = new User(dispatcherId, new EmailAddress(dispatcherEmail), hasher.HashPassword(password), UserRole.Dispatcher, "Dispatcher W17");
+        await context.Users.AddAsync(dispatcher);
+        await context.SaveChangesAsync();
+
+        using var factory = new DispatchTestWebApplicationFactory(_fixture.ConnectionString);
+        using var client = factory.CreateClient();
+
+        var loginResp = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(dispatcherEmail, password));
+        loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var authBody = await loginResp.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+        var token = authBody!.AccessToken;
+
+        var clientRequestId = Guid.NewGuid().ToString();
+        var requestPayload = new CreateJobTaskRequest(
+            Ref: GenerateRef("TSK-W17-1"),
+            Title: "W17 Idempotency Test Task",
+            AreaId: area.Id,
+            ScheduledFor: new DateTimeOffset(2026, 8, 25, 9, 0, 0, TimeSpan.FromHours(12)),
+            Priority: TaskPriority.High,
+            Description: "Testing W17 HTTP creation with idempotency key",
+            PlannedDistanceKm: 42m,
+            DriverId: driver.Id,
+            VehicleId: vehicle.Id,
+            OverrideAreaWarning: true);
+
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/api/dispatch/tasks")
+        {
+            Content = JsonContent.Create(requestPayload)
+        };
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        httpRequest.Headers.Add("X-Client-Request-Id", clientRequestId);
+
+        // Act
+        var response = await client.SendAsync(httpRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // 验证数据库中存在且仅存在 1 条任务和 1 条幂等记录
+        await using var verifyContext = _fixture.CreateDbContext();
+        var savedTask = await verifyContext.JobTasks.FirstOrDefaultAsync(t => t.Ref == requestPayload.Ref);
+        savedTask.Should().NotBeNull();
+
+        var idempotencyRecord = await verifyContext.IdempotencyRecords.FindAsync(clientRequestId);
+        idempotencyRecord.Should().NotBeNull();
+        idempotencyRecord!.StatusCode.Should().Be(200);
+    }
+
+    /// <summary>
+    /// W17 / R2: 同一幂等键重复请求返回相同结果且不产生第二条业务记录。
+    /// </summary>
+    [Fact]
+    public async Task W17_Http_CreateJobTask_DuplicateClientRequestId_ReturnsSameResult_AndDoesNotDuplicateBusinessRecord()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var (user, driver, vehicle, area) = await SeedBaseEntitiesAsync();
+
+        var dispatcherId = Guid.NewGuid();
+        var dispatcherEmail = TestDataFactory.CreateEmail("disp_w17_dup");
+        var password = "SecurePassword123!";
+        var hasher = new PasswordHasher();
+        var dispatcher = new User(dispatcherId, new EmailAddress(dispatcherEmail), hasher.HashPassword(password), UserRole.Dispatcher, "Dispatcher W17 Dup");
+        await context.Users.AddAsync(dispatcher);
+        await context.SaveChangesAsync();
+
+        using var factory = new DispatchTestWebApplicationFactory(_fixture.ConnectionString);
+        using var client = factory.CreateClient();
+
+        var loginResp = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(dispatcherEmail, password));
+        loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var authBody = await loginResp.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+        var token = authBody!.AccessToken;
+
+        var clientRequestId = Guid.NewGuid().ToString();
+        var requestPayload = new CreateJobTaskRequest(
+            Ref: GenerateRef("TSK-W17-DUP"),
+            Title: "W17 Duplicate Test Task",
+            AreaId: area.Id,
+            ScheduledFor: new DateTimeOffset(2026, 8, 25, 9, 0, 0, TimeSpan.FromHours(12)),
+            Priority: TaskPriority.Medium,
+            Description: "Testing duplicate idempotent submission",
+            PlannedDistanceKm: 30m,
+            DriverId: driver.Id,
+            VehicleId: vehicle.Id,
+            OverrideAreaWarning: true);
+
+        // 第一次请求
+        var req1 = new HttpRequestMessage(HttpMethod.Post, "/api/dispatch/tasks")
+        {
+            Content = JsonContent.Create(requestPayload)
+        };
+        req1.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        req1.Headers.Add("X-Client-Request-Id", clientRequestId);
+
+        var resp1 = await client.SendAsync(req1);
+        resp1.StatusCode.Should().Be(HttpStatusCode.Created);
+        var respContent1 = await resp1.Content.ReadAsStringAsync();
+
+        // 第二次请求（同一幂等键 + 相同内容）
+        var req2 = new HttpRequestMessage(HttpMethod.Post, "/api/dispatch/tasks")
+        {
+            Content = JsonContent.Create(requestPayload)
+        };
+        req2.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        req2.Headers.Add("X-Client-Request-Id", clientRequestId);
+
+        var resp2 = await client.SendAsync(req2);
+
+        // Assert: 状态码一致，返回首次结果
+        resp2.StatusCode.Should().Be(HttpStatusCode.Created);
+        var respContent2 = await resp2.Content.ReadAsStringAsync();
+        respContent2.Should().Be(respContent1);
+
+        // 数据库中不产生第二条业务记录
+        await using var verifyContext = _fixture.CreateDbContext();
+        var taskCount = await verifyContext.JobTasks.CountAsync(t => t.Ref == requestPayload.Ref);
+        taskCount.Should().Be(1);
+    }
+
+    /// <summary>
+    /// W17 / R2: 业务失败时幂等记录不残留（否则重试会被误判为已处理）。
+    /// </summary>
+    [Fact]
+    public async Task W17_Http_CreateJobTask_BusinessFailure_DoesNotLeaveIdempotencyRecord_AndAllowsSubsequentRetry()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var (user, driver, vehicle, area) = await SeedBaseEntitiesAsync();
+
+        var dispatcherId = Guid.NewGuid();
+        var dispatcherEmail = TestDataFactory.CreateEmail("disp_w17_fail");
+        var password = "SecurePassword123!";
+        var hasher = new PasswordHasher();
+        var dispatcher = new User(dispatcherId, new EmailAddress(dispatcherEmail), hasher.HashPassword(password), UserRole.Dispatcher, "Dispatcher W17 Fail");
+        await context.Users.AddAsync(dispatcher);
+        await context.SaveChangesAsync();
+
+        using var factory = new DispatchTestWebApplicationFactory(_fixture.ConnectionString);
+        using var client = factory.CreateClient();
+
+        var loginResp = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(dispatcherEmail, password));
+        loginResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var authBody = await loginResp.Content.ReadFromJsonAsync<AuthSuccessResponse>();
+        var token = authBody!.AccessToken;
+
+        var clientRequestId = Guid.NewGuid().ToString();
+        var nonExistentAreaId = Guid.NewGuid();
+
+        // 首次请求传入不存在的 AreaId -> 业务失败 (404)
+        var failedPayload = new CreateJobTaskRequest(
+            Ref: GenerateRef("TSK-W17-FAIL"),
+            Title: "W17 Failed Test Task",
+            AreaId: nonExistentAreaId,
+            ScheduledFor: new DateTimeOffset(2026, 8, 25, 9, 0, 0, TimeSpan.FromHours(12)));
+
+        var failReq = new HttpRequestMessage(HttpMethod.Post, "/api/dispatch/tasks")
+        {
+            Content = JsonContent.Create(failedPayload)
+        };
+        failReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        failReq.Headers.Add("X-Client-Request-Id", clientRequestId);
+
+        var failResp = await client.SendAsync(failReq);
+        failResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        // Assert 1: 幂等记录不得残留（否则重试会被误判为已处理）
+        await using (var verifyContext = _fixture.CreateDbContext())
+        {
+            var record = await verifyContext.IdempotencyRecords.FindAsync(clientRequestId);
+            record.Should().BeNull();
+        }
+
+        // 第二次请求携带相同 ClientRequestId 但修正了 AreaId -> 应能正常成功
+        var successPayload = new CreateJobTaskRequest(
+            Ref: GenerateRef("TSK-W17-RETRY"),
+            Title: "W17 Retried Test Task",
+            AreaId: area.Id,
+            ScheduledFor: new DateTimeOffset(2026, 8, 25, 9, 0, 0, TimeSpan.FromHours(12)));
+
+        var retryReq = new HttpRequestMessage(HttpMethod.Post, "/api/dispatch/tasks")
+        {
+            Content = JsonContent.Create(successPayload)
+        };
+        retryReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        retryReq.Headers.Add("X-Client-Request-Id", clientRequestId);
+
+        var retryResp = await client.SendAsync(retryReq);
+        retryResp.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // 验证重试成功后幂等记录已写入
+        await using (var verifyContext = _fixture.CreateDbContext())
+        {
+            var record = await verifyContext.IdempotencyRecords.FindAsync(clientRequestId);
+            record.Should().NotBeNull();
+            record!.StatusCode.Should().Be(200);
+        }
+    }
+
+    #endregion
+
     private sealed class TestDateTimeProvider : IDateTimeProvider
     {
         public DateTimeOffset UtcNow => new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
@@ -324,5 +553,37 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
         public string? IpAddress => "127.0.0.1";
         public string? UserAgent => "TestAgent";
         public bool IsAuthenticated => true;
+    }
+}
+
+public class DispatchTestWebApplicationFactory : WebApplicationFactory<Program>
+{
+    private readonly string _connectionString;
+
+    public DispatchTestWebApplicationFactory(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+        builder.ConfigureServices(services =>
+        {
+            var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            if (dbContextDescriptor != null)
+            {
+                services.Remove(dbContextDescriptor);
+            }
+
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(_connectionString, npgsql =>
+                {
+                    npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                    npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                });
+            });
+        });
     }
 }
