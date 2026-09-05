@@ -1,7 +1,7 @@
 .driver-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16, 1rem);
+  gap: var(--space-16);
 }
 
 .page-title-row {
@@ -11,76 +11,88 @@
 
   .page-title {
     margin: 0;
-    font-size: var(--font-size-xl, 1.25rem);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--text-inverse, #f8fafc);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-inverse);
   }
 }
 
 .refresh-btn {
-  min-width: 44px;
-  min-height: 44px;
-  background-color: var(--color-gray-800, #1e293b);
-  border: 1px solid var(--color-gray-700, #334155);
-  border-radius: var(--radius-lg, 8px);
+  width: 38px;
+  height: 38px;
+  background-color: var(--color-gray-800);
+  border: 1px solid var(--color-gray-700);
+  border-radius: var(--radius-lg);
+  color: var(--color-gray-200);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-lg, 1.125rem);
+  font-size: var(--font-size-lg);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
 }
 
 .cached-banner {
   background-color: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.3);
   color: #fde68a;
-  border-radius: var(--radius-lg, 8px);
-  padding: var(--space-10, 0.625rem) var(--space-14, 0.875rem);
-  font-size: var(--font-size-sm, 0.8125rem);
-  font-weight: var(--font-weight-medium, 500);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10) var(--space-14);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
 }
 
 .empty-card {
-  background-color: var(--color-gray-800, #1e293b);
-  border-radius: var(--radius-xl, 12px);
-  padding: var(--space-48, 3rem) var(--space-24, 1.5rem);
+  background-color: var(--color-gray-800);
+  border-radius: var(--radius-xl);
+  padding: var(--space-48) var(--space-24);
   text-align: center;
-  color: var(--color-gray-400, #94a3b8);
+  color: var(--color-gray-400);
 
   .empty-icon {
     font-size: 2.5rem;
     display: block;
-    margin-bottom: var(--space-12, 0.75rem);
+    margin-bottom: var(--space-12);
   }
 
   p {
     margin: 0;
-    font-size: var(--font-size-base, 0.9375rem);
+    font-size: var(--font-size-base);
   }
 }
 
 .payslip-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16, 1rem);
+  gap: var(--space-16);
 }
 
 .payslip-card {
-  background-color: var(--color-gray-800, #1e293b);
-  border: 1px solid var(--color-gray-700, #334155);
-  border-radius: var(--radius-xl, 14px);
-  padding: var(--space-20, 1.25rem);
+  background-color: var(--color-gray-800);
+  border: 1px solid var(--color-gray-700);
+  border-radius: var(--radius-xl);
+  padding: var(--space-20);
   display: flex;
   flex-direction: column;
-  gap: var(--space-16, 1rem);
+  gap: var(--space-16);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--color-gray-700, #334155);
-  padding-bottom: var(--space-12, 0.75rem);
+  border-bottom: 1px solid var(--color-gray-700);
+  padding-bottom: var(--space-12);
 }
 
 .period-info {
@@ -88,70 +100,77 @@
   flex-direction: column;
 
   .period-label {
-    font-size: var(--font-size-xs, 0.6875rem);
-    color: var(--color-gray-400, #94a3b8);
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-400);
+    line-height: var(--line-height-tight);
   }
 
   .period-val {
-    font-size: var(--font-size-base, 0.9375rem);
-    color: var(--text-inverse, #f8fafc);
+    font-size: var(--font-size-base);
+    color: var(--text-inverse);
+    line-height: var(--line-height-tight);
   }
 }
 
 .pay-date-badge {
-  font-size: var(--font-size-xs, 0.75rem);
-  color: var(--color-gray-400, #94a3b8);
-  background-color: var(--color-gray-900, #0f172a);
-  padding: var(--space-4, 0.25rem) var(--space-8, 0.5rem);
-  border-radius: var(--radius-md, 6px);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-tight);
+  color: var(--color-gray-400);
+  background-color: var(--color-gray-900);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-md);
 }
 
 .net-pay-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-12, 0.75rem);
+  padding: var(--space-12);
   background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(15, 23, 42, 0.4) 100%);
-  border-radius: var(--radius-lg, 10px);
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(56, 189, 248, 0.2);
 
   .net-label {
-    font-size: var(--font-size-xs, 0.75rem);
-    color: var(--color-gray-400, #94a3b8);
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-400);
+    line-height: var(--line-height-tight);
   }
 
   .net-amount {
-    font-size: var(--font-size-3xl, 1.75rem);
-    font-weight: var(--font-weight-bold, 800);
-    color: var(--color-primary-400, #38bdf8);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary-400);
+    line-height: var(--line-height-tight);
   }
 }
 
 .breakdown-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-12, 0.75rem);
+  gap: var(--space-12);
 }
 
 .breakdown-item {
   display: flex;
   flex-direction: column;
-  background-color: var(--color-gray-900, #0f172a);
-  padding: var(--space-8, 0.5rem) var(--space-12, 0.75rem);
-  border-radius: var(--radius-lg, 8px);
+  background-color: var(--color-gray-900);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-lg);
 
   small {
-    font-size: var(--font-size-xs, 0.6875rem);
-    color: var(--color-gray-400, #94a3b8);
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-400);
+    line-height: var(--line-height-tight);
   }
 
   span {
-    font-size: var(--font-size-base, 0.875rem);
-    font-weight: var(--font-weight-semibold, 600);
-    color: var(--color-gray-100, #f1f5f9);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-gray-100);
+    line-height: var(--line-height-tight);
   }
 
   .deduction-val {
-    color: var(--color-danger, #f87171);
+    color: var(--color-danger);
   }
 }

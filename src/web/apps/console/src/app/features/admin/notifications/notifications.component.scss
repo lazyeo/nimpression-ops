@@ -1,6 +1,6 @@
 :host {
   display: block;
-  padding: var(--space-24, 1.5rem);
+  padding: var(--space-24);
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -8,7 +8,7 @@
 .notifications-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-24, 1.5rem);
+  gap: var(--space-24);
 }
 
 .page-header {
@@ -20,68 +20,72 @@
 .header-titles {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 0.25rem);
+  gap: var(--space-4);
 }
 
 .title-with-icon {
   display: flex;
   align-items: center;
-  gap: var(--space-10, 0.625rem);
+  gap: var(--space-10);
 
   .header-icon {
-    color: var(--color-primary, #0284c7);
+    color: var(--color-primary);
   }
 }
 
 .page-title {
   margin: 0;
-  font-size: var(--font-size-2xl, 1.5rem);
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--text-primary, #0f172a);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
 }
 
 .page-subtitle {
   margin: 0;
-  font-size: var(--font-size-base, 0.875rem);
-  color: var(--text-muted, #64748b);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: var(--line-height-normal);
 }
 
 /* Tabs Navigation Bar */
 .tabs-nav-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-8, 0.5rem);
-  border-bottom: 1px solid var(--border-default, #e2e8f0);
-  padding-bottom: var(--space-4, 0.25rem);
+  gap: var(--space-8);
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 0;
   overflow-x: auto;
 }
 
 .nav-tab-btn {
-  padding: var(--space-10, 0.625rem) var(--space-20, 1.25rem);
+  padding: var(--space-8) var(--space-16);
   background: none;
   border: none;
-  font-size: var(--font-size-base, 0.875rem);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--text-muted, #64748b);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
   cursor: pointer;
-  border-radius: var(--radius-lg, 8px) var(--radius-lg, 8px) 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-8, 0.5rem);
+  gap: var(--space-8);
   border-bottom: 2px solid transparent;
-  transition: all var(--transition-fast);
+  margin-bottom: -1px;
+  line-height: var(--line-height-tight);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
   white-space: nowrap;
 
   &:hover {
-    color: var(--text-primary, #0f172a);
-    background-color: var(--bg-subtle, #f1f5f9);
+    color: var(--text-primary);
+    background-color: var(--bg-subtle);
   }
 
   &.active {
-    color: var(--color-primary, #0284c7);
-    border-bottom-color: var(--color-primary, #0284c7);
-    background-color: var(--bg-surface, #ffffff);
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.02);
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background-color: var(--bg-surface);
   }
 }
 
