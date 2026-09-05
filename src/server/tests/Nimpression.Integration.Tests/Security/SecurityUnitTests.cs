@@ -13,17 +13,17 @@ public class SecurityUnitTests
     public void PasswordHasher_HashPassword_ProducesValidBCryptHashAndVerifies()
     {
         var hasher = new PasswordHasher();
-        var rawPassword = "SuperSecurePassword123!";
+        var rawPassword = "dev-only-insecure-password-123!";
 
         var hash = hasher.HashPassword(rawPassword);
 
         hash.Should().NotBeNullOrWhiteSpace();
         hash.Should().StartWith("$2"); // BCrypt prefix
         hasher.VerifyPassword(rawPassword, hash).Should().BeTrue();
-        hasher.VerifyPassword("WrongPassword123!", hash).Should().BeFalse();
+        hasher.VerifyPassword("dev-only-insecure-wrong-password-123!", hash).Should().BeFalse();
 
         // 验证假哈希用于时序侧信道对齐时可正常解析执行且返回 false
-        const string dummyHash = "$2a$12$XZCHWVyJw9OQb10ZeqYcyeOQcZJ6bY5xH7Wl.c6kR4V1mQZ4m1aCe";
+        const string dummyHash = "$2a$12$XZCHWVyJw9OQb10ZeqYcyeOQcZJ6bY5xH7Wl.c6kR4V1mQZ4m1aCe"; // allow-hardcoded: dummy test hash for timing attack mitigation verification
         hasher.VerifyPassword(rawPassword, dummyHash).Should().BeFalse();
     }
 
@@ -32,7 +32,7 @@ public class SecurityUnitTests
     {
         var options = Options.Create(new JwtSettings
         {
-            Secret = "SuperSecretKeyForTestingJwtTokenGenerationMustBeLongEnough123!",
+            Secret = "dev-only-insecure-jwt-secret-never-use-in-production-0000",
             Issuer = "test-issuer",
             Audience = "test-audience",
             AccessTokenLifetimeMinutes = 15
@@ -56,7 +56,7 @@ public class SecurityUnitTests
     {
         var options = Options.Create(new JwtSettings
         {
-            Secret = "SuperSecretKeyForTestingJwtTokenGenerationMustBeLongEnough123!"
+            Secret = "dev-only-insecure-jwt-secret-never-use-in-production-0000"
         });
         var dateTimeProvider = Substitute.For<IDateTimeProvider>();
         var now = new DateTimeOffset(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);

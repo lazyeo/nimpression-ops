@@ -57,7 +57,7 @@ public class JwtSettingsTests
         // Arrange
         var settings = new JwtSettings
         {
-            Secret = "12345678901234567890123456789012" // Exactly 32 bytes
+            Secret = "12345678901234567890123456789012" // allow-hardcoded: exactly 32 bytes test boundary string
         };
 
         // Act
@@ -106,7 +106,7 @@ public class JwtSettingsTests
         // Arrange
         var options = Options.Create(new JwtSettings
         {
-            Secret = "too_short_key_123"
+            Secret = "too_short_key_123" // allow-hardcoded: short secret validation test
         });
 
         // Act

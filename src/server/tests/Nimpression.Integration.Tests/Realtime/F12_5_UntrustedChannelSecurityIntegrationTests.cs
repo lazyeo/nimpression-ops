@@ -54,7 +54,7 @@ public sealed class F12_5_UntrustedChannelSecurityIntegrationTests : IAsyncLifet
 
     private string _token = null!;
 
-    public const string DefaultPassword = "SecurePassword123!";
+    public const string DefaultPassword = "dev-only-insecure-password-123!";
 
     public F12_5_UntrustedChannelSecurityIntegrationTests(PostgreSqlContainerFixture fixture)
     {

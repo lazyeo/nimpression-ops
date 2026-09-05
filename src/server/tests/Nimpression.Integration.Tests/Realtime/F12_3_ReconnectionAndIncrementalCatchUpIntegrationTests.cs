@@ -46,7 +46,7 @@ public sealed class F12_3_ReconnectionAndIncrementalCatchUpIntegrationTests : IA
 
     private string _tokenA = null!;
 
-    public const string DefaultPassword = "SecurePassword123!";
+    public const string DefaultPassword = "dev-only-insecure-password-123!";
 
     public F12_3_ReconnectionAndIncrementalCatchUpIntegrationTests(PostgreSqlContainerFixture fixture)
     {

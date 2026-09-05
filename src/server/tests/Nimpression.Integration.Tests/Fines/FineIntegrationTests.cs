@@ -41,7 +41,7 @@ public sealed class FineIntegrationTests : IAsyncLifetime, IDisposable
     private readonly string _adminEmail = TestDataFactory.CreateEmail("fine_admin");
     private readonly string _driverAEmail = TestDataFactory.CreateEmail("fine_driver_a");
     private readonly string _driverBEmail = TestDataFactory.CreateEmail("fine_driver_b");
-    private const string DefaultPassword = "Password123!";
+    private const string DefaultPassword = "dev-only-insecure-password-123!";
 
     private string _adminToken = string.Empty;
     private string _driverAToken = string.Empty;

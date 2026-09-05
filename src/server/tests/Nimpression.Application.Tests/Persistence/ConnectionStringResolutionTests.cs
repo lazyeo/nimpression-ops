@@ -51,7 +51,7 @@ public sealed class ConnectionStringResolutionTests : IDisposable
     public void ResolveConnectionString_WhenConfiguredViaGetConnectionString_ReturnsConfiguredString()
     {
         // Arrange
-        const string expected = "Host=my-prod-db;Port=5432;Database=nimpression;Username=app;Password=secret";
+        const string expected = "Host=my-prod-db;Port=5432;Database=nimpression;Username=app;Password=secret"; // allow-hardcoded: unit test connection string assertion
         var inMemorySettings = new Dictionary<string, string?>
         {
             ["ConnectionStrings:DefaultConnection"] = expected
@@ -71,7 +71,7 @@ public sealed class ConnectionStringResolutionTests : IDisposable
     public void ResolveConnectionString_WhenConfiguredViaEnvironmentVariable_ReturnsConfiguredString()
     {
         // Arrange
-        const string expected = "Host=my-env-db;Port=5432;Database=nimpression;Username=app;Password=secret";
+        const string expected = "Host=my-env-db;Port=5432;Database=nimpression;Username=app;Password=secret"; // allow-hardcoded: unit test connection string assertion
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", expected);
         var config = new ConfigurationBuilder().Build();
 
@@ -86,7 +86,7 @@ public sealed class ConnectionStringResolutionTests : IDisposable
     public void ResolveConnectionString_WhenConfiguredViaDatabaseUrl_ReturnsConfiguredString()
     {
         // Arrange
-        const string expected = "Host=my-database-url-db;Port=5432;Database=nimpression;Username=app;Password=secret";
+        const string expected = "Host=my-database-url-db;Port=5432;Database=nimpression;Username=app;Password=secret"; // allow-hardcoded: unit test connection string assertion
         Environment.SetEnvironmentVariable("DATABASE_URL", expected);
         var config = new ConfigurationBuilder().Build();
 
@@ -116,7 +116,7 @@ public sealed class ConnectionStringResolutionTests : IDisposable
     public void AppDbContextFactory_CreateDbContext_WhenConnectionStringProvided_ReturnsAppDbContext()
     {
         // Arrange
-        const string connStr = "Host=localhost;Port=5432;Database=test_design_time;Username=user;Password=pass";
+        const string connStr = "Host=localhost;Port=5432;Database=test_design_time;Username=user;Password=pass"; // allow-hardcoded: unit test design time connection string
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", connStr);
         var factory = new AppDbContextFactory();
 

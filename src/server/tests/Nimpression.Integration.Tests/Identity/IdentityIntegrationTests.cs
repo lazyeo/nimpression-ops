@@ -46,7 +46,7 @@ public sealed class IdentityIntegrationTests : IAsyncLifetime, IDisposable
     private readonly string _driver1Email = TestDataFactory.CreateEmail("id_driver1");
     private readonly string _driver2Email = TestDataFactory.CreateEmail("id_driver2");
 
-    public const string DefaultPassword = "SecurePassword123!";
+    public const string DefaultPassword = "dev-only-insecure-password-123!";
 
     public IdentityIntegrationTests(PostgreSqlContainerFixture fixture)
     {

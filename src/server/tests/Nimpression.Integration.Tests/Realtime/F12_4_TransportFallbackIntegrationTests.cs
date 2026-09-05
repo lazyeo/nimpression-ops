@@ -39,7 +39,7 @@ public sealed class F12_4_TransportFallbackIntegrationTests : IAsyncLifetime, ID
 
     private string _token = null!;
 
-    public const string DefaultPassword = "SecurePassword123!";
+    public const string DefaultPassword = "dev-only-insecure-password-123!";
 
     public F12_4_TransportFallbackIntegrationTests(PostgreSqlContainerFixture fixture)
     {

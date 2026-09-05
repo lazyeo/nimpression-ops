@@ -32,7 +32,7 @@ public sealed class F12_1_AuthenticationAndHandshakeIntegrationTests : IAsyncLif
     private readonly string _activeUserEmail = TestDataFactory.CreateEmail("rt_auth_act");
     private readonly string _deactivatedUserEmail = TestDataFactory.CreateEmail("rt_auth_deact");
 
-    public const string DefaultPassword = "SecurePassword123!";
+    public const string DefaultPassword = "dev-only-insecure-password-123!";
 
     public F12_1_AuthenticationAndHandshakeIntegrationTests(PostgreSqlContainerFixture fixture)
     {
@@ -110,7 +110,7 @@ public sealed class F12_1_AuthenticationAndHandshakeIntegrationTests : IAsyncLif
         // Arrange: 使用伪造密钥签名的 Token
         var fakeJwtGenerator = new JwtTokenGenerator(Options.Create(new JwtSettings
         {
-            Secret = "wrong_secret_key_that_is_at_least_32_bytes_long_123456",
+            Secret = "dev-only-insecure-wrong-secret-key-at-least-32-bytes-long",
             Issuer = "nimpression-api",
             Audience = "nimpression-client"
         }));

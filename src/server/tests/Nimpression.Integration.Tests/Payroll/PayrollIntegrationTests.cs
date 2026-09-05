@@ -44,7 +44,7 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
     private readonly string _adminEmail = TestDataFactory.CreateEmail("pr_admin");
     private readonly string _driver1Email = TestDataFactory.CreateEmail("pr_driver1");
     private readonly string _driver2Email = TestDataFactory.CreateEmail("pr_driver2");
-    private const string DefaultPassword = "Password123!";
+    private const string DefaultPassword = "dev-only-insecure-password-123!";
 
     private string _adminToken = string.Empty;
     private string _driver1Token = string.Empty;

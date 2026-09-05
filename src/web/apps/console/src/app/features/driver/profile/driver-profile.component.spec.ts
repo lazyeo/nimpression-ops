@@ -19,7 +19,7 @@ describe('DriverProfileComponent (Language switcher & profile)', () => {
 
     authService = TestBed.inject(AuthService);
     authService.setSession({
-      accessToken: 'token-123',
+      accessToken: 'dev-only-insecure-token-123',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {

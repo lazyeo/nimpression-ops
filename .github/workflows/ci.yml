@@ -29,7 +29,7 @@ jobs:
         env:
           POSTGRES_DB: nimpression_test
           POSTGRES_USER: nimpression
-          POSTGRES_PASSWORD: ci_only
+          POSTGRES_PASSWORD: dev-only-insecure-ci-password # allow-hardcoded: CI test runner ephemeral postgres password
           TZ: Pacific/Auckland
         ports: ["5432:5432"]
         options: >-
@@ -51,7 +51,7 @@ jobs:
 
       - name: Test with coverage
         env:
-          ConnectionStrings__Default: "Host=localhost;Port=5432;Database=nimpression_test;Username=nimpression;Password=ci_only"
+          ConnectionStrings__Default: "Host=localhost;Port=5432;Database=nimpression_test;Username=nimpression;Password=dev-only-insecure-ci-password" # allow-hardcoded: CI runner test db connection string
         run: >-
           dotnet test src/server/Nimpression.slnx --no-build --nologo --filter "Category!=Timing"
           --collect:"XPlat Code Coverage"
