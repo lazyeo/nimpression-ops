@@ -228,19 +228,18 @@
                   <span>{{ task.scheduledFor | localeDate: 'short' }}</span>
                 </td>
                 <td>
-                  <span class="badge priority-{{ task.priority.toLowerCase() }}">
+                  <nim-status-badge [status]="task.priority">
                     {{ 'DISPATCH.PRIORITY_' + task.priority.toUpperCase() | i18n }}
-                  </span>
+                  </nim-status-badge>
                 </td>
                 <td>
-                  <span class="badge badge-{{ task.status.toLowerCase() }}">
+                  <nim-status-badge [status]="task.status">
                     {{ 'DISPATCH.STATUS_' + getStatusKey(task.status) | i18n }}
-                  </span>
+                  </nim-status-badge>
                   @if (isTaskOverdueUnacknowledged(task)) {
-                    <div class="badge badge-alert">
-                      <nim-icon name="clock" [size]="10" />
+                    <nim-status-badge status="Overdue" variant="warning" icon="clock">
                       {{ 'DISPATCH.OVERDUE_ALERT' | i18n }}
-                    </div>
+                    </nim-status-badge>
                   }
                 </td>
                 <td>
@@ -298,7 +297,7 @@
       <!-- Pagination -->
       <div class="table-pagination">
         <span>
-          Page {{ currentPage() }} of {{ totalPages() }} ({{ totalCount() }} tasks)
+          {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}
         </span>
         <div class="pagination-btns">
           <button
@@ -307,7 +306,7 @@
             [disabled]="currentPage() <= 1"
             (click)="goToPage(currentPage() - 1)"
           >
-            Prev
+            {{ 'COMMON.PREV' | i18n }}
           </button>
           <button
             type="button"
@@ -315,7 +314,7 @@
             [disabled]="currentPage() >= totalPages()"
             (click)="goToPage(currentPage() + 1)"
           >
-            Next
+            {{ 'COMMON.NEXT' | i18n }}
           </button>
         </div>
       </div>
@@ -343,7 +342,7 @@
                 type="text"
                 class="input-control"
                 [(ngModel)]="createForm.title"
-                placeholder="e.g. Morning Freight Delivery"
+                [placeholder]="'DISPATCH.PLACEHOLDER_TITLE' | i18n"
               />
             </div>
 
@@ -366,7 +365,7 @@
                 [(ngModel)]="createForm.areaId"
                 (ngModelChange)="onAreaOrDriverChangeInCreate()"
               >
-                <option value="">-- Select Area --</option>
+                <option value="">{{ 'COMMON.SELECT_AREA' | i18n }}</option>
                 @for (area of areas(); track area.id) {
                   <option [value]="area.id">{{ area.name }} ({{ area.code }})</option>
                 }
@@ -402,7 +401,7 @@
                 step="0.1"
                 class="input-control"
                 [(ngModel)]="createForm.plannedDistanceKm"
-                placeholder="e.g. 25.5"
+                [placeholder]="'DISPATCH.PLACEHOLDER_DISTANCE' | i18n"
               />
             </div>
 
@@ -414,7 +413,7 @@
                 [(ngModel)]="createForm.driverId"
                 (ngModelChange)="onAreaOrDriverChangeInCreate()"
               >
-                <option value="">-- Optional Driver --</option>
+                <option value="">{{ 'DISPATCH.OPTIONAL_DRIVER' | i18n }}</option>
                 @for (driver of drivers(); track driver.id) {
                   <option [value]="driver.id" [disabled]="driver.isLicenceExpired">
                     {{ driver.displayName }} ({{ driver.employeeNo }})
@@ -427,7 +426,7 @@
             <div class="form-field">
               <label for="create-vehicle">{{ 'DISPATCH.FIELD_VEHICLE' | i18n }}</label>
               <select id="create-vehicle" class="input-control" [(ngModel)]="createForm.vehicleId">
-                <option value="">-- Optional Vehicle --</option>
+                <option value="">{{ 'DISPATCH.OPTIONAL_VEHICLE' | i18n }}</option>
                 @for (veh of vehicles(); track veh.id) {
                   <option [value]="veh.id">{{ veh.rego }} - {{ veh.make }} {{ veh.model }}</option>
                 }
@@ -453,7 +452,7 @@
                 id="create-desc"
                 class="input-control"
                 [(ngModel)]="createForm.description"
-                placeholder="Optional special instructions..."
+                [placeholder]="'DISPATCH.PLACEHOLDER_INSTRUCTIONS' | i18n"
               ></textarea>
             </div>
           </div>
@@ -496,7 +495,7 @@
               [(ngModel)]="assignForm.driverId"
               (ngModelChange)="checkAssignEligibility()"
             >
-              <option value="">-- Select Driver --</option>
+              <option value="">{{ 'DISPATCH.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
                 <option [value]="driver.id" [disabled]="driver.isLicenceExpired">
                   {{ driver.displayName }} ({{ driver.employeeNo }})
@@ -509,7 +508,7 @@
           <div class="form-field">
             <label for="assign-vehicle">{{ 'DISPATCH.FIELD_VEHICLE' | i18n }} *</label>
             <select id="assign-vehicle" class="input-control" [(ngModel)]="assignForm.vehicleId">
-              <option value="">-- Select Vehicle --</option>
+              <option value="">{{ 'DISPATCH.SELECT_VEHICLE' | i18n }}</option>
               @for (veh of vehicles(); track veh.id) {
                 <option [value]="veh.id">{{ veh.rego }} - {{ veh.make }} {{ veh.model }}</option>
               }
@@ -580,7 +579,7 @@
               step="0.1"
               class="input-control"
               [(ngModel)]="startForm.startOdometerKm"
-              placeholder="e.g. 12500.5"
+              [placeholder]="'DISPATCH.PLACEHOLDER_START_KM' | i18n"
             />
           </div>
         </div>
@@ -620,7 +619,7 @@
               step="0.1"
               class="input-control"
               [(ngModel)]="completeForm.actualDistanceKm"
-              placeholder="e.g. 28.0"
+              [placeholder]="'DISPATCH.PLACEHOLDER_ACTUAL_KM' | i18n"
             />
           </div>
           <div class="form-field">
@@ -631,7 +630,7 @@
               step="0.1"
               class="input-control"
               [(ngModel)]="completeForm.endOdometerKm"
-              placeholder="e.g. 12528.5"
+              [placeholder]="'DISPATCH.PLACEHOLDER_END_KM' | i18n"
             />
           </div>
         </div>
@@ -666,7 +665,7 @@
               id="cancel-reason"
               class="input-control"
               [(ngModel)]="cancelReason"
-              placeholder="Enter cancellation reason..."
+              [placeholder]="'DISPATCH.PLACEHOLDER_CANCEL_REASON' | i18n"
             ></textarea>
           </div>
         </div>
@@ -699,7 +698,7 @@
         <div class="dialog-body">
           <div class="details-grid">
             <div class="detail-group">
-              <h4>Overview</h4>
+              <h4>{{ 'DISPATCH.SECTION_OVERVIEW' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_TITLE' | i18n }}</span>
                 <span class="detail-val">{{ selectedTask()!.title }}</span>
@@ -719,7 +718,7 @@
             </div>
 
             <div class="detail-group">
-              <h4>Assignment</h4>
+              <h4>{{ 'DISPATCH.SECTION_ASSIGNMENT' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_DRIVER' | i18n }}</span>
                 <span class="detail-val">{{ selectedTask()!.driverName || '-' }}</span>
@@ -735,33 +734,33 @@
             </div>
 
             <div class="detail-group">
-              <h4>Timeline</h4>
+              <h4>{{ 'DISPATCH.TIMELINE_TITLE' | i18n }}</h4>
               <div class="detail-row">
-                <span class="detail-label">Acknowledged At</span>
+                <span class="detail-label">{{ 'DISPATCH.FIELD_ACKNOWLEDGED_AT' | i18n }}</span>
                 <span class="detail-val">{{ (selectedTask()!.acknowledgedAt | localeDate: 'medium') || '-' }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Started At</span>
+                <span class="detail-label">{{ 'DISPATCH.FIELD_STARTED_AT' | i18n }}</span>
                 <span class="detail-val">{{ (selectedTask()!.startedAt | localeDate: 'medium') || '-' }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Completed At</span>
+                <span class="detail-label">{{ 'DISPATCH.FIELD_COMPLETED_AT' | i18n }}</span>
                 <span class="detail-val">{{ (selectedTask()!.completedAt | localeDate: 'medium') || '-' }}</span>
               </div>
               @if (selectedTask()!.cancelledAt) {
                 <div class="detail-row">
-                  <span class="detail-label">Cancelled At</span>
+                  <span class="detail-label">{{ 'DISPATCH.FIELD_CANCELLED_AT' | i18n }}</span>
                   <span class="detail-val">{{ selectedTask()!.cancelledAt | localeDate: 'medium' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Cancel Reason</span>
+                  <span class="detail-label">{{ 'DISPATCH.FIELD_CANCEL_REASON' | i18n }}</span>
                   <span class="detail-val">{{ selectedTask()!.cancellationReason || '-' }}</span>
                 </div>
               }
             </div>
 
             <div class="detail-group">
-              <h4>Distance & Mileage</h4>
+              <h4>{{ 'DISPATCH.SECTION_MILEAGE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_PLANNED_DISTANCE' | i18n }}</span>
                 <span class="detail-val">{{ selectedTask()!.plannedDistanceKm ? selectedTask()!.plannedDistanceKm + ' km' : '-' }}</span>

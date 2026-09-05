@@ -22,6 +22,7 @@ import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { LocaleCurrencyPipe } from '../../../core/i18n/locale-currency.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'nim-admin-payroll',
@@ -34,6 +35,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
     LocaleCurrencyPipe,
     LocaleNumberPipe,
     IconComponent,
+    StatusBadgeComponent,
   ],
   templateUrl: './payroll.component.html',
   styleUrl: './payroll.component.scss',

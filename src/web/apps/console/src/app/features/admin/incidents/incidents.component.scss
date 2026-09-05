@@ -1,104 +1,57 @@
 .incidents-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-24, 1.5rem);
 }
 
 .location-cell {
-  color: #0f172a;
+  color: var(--text-primary, #0f172a);
 }
 
 .driver-cell {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium, 500);
 }
 
 .rego-badge {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-family: monospace;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-// Severity Badges
-.severity-badge {
-  display: inline-block;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-
-  &.severity-minor {
-    background-color: #dcfce7;
-    color: #16a34a;
-  }
-  &.severity-moderate {
-    background-color: #fef3c7;
-    color: #d97706;
-  }
-  &.severity-major {
-    background-color: #ffedd5;
-    color: #ea580c;
-  }
-  &.severity-critical {
-    background-color: #fee2e2;
-    color: #dc2626;
-  }
-}
-
-.insurer-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-
-  &.notified {
-    background-color: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #bfdbfe;
-  }
-
-  &.standard {
-    background-color: #f8fafc;
-    color: #64748b;
-  }
+  padding: 2px var(--space-8, 8px);
+  background: var(--bg-subtle, #f1f5f9);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  font-family: var(--font-family-mono, monospace);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-primary, #1e293b);
 }
 
 // Insurer notification notice in detail modal
 .insurer-notice-card {
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-left: 4px solid #2563eb;
-  border-radius: 8px;
-  padding: 0.875rem 1rem;
+  background-color: var(--color-primary-subtle, #eff6ff);
+  border: 1px solid var(--badge-info-border, #bfdbfe);
+  border-left: 4px solid var(--color-primary, #2563eb);
+  border-radius: var(--radius-lg, 8px);
+  padding: var(--space-14, 0.875rem) var(--space-16, 1rem);
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--space-12, 0.75rem);
 
   .insurer-icon {
-    color: #2563eb;
-    margin-top: 0.125rem;
+    color: var(--color-primary, #2563eb);
+    margin-top: 2px;
     flex-shrink: 0;
   }
 
   .insurer-text {
     .insurer-title {
       margin: 0;
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: #1e40af;
+      font-size: var(--font-size-base, 0.875rem);
+      font-weight: var(--font-weight-bold, 700);
+      color: var(--color-primary-text, #1e40af);
     }
 
     .insurer-desc {
-      margin: 0.25rem 0 0;
-      font-size: 0.8125rem;
-      color: #1e3a8a;
+      margin: var(--space-4, 0.25rem) 0 0;
+      font-size: var(--font-size-sm, 0.8125rem);
+      color: var(--color-primary-text, #1e3a8a);
       line-height: 1.4;
     }
   }
@@ -107,53 +60,54 @@
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--space-16, 1rem);
 
   .detail-item {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-4, 0.25rem);
 
     &.full-width { grid-column: 1 / -1; }
 
     label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #64748b;
+      font-size: var(--font-size-xs, 0.75rem);
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--text-muted, #64748b);
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
     span, strong {
-      font-size: 0.875rem;
-      color: #1e293b;
+      font-size: var(--font-size-base, 0.875rem);
+      color: var(--text-primary, #1e293b);
     }
 
     .desc-box {
       margin: 0;
-      padding: 0.75rem;
-      background: #f8fafc;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      color: #334155;
+      padding: var(--space-12, 0.75rem);
+      background: var(--bg-subtle, #f8fafc);
+      border-radius: var(--radius-md, 6px);
+      font-size: var(--font-size-base, 0.875rem);
+      color: var(--text-secondary, #334155);
       line-height: 1.4;
+      border: 1px solid var(--border-default, #e2e8f0);
     }
 
     &.third-party-box {
-      background: #fafafa;
-      border: 1px solid #e5e5e5;
-      border-radius: 8px;
-      padding: 0.875rem;
+      background: var(--bg-subtle, #fafafa);
+      border: 1px solid var(--border-default, #e5e5e5);
+      border-radius: var(--radius-lg, 8px);
+      padding: var(--space-14, 0.875rem);
 
       .third-party-title {
-        font-weight: 700;
-        color: #404040;
+        font-weight: var(--font-weight-bold, 700);
+        color: var(--text-primary, #404040);
       }
 
       .third-party-text {
-        margin: 0.25rem 0 0;
-        font-size: 0.8125rem;
-        color: #525252;
+        margin: var(--space-4, 0.25rem) 0 0;
+        font-size: var(--font-size-sm, 0.8125rem);
+        color: var(--text-secondary, #525252);
         line-height: 1.4;
       }
     }
@@ -163,14 +117,14 @@
 .photo-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.875rem;
-  margin-top: 0.375rem;
+  gap: var(--space-14, 0.875rem);
+  margin-top: var(--space-6, 0.375rem);
 
   .gallery-item {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: var(--radius-lg, 8px);
     overflow: hidden;
-    background: #0f172a;
+    background: var(--bg-surface, #0f172a);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -182,10 +136,10 @@
     }
 
     .gallery-link {
-      padding: 0.375rem;
-      color: #38bdf8;
-      font-size: 0.75rem;
-      font-weight: 600;
+      padding: var(--space-6, 0.375rem);
+      color: var(--color-primary, #38bdf8);
+      font-size: var(--font-size-xs, 0.75rem);
+      font-weight: var(--font-weight-semibold, 600);
       text-decoration: none;
       &:hover { text-decoration: underline; }
     }
@@ -193,14 +147,14 @@
 }
 
 .no-photo-box {
-  padding: 1.5rem;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  background: #f8fafc;
+  padding: var(--space-24, 1.5rem);
+  border: 1px dashed var(--border-strong, #cbd5e1);
+  border-radius: var(--radius-lg, 8px);
+  background: var(--bg-subtle, #f8fafc);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  color: #94a3b8;
-  font-size: 0.875rem;
+  gap: var(--space-8, 0.5rem);
+  color: var(--text-muted, #94a3b8);
+  font-size: var(--font-size-base, 0.875rem);
 }

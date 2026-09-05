@@ -187,17 +187,7 @@
                     <strong>{{ incident.location }}</strong>
                   </td>
                   <td>
-                    <span
-                      class="severity-badge"
-                      [ngClass]="{
-                        'severity-minor': incident.severity === 'Minor',
-                        'severity-moderate': incident.severity === 'Moderate',
-                        'severity-major': incident.severity === 'Major',
-                        'severity-critical': incident.severity === 'Critical'
-                      }"
-                    >
-                      {{ incident.severity }}
-                    </span>
+                    <nim-status-badge [status]="incident.severity" />
                   </td>
                   <td class="driver-cell">
                     {{ incident.driverName || 'Driver ' + incident.driverId.substring(0, 8) }}
@@ -208,14 +198,13 @@
                   <td><span class="rego-badge">{{ incident.vehicleRego }}</span></td>
                   <td>
                     @if (incident.notifiedInsurer) {
-                      <span class="insurer-badge notified" [title]="incident.insurerNotifiedAt ? (incident.insurerNotifiedAt | localeDate: 'short') : ''">
-                        <nim-icon name="check-circle" [size]="12" />
-                        <span>{{ 'INCIDENTS.INSURER_NOTIFIED' | i18n }}</span>
-                      </span>
+                      <nim-status-badge status="InsurerNotified" variant="success" icon="check-circle" [title]="incident.insurerNotifiedAt ? (incident.insurerNotifiedAt | localeDate: 'short') : ''">
+                        {{ 'INCIDENTS.INSURER_NOTIFIED' | i18n }}
+                      </nim-status-badge>
                     } @else {
-                      <span class="insurer-badge standard">
+                      <nim-status-badge status="InsurerStandard" variant="neutral">
                         {{ 'INCIDENTS.INSURER_NOT_REQUIRED' | i18n }}
-                      </span>
+                      </nim-status-badge>
                     }
                   </td>
                   <td class="actions-cell">
@@ -238,7 +227,7 @@
         <!-- Pagination -->
         <div class="pagination-bar">
           <span class="page-info">
-            Total {{ totalRecords() }} items (Page {{ currentPage() }} of {{ totalPages() }})
+            {{ 'COMMON.PAGE_INFO_INCIDENTS' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
           </span>
           <div class="pagination-controls">
             <button
@@ -247,7 +236,7 @@
               [disabled]="currentPage() <= 1"
               (click)="goToPage(currentPage() - 1)"
             >
-              Prev
+              {{ 'COMMON.PREV' | i18n }}
             </button>
             <span class="current-page-num">{{ currentPage() }}</span>
             <button
@@ -256,7 +245,7 @@
               [disabled]="currentPage() >= totalPages()"
               (click)="goToPage(currentPage() + 1)"
             >
-              Next
+              {{ 'COMMON.NEXT' | i18n }}
             </button>
           </div>
         </div>
@@ -302,17 +291,7 @@
               </div>
               <div class="detail-item">
                 <label>{{ 'INCIDENTS.COL_SEVERITY' | i18n }}</label>
-                <span
-                  class="severity-badge"
-                  [ngClass]="{
-                    'severity-minor': activeIncidentDetail()?.severity === 'Minor',
-                    'severity-moderate': activeIncidentDetail()?.severity === 'Moderate',
-                    'severity-major': activeIncidentDetail()?.severity === 'Major',
-                    'severity-critical': activeIncidentDetail()?.severity === 'Critical'
-                  }"
-                >
-                  {{ activeIncidentDetail()?.severity }}
-                </span>
+                <nim-status-badge [status]="activeIncidentDetail()?.severity || 'Minor'" />
               </div>
               <div class="detail-item">
                 <label>{{ 'INCIDENTS.COL_DRIVER' | i18n }}</label>
@@ -397,7 +376,7 @@
           <div class="form-group">
             <label class="form-label">{{ 'INCIDENTS.FILTER_DRIVER' | i18n }}</label>
             <select class="form-control" [(ngModel)]="newDriverId">
-              <option value="">Select driver (optional)</option>
+              <option value="">{{ 'INCIDENTS.SELECT_DRIVER_OPTIONAL' | i18n }}</option>
               @for (d of drivers(); track d.id) {
                 <option [value]="d.id">{{ d.displayName }} ({{ d.employeeNo }})</option>
               }
@@ -407,7 +386,7 @@
           <div class="form-group">
             <label class="form-label">{{ 'INCIDENTS.FILTER_VEHICLE' | i18n }} *</label>
             <select class="form-control" [(ngModel)]="newVehicleId" required>
-              <option value="">Select vehicle *</option>
+              <option value="">{{ 'INCIDENTS.SELECT_VEHICLE_REQUIRED' | i18n }}</option>
               @for (v of vehicles(); track v.id) {
                 <option [value]="v.id">{{ v.rego }} ({{ v.make }} {{ v.model }})</option>
               }
@@ -425,7 +404,7 @@
               type="text"
               class="form-control"
               [(ngModel)]="newLocation"
-              placeholder="e.g. State Highway 1, Penrose / Hobson St & Victoria St"
+              [placeholder]="'INCIDENTS.PLACEHOLDER_LOCATION' | i18n"
               required
             />
           </div>
@@ -462,12 +441,12 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Scene Photo Keys (comma-separated, optional)</label>
+            <label class="form-label">{{ 'INCIDENTS.SCENE_PHOTO_KEYS_OPTIONAL' | i18n }}</label>
             <input
               type="text"
               class="form-control"
               [(ngModel)]="newPhotoKeys"
-              placeholder="incidents/front.jpg, incidents/rear.jpg"
+              [placeholder]="'INCIDENTS.PLACEHOLDER_PHOTO_KEYS' | i18n"
             />
           </div>
         </div>

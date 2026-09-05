@@ -15,6 +15,7 @@ import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import {
   AreaOption,
   DispatchService,
@@ -34,7 +35,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-dispatch',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, SlicePipe, IconComponent],
+  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, SlicePipe, IconComponent, StatusBadgeComponent],
   templateUrl: './dispatch.component.html',
   styleUrl: './dispatch.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -130,7 +130,7 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" aria-label="News and Notices List">
+      <table class="data-table" [attr.aria-label]="'NEWS.LIST_ARIA_LABEL' | i18n">
         <thead>
           <tr>
             <th class="th-pin">{{ 'NEWS.COL_PIN' | i18n }}</th>
@@ -159,7 +159,7 @@
                 <span class="news-title-text">{{ item.title }}</span>
               </td>
               <td>
-                <span class="badge badge-audience">
+                <nim-status-badge variant="info" size="sm">
                   @if (item.audience === 'All') {
                     {{ 'NEWS.AUDIENCE_ALL' | i18n }}
                   } @else if (item.audience === 'Drivers') {
@@ -167,34 +167,31 @@
                   } @else if (item.audience === 'Dispatchers') {
                     {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
                   }
-                </span>
+                </nim-status-badge>
               </td>
               <td class="cell-date">
                 {{ item.publishedAt | localeDate: 'medium' }}
               </td>
               <td>
                 @if (item.isRead) {
-                  <span class="badge badge-read">
-                    <nim-icon name="check-circle" [size]="12" />
+                  <nim-status-badge variant="success" size="sm" icon="check">
                     <span>{{ 'NEWS.STATUS_READ' | i18n }}</span>
-                  </span>
+                  </nim-status-badge>
                 } @else {
-                  <span class="badge badge-unread">
+                  <nim-status-badge variant="neutral" size="sm">
                     <span>{{ 'NEWS.STATUS_UNREAD' | i18n }}</span>
-                  </span>
+                  </nim-status-badge>
                 }
               </td>
               <td>
                 @if (item.isActive) {
-                  <span class="status-indicator status-active">
-                    <span class="dot"></span>
+                  <nim-status-badge variant="success" size="sm" [dot]="true">
                     <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
-                  </span>
+                  </nim-status-badge>
                 } @else {
-                  <span class="status-indicator status-inactive">
-                    <span class="dot"></span>
+                  <nim-status-badge variant="neutral" size="sm" [dot]="true">
                     <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
-                  </span>
+                  </nim-status-badge>
                 }
               </td>
               <td class="cell-actions" (click)="$event.stopPropagation()">

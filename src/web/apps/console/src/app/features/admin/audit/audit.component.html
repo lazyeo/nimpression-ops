@@ -62,13 +62,13 @@
         class="filter-select"
       >
         <option value="">{{ 'COMMON.ALL' | i18n }}</option>
-        <option value="Create">Create</option>
-        <option value="Update">Update</option>
-        <option value="Delete">Delete</option>
-        <option value="Login">Login</option>
-        <option value="Submit">Submit</option>
-        <option value="Activate">Activate</option>
-        <option value="Deactivate">Deactivate</option>
+        <option value="Create">{{ 'AUDIT.ACTION_CREATE' | i18n }}</option>
+        <option value="Update">{{ 'AUDIT.ACTION_UPDATE' | i18n }}</option>
+        <option value="Delete">{{ 'AUDIT.ACTION_DELETE' | i18n }}</option>
+        <option value="Login">{{ 'AUDIT.ACTION_LOGIN' | i18n }}</option>
+        <option value="Submit">{{ 'AUDIT.ACTION_SUBMIT' | i18n }}</option>
+        <option value="Activate">{{ 'AUDIT.ACTION_ACTIVATE' | i18n }}</option>
+        <option value="Deactivate">{{ 'AUDIT.ACTION_DEACTIVATE' | i18n }}</option>
       </select>
     </div>
 
@@ -163,7 +163,7 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" aria-label="Audit Logs Table">
+      <table class="data-table" [attr.aria-label]="'AUDIT.TABLE_ARIA_LABEL' | i18n">
         <thead>
           <tr>
             <th class="th-time">{{ 'AUDIT.COL_OCCURRED_AT' | i18n }}</th>
@@ -182,14 +182,12 @@
                 {{ log.occurredAt | localeDate: 'medium' }}
               </td>
               <td>
-                <span
-                  class="badge-action"
-                  [class.action-create]="log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')"
-                  [class.action-delete]="log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')"
-                  [class.action-update]="log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')"
+                <nim-status-badge
+                  [variant]="(log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')) ? 'success' : (log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')) ? 'danger' : (log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')) ? 'info' : 'neutral'"
+                  size="sm"
                 >
                   {{ log.action }}
-                </span>
+                </nim-status-badge>
               </td>
               <td>
                 <span class="badge-entity">{{ log.entityType }}</span>
@@ -198,9 +196,9 @@
                 <span class="code-id">{{ log.entityId }}</span>
               </td>
               <td>
-                <span class="badge-role">
+                <nim-status-badge variant="neutral" size="sm">
                   {{ log.actorRole ? ('ROLES.' + (log.actorRole === 1 || log.actorRole === 'Admin' ? 'ADMIN' : log.actorRole === 2 || log.actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
-                </span>
+                </nim-status-badge>
               </td>
               <td class="cell-ip">
                 <span class="text-ip">{{ log.ipAddress || '-' }}</span>

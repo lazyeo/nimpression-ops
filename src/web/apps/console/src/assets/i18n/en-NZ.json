@@ -28,7 +28,42 @@
     "ALL": "All",
     "FORBIDDEN_TITLE": "Access Denied",
     "PREV_PAGE": "Previous Page",
-    "NEXT_PAGE": "Next Page"
+    "NEXT_PAGE": "Next Page",
+    "VS": "vs",
+    "PREV": "Prev",
+    "NEXT": "Next",
+    "PAGINATION_PAGE_OF": "Page {page} of {total} ({count} items)",
+    "PAGINATION_PAGE_OF_SIMPLE": "Page {page} of {total}",
+    "PAGINATION_TOTAL_ITEMS": "Total {total} items (Page {page} of {pages})",
+    "PAGINATION_TOTAL_VEHICLES": "Page {page} of {total} ({count} vehicles)",
+    "PAGINATION_TOTAL_AREAS": "Page {page} of {total} ({count} areas)",
+    "SELECT_DRIVER": "-- Select Driver --",
+    "SELECT_DRIVER_OPTIONAL": "Select driver (optional)",
+    "SELECT_VEHICLE": "-- Select Vehicle --",
+    "SELECT_VEHICLE_REQUIRED": "Select vehicle *",
+    "SELECT_AREA": "-- Select Operational Area --",
+    "PHOTO_KEY_OPTIONAL": "Key (Optional)",
+    "UNITS": {
+      "HOURS": "hours",
+      "MINUTES": "minutes",
+      "HRS": "hrs",
+      "MINS": "mins",
+      "H": "h",
+      "M": "m",
+      "KM": "km",
+      "SLASH_KM": "/ km",
+      "PER_HR": "/hr",
+      "PER_TRIP": "/trip",
+      "PER_KM": "/km",
+      "TRIPS": "trips"
+    },
+    "PAGE_INFO_TASKS": "Page {page} of {total} ({count} tasks)",
+    "PAGE_INFO_DRIVERS": "Page {page} of {total} ({count} drivers)",
+    "PAGE_INFO_FINES": "Page {page} of {total} ({count} fines)",
+    "PAGE_INFO_INCIDENTS": "Page {page} of {total} ({count} incidents)",
+    "PAGE_INFO_TIMESHEETS": "Page {page} of {total} ({count} timesheets)",
+    "PAGE_INFO_PAYROLL": "Page {page} of {total} ({count} pay periods)",
+    "PAGE_INFO_AUDIT": "Page {page} of {total} ({count} audit records)"
   },
   "NAV": {
     "DASHBOARD": "Dashboard",
@@ -48,7 +83,9 @@
     "SHIFTS": "Shifts",
     "PAYSLIPS": "Payslips",
     "PROFILE": "Profile",
-    "LOGOUT": "Log out"
+    "LOGOUT": "Log out",
+    "MAIN_NAV": "Main Navigation",
+    "DRIVER_NAV": "Driver Navigation"
   },
   "AUTH": {
     "LOGIN_TITLE": "Sign in to Nimpression Ops",
@@ -68,7 +105,8 @@
     "CURRENT_PASSWORD": "Current Password",
     "NEW_PASSWORD": "New Password",
     "CONFIRM_NEW_PASSWORD": "Confirm New Password",
-    "PASSWORD_CHANGED_SUCCESS": "Password changed successfully"
+    "PASSWORD_CHANGED_SUCCESS": "Password changed successfully",
+    "PLATFORM_MANUAL": "Platform Manual & Architecture Specification"
   },
   "ROLES": {
     "ADMIN": "Administrator",
@@ -388,7 +426,7 @@
     "FIELD_DRIVER": "Assigned Driver",
     "FIELD_VEHICLE": "Assigned Vehicle",
     "FIELD_DESCRIPTION": "Description / Notes",
-    "FIELD_CANCEL_REASON": "Cancellation Reason",
+    "FIELD_CANCEL_REASON": "Cancel Reason",
     "FIELD_OVERRIDE_WARNING": "Override area eligibility warning",
     "AREA_WARNING_MESSAGE": "Driver is not assigned to this area for the scheduled date. Check override to proceed.",
     "CANCEL_CONFIRM_MSG": "Are you sure you want to cancel this task? Please provide a reason.",
@@ -402,7 +440,29 @@
     "SUCCESS_ACKNOWLEDGED": "Task acknowledged successfully",
     "SUCCESS_STARTED": "Task started successfully",
     "SUCCESS_COMPLETED": "Task completed successfully",
-    "SUCCESS_CANCELLED": "Task cancelled successfully"
+    "SUCCESS_CANCELLED": "Task cancelled successfully",
+    "SEARCH_PLACEHOLDER": "e.g. #ORD-9921, AKL-WLG express",
+    "FIELD_NOTES_PLACEHOLDER": "Optional route details or delivery notes...",
+    "SELECT_DRIVER": "-- Select Driver --",
+    "SELECT_VEHICLE": "-- Select Vehicle --",
+    "SELECT_AREA": "-- Select Operational Area --",
+    "TIMELINE_TITLE": "Timeline",
+    "FIELD_ACKNOWLEDGED_AT": "Acknowledged At",
+    "FIELD_STARTED_AT": "Started At",
+    "FIELD_COMPLETED_AT": "Completed At",
+    "FIELD_CANCELLED_AT": "Cancelled At",
+    "PLACEHOLDER_TITLE": "e.g. Morning Freight Delivery",
+    "PLACEHOLDER_DISTANCE": "e.g. 25.5",
+    "PLACEHOLDER_INSTRUCTIONS": "Optional special instructions...",
+    "PLACEHOLDER_START_KM": "e.g. 12500.5",
+    "PLACEHOLDER_ACTUAL_KM": "e.g. 28.0",
+    "PLACEHOLDER_END_KM": "e.g. 12528.5",
+    "PLACEHOLDER_CANCEL_REASON": "Enter cancellation reason...",
+    "OPTIONAL_DRIVER": "-- Optional Driver --",
+    "OPTIONAL_VEHICLE": "-- Optional Vehicle --",
+    "SECTION_OVERVIEW": "Overview",
+    "SECTION_ASSIGNMENT": "Assignment",
+    "SECTION_MILEAGE": "Distance & Mileage"
   },
   "DRIVERS": {
     "TITLE": "Driver Management",
@@ -469,7 +529,24 @@
     "SUCCESS_CREATED": "Driver created successfully",
     "SUCCESS_UPDATED": "Driver updated successfully",
     "SUCCESS_DEACTIVATED": "Driver deactivated successfully",
-    "SUCCESS_AVATAR": "Avatar uploaded successfully"
+    "SUCCESS_AVATAR": "Avatar uploaded successfully",
+    "SECTION_EMPLOYMENT": "Employment",
+    "SECTION_COMPLIANCE": "Licence & Compliance",
+    "SECTION_STATUS": "Status",
+    "SECTION_RATE_CARDS": "Rate Cards (NZD)",
+    "SECTION_CONTACT": "Contact Information",
+    "SECTION_ASSIGNED_AREAS": "Assigned Areas",
+    "NO_ASSIGNED_AREAS": "No assigned operational areas",
+    "PLACEHOLDER_NAME": "e.g. John Doe",
+    "PLACEHOLDER_EMPLOYEE_NO": "e.g. DRV-001",
+    "PLACEHOLDER_EMAIL": "e.g. john@nimpression.co.nz",
+    "PLACEHOLDER_PHONE": "021 123 4567",
+    "PLACEHOLDER_EMERGENCY": "e.g. Jane Doe (021 987 6543)",
+    "PLACEHOLDER_ADDRESS": "123 Queen St, Auckland",
+    "PLACEHOLDER_SEARCH": "Search drivers by name, employee no, email...",
+    "PLACEHOLDER_LICENCE_CLASS": "Class 2 Heavy Rigid",
+    "PLACEHOLDER_DEACTIVATE_REASON": "e.g. Voluntary resignation, contract ended",
+    "FIELD_PASSWORD_PLACEHOLDER": "Default: Initial@123"
   },
   "VEHICLES": {
     "TITLE": "Vehicle Fleet Management",
@@ -543,7 +620,22 @@
     "SUCCESS_SERVICE": "Vehicle service recorded successfully",
     "SUCCESS_ODOMETER": "Odometer reading recorded successfully",
     "ODOMETER_HISTORY_TITLE": "Odometer History",
-    "NO_ODOMETER_HISTORY": "No odometer readings recorded yet."
+    "NO_ODOMETER_HISTORY": "No odometer readings recorded yet.",
+    "PLACEHOLDER_REGO": "e.g. ABC123",
+    "PLACEHOLDER_VIN": "17-character VIN",
+    "PLACEHOLDER_MAKE": "e.g. Toyota",
+    "PLACEHOLDER_MODEL": "e.g. HiAce",
+    "SELECT_DRIVER": "-- Select Driver --",
+    "SECTION_SPECS": "Vehicle Specifications",
+    "SECTION_MAINTENANCE": "Service & Maintenance",
+    "SERVICE_STATUS": "Service Status",
+    "COMPLIANCE_EXPIRIES": "Compliance Expiries",
+    "ACTIVE_ASSIGNMENT": "Active Assignment",
+    "ASSIGNED_AT": "Assigned At",
+    "WOF_LABEL": "WOF:",
+    "COF_LABEL": "COF:",
+    "COF": "COF",
+    "WOF": "WOF"
   },
   "AREAS": {
     "TITLE": "Operational Area Management",
@@ -595,7 +687,11 @@
     "SUCCESS_DELETED": "Operational area deleted successfully",
     "SUCCESS_ASSIGNED": "Driver assigned to area successfully",
     "SUCCESS_ENDED": "Driver area assignment ended successfully",
-    "NO_ASSIGNMENTS": "No driver assignments in this area."
+    "NO_ASSIGNMENTS": "No driver assignments in this area.",
+    "PLACEHOLDER_CODE": "e.g. AKL-CBD",
+    "PLACEHOLDER_NAME": "e.g. Auckland Central Business District",
+    "PLACEHOLDER_DESC": "Optional area description...",
+    "SELECT_DRIVER": "-- Select Driver --"
   },
   "TIMESHEETS": {
     "TITLE": "Timesheet Management",
@@ -648,7 +744,10 @@
     "CORRECTED_BY": "Corrected By",
     "CORRECTED_AT": "Corrected At",
     "EMPTY_TITLE": "No Shift Records Found",
-    "EMPTY_DESC": "There are no timesheet records matching the selected date range and filter criteria."
+    "EMPTY_DESC": "There are no timesheet records matching the selected date range and filter criteria.",
+    "IN_OUT_SUMMARY": "In: ({inLat}, {inLng}) | Out: ({outLat}, {outLng})",
+    "NOTE_LABEL": "Note",
+    "LOCATION_NOTE": "In: ({inLat}, {inLng}) | Out: ({outLat}, {outLng})"
   },
   "PAYROLL": {
     "TITLE": "Payroll Management",
@@ -721,7 +820,42 @@
     "FINES_LEGAL_BANNER": "Under the Wages Protection Act 1983, employer deductions from wages are unlawful without prior written consent. Fines are strictly tracked for informational purposes and ARE NOT deducted from payroll ($0.00 deduction).",
     "NO_FINES_IN_PERIOD": "No traffic fines recorded for this driver during the pay period.",
     "EMPTY_PERIODS_TITLE": "No Pay Periods Found",
-    "EMPTY_PERIODS_DESC": "Create a new pay period to begin fortnightly payroll calculation."
+    "EMPTY_PERIODS_DESC": "Create a new pay period to begin fortnightly payroll calculation.",
+    "ZERO_WAGE_DEDUCTION": "$0.00 Wage Deduction",
+    "NO_PAYSLIPS_YET": "No Payslips Calculated Yet",
+    "NO_PAYSLIPS_DESC": "Click Calculate / Trial above to compute driver earnings for this period.",
+    "GROSS_PAY_CALCULATED": "Gross Pay (Calculated: {basis})",
+    "APPLIED_BADGE": "(Applied)",
+    "ORDINARY_HOURS_LABEL": "Ordinary Hours:",
+    "OVERTIME_HOURS_LABEL": "Overtime Hours:",
+    "HOLIDAY_HOURS_LABEL": "Holiday Hours:",
+    "COMPLETED_TRIPS_LABEL": "Completed Trips:",
+    "TOTAL_DISTANCE_LABEL": "Total Distance:",
+    "SNAPSHOTS_LABEL": "Per Trip / Km Snapshots:",
+    "NO_SHIFTS_LINKED": "No shift records linked to this payslip.",
+    "NO_TASKS_LINKED": "No completed dispatch tasks linked to this payslip.",
+    "NO_LINES_RECORDED": "No calculation line details recorded.",
+    "STATUS_SUMMARY": "Status: {status} | Payslips: {count}",
+    "TABLE_NOTICE_REF": "Notice Ref",
+    "TABLE_AUTHORITY": "Authority",
+    "TABLE_ISSUED_ON": "Issued On",
+    "TABLE_AMOUNT": "Amount",
+    "TABLE_STATUS": "Status",
+    "TABLE_REASON": "Reason",
+    "TABLE_BASIS": "Basis",
+    "TABLE_KIND": "Kind",
+    "TABLE_DESCRIPTION": "Description",
+    "TABLE_RATE": "Rate",
+    "TABLE_QTY": "Qty / Hours / Dist",
+    "TABLE_TASK_REF": "Task Ref",
+    "TABLE_TITLE": "Title",
+    "TABLE_COMPLETED_AT": "Completed At",
+    "TABLE_DISTANCE": "Distance",
+    "TABLE_CLOCK_IN": "Clock In",
+    "TABLE_CLOCK_OUT": "Clock Out",
+    "TABLE_BREAK": "Break",
+    "TABLE_PAYABLE_HOURS": "Payable Hours",
+    "MIN_WAGE_TOPUP_RATE_PLACEHOLDER": "e.g. 23.15"
   },
   "FINES": {
     "TITLE": "Traffic Fines Management",
@@ -778,7 +912,15 @@
     "REVIEWED_AT": "Reviewed At",
     "REVIEW_NOTE": "Review Note",
     "EMPTY_TITLE": "No Traffic Fines Found",
-    "EMPTY_DESC": "No infringement notices match the selected filters."
+    "EMPTY_DESC": "No infringement notices match the selected filters.",
+    "PLACEHOLDER_AUTHORITY": "e.g. NZTA, Auckland Transport, Police",
+    "PLACEHOLDER_REF": "e.g. TKT-2026-9901",
+    "PLACEHOLDER_AMOUNT": "e.g. 150.00",
+    "PLACEHOLDER_TICKET_KEY": "fines/sample-ticket-key.jpg",
+    "PLACEHOLDER_NOTES": "Enter justification / review notes...",
+    "SELECT_DRIVER_OPTIONAL": "Select driver (optional)",
+    "SELECT_VEHICLE_REQUIRED": "Select vehicle *",
+    "PHOTO_KEY_OPTIONAL": "Key (Optional)"
   },
   "INCIDENTS": {
     "TITLE": "Incident Reports Management",
@@ -820,7 +962,12 @@
     "PHOTOS_SECTION": "Scene Photo Evidence ({count})",
     "NO_PHOTOS": "No scene photos attached to this incident report.",
     "EMPTY_TITLE": "No Incidents Recorded",
-    "EMPTY_DESC": "No fleet incidents found for the selected time range and filters."
+    "EMPTY_DESC": "No fleet incidents found for the selected time range and filters.",
+    "PLACEHOLDER_LOCATION": "e.g. State Highway 1, Penrose / Hobson St & Victoria St",
+    "PLACEHOLDER_PHOTO_KEYS": "incidents/front.jpg, incidents/rear.jpg",
+    "SELECT_DRIVER_OPTIONAL": "Select driver (optional)",
+    "SELECT_VEHICLE_REQUIRED": "Select vehicle *",
+    "SCENE_PHOTO_KEYS_OPTIONAL": "Scene Photo Keys (comma-separated, optional)"
   },
   "NEWS": {
     "PAGE_TITLE": "News & Announcements",
@@ -883,7 +1030,9 @@
     "SEARCH_UNREAD_PLACEHOLDER": "Filter unread users...",
     "ALL_READ_TITLE": "100% Read Completion",
     "ALL_READ_DESC": "All active users in the target audience have acknowledged this announcement.",
-    "TOTAL_COUNT": "Total: {count} notices"
+    "TOTAL_COUNT": "Total: {count} notices",
+    "LIST_LABEL": "News and Notices List",
+    "LIST_ARIA_LABEL": "News and Notices List"
   },
   "NOTIFICATIONS": {
     "PAGE_TITLE": "Notifications & Delivery",
@@ -954,7 +1103,7 @@
     "KIND_MAINTENANCE": "Maintenance",
     "KIND_INSPECTION": "Inspection",
     "SEARCH_PARTNERS_PLACEHOLDER": "Search company name or email...",
-    "NEW_PARTNER_BUTTON": "Add Partner",
+    "NEW_PARTNER_BUTTON": "New Partner",
     "PARTNERS_LOAD_FAILED": "Failed to load partner contacts",
     "EMPTY_PARTNERS_TITLE": "No Partner Contacts Found",
     "EMPTY_PARTNERS_DESC": "Add insurer, maintenance, and inspection partners to receive automated notifications.",
@@ -985,7 +1134,17 @@
     "SCANNING_BUTTON": "Scanning Fleet Records...",
     "SCAN_SUCCESS_TITLE": "Compliance Scan Completed",
     "SCAN_SUCCESS_DESC": "Fleet compliance records checked. Warning emails have been enqueued to Outbox if applicable.",
-    "SCAN_FAILED": "Compliance scan failed"
+    "SCAN_FAILED": "Compliance scan failed",
+    "LIST_LABEL": "Notifications List",
+    "EMAIL_LOGS_LIST_LABEL": "Email Logs List",
+    "EMAIL_TEMPLATES_LIST_LABEL": "Email Templates List",
+    "PARTNER_CONTACTS_LIST_LABEL": "Partner Contacts List",
+    "TEMPLATE_TYPES": {
+      "SERVICE_DUE_REMINDER": "Vehicle Service Due Reminder",
+      "COMPLIANCE_EXPIRY_WARNING": "Compliance Expiry Warning",
+      "INCIDENT_NOTIFICATION": "Incident Notification",
+      "FINE_ACCEPTED_NOTICE": "Fine Accepted Notice"
+    }
   },
   "AUDIT": {
     "PAGE_TITLE": "Audit Logs",
@@ -1035,6 +1194,14 @@
     "ENTITY_PAYROLL": "Pay Period",
     "ENTITY_FINE": "Traffic Fine",
     "ENTITY_TEMPLATE": "Email Template",
-    "ENTITY_PARTNER": "Partner Contact"
+    "ENTITY_PARTNER": "Partner Contact",
+    "ACTION_CREATE": "Create",
+    "ACTION_UPDATE": "Update",
+    "ACTION_DELETE": "Delete",
+    "ACTION_LOGIN": "Login",
+    "ACTION_SUBMIT": "Submit",
+    "ACTION_ACTIVATE": "Activate",
+    "ACTION_DEACTIVATE": "Deactivate",
+    "TABLE_ARIA_LABEL": "Audit Logs Table"
   }
 }

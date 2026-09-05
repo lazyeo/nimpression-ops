@@ -1,7 +1,14 @@
+:host {
+  display: block;
+  padding: var(--space-24, 1.5rem);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
 .notifications-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-24, 1.5rem);
 }
 
 .page-header {
@@ -13,68 +20,67 @@
 .header-titles {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-4, 0.25rem);
 }
 
 .title-with-icon {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--space-10, 0.625rem);
 
   .header-icon {
-    color: #0284c7;
+    color: var(--color-primary, #0284c7);
   }
 }
 
 .page-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-2xl, 1.5rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-primary, #0f172a);
 }
 
 .page-subtitle {
   margin: 0;
-  font-size: 0.875rem;
-  color: #64748b;
+  font-size: var(--font-size-base, 0.875rem);
+  color: var(--text-muted, #64748b);
 }
 
 /* Tabs Navigation Bar */
 .tabs-nav-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 0.25rem;
+  gap: var(--space-8, 0.5rem);
+  border-bottom: 1px solid var(--border-default, #e2e8f0);
+  padding-bottom: var(--space-4, 0.25rem);
   overflow-x: auto;
 }
 
 .nav-tab-btn {
-  padding: 0.625rem 1.25rem;
+  padding: var(--space-10, 0.625rem) var(--space-20, 1.25rem);
   background: none;
   border: none;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #64748b;
+  font-size: var(--font-size-base, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-muted, #64748b);
   cursor: pointer;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-lg, 8px) var(--radius-lg, 8px) 0 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-8, 0.5rem);
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   white-space: nowrap;
 
   &:hover {
-    color: #0f172a;
-    background-color: #f1f5f9;
+    color: var(--text-primary, #0f172a);
+    background-color: var(--bg-subtle, #f1f5f9);
   }
 
   &.active {
-    color: #0284c7;
-    border-bottom-color: #0284c7;
-    background-color: #ffffff;
+    color: var(--color-primary, #0284c7);
+    border-bottom-color: var(--color-primary, #0284c7);
+    background-color: var(--bg-surface, #ffffff);
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.02);
   }
 }

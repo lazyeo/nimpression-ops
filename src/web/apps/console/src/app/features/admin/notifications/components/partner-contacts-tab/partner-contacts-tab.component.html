@@ -88,7 +88,7 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" aria-label="Partner Contacts List">
+      <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.PARTNER_CONTACTS_LIST_LABEL' | i18n">
         <thead>
           <tr>
             <th class="th-name">{{ 'NOTIFICATIONS.COL_COMPANY_NAME' | i18n }}</th>

@@ -20,6 +20,7 @@ import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'nim-admin-timesheets',
@@ -31,6 +32,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
     LocaleDatePipe,
     LocaleNumberPipe,
     IconComponent,
+    StatusBadgeComponent,
   ],
   templateUrl: './timesheets.component.html',
   styleUrl: './timesheets.component.scss',

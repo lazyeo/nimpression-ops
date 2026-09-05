@@ -18,6 +18,7 @@ import {
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { VehicleDto } from '../../../core/api/models/api-models';
 
 @Component({
@@ -29,6 +30,7 @@ import { VehicleDto } from '../../../core/api/models/api-models';
     I18nPipe,
     LocaleDatePipe,
     IconComponent,
+    StatusBadgeComponent,
   ],
   templateUrl: './incidents.component.html',
   styleUrl: './incidents.component.scss',
