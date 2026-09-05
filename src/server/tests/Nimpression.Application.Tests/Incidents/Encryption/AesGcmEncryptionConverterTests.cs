@@ -7,7 +7,7 @@ namespace Nimpression.Application.Tests.Incidents.Encryption;
 
 public sealed class AesGcmEncryptionConverterTests : IDisposable
 {
-    private const string ValidTestKey = "k8+1h7T7mK6rL4p5v3z9Q1w2e3r4t5y6u7i8o9p0a1s=";
+    private const string ValidTestKey = "ZGV2LW9ubHktaW5zZWN1cmUtYWVzLWtleS0zMmJ5dGU=";
     private const string OtherValidKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     private readonly string? _originalKey;
 
