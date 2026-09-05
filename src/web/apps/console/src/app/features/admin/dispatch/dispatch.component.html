@@ -257,7 +257,7 @@
                       {{ 'DISPATCH.ACTION_VIEW' | i18n }}
                     </button>
 
-                    @if (task.status === 'Draft') {
+                    @if (task.status === 'Draft' || task.status === 'Assigned') {
                       <button type="button" class="action-btn btn-assign" (click)="openAssignModal(task)">
                         {{ 'DISPATCH.ACTION_ASSIGN' | i18n }}
                       </button>
