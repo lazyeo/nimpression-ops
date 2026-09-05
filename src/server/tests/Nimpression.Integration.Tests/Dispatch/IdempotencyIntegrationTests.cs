@@ -336,6 +336,7 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         var dispatcherId = Guid.NewGuid();
         var dispatcherEmail = TestDataFactory.CreateEmail("disp_w17");
+        // allow-hardcoded: 测试夹具专用的假口令，不涉及任何真实凭据
         var password = "SecurePassword123!";
         var hasher = new PasswordHasher();
         var dispatcher = new User(dispatcherId, new EmailAddress(dispatcherEmail), hasher.HashPassword(password), UserRole.Dispatcher, "Dispatcher W17");
@@ -398,6 +399,7 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         var dispatcherId = Guid.NewGuid();
         var dispatcherEmail = TestDataFactory.CreateEmail("disp_w17_dup");
+        // allow-hardcoded: 测试夹具专用的假口令，不涉及任何真实凭据
         var password = "SecurePassword123!";
         var hasher = new PasswordHasher();
         var dispatcher = new User(dispatcherId, new EmailAddress(dispatcherEmail), hasher.HashPassword(password), UserRole.Dispatcher, "Dispatcher W17 Dup");
@@ -470,6 +472,7 @@ public class IdempotencyIntegrationTests : IAsyncLifetime
 
         var dispatcherId = Guid.NewGuid();
         var dispatcherEmail = TestDataFactory.CreateEmail("disp_w17_fail");
+        // allow-hardcoded: 测试夹具专用的假口令，不涉及任何真实凭据
         var password = "SecurePassword123!";
         var hasher = new PasswordHasher();
         var dispatcher = new User(dispatcherId, new EmailAddress(dispatcherEmail), hasher.HashPassword(password), UserRole.Dispatcher, "Dispatcher W17 Fail");
