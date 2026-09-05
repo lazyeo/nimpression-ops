@@ -1,23 +1,24 @@
 .payroll-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-24, 1.5rem);
+  gap: var(--space-24);
 }
 
 .breadcrumb-back {
-  margin-bottom: var(--space-8, 0.5rem);
+  margin-bottom: var(--space-8);
 
   .back-link-btn {
     background: none;
     border: none;
     padding: 0;
-    color: var(--color-primary, #0284c7);
-    font-size: var(--font-size-base, 0.875rem);
-    font-weight: var(--font-weight-semibold, 600);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-6, 0.375rem);
+    gap: var(--space-6);
 
     &:hover {
       text-decoration: underline;
@@ -27,62 +28,66 @@
 
 .period-cell,
 .driver-cell {
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--text-primary, #0f172a);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .gross-cell {
-  color: var(--color-primary, #0284c7);
-  font-size: var(--font-size-md, 1rem);
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
 }
 
 // Settlement Hero
 .settlement-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: var(--text-inverse, #ffffff);
-  border-radius: var(--radius-xl, 12px);
-  padding: var(--space-24, 1.5rem);
+  background: linear-gradient(135deg, var(--color-gray-900) 0%, var(--color-gray-800) 100%);
+  color: var(--text-inverse);
+  border-radius: var(--radius-xl);
+  padding: var(--space-24);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-16, 1rem);
+  gap: var(--space-16);
   box-shadow: var(--shadow-md);
 
   .hero-left {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4, 0.25rem);
+    gap: var(--space-4);
 
     .hero-label {
-      font-size: var(--font-size-sm, 0.8125rem);
-      color: #94a3b8;
+      font-size: var(--font-size-xs);
+      color: var(--color-gray-400);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      line-height: var(--line-height-tight);
     }
 
     .hero-gross {
-      font-size: var(--font-size-3xl, 2.25rem);
-      font-weight: var(--font-weight-bold, 800);
-      color: #38bdf8;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-primary-400);
       letter-spacing: -0.02em;
+      line-height: var(--line-height-tight);
     }
 
     .hero-sub {
-      font-size: var(--font-size-xs, 0.75rem);
-      color: #cbd5e1;
+      font-size: var(--font-size-xs);
+      color: var(--color-gray-300);
+      line-height: var(--line-height-normal);
     }
   }
 
   .hero-right {
     .basis-callout {
-      padding: var(--space-16, 1rem);
-      border-radius: var(--radius-lg, 8px);
+      padding: var(--space-16);
+      border-radius: var(--radius-lg);
       max-width: 420px;
 
       &.callout-hourly {
         background: rgba(2, 132, 199, 0.2);
-        border: 1px solid #0284c7;
+        border: 1px solid var(--color-primary);
       }
 
       &.callout-trip {
@@ -91,17 +96,18 @@
       }
 
       .callout-tag {
-        font-size: var(--font-size-xs, 0.75rem);
-        font-weight: var(--font-weight-bold, 700);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-bold);
         text-transform: uppercase;
-        color: #f8fafc;
+        color: var(--text-inverse);
+        line-height: var(--line-height-tight);
       }
 
       .callout-desc {
-        margin: var(--space-6, 0.375rem) 0 0;
-        font-size: var(--font-size-sm, 0.8125rem);
-        color: #e2e8f0;
-        line-height: 1.4;
+        margin: var(--space-6) 0 0;
+        font-size: var(--font-size-xs);
+        color: var(--color-gray-200);
+        line-height: var(--line-height-normal);
       }
     }
   }
@@ -109,33 +115,35 @@
 
 // Minimum Wage Statutory Banner
 .min-wage-banner {
-  background-color: var(--color-warning-subtle, #fffbeb);
-  border: 1px solid var(--badge-warning-border, #fde68a);
-  border-left: 4px solid var(--color-warning, #d97706);
-  border-radius: var(--radius-lg, 8px);
-  padding: var(--space-16, 1rem) var(--space-20, 1.25rem);
+  background-color: var(--color-warning-subtle);
+  border: 1px solid var(--badge-warning-border);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  padding: var(--space-16) var(--space-20);
   display: flex;
-  gap: var(--space-14, 0.875rem);
+  gap: var(--space-14);
   align-items: flex-start;
 
   .min-wage-icon {
-    color: var(--color-warning, #d97706);
+    color: var(--color-warning);
     margin-top: 2px;
+    flex-shrink: 0;
   }
 
   .min-wage-text {
     .min-wage-title {
       margin: 0;
-      font-size: var(--font-size-base, 0.9375rem);
-      font-weight: var(--font-weight-bold, 700);
-      color: var(--color-warning-text, #92400e);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-warning-text);
+      line-height: var(--line-height-tight);
     }
 
     .min-wage-desc {
-      margin: var(--space-4, 0.25rem) 0 0;
-      font-size: var(--font-size-sm, 0.8125rem);
-      color: var(--color-warning-text, #78350f);
-      line-height: 1.4;
+      margin: var(--space-4) 0 0;
+      font-size: var(--font-size-xs);
+      color: var(--color-warning-text);
+      line-height: var(--line-height-normal);
     }
   }
 }
@@ -144,68 +152,70 @@
 .dual-basis-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-20, 1.25rem);
+  gap: var(--space-20);
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
 
   .basis-card {
-    background: var(--bg-surface, #ffffff);
-    border: 2px solid var(--border-default, #e2e8f0);
-    border-radius: var(--radius-lg, 10px);
+    background: var(--bg-surface);
+    border: 2px solid var(--border-default);
+    border-radius: var(--radius-lg);
     overflow: hidden;
 
     &.selected-basis {
-      border-color: var(--color-primary, #0284c7);
+      border-color: var(--color-primary);
       box-shadow: var(--shadow-sm);
 
       .basis-card-header {
-        background: var(--color-primary-subtle, #f0f9ff);
-        border-bottom-color: var(--badge-info-border, #bae6fd);
-        color: var(--color-primary-text, #0369a1);
+        background: var(--color-primary-subtle);
+        border-bottom-color: var(--badge-info-border);
+        color: var(--color-primary-text);
       }
     }
 
     .basis-card-header {
-      padding: var(--space-14, 0.875rem) var(--space-16, 1rem);
-      background: var(--bg-subtle, #f8fafc);
-      border-bottom: 1px solid var(--border-default, #e2e8f0);
+      padding: var(--space-12) var(--space-16);
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-default);
       display: flex;
       align-items: center;
       justify-content: space-between;
 
       h4 {
         margin: 0;
-        font-size: var(--font-size-base, 0.9375rem);
-        font-weight: var(--font-weight-bold, 700);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-tight);
       }
     }
 
     .basis-card-body {
-      padding: var(--space-16, 1rem);
+      padding: var(--space-16);
       display: flex;
       flex-direction: column;
-      gap: var(--space-8, 0.5rem);
+      gap: var(--space-8);
 
       .basis-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: var(--font-size-sm, 0.8125rem);
-        color: var(--text-muted, #475569);
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        line-height: var(--line-height-normal);
 
         &.subtotal {
-          margin-top: var(--space-8, 0.5rem);
-          padding-top: var(--space-12, 0.75rem);
-          border-top: 1px dashed var(--border-strong, #cbd5e1);
-          font-size: var(--font-size-base, 0.9375rem);
-          font-weight: var(--font-weight-bold, 700);
-          color: var(--text-primary, #0f172a);
+          margin-top: var(--space-8);
+          padding-top: var(--space-12);
+          border-top: 1px dashed var(--border-strong);
+          font-size: var(--font-size-sm);
+          font-weight: var(--font-weight-bold);
+          color: var(--text-primary);
 
           .subtotal-val {
-            color: var(--color-primary, #0284c7);
-            font-size: var(--font-size-lg, 1.125rem);
+            color: var(--color-primary);
+            font-size: var(--font-size-base);
           }
         }
       }
@@ -216,36 +226,39 @@
 // Traceability Section
 .traceability-section {
   .trace-title {
-    margin: 0 0 var(--space-12, 0.75rem);
-    font-size: var(--font-size-md, 1rem);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--text-primary, #0f172a);
+    margin: 0 0 var(--space-12);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: var(--line-height-tight);
   }
 
   .trace-tabs {
     display: flex;
-    gap: var(--space-8, 0.5rem);
-    border-bottom: 1px solid var(--border-default, #e2e8f0);
-    margin-bottom: var(--space-16, 1rem);
+    gap: var(--space-8);
+    border-bottom: 1px solid var(--border-default);
+    margin-bottom: var(--space-16);
 
     .trace-tab-btn {
-      padding: var(--space-8, 0.5rem) var(--space-16, 1rem);
+      padding: var(--space-8) var(--space-16);
       background: none;
       border: none;
       border-bottom: 2px solid transparent;
-      font-size: var(--font-size-base, 0.875rem);
-      font-weight: var(--font-weight-semibold, 600);
-      color: var(--text-muted, #64748b);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-muted);
       cursor: pointer;
       margin-bottom: -1px;
+      line-height: var(--line-height-tight);
+      transition: color var(--transition-fast), border-color var(--transition-fast);
 
       &.active {
-        color: var(--color-primary, #0284c7);
-        border-bottom-color: var(--color-primary, #0284c7);
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
       }
 
       &:hover:not(.active) {
-        color: var(--text-primary, #1e293b);
+        color: var(--text-primary);
       }
     }
   }
@@ -253,56 +266,59 @@
   .nested-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: var(--font-size-sm, 0.8125rem);
+    font-size: var(--font-size-xs);
 
     thead {
-      background: var(--bg-subtle, #f8fafc);
+      background: var(--bg-subtle);
       th {
-        padding: var(--space-8, 0.5rem) var(--space-12, 0.75rem);
-        border-bottom: 1px solid var(--border-default, #e2e8f0);
-        color: var(--text-muted, #475569);
-        font-weight: var(--font-weight-semibold, 600);
+        padding: var(--space-8) var(--space-12);
+        border-bottom: 1px solid var(--border-default);
+        color: var(--text-muted);
+        font-weight: var(--font-weight-semibold);
         text-align: left;
+        line-height: var(--line-height-tight);
       }
     }
 
     tbody {
       tr {
-        border-bottom: 1px solid var(--border-subtle, #f1f5f9);
+        border-bottom: 1px solid var(--border-subtle);
         td {
-          padding: var(--space-8, 0.5rem) var(--space-12, 0.75rem);
-          color: var(--text-secondary, #334155);
+          padding: var(--space-8) var(--space-12);
+          color: var(--text-secondary);
+          line-height: var(--line-height-tight);
         }
       }
     }
   }
 
   .empty-trace {
-    color: var(--text-muted, #94a3b8);
-    font-size: var(--font-size-base, 0.875rem);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
     font-style: italic;
-    margin: var(--space-8, 0.5rem) 0;
+    margin: var(--space-8) 0;
   }
 }
 
 .basis-mini-badge {
   display: inline-block;
-  font-size: var(--font-size-xs, 0.6875rem);
-  font-weight: var(--font-weight-bold, 700);
-  padding: 1px var(--space-6, 0.375rem);
-  background: var(--bg-subtle, #f1f5f9);
-  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: 1px var(--space-6);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  line-height: var(--line-height-tight);
 }
 
 // Fines Partition (NZ Wages Protection Act 1983 Compliance)
 .fines-partition {
-  background: var(--bg-subtle, #fafaf9);
-  border: 1px solid var(--border-default, #e7e5e4);
-  border-radius: var(--radius-lg, 10px);
-  padding: var(--space-20, 1.25rem);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-20);
   display: flex;
   flex-direction: column;
-  gap: var(--space-14, 0.875rem);
+  gap: var(--space-14);
 
   .fines-partition-header {
     display: flex;
@@ -312,44 +328,45 @@
     .fines-header-title {
       display: flex;
       align-items: center;
-      gap: var(--space-8, 0.5rem);
-      color: var(--text-primary, #44403c);
+      gap: var(--space-8);
+      color: var(--text-primary);
 
       h4 {
         margin: 0;
-        font-size: var(--font-size-md, 1rem);
-        font-weight: var(--font-weight-bold, 700);
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-tight);
       }
     }
   }
 
   .fines-legal-banner {
-    background-color: var(--bg-surface, #ffffff);
-    border: 1px solid var(--border-default, #e7e5e4);
-    border-left: 3px solid var(--color-neutral, #78716c);
-    border-radius: var(--radius-md, 6px);
-    padding: var(--space-12, 0.75rem) var(--space-16, 1rem);
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-left: 3px solid var(--color-neutral);
+    border-radius: var(--radius-md);
+    padding: var(--space-12) var(--space-16);
     display: flex;
     align-items: flex-start;
-    gap: var(--space-10, 0.625rem);
+    gap: var(--space-10);
 
     .legal-icon {
-      color: var(--color-neutral, #78716c);
+      color: var(--color-neutral);
       margin-top: 2px;
       flex-shrink: 0;
     }
 
     .legal-text {
       margin: 0;
-      font-size: var(--font-size-xs, 0.75rem);
-      color: var(--text-secondary, #57534e);
-      line-height: 1.4;
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      line-height: var(--line-height-normal);
     }
   }
 
   .no-fines-text {
-    font-size: var(--font-size-sm, 0.8125rem);
-    color: var(--text-muted, #78716c);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
     margin: 0;
     font-style: italic;
   }
@@ -357,25 +374,28 @@
   .fines-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: var(--font-size-sm, 0.8125rem);
-    background: var(--bg-surface, #ffffff);
-    border-radius: var(--radius-md, 6px);
+    font-size: var(--font-size-xs);
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
     overflow: hidden;
 
     thead th {
-      background: var(--bg-subtle, #f5f5f4);
-      padding: var(--space-8, 0.5rem) var(--space-12, 0.75rem);
-      border-bottom: 1px solid var(--border-default, #e7e5e4);
+      background: var(--bg-subtle);
+      padding: var(--space-8) var(--space-12);
+      border-bottom: 1px solid var(--border-default);
       text-align: left;
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--line-height-tight);
     }
 
     tbody td {
-      padding: var(--space-8, 0.5rem) var(--space-12, 0.75rem);
-      border-bottom: 1px solid var(--border-subtle, #f5f5f4);
+      padding: var(--space-8) var(--space-12);
+      border-bottom: 1px solid var(--border-subtle);
+      line-height: var(--line-height-tight);
 
       &.fine-amount-cell {
-        color: var(--color-danger, #b91c1c);
-        font-weight: var(--font-weight-semibold, 600);
+        color: var(--color-danger);
+        font-weight: var(--font-weight-semibold);
       }
     }
   }

@@ -7,7 +7,8 @@
     "check:i18n": "node scripts/check-i18n.mjs",
     "check:emoji": "node scripts/check-emoji.mjs",
     "check:enum": "node scripts/check-enum-contract.mjs",
-    "build": "node scripts/check-enum-contract.mjs && node scripts/check-i18n.mjs && node scripts/check-emoji.mjs && ng build",
+    "check:tokens": "node scripts/check-design-tokens.mjs",
+    "build": "node scripts/check-enum-contract.mjs && node scripts/check-i18n.mjs && node scripts/check-emoji.mjs && node scripts/check-design-tokens.mjs && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

@@ -1,6 +1,6 @@
 :host {
   display: block;
-  padding: var(--space-24, 1.5rem);
+  padding: var(--space-24);
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -8,51 +8,51 @@
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-24, 1.5rem);
+  gap: var(--space-24);
 }
 
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-20, 1.25rem);
+  gap: var(--space-20);
 }
 
 .metric-card {
-  background: var(--bg-surface, #ffffff);
-  border-radius: var(--radius-xl, 12px);
-  padding: var(--space-20, 1.25rem);
-  border: 1px solid var(--border-default, #e2e8f0);
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-20);
+  border: 1px solid var(--border-default);
   display: flex;
   align-items: center;
-  gap: var(--space-16, 1rem);
+  gap: var(--space-16);
   box-shadow: var(--shadow-sm);
 }
 
 .metric-icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-lg, 10px);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-2xl, 1.5rem);
-  background-color: var(--bg-subtle, #f1f5f9);
+  font-size: var(--font-size-2xl);
+  background-color: var(--bg-subtle);
 
   &.icon-dispatch {
-    background-color: var(--color-primary-subtle, #e0f2fe);
-    color: var(--color-primary, #0284c7);
+    background-color: var(--color-primary-subtle);
+    color: var(--color-primary);
   }
   &.icon-drivers {
-    background-color: var(--color-success-subtle, #f0fdf4);
-    color: var(--color-success, #16a34a);
+    background-color: var(--color-success-subtle);
+    color: var(--color-success);
   }
   &.icon-incidents {
-    background-color: var(--color-danger-subtle, #fee2e2);
-    color: var(--color-danger, #ef4444);
+    background-color: var(--color-danger-subtle);
+    color: var(--color-danger);
   }
   &.icon-fines {
-    background-color: var(--color-warning-subtle, #fef3c7);
-    color: var(--color-warning, #d97706);
+    background-color: var(--color-warning-subtle);
+    color: var(--color-warning);
   }
 }
 
@@ -61,15 +61,20 @@
   flex-direction: column;
 
   .metric-label {
-    font-size: var(--font-size-sm, 0.8125rem);
-    color: var(--text-muted, #64748b);
-    font-weight: var(--font-weight-medium, 500);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-tight);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .metric-val {
-    font-size: var(--font-size-2xl, 1.5rem);
-    font-weight: var(--font-weight-bold, 800);
-    color: var(--text-primary, #0f172a);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: var(--line-height-tight);
+    margin-top: 2px;
   }
 }
 
@@ -79,36 +84,38 @@
 }
 
 .panel-card {
-  background: var(--bg-surface, #ffffff);
-  border-radius: var(--radius-xl, 12px);
-  padding: var(--space-24, 1.5rem);
-  border: 1px solid var(--border-default, #e2e8f0);
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-24);
+  border: 1px solid var(--border-default);
   box-shadow: var(--shadow-sm);
 
   .panel-title {
-    margin: 0 0 var(--space-16, 1rem) 0;
-    font-size: var(--font-size-md, 1.0625rem);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--text-primary, #0f172a);
+    margin: 0 0 var(--space-16) 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: var(--line-height-tight);
   }
 }
 
 .status-rows {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12, 0.75rem);
+  gap: var(--space-12);
 }
 
 .status-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-8, 0.5rem) 0;
-  border-bottom: 1px solid var(--border-subtle, #f1f5f9);
-  font-size: var(--font-size-base, 0.875rem);
-  color: var(--text-secondary, #334155);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-tight);
 }
 
 .text-muted {
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted);
 }

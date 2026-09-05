@@ -4,32 +4,24 @@
    ========================================================================== */
 
 :root {
-  /* Spacing Scale (4, 8, 12, 16, 24, 32, 48) */
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-6: 24px;
-  --spacing-8: 32px;
-  --spacing-12: 48px;
-
-  /* Aliases for numerical/pixel parity */
+  /* Spacing Scale (Pixel-based semantic naming: --space-N = Npx) */
+  --space-1: 1px;
+  --space-2: 2px;
   --space-4: 4px;
+  --space-6: 6px;
   --space-8: 8px;
+  --space-10: 10px;
   --space-12: 12px;
+  --space-14: 14px;
   --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
   --space-24: 24px;
+  --space-28: 28px;
   --space-32: 32px;
+  --space-40: 40px;
   --space-48: 48px;
-
-  /* Step-based spacing */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4-step: 16px;
-  --space-6: 24px;
-  --space-8-step: 32px;
-  --space-12-step: 48px;
+  --space-64: 64px;
 
   /* Typography - Font Family */
   --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -52,6 +44,7 @@
   --font-weight-bold: 700;
 
   /* Typography - Line Heights */
+  --line-height-none: 1;
   --line-height-tight: 1.25;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
@@ -76,9 +69,11 @@
   /* Transitions */
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
+  --transition-normal: 0.2s ease;
   --transition-slow: 0.3s ease;
 
   /* Z-Index Hierarchy */
+  --z-fixed: 100;
   --z-dropdown: 100;
   --z-sticky: 500;
   --z-modal-backdrop: 1000;
