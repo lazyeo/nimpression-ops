@@ -19,7 +19,7 @@ namespace Nimpression.Integration.Tests.Notifications;
 public sealed class F11_3_OutboxDeliveryAndResilienceIntegrationTests : IAsyncLifetime, IDisposable
 {
     private readonly PostgreSqlContainerFixture _fixture;
-    private readonly MailpitTestClient _mailpit = new();
+    private MailpitTestClient _mailpit = null!;
     private TestDateTimeProvider _dateTimeProvider = null!;
 
     public F11_3_OutboxDeliveryAndResilienceIntegrationTests(PostgreSqlContainerFixture fixture)
@@ -29,6 +29,8 @@ public sealed class F11_3_OutboxDeliveryAndResilienceIntegrationTests : IAsyncLi
 
     public async Task InitializeAsync()
     {
+        _mailpit = _fixture.CreateMailpitClient();
+
         await using (var db = _fixture.CreateDbContext())
         {
             await db.Database.MigrateAsync();
@@ -61,7 +63,7 @@ public sealed class F11_3_OutboxDeliveryAndResilienceIntegrationTests : IAsyncLi
 
     public void Dispose()
     {
-        _mailpit.Dispose();
+        _mailpit?.Dispose();
     }
 
     [Fact]
@@ -113,7 +115,7 @@ public sealed class F11_3_OutboxDeliveryAndResilienceIntegrationTests : IAsyncLi
         }
 
         // ── Phase 2: 模拟服务进程重新启动并消费未处理的 Outbox 消息 ──
-        using var factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString, _dateTimeProvider);
+        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
         using (var scope = factory.Services.CreateScope())
         {
             var outboxService = scope.ServiceProvider.GetRequiredService<INotificationOutboxService>();
@@ -164,7 +166,7 @@ public sealed class F11_3_OutboxDeliveryAndResilienceIntegrationTests : IAsyncLi
             NotificationOutboxService.LastAttemptTimestamps[logId] = _dateTimeProvider.UtcNow;
         }
 
-        using var factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString, _dateTimeProvider);
+        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
 
         // Step 1: 立即执行重试队列（距上次尝试 0 秒，退避 1 分钟未到）-> 不应重试
         using (var scope1 = factory.Services.CreateScope())

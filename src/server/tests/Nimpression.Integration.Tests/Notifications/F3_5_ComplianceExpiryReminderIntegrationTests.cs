@@ -16,7 +16,7 @@ namespace Nimpression.Integration.Tests.Notifications;
 public sealed class F3_5_ComplianceExpiryReminderIntegrationTests : IAsyncLifetime, IDisposable
 {
     private readonly PostgreSqlContainerFixture _fixture;
-    private readonly MailpitTestClient _mailpit = new();
+    private MailpitTestClient _mailpit = null!;
     private TestDateTimeProvider _dateTimeProvider = null!;
 
     public F3_5_ComplianceExpiryReminderIntegrationTests(PostgreSqlContainerFixture fixture)
@@ -26,6 +26,8 @@ public sealed class F3_5_ComplianceExpiryReminderIntegrationTests : IAsyncLifeti
 
     public async Task InitializeAsync()
     {
+        _mailpit = _fixture.CreateMailpitClient();
+
         await using (var db = _fixture.CreateDbContext())
         {
             await db.Database.MigrateAsync();
@@ -58,7 +60,7 @@ public sealed class F3_5_ComplianceExpiryReminderIntegrationTests : IAsyncLifeti
 
     public void Dispose()
     {
-        _mailpit.Dispose();
+        _mailpit?.Dispose();
     }
 
     [Fact]
@@ -107,7 +109,7 @@ public sealed class F3_5_ComplianceExpiryReminderIntegrationTests : IAsyncLifeti
             await db.SaveChangesAsync();
         }
 
-        using var factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString, _dateTimeProvider);
+        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
 
         // ── Step 2: 边界 1 — 30 天前（2026-09-01，差值 30 天） ──
         _dateTimeProvider.SetNzToday(new DateOnly(2026, 9, 1));
