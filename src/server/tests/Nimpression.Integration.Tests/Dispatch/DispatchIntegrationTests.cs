@@ -384,6 +384,96 @@ public class DispatchIntegrationTests : IAsyncLifetime
         result.Value.Should().NotContain(x => x.TaskId == taskC.Id);
     }
 
+    [Fact]
+    public async Task GetMyJobTasks_DriverA_OnlyReceivesOwnTasks_NeverDriverBTasks()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var baseEntitiesA = await SeedBaseEntitiesAsync();
+        var baseEntitiesB = await SeedBaseEntitiesAsync();
+
+        var scheduledTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+
+        var taskA1 = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-A1"),
+            "Task for Driver A1",
+            baseEntitiesA.Area.Id,
+            scheduledTime,
+            baseEntitiesA.User.Id,
+            "Delivery to Zone A",
+            TaskPriority.High,
+            new Kilometres(25m),
+            baseEntitiesA.Driver.Id,
+            baseEntitiesA.Vehicle.Id);
+
+        var taskA2 = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-A2"),
+            "Task for Driver A2",
+            baseEntitiesA.Area.Id,
+            scheduledTime.AddHours(2),
+            baseEntitiesA.User.Id,
+            "Delivery to Zone A2",
+            TaskPriority.Medium,
+            new Kilometres(30m),
+            baseEntitiesA.Driver.Id,
+            baseEntitiesA.Vehicle.Id);
+
+        var taskB1 = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-B1"),
+            "Task for Driver B1",
+            baseEntitiesB.Area.Id,
+            scheduledTime,
+            baseEntitiesB.User.Id,
+            "Delivery to Zone B",
+            TaskPriority.Low,
+            new Kilometres(50m),
+            baseEntitiesB.Driver.Id,
+            baseEntitiesB.Vehicle.Id);
+
+        await context.JobTasks.AddRangeAsync(taskA1, taskA2, taskB1);
+        await context.SaveChangesAsync();
+
+        var repo = new JobTaskRepository(context);
+        var currentUserA = new TestCurrentUser(baseEntitiesA.User.Id, UserRole.Driver);
+        var handler = new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQueryHandler(repo, currentUserA);
+
+        // Act
+        var result = await handler.Handle(new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQuery(), CancellationToken.None);
+
+        // Assert: 严格只能查出 Driver A 自己的任务，绝对拿不到 Driver B 的任务
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().HaveCount(2);
+        result.Value.Select(x => x.Id).Should().Contain(new[] { taskA1.Id, taskA2.Id });
+        result.Value.Select(x => x.Id).Should().NotContain(taskB1.Id);
+        result.Value.Should().AllSatisfy(x =>
+        {
+            x.Status.Should().Be("ASSIGNED");
+            x.PickupLocation.Should().NotBeNullOrWhiteSpace();
+            x.DeliveryLocation.Should().NotBeNullOrWhiteSpace();
+            x.VehiclePlate.Should().NotBeNullOrWhiteSpace();
+        });
+    }
+
+    [Fact]
+    public async Task GetMyJobTasks_NonDriverRole_ReturnsForbidden()
+    {
+        await using var context = _fixture.CreateDbContext();
+        var baseEntities = await SeedBaseEntitiesAsync();
+        var repo = new JobTaskRepository(context);
+        var currentUser = new TestCurrentUser(baseEntities.User.Id, UserRole.Dispatcher);
+        var handler = new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQueryHandler(repo, currentUser);
+
+        var result = await handler.Handle(new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Kind.Should().Be(ErrorKind.Forbidden);
+    }
+
     #endregion
 
     private sealed class TestDateTimeProvider : IDateTimeProvider

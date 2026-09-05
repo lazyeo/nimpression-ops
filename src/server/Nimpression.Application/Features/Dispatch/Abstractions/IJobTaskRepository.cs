@@ -1,5 +1,6 @@
 using Nimpression.Application.Features.Dispatch.DTOs;
 using Nimpression.Domain.Entities.Dispatch;
+using Nimpression.Domain.Enums;
 
 namespace Nimpression.Application.Features.Dispatch.Abstractions;
 
@@ -33,4 +34,8 @@ public interface IJobTaskRepository
     Task<JobTaskDetailDto?> GetJobTaskDetailByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<List<JobTaskAlertDto>> GetUnacknowledgedTaskAlertsAsync(int thresholdMinutes, DateTimeOffset referenceTime, CancellationToken cancellationToken = default);
+
+    Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, CancellationToken cancellationToken = default);
+
+    Task<DashboardMetricsDto> GetDashboardMetricsAsync(CancellationToken cancellationToken = default);
 }

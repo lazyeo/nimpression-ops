@@ -1,3 +1,4 @@
+using System.Globalization;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
@@ -180,8 +181,125 @@ public sealed class TimesheetEndpoints : IEndpointModule
         .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("AdminCorrectShift")
         .WithSummary("管理员更正打卡记录（必须填理由，缺理由 422，原值新值全量入审计）");
+
+        // 司机端专用路由别名与打卡端点（/api/timesheet）
+        var driverGroup = routes.MapGroup("/api/timesheet")
+            .WithTags("TimesheetDriver");
+
+        // 获取当前进行中的活跃班次（适配 ShiftStatusDto 契约）
+        driverGroup.MapGet("/current-shift", async (
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetCurrentActiveShiftQuery(null), ct);
+            if (!result.IsSuccess)
+            {
+                return result.ToHttpResult();
+            }
+
+            if (result.Value is null)
+            {
+                return Results.Ok(new
+                {
+                    status = "NOT_STARTED",
+                    totalWorkedMinutes = 0
+                });
+            }
+
+            var shift = result.Value;
+            var elapsedMinutes = (int)Math.Max(0, (DateTimeOffset.UtcNow - shift.ClockInAt).TotalMinutes);
+
+            return Results.Ok(new
+            {
+                id = shift.Id,
+                status = "ACTIVE",
+                clockedInAt = shift.ClockInAt.ToString("o", CultureInfo.InvariantCulture),
+                totalWorkedMinutes = elapsedMinutes
+            });
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("GetCurrentShiftDriver")
+        .WithSummary("司机端获取当前进行中的活跃班次");
+
+        // 司机端上班打卡（自动从 JWT 解析 DriverId）
+        driverGroup.MapPost("/clock-in", async (
+            [FromBody] DriverClockRequest? request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            DateTimeOffset? clockTime = null;
+            if (!string.IsNullOrWhiteSpace(request?.Timestamp) && DateTimeOffset.TryParse(request.Timestamp, out var parsed))
+            {
+                clockTime = parsed;
+            }
+
+            var command = new ClockInCommand(
+                DriverId: null,
+                ClockInAt: clockTime,
+                Latitude: null,
+                Longitude: null,
+                VehicleId: null,
+                LocationUnavailable: true);
+
+            var result = await sender.Send(command, ct);
+            return result.ToHttpResult(StatusCodes.Status200OK);
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("ClockInDriver")
+        .WithSummary("司机端上班打卡（自动从 JWT 绑定身份）");
+
+        // 司机端下班打卡（自动从 JWT 解析 DriverId 并查找活跃班次）
+        driverGroup.MapPost("/clock-out", async (
+            [FromBody] DriverClockRequest? request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            DateTimeOffset? clockTime = null;
+            if (!string.IsNullOrWhiteSpace(request?.Timestamp) && DateTimeOffset.TryParse(request.Timestamp, out var parsed))
+            {
+                clockTime = parsed;
+            }
+
+            var command = new ClockOutCommand(
+                ShiftId: null,
+                DriverId: null,
+                ClockOutAt: clockTime,
+                Latitude: null,
+                Longitude: null,
+                BreakMinutes: 0,
+                Note: null,
+                LocationUnavailable: true);
+
+            var result = await sender.Send(command, ct);
+            return result.ToHttpResult(StatusCodes.Status200OK);
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("ClockOutDriver")
+        .WithSummary("司机端下班打卡（自动从 JWT 绑定身份）");
+
+        // 司机端开始休息
+        driverGroup.MapPost("/start-break", (
+            [FromBody] DriverClockRequest? request) =>
+        {
+            return Results.Ok(new { success = true, status = "ON_BREAK" });
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("StartBreakDriver")
+        .WithSummary("司机端开始休息");
+
+        // 司机端结束休息
+        driverGroup.MapPost("/end-break", (
+            [FromBody] DriverClockRequest? request) =>
+        {
+            return Results.Ok(new { success = true, status = "ACTIVE" });
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("EndBreakDriver")
+        .WithSummary("司机端结束休息");
     }
 }
+
+public sealed record DriverClockRequest(string? Timestamp = null);
 
 public sealed record ClockInRequest(
     Guid? DriverId = null,

@@ -172,6 +172,44 @@ public sealed class FakeJobTaskRepository : IJobTaskRepository
 
         return Task.FromResult(list);
     }
+
+    public Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = Tasks.Values.Where(t => t.DriverId == driverId);
+        if (status.HasValue)
+        {
+            query = query.Where(t => t.Status == status.Value);
+        }
+
+        var list = query
+            .OrderByDescending(t => t.ScheduledFor)
+            .Select(t => new DriverTaskItemDto(
+                t.Id,
+                t.Ref,
+                t.Status switch
+                {
+                    JobTaskStatus.Draft => "PENDING",
+                    JobTaskStatus.Assigned => "ASSIGNED",
+                    JobTaskStatus.Acknowledged => "ASSIGNED",
+                    JobTaskStatus.InProgress => "IN_PROGRESS",
+                    JobTaskStatus.Completed => "COMPLETED",
+                    JobTaskStatus.Cancelled => "CANCELLED",
+                    _ => "PENDING"
+                },
+                "Area Name Hub",
+                !string.IsNullOrWhiteSpace(t.Description) ? t.Description : (!string.IsNullOrWhiteSpace(t.Title) ? t.Title : "Area Name"),
+                t.ScheduledFor,
+                "VEH-01"))
+            .ToList();
+
+        return Task.FromResult(list);
+    }
+
+    public Task<DashboardMetricsDto> GetDashboardMetricsAsync(CancellationToken cancellationToken = default)
+    {
+        var activeDispatches = Tasks.Values.Count(t => t.Status == JobTaskStatus.InProgress || t.Status == JobTaskStatus.Assigned || t.Status == JobTaskStatus.Acknowledged);
+        return Task.FromResult(new DashboardMetricsDto(activeDispatches, 10, 0, 1));
+    }
 }
 
 public sealed class FakeAuditSink : IAuditSink

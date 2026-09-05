@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
+using Nimpression.Application.Common.Results;
 using Nimpression.Application.Common.Security;
 using Nimpression.Application.Features.Dispatch.Abstractions;
 using Nimpression.Application.Features.Dispatch.Commands.AcknowledgeJobTask;
@@ -11,8 +12,10 @@ using Nimpression.Application.Features.Dispatch.Commands.CreateJobTask;
 using Nimpression.Application.Features.Dispatch.Commands.StartJobTask;
 using Nimpression.Application.Features.Dispatch.DTOs;
 using Nimpression.Application.Features.Dispatch.Queries.CheckAreaEligibility;
+using Nimpression.Application.Features.Dispatch.Queries.GetDispatchMetrics;
 using Nimpression.Application.Features.Dispatch.Queries.GetJobTaskById;
 using Nimpression.Application.Features.Dispatch.Queries.GetJobTasksList;
+using Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks;
 using Nimpression.Application.Features.Dispatch.Queries.GetUnacknowledgedTaskAlerts;
 using Nimpression.Domain.Enums;
 
@@ -261,8 +264,72 @@ public sealed class DispatchEndpoints : IEndpointModule
         .RequireAuthorization(AuthorizationPolicies.Dispatcher)
         .WithName("CancelJobTask")
         .WithSummary("取消派发任务并记录原因");
+
+        // R1: 司机端专用本人派发任务列表查询
+        group.MapGet("/my-tasks", async (
+            [FromQuery] JobTaskStatus? status,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetMyJobTasksQuery(status), ct);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(AuthorizationPolicies.DriverOnly)
+        .WithName("GetMyJobTasks")
+        .WithSummary("司机端查询本人名下派发任务列表（严格由 JWT 解析身份，禁止客户端传入 driverId）");
+
+        // 司机端任务状态统一更新接口
+        group.MapPost("/tasks/{id:guid}/status", async (
+            Guid id,
+            [FromBody] UpdateJobTaskStatusRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var normalizedStatus = request.Status?.Trim().ToUpperInvariant();
+            Result result;
+
+            if (normalizedStatus == "IN_PROGRESS")
+            {
+                result = await sender.Send(new StartJobTaskCommand(id, request.Timestamp, request.OdometerKm), ct);
+            }
+            else if (normalizedStatus == "COMPLETED")
+            {
+                result = await sender.Send(new CompleteJobTaskCommand(id, request.Timestamp, request.ActualDistanceKm, request.OdometerKm), ct);
+            }
+            else if (normalizedStatus == "ACKNOWLEDGED")
+            {
+                result = await sender.Send(new AcknowledgeJobTaskCommand(id, request.Timestamp), ct);
+            }
+            else
+            {
+                return Results.UnprocessableEntity(new { error = "invalid_status", message = $"Unsupported status '{request.Status}'." });
+            }
+
+            return result.ToHttpResult(StatusCodes.Status200OK);
+        })
+        .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
+        .WithName("UpdateJobTaskStatus")
+        .WithSummary("司机更新任务状态（支持 IN_PROGRESS / COMPLETED / ACKNOWLEDGED）");
+
+        // 调度看板聚合指标查询
+        group.MapGet("/metrics", async (
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetDispatchMetricsQuery(), ct);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization(AuthorizationPolicies.AuthenticatedUser)
+        .WithName("GetDispatchMetrics")
+        .WithSummary("获取调度控制台聚合指标（活跃派发数、在岗司机数、未结事故与罚单数）");
     }
 }
+
+public sealed record UpdateJobTaskStatusRequest(
+    string Status,
+    DateTimeOffset? Timestamp = null,
+    decimal? OdometerKm = null,
+    decimal? ActualDistanceKm = null);
 
 public sealed record CreateJobTaskRequest(
     string? Ref,
