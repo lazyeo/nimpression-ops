@@ -1,0 +1,98 @@
+name: Deploy
+
+# 只在推送 v* tag 时触发。
+# 关键安全约束：本仓库是公开的，self-hosted runner 跑在生产机上。
+# tag 只有具备写权限的人能推，外部 PR 推不了 tag——因此绝不添加
+# pull_request 触发器，否则任何人都能在生产机上执行任意代码。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '要部署的 tag 或 commit'
+        required: true
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  deploy:
+    name: Build · Test · Deploy (node-jp)
+    runs-on: [self-hosted, linux, arm64, deploy]
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: 前端构建（含六道守卫）
+        run: |
+          export PNPM_HOME="$HOME/.local/share/pnpm"
+          export PATH="$PNPM_HOME:$HOME/.dotnet:$PATH"
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm -F console run build
+
+      - name: 前端单元测试
+        run: |
+          export PNPM_HOME="$HOME/.local/share/pnpm"
+          export PATH="$PNPM_HOME:$PATH"
+          pnpm -F console exec ng test --watch=false
+
+      - name: 后端测试（含集成测试，排除挂钟时序）
+        run: |
+          export PATH="$HOME/.dotnet:$PATH"
+          dotnet test src/server/Nimpression.slnx --nologo --filter "Category!=Timing"
+
+      - name: 发布 linux-arm64 自包含二进制
+        run: |
+          export PATH="$HOME/.dotnet:$PATH"
+          dotnet publish src/server/Nimpression.Api -c Release -r linux-arm64 \
+            --self-contained true -o "$RUNNER_TEMP/api-out"
+
+      - name: 部署前端
+        run: |
+          rsync -a --delete src/web/apps/console/dist/console/browser/ /opt/nimpression/web/
+
+      - name: 数据库迁移
+        run: |
+          set -a; . /opt/nimpression/api.env; set +a
+          chmod +x "$RUNNER_TEMP/api-out/Nimpression.Api"
+          "$RUNNER_TEMP/api-out/Nimpression.Api" migrate
+
+      - name: 切换二进制并重启
+        run: |
+          sudo systemctl stop nimpression-api
+          sudo rm -rf /opt/nimpression/api-old
+          sudo mv /opt/nimpression/api /opt/nimpression/api-old
+          sudo cp -r "$RUNNER_TEMP/api-out" /opt/nimpression/api
+          sudo chmod +x /opt/nimpression/api/Nimpression.Api
+          sudo systemctl start nimpression-api
+
+      - name: 健康检查（失败即回滚）
+        run: |
+          for i in $(seq 1 30); do
+            body=$(curl -fsS -m 10 http://127.0.0.1:5080/health 2>/dev/null) && \
+              echo "$body" | grep -q '"status":"healthy"' && \
+              echo "健康检查通过: $body" && exit 0
+            sleep 5
+          done
+          echo "健康检查失败，回滚到上一版本" >&2
+          curl -s -m 10 http://127.0.0.1:5080/health >&2 || true
+          sudo systemctl stop nimpression-api
+          sudo rm -rf /opt/nimpression/api
+          sudo mv /opt/nimpression/api-old /opt/nimpression/api
+          sudo systemctl start nimpression-api
+          exit 1
+
+      - name: 公网可达性验证
+        run: |
+          curl -fsS -m 30 -o /dev/null -w "首页 %{http_code}\n" https://nimpression.a-dobe.club/
+          curl -fsS -m 30 -o /dev/null -w "说明书 %{http_code}\n" https://nimpression.a-dobe.club/manual.html

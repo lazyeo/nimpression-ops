@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # 允许手动重跑——调试 CI 时不必为改一行而推一个提交
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
