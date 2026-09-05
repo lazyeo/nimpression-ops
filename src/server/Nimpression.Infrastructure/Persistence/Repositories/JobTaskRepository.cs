@@ -255,4 +255,65 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
             x.ScheduledFor,
             (int)(referenceTime - x.ScheduledFor).TotalMinutes)).ToList();
     }
+
+    public async Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = from t in dbContext.JobTasks.AsNoTracking()
+                    join a in dbContext.Areas.AsNoTracking() on t.AreaId equals a.Id
+                    join v in dbContext.Vehicles.AsNoTracking() on t.VehicleId equals v.Id into vGroup
+                    from v in vGroup.DefaultIfEmpty()
+                    where t.DriverId == driverId
+                    select new
+                    {
+                        Task = t,
+                        AreaName = a.Name,
+                        VehicleRego = v != null ? v.Rego.Value : string.Empty
+                    };
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => x.Task.Status == status.Value);
+        }
+
+        var items = await query
+            .OrderByDescending(x => x.Task.ScheduledFor)
+            .ToListAsync(cancellationToken);
+
+        return items.Select(x => new DriverTaskItemDto(
+            x.Task.Id,
+            x.Task.Ref,
+            MapStatusToDriverStatus(x.Task.Status),
+            $"{x.AreaName} Hub",
+            !string.IsNullOrWhiteSpace(x.Task.Description) ? x.Task.Description : (!string.IsNullOrWhiteSpace(x.Task.Title) ? x.Task.Title : x.AreaName),
+            x.Task.ScheduledFor,
+            x.VehicleRego)).ToList();
+    }
+
+    public async Task<DashboardMetricsDto> GetDashboardMetricsAsync(CancellationToken cancellationToken = default)
+    {
+        var activeDispatches = await dbContext.JobTasks.AsNoTracking()
+            .CountAsync(t => t.Status == JobTaskStatus.InProgress || t.Status == JobTaskStatus.Assigned || t.Status == JobTaskStatus.Acknowledged, cancellationToken);
+
+        var onlineDrivers = await dbContext.ShiftEntries.AsNoTracking()
+            .CountAsync(s => s.Status == ShiftStatus.Active, cancellationToken);
+
+        var pendingIncidents = await dbContext.IncidentReports.AsNoTracking()
+            .CountAsync(i => i.Status == "Reported" || i.Status == "Investigating", cancellationToken);
+
+        var unresolvedFines = await dbContext.Fines.AsNoTracking()
+            .CountAsync(f => f.Status == FineStatus.Submitted || f.Status == FineStatus.UnderReview || f.Status == FineStatus.Disputed, cancellationToken);
+
+        return new DashboardMetricsDto(activeDispatches, onlineDrivers, pendingIncidents, unresolvedFines);
+    }
+
+    private static string MapStatusToDriverStatus(JobTaskStatus status) => status switch
+    {
+        JobTaskStatus.Draft => "PENDING",
+        JobTaskStatus.Assigned => "ASSIGNED",
+        JobTaskStatus.Acknowledged => "ASSIGNED",
+        JobTaskStatus.InProgress => "IN_PROGRESS",
+        JobTaskStatus.Completed => "COMPLETED",
+        JobTaskStatus.Cancelled => "CANCELLED",
+        _ => "PENDING"
+    };
 }
