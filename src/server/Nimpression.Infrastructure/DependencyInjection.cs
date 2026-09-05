@@ -139,16 +139,25 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// 连接串解析顺序：配置 → 标准环境变量 → 容器编排常见的 DATABASE_URL → 本地默认值。
-    /// 本地默认值只含开发口令，生产靠环境变量覆盖（N1.7：无密钥入库）。
+    /// 连接串解析顺序：配置 → 标准环境变量 → 容器编排常见的 DATABASE_URL。
+    /// 缺失时快速失败（Fail-Fast），拒绝静默降级为公开硬编码凭据（CLAUDE.md 2.3 规约）。
     /// </summary>
     public static string ResolveConnectionString(IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        return configuration.GetConnectionString("DefaultConnection")
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? configuration.GetConnectionString("Default")
             ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-            ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-            ?? "Host=localhost;Port=5432;Database=nimpression;Username=nimpression;Password=devonly_change_me";
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+            ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Database connection string is missing. Please configure the 'ConnectionStrings__DefaultConnection' (or 'ConnectionStrings:DefaultConnection' / 'DATABASE_URL') environment variable or configuration key.");
+        }
+
+        return connectionString;
     }
 }
