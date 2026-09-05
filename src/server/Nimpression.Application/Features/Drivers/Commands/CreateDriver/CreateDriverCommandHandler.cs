@@ -47,7 +47,7 @@ public sealed class CreateDriverCommandHandler(
         var driverId = request.Id ?? Guid.NewGuid();
         request.CreatedId = driverId;
 
-        var rawPassword = string.IsNullOrWhiteSpace(request.Password) ? "TempPassword123!" : request.Password;
+        var rawPassword = string.IsNullOrWhiteSpace(request.Password) ? "dev-only-insecure-temp-password-123!" : request.Password;
         var passwordHash = passwordHasher?.HashPassword(rawPassword)
             ?? "$2a$12$e8Y6bFvU2.i/sD.y/5pMhuo1KzMh1k1R4k0A6W/o8L2m2o8g/4W8.";
 

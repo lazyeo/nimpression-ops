@@ -21,7 +21,7 @@ namespace Nimpression.Integration.Tests.Notifications;
 public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, IDisposable
 {
     private readonly PostgreSqlContainerFixture _fixture;
-    private readonly MailpitTestClient _mailpit = new();
+    private MailpitTestClient _mailpit = null!;
     private readonly TestDateTimeProvider _dateTimeProvider = TestDateTimeProvider.FromNzDate(2026, 8, 30);
 
     public F11_4_EmailDeduplicationIntegrationTests(PostgreSqlContainerFixture fixture)
@@ -31,6 +31,8 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
 
     public async Task InitializeAsync()
     {
+        _mailpit = _fixture.CreateMailpitClient();
+
         await using (var db = _fixture.CreateDbContext())
         {
             await db.Database.MigrateAsync();
@@ -62,7 +64,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
 
     public void Dispose()
     {
-        _mailpit.Dispose();
+        _mailpit?.Dispose();
     }
 
     [Fact]
@@ -132,7 +134,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
             await db.SaveChangesAsync();
         }
 
-        using var factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString, _dateTimeProvider);
+        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
 
         // ── Step 2: 第一次处理 Outbox 消息 ──
         using (var scope1 = factory.Services.CreateScope())
@@ -238,7 +240,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
             await db.SaveChangesAsync();
         }
 
-        using var factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString, _dateTimeProvider);
+        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
 
         // ── Step 2: 两个独立 Scope / DbContext 并发执行 Task.WhenAll ──
         using var scope1 = factory.Services.CreateScope();

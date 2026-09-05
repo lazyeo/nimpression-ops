@@ -42,7 +42,7 @@ public sealed class TimesheetIntegrationTests : IAsyncLifetime, IDisposable
     private readonly string _adminEmail = TestDataFactory.CreateEmail("ts_admin");
     private readonly string _driverEmail = TestDataFactory.CreateEmail("ts_driver");
     private readonly string _otherDriverEmail = TestDataFactory.CreateEmail("ts_driver_other");
-    private const string DefaultPassword = "Password123!";
+    private const string DefaultPassword = "dev-only-insecure-password-123!";
 
     private string _adminToken = string.Empty;
     private string _driverToken = string.Empty;

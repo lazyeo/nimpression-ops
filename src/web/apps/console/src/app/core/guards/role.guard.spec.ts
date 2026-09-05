@@ -28,7 +28,7 @@ describe('RoleGuard (Role routing & redirection)', () => {
 
   it('redirects Driver cleanly to /driver when accessing admin routes (AC: Driver 访问 admin 路由要跳转而非报错)', () => {
     authService.setSession({
-      accessToken: 'driver-token',
+      accessToken: 'dev-only-insecure-driver-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {
@@ -51,7 +51,7 @@ describe('RoleGuard (Role routing & redirection)', () => {
 
   it('redirects Admin cleanly to /admin when accessing driver routes', () => {
     authService.setSession({
-      accessToken: 'admin-token',
+      accessToken: 'dev-only-insecure-admin-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {
@@ -72,7 +72,7 @@ describe('RoleGuard (Role routing & redirection)', () => {
 
   it('allows access when role matches expected roles', () => {
     authService.setSession({
-      accessToken: 'dispatcher-token',
+      accessToken: 'dev-only-insecure-dispatcher-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {

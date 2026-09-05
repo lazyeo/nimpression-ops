@@ -44,7 +44,7 @@ public sealed class OutboxProcessorIntegrationTests : IAsyncLifetime, IDisposabl
 
     private string _token = null!;
 
-    public const string DefaultPassword = "SecurePassword123!";
+    public const string DefaultPassword = "dev-only-insecure-password-123!";
 
     public OutboxProcessorIntegrationTests(PostgreSqlContainerFixture fixture)
     {

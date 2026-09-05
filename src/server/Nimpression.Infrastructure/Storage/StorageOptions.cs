@@ -14,7 +14,7 @@ public sealed class StorageOptions
     public string AccessKey { get; set; } = "nimpression";
 
     /// <summary>MinIO / S3 SecretKey</summary>
-    public string SecretKey { get; set; } = "devonly_change_me";
+    public string SecretKey { get; set; } = "dev-only-insecure-minio-secret-key";
 
     /// <summary>多媒体文件桶名（默认私有）</summary>
     public string MediaBucketName { get; set; } = "nimpression-media";

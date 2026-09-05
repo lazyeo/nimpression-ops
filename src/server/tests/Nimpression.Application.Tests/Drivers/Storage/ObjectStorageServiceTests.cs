@@ -18,7 +18,7 @@ public sealed class ObjectStorageServiceTests
     {
         Endpoint = "http://localhost:9000",
         AccessKey = "test_key",
-        SecretKey = "test_secret",
+        SecretKey = "dev-only-insecure-minio-secret-key",
         MediaBucketName = "nimpression-media",
         ExportsBucketName = "nimpression-exports",
     };

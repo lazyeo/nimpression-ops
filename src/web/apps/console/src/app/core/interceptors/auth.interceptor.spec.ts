@@ -70,7 +70,7 @@ describe('AuthInterceptor (F13.3 Accept-Language & Token Refresh)', () => {
 
   it('attaches Authorization header when user is authenticated', () => {
     authService.setSession({
-      accessToken: 'valid-test-bearer-token',
+      accessToken: 'dev-only-insecure-bearer-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {
@@ -84,13 +84,13 @@ describe('AuthInterceptor (F13.3 Accept-Language & Token Refresh)', () => {
 
     httpClient.get('/api/secure-data').subscribe();
     const req = httpMock.expectOne('/api/secure-data');
-    expect(req.request.headers.get('Authorization')).toBe('Bearer valid-test-bearer-token');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer dev-only-insecure-bearer-token');
     req.flush({ data: 123 });
   });
 
   it('handles 401 by attempting token refresh and retrying original request', () => {
     authService.setSession({
-      accessToken: 'expired-token',
+      accessToken: 'dev-only-insecure-expired-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {
@@ -113,7 +113,7 @@ describe('AuthInterceptor (F13.3 Accept-Language & Token Refresh)', () => {
     // 2. Interceptor triggers /api/auth/refresh
     const refreshReq = httpMock.expectOne('/api/auth/refresh');
     refreshReq.flush({
-      accessToken: 'new-refreshed-token',
+      accessToken: 'dev-only-insecure-new-refreshed-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {
@@ -127,9 +127,9 @@ describe('AuthInterceptor (F13.3 Accept-Language & Token Refresh)', () => {
 
     // 3. Original request retried with new token
     const retryReq = httpMock.expectOne('/api/protected-resource');
-    expect(retryReq.request.headers.get('Authorization')).toBe('Bearer new-refreshed-token');
+    expect(retryReq.request.headers.get('Authorization')).toBe('Bearer dev-only-insecure-new-refreshed-token');
     retryReq.flush({ success: true });
 
-    expect(authService.accessToken()).toBe('new-refreshed-token');
+    expect(authService.accessToken()).toBe('dev-only-insecure-new-refreshed-token');
   });
 });

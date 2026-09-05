@@ -50,7 +50,7 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
             await db.SaveChangesAsync();
         }
 
-        _factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString);
+        _factory = new NotificationTestWebApplicationFactory(_fixture);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")

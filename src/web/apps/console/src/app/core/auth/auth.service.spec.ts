@@ -50,7 +50,7 @@ describe('AuthService', () => {
 
   it('handles login and establishes authenticated state with role signals', () => {
     const mockResponse: AuthSuccessResponse = {
-      accessToken: 'test-jwt-token',
+      accessToken: 'dev-only-insecure-test-jwt-token',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {
@@ -63,9 +63,9 @@ describe('AuthService', () => {
     };
 
     service
-      .login({ email: 'driver@nimpression.co.nz', password: 'password123' })
+      .login({ email: 'driver@nimpression.co.nz', password: 'dev-only-insecure-password-123!' })
       .subscribe((res) => {
-        expect(res.accessToken).toBe('test-jwt-token');
+        expect(res.accessToken).toBe('dev-only-insecure-test-jwt-token');
       });
 
     const req = httpMock.expectOne('/api/auth/login');
@@ -80,7 +80,7 @@ describe('AuthService', () => {
 
   it('handles logout and clears storage and signals', () => {
     service.setSession({
-      accessToken: 'token-to-clear',
+      accessToken: 'dev-only-insecure-token-to-clear',
       expiresIn: 3600,
       tokenType: 'Bearer',
       user: {

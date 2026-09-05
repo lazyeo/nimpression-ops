@@ -20,7 +20,7 @@ namespace Nimpression.Integration.Tests.Notifications;
 public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IAsyncLifetime, IDisposable
 {
     private readonly PostgreSqlContainerFixture _fixture;
-    private readonly MailpitTestClient _mailpit = new();
+    private MailpitTestClient _mailpit = null!;
     private NotificationTestWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
 
@@ -34,6 +34,8 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
 
     public async Task InitializeAsync()
     {
+        _mailpit = _fixture.CreateMailpitClient();
+
         var adminEmail = TestDataFactory.CreateEmailAddress("admin");
 
         await using (var db = _fixture.CreateDbContext())
@@ -46,7 +48,7 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
         }
 
         await _mailpit.ClearAllMessagesAsync();
-        _factory = new NotificationTestWebApplicationFactory(_fixture.ConnectionString);
+        _factory = new NotificationTestWebApplicationFactory(_fixture);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")
@@ -66,7 +68,7 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
     {
         _client.Dispose();
         _factory.Dispose();
-        _mailpit.Dispose();
+        _mailpit?.Dispose();
     }
 
     [Fact]
