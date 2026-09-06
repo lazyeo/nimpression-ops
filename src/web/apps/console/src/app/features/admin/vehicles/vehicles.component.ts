@@ -2,16 +2,20 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { AuthService } from '../../../core/auth/auth.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { DriverLookupOption, VehiclesService } from './services/vehicles.service';
@@ -35,6 +39,8 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 })
 export class VehiclesComponent implements OnInit {
   private readonly vehiclesService = inject(VehiclesService);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
 
   // States
@@ -118,6 +124,16 @@ export class VehiclesComponent implements OnInit {
 
     this.loadDrivers();
     this.loadVehicles();
+
+    // SignalR Realtime Invalidation Subscription
+    this.realtime.invalidation$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((msg) => msg.kind.startsWith('vehicle.')),
+      )
+      .subscribe(() => {
+        this.loadVehicles(false);
+      });
   }
 
   isAdmin(): boolean {
