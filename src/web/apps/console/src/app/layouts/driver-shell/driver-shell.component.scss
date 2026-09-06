@@ -14,24 +14,29 @@
   height: 60px;
   background-color: var(--color-gray-800);
   border-bottom: 1px solid var(--color-gray-700);
-  padding: 0 var(--space-16);
+  padding: 0 var(--space-12);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-8);
   position: sticky;
   top: 0;
   z-index: var(--z-fixed);
+  min-width: 0;
 }
 
 .header-user {
   display: flex;
   align-items: center;
-  gap: var(--space-12);
+  gap: var(--space-8);
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .driver-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
   color: var(--color-primary-contrast);
@@ -46,29 +51,39 @@
 .driver-greeting {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 
   .greeting-text {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     color: var(--text-inverse);
     line-height: var(--line-height-tight);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .app-tag {
     font-size: var(--font-size-xs);
     color: var(--color-primary-400);
     line-height: var(--line-height-tight);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-6);
+  flex-shrink: 0;
 }
 
 .touch-btn {
-  padding: var(--space-6) var(--space-10);
+  padding: var(--space-6) var(--space-8);
+  min-height: 44px;
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -78,6 +93,9 @@
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
   transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 
   &:active:not(:disabled) {
