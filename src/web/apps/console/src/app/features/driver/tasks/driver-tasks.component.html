@@ -1,6 +1,6 @@
 <div class="driver-page">
   <div class="page-title-row">
-    <h2 class="page-title">{{ 'DRIVER.TODAY_TASKS' | i18n }}</h2>
+    <h2 class="page-title">{{ 'DRIVER.MY_TASKS' | i18n }}</h2>
     <button
       type="button"
       class="refresh-btn"
@@ -11,80 +11,214 @@
     </button>
   </div>
 
+  <!-- Tab Switcher -->
+  <div class="task-tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="tab-btn"
+      [class.tab-active]="activeTab() === 'active'"
+      [attr.aria-selected]="activeTab() === 'active'"
+      (click)="setTab('active')"
+    >
+      <span>{{ 'DRIVER.TAB_ACTIVE' | i18n }}</span>
+      @if (activeTotalCount() > 0) {
+        <span class="tab-badge">{{ activeTotalCount() }}</span>
+      }
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab-btn"
+      [class.tab-active]="activeTab() === 'history'"
+      [attr.aria-selected]="activeTab() === 'history'"
+      (click)="setTab('history')"
+    >
+      <span>{{ 'DRIVER.TAB_HISTORY' | i18n }}</span>
+      @if (historyTotalCount() > 0) {
+        <span class="tab-badge secondary">{{ historyTotalCount() }}</span>
+      }
+    </button>
+  </div>
+
   <!-- Offline Cached View Banner -->
-  @if (isUsingCache()) {
+  @if (isUsingCache() && activeTab() === 'active') {
     <div class="cached-banner">
       <nim-icon name="cloud-offline" [size]="14" />
       <span>{{ 'DRIVER.OFFLINE_CACHED_VIEW' | i18n }}</span>
     </div>
   }
 
-  <!-- Task List -->
-  @if (tasks().length === 0 && !isLoading()) {
-    <div class="empty-card">
-      <nim-icon name="tasks" [size]="36" class="empty-icon" />
-      <p>{{ 'DRIVER.NO_TASKS' | i18n }}</p>
-    </div>
-  } @else {
-    <div class="task-cards-list">
-      @for (task of tasks(); track task.id) {
-        <div class="task-card" [class.card-active]="task.status === 'IN_PROGRESS'">
-          <div class="card-top">
-            <span class="trip-badge">#{{ task.tripNo }}</span>
-            <span class="status-pill status-{{ task.status.toLowerCase() }}">
-              {{ 'DRIVER.TRIP_STATUS_' + task.status | i18n }}
-            </span>
-          </div>
+  <!-- Active Tasks Tab Content -->
+  @if (activeTab() === 'active') {
+    @if (tasks().length === 0 && !isLoading()) {
+      <div class="empty-card">
+        <nim-icon name="tasks" [size]="36" class="empty-icon" />
+        <p>{{ 'DRIVER.NO_TASKS' | i18n }}</p>
+      </div>
+    } @else {
+      <div class="task-cards-list">
+        @for (task of tasks(); track task.id) {
+          <div class="task-card" [class.card-active]="task.status === 'IN_PROGRESS'">
+            <div class="card-top">
+              <span class="trip-badge">#{{ task.tripNo }}</span>
+              <span class="status-pill status-{{ task.status.toLowerCase() }}">
+                {{ 'DRIVER.TRIP_STATUS_' + task.status | i18n }}
+              </span>
+            </div>
 
-          <div class="route-details">
-            <div class="route-point">
-              <span class="point-dot pickup"></span>
-              <div class="point-info">
-                <small class="point-label">{{ 'DRIVER.PICKUP' | i18n }}</small>
-                <div class="point-address">{{ task.pickupLocation }}</div>
+            <div class="route-details">
+              <div class="route-point">
+                <span class="point-dot pickup"></span>
+                <div class="point-info">
+                  <small class="point-label">{{ 'DRIVER.PICKUP' | i18n }}</small>
+                  <div class="point-address">{{ task.pickupLocation }}</div>
+                </div>
+              </div>
+              <div class="route-point">
+                <span class="point-dot delivery"></span>
+                <div class="point-info">
+                  <small class="point-label">{{ 'DRIVER.DELIVERY' | i18n }}</small>
+                  <div class="point-address">{{ task.deliveryLocation }}</div>
+                </div>
               </div>
             </div>
-            <div class="route-point">
-              <span class="point-dot delivery"></span>
-              <div class="point-info">
-                <small class="point-label">{{ 'DRIVER.DELIVERY' | i18n }}</small>
-                <div class="point-address">{{ task.deliveryLocation }}</div>
-              </div>
+
+            <div class="card-meta">
+              <span class="meta-item"
+                ><nim-icon name="truck" [size]="14" /> {{ task.vehiclePlate }}</span
+              >
+              <span class="meta-item"
+                ><nim-icon name="clock" [size]="14" />
+                {{ task.scheduledTime | localeDate: 'short' }}</span
+              >
+            </div>
+
+            <!-- Driver Action Touch Buttons (>= 44x44px) -->
+            <div class="card-actions">
+              @if (task.status === 'ASSIGNED' || task.status === 'PENDING') {
+                <button
+                  type="button"
+                  class="touch-action-btn btn-start"
+                  (click)="updateTaskStatus(task, 'IN_PROGRESS')"
+                >
+                  {{ 'DRIVER.START_TRIP' | i18n }}
+                </button>
+              } @else if (task.status === 'IN_PROGRESS') {
+                <button
+                  type="button"
+                  class="touch-action-btn btn-complete"
+                  (click)="updateTaskStatus(task, 'COMPLETED')"
+                >
+                  {{ 'DRIVER.COMPLETE_TRIP' | i18n }}
+                </button>
+              }
             </div>
           </div>
+        }
+      </div>
 
-          <div class="card-meta">
-            <span class="meta-item"
-              ><nim-icon name="truck" [size]="14" /> {{ task.vehiclePlate }}</span
+      <!-- Active Tasks Pagination (shown when activeTotalPages > 1) -->
+      @if (activeTotalPages() > 1) {
+        <div class="history-pagination">
+          <span class="page-info">
+            {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: activePage(), total: activeTotalPages(), count: activeTotalCount() } }}
+          </span>
+          <div class="pagination-actions">
+            <button
+              type="button"
+              class="touch-page-btn"
+              [disabled]="activePage() <= 1"
+              (click)="prevActivePage()"
             >
-            <span class="meta-item"
-              ><nim-icon name="clock" [size]="14" />
-              {{ task.scheduledTime | localeDate: 'short' }}</span
+              {{ 'COMMON.PREV' | i18n }}
+            </button>
+            <button
+              type="button"
+              class="touch-page-btn"
+              [disabled]="activePage() >= activeTotalPages()"
+              (click)="nextActivePage()"
             >
-          </div>
-
-          <!-- Driver Action Touch Buttons (>= 44x44px) -->
-          <div class="card-actions">
-            @if (task.status === 'ASSIGNED' || task.status === 'PENDING') {
-              <button
-                type="button"
-                class="touch-action-btn btn-start"
-                (click)="updateTaskStatus(task, 'IN_PROGRESS')"
-              >
-                {{ 'DRIVER.START_TRIP' | i18n }}
-              </button>
-            } @else if (task.status === 'IN_PROGRESS') {
-              <button
-                type="button"
-                class="touch-action-btn btn-complete"
-                (click)="updateTaskStatus(task, 'COMPLETED')"
-              >
-                {{ 'DRIVER.COMPLETE_TRIP' | i18n }}
-              </button>
-            }
+              {{ 'COMMON.NEXT' | i18n }}
+            </button>
           </div>
         </div>
       }
-    </div>
+    }
+  }
+
+  <!-- History Tab Content -->
+  @if (activeTab() === 'history') {
+    @if (historyTasks().length === 0 && !isLoading()) {
+      <div class="empty-card">
+        <nim-icon name="tasks" [size]="36" class="empty-icon" />
+        <p>{{ 'DRIVER.NO_HISTORY_TASKS' | i18n }}</p>
+      </div>
+    } @else {
+      <div class="task-cards-list">
+        @for (task of historyTasks(); track task.id) {
+          <div class="task-card history-card">
+            <div class="card-top">
+              <span class="trip-badge">#{{ task.tripNo }}</span>
+              <span class="status-pill status-{{ task.status.toLowerCase() }}">
+                {{ 'DRIVER.TRIP_STATUS_' + task.status | i18n }}
+              </span>
+            </div>
+
+            <div class="route-details">
+              <div class="route-point">
+                <span class="point-dot pickup"></span>
+                <div class="point-info">
+                  <small class="point-label">{{ 'DRIVER.PICKUP' | i18n }}</small>
+                  <div class="point-address">{{ task.pickupLocation }}</div>
+                </div>
+              </div>
+              <div class="route-point">
+                <span class="point-dot delivery"></span>
+                <div class="point-info">
+                  <small class="point-label">{{ 'DRIVER.DELIVERY' | i18n }}</small>
+                  <div class="point-address">{{ task.deliveryLocation }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-meta">
+              <span class="meta-item"
+                ><nim-icon name="truck" [size]="14" /> {{ task.vehiclePlate }}</span
+              >
+              <span class="meta-item"
+                ><nim-icon name="clock" [size]="14" />
+                {{ task.scheduledTime | localeDate: 'short' }}</span
+              >
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- History Pagination -->
+      <div class="history-pagination">
+        <span class="page-info">
+          {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: historyPage(), total: historyTotalPages(), count: historyTotalCount() } }}
+        </span>
+        <div class="pagination-actions">
+          <button
+            type="button"
+            class="touch-page-btn"
+            [disabled]="historyPage() <= 1"
+            (click)="prevHistoryPage()"
+          >
+            {{ 'COMMON.PREV' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="touch-page-btn"
+            [disabled]="historyPage() >= historyTotalPages()"
+            (click)="nextHistoryPage()"
+          >
+            {{ 'COMMON.NEXT' | i18n }}
+          </button>
+        </div>
+      </div>
+    }
   }
 </div>

@@ -35,7 +35,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     httpMock.verify();
   });
 
-  it('loads tasks and displays them', () => {
+  it('loads active tasks by default with activeOnly=true and displays them with totalCount', () => {
     const mockTasks: DriverTaskItem[] = [
       {
         id: 't-1',
@@ -48,11 +48,251 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const req = httpMock.expectOne('/api/dispatch/my-tasks');
-    req.flush(mockTasks);
+    const req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    req.flush({
+      items: mockTasks,
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
+
+    expect(component.activeTab()).toBe('active');
+    expect(component.tasks().length).toBe(1);
+    expect(component.activeTotalCount()).toBe(1);
+    expect(component.tasks()[0].tripNo).toBe('TRIP-101');
+  });
+
+  it('R5 Requirement: paginates active tasks without silent truncation when totalCount exceeds pageSize', () => {
+    // Initial load: 52 active tasks across 3 pages (pageSize=20)
+    const mockActivePage1: DriverTaskItem[] = Array.from({ length: 20 }, (_, i) => ({
+      id: `act-${i + 1}`,
+      tripNo: `TRIP-${100 + i + 1}`,
+      status: 'ASSIGNED',
+      pickupLocation: `Pickup ${i + 1}`,
+      deliveryLocation: `Delivery ${i + 1}`,
+      scheduledTime: '2026-08-24T08:00:00Z',
+      vehiclePlate: `NIM-${100 + i}`,
+    }));
+
+    const mockActivePage2: DriverTaskItem[] = Array.from({ length: 20 }, (_, i) => ({
+      id: `act-${i + 21}`,
+      tripNo: `TRIP-${100 + i + 21}`,
+      status: 'IN_PROGRESS',
+      pickupLocation: `Pickup ${i + 21}`,
+      deliveryLocation: `Delivery ${i + 21}`,
+      scheduledTime: '2026-08-24T09:00:00Z',
+      vehiclePlate: `NIM-${120 + i}`,
+    }));
+
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: mockActivePage1,
+      totalCount: 52,
+      page: 1,
+      pageSize: 20,
+      totalPages: 3,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.tasks().length).toBe(20);
+    expect(component.activeTotalCount()).toBe(52);
+    expect(component.activeTotalPages()).toBe(3);
+    expect(component.activePage()).toBe(1);
+
+    // Navigate to page 2 of active tasks
+    component.nextActivePage();
+    const page2Req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=2&pageSize=20');
+    page2Req.flush({
+      items: mockActivePage2,
+      totalCount: 52,
+      page: 2,
+      pageSize: 20,
+      totalPages: 3,
+      hasPreviousPage: true,
+      hasNextPage: true,
+    });
+
+    expect(component.activePage()).toBe(2);
+    expect(component.tasks().length).toBe(20);
+    expect(component.tasks()[0].tripNo).toBe('TRIP-121');
+
+    // Navigate back to page 1
+    component.prevActivePage();
+    const page1Req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    page1Req.flush({
+      items: mockActivePage1,
+      totalCount: 52,
+      page: 1,
+      pageSize: 20,
+      totalPages: 3,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.activePage()).toBe(1);
+    expect(component.tasks().length).toBe(20);
+    expect(component.tasks()[0].tripNo).toBe('TRIP-101');
+  });
+
+  it('switches to history tab and performs server-side pagination with activeOnly=false', () => {
+    // Flush initial active tasks request
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
+
+    // Create mock tasks for page 1 (5 items) and page 2 (2 items)
+    const mockPage1: DriverTaskItem[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `hist-${i + 1}`,
+      tripNo: `HIST-${100 + i + 1}`,
+      status: i % 2 === 0 ? 'COMPLETED' : 'CANCELLED',
+      pickupLocation: `Pickup ${i + 1}`,
+      deliveryLocation: `Delivery ${i + 1}`,
+      scheduledTime: '2026-08-20T08:00:00Z',
+      vehiclePlate: `NIM-${100 + i}`,
+    }));
+
+    const mockPage2: DriverTaskItem[] = Array.from({ length: 2 }, (_, i) => ({
+      id: `hist-${i + 6}`,
+      tripNo: `HIST-${100 + i + 6}`,
+      status: 'COMPLETED',
+      pickupLocation: `Pickup ${i + 6}`,
+      deliveryLocation: `Delivery ${i + 6}`,
+      scheduledTime: '2026-08-20T08:00:00Z',
+      vehiclePlate: `NIM-${105 + i}`,
+    }));
+
+    // Switch to history tab -> triggers server request for page 1
+    component.setTab('history');
+    expect(component.activeTab()).toBe('history');
+
+    const histReq1 = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5');
+    histReq1.flush({
+      items: mockPage1,
+      totalCount: 7,
+      page: 1,
+      pageSize: 5,
+      totalPages: 2,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.historyTasks().length).toBe(5);
+    expect(component.historyTotalCount()).toBe(7);
+    expect(component.historyTotalPages()).toBe(2);
+    expect(component.historyPage()).toBe(1);
+    expect(component.historyTasks()[0].tripNo).toBe('HIST-101');
+
+    // Go to next page -> triggers server request for page 2
+    component.nextHistoryPage();
+    const histReq2 = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=2&pageSize=5');
+    histReq2.flush({
+      items: mockPage2,
+      totalCount: 7,
+      page: 2,
+      pageSize: 5,
+      totalPages: 2,
+      hasPreviousPage: true,
+      hasNextPage: false,
+    });
+
+    expect(component.historyPage()).toBe(2);
+    expect(component.historyTasks().length).toBe(2);
+    expect(component.historyTasks()[0].tripNo).toBe('HIST-106');
+
+    // Go back to previous page -> triggers server request for page 1
+    component.prevHistoryPage();
+    const histReq3 = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5');
+    histReq3.flush({
+      items: mockPage1,
+      totalCount: 7,
+      page: 1,
+      pageSize: 5,
+      totalPages: 2,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.historyPage()).toBe(1);
+    expect(component.historyTasks().length).toBe(5);
+  });
+
+  it('R2 Regression: completing a task in active tab then switching to history tab still makes backend request and fetches full history', async () => {
+    const activeItem: DriverTaskItem = {
+      id: 't-1',
+      tripNo: 'TRIP-101',
+      status: 'IN_PROGRESS',
+      pickupLocation: 'Auckland Port',
+      deliveryLocation: 'Manukau Depot',
+      scheduledTime: '2026-08-24T08:00:00Z',
+      vehiclePlate: 'NIM-888',
+    };
+
+    // Initial load in active tab
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: [activeItem],
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
 
     expect(component.tasks().length).toBe(1);
-    expect(component.tasks()[0].tripNo).toBe('TRIP-101');
+
+    // 1. Complete the task in active tab
+    await component.updateTaskStatus(activeItem, 'COMPLETED');
+    expect(component.tasks().length).toBe(0);
+
+    const postReq = httpMock.expectOne('/api/dispatch/tasks/t-1/status');
+    expect(postReq.request.body).toEqual({ status: 'COMPLETED' });
+    postReq.flush({});
+
+    // 2. Switch to history tab
+    component.setTab('history');
+    expect(component.activeTab()).toBe('history');
+
+    // Assert: Backend request MUST be issued even though a task was completed
+    const histReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5');
+    const mockFullHistory: DriverTaskItem[] = [
+      { ...activeItem, status: 'COMPLETED' },
+      {
+        id: 'hist-old-1',
+        tripNo: 'HIST-001',
+        status: 'COMPLETED',
+        pickupLocation: 'Depot A',
+        deliveryLocation: 'Depot B',
+        scheduledTime: '2026-08-20T08:00:00Z',
+        vehiclePlate: 'NIM-101',
+      },
+    ];
+
+    histReq.flush({
+      items: mockFullHistory,
+      totalCount: 15,
+      page: 1,
+      pageSize: 5,
+      totalPages: 3,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.historyTasks().length).toBe(2);
+    expect(component.historyTotalCount()).toBe(15);
+    expect(component.historyTotalPages()).toBe(3);
+    expect(component.historyTasks()[0].tripNo).toBe('TRIP-101');
   });
 
   it('re-queries API when SignalR invalidation signal arrives for driver task', async () => {
@@ -68,8 +308,16 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks');
-    initialReq.flush(initialTasks);
+    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initialReq.flush({
+      items: initialTasks,
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
     expect(component.tasks().length).toBe(1);
 
     const realtime = TestBed.inject(RealtimeService);
@@ -83,19 +331,27 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     // Wait for async offlineCache read to complete
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks');
-    reloadReq.flush([
-      ...initialTasks,
-      {
-        id: 't-2',
-        tripNo: 'TRIP-102',
-        status: 'ASSIGNED',
-        pickupLocation: 'Airport',
-        deliveryLocation: 'CBD',
-        scheduledTime: '2026-08-24T10:00:00Z',
-        vehiclePlate: 'NIM-999',
-      },
-    ]);
+    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    reloadReq.flush({
+      items: [
+        ...initialTasks,
+        {
+          id: 't-2',
+          tripNo: 'TRIP-102',
+          status: 'ASSIGNED',
+          pickupLocation: 'Airport',
+          deliveryLocation: 'CBD',
+          scheduledTime: '2026-08-24T10:00:00Z',
+          vehiclePlate: 'NIM-999',
+        },
+      ],
+      totalCount: 2,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
 
     expect(component.tasks().length).toBe(2);
     expect(component.tasks()[1].tripNo).toBe('TRIP-102');

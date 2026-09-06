@@ -114,6 +114,12 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       data: HOURS,
       splitArea: {
         show: true,
+        areaStyle: {
+          color:
+            theme.name === 'dark'
+              ? ['rgba(255, 255, 255, 0.02)', 'transparent']
+              : ['rgba(0, 0, 0, 0.02)', 'transparent'],
+        },
       },
       axisLine: {
         lineStyle: {
@@ -132,6 +138,12 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       data: weekdaysList,
       splitArea: {
         show: true,
+        areaStyle: {
+          color:
+            theme.name === 'dark'
+              ? ['rgba(255, 255, 255, 0.02)', 'transparent']
+              : ['rgba(0, 0, 0, 0.02)', 'transparent'],
+        },
       },
       axisLine: {
         lineStyle: {
@@ -157,10 +169,12 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       },
       inRange: {
         // Okabe-Ito compliant continuous gradient from neutral sky-tint to Okabe-Ito Blue to Vermilion
-        color:
-          theme.name === 'dark'
-            ? ['#1E293B', '#0284C7', '#0072B2', '#D55E00']
-            : ['#F1F5F9', '#BAE6FD', '#0072B2', '#D55E00'],
+        color: [
+          theme.splitLineColor,
+          theme.name === 'dark' ? '#0284C7' : '#BAE6FD',
+          OKABE_ITO_PALETTE.blue,
+          OKABE_ITO_PALETTE.vermilion,
+        ],
       },
     },
     series: [
@@ -168,6 +182,11 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
         name: seriesNameText,
         type: 'heatmap',
         data: seriesData,
+        itemStyle: {
+          borderColor: theme.backgroundColor,
+          borderWidth: 1,
+          borderRadius: 2,
+        },
         label: {
           show: !isMobile && maxHours > 0,
           formatter: (p: any) => {
@@ -175,7 +194,7 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
             return val > 0 ? `${val}h` : '';
           },
           fontSize: 9,
-          color: theme.name === 'dark' ? '#F8FAFC' : '#0F172A',
+          color: theme.textColor,
         },
         emphasis: {
           itemStyle: {

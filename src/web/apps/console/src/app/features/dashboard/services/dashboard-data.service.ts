@@ -55,6 +55,22 @@ export interface RawDashboardPayload {
   odometerReadingsMap?: Record<string, OdometerReadingDto[]>;
 }
 
+export function detectAppTheme(): ChartThemeConfig {
+  if (typeof document !== 'undefined' && document.documentElement) {
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    if (dataTheme === 'dark') return DARK_THEME;
+    if (dataTheme === 'light') return LIGHT_THEME;
+  }
+
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return DARK_THEME;
+    }
+  }
+
+  return LIGHT_THEME;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -65,10 +81,59 @@ export class DashboardDataService {
   // State Signals
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
-  readonly theme = signal<ChartThemeConfig>(LIGHT_THEME);
+  readonly theme = signal<ChartThemeConfig>(detectAppTheme());
   readonly isMobile = signal<boolean>(false);
   readonly selectedFineCategory = signal<string | null>(null);
   readonly lastRenderDurationMs = signal<number>(0);
+
+  constructor() {
+    this.initThemeSync();
+  }
+
+  private initThemeSync(): void {
+    if (typeof window === 'undefined') return;
+
+    // 1. Listen for system color-scheme preference changes
+    if (typeof window.matchMedia === 'function') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const mediaListener = (e: MediaQueryListEvent | MediaQueryList) => {
+        const explicit =
+          typeof document !== 'undefined' && document.documentElement
+            ? document.documentElement.getAttribute('data-theme')
+            : null;
+        if (!explicit) {
+          this.theme.set(e.matches ? DARK_THEME : LIGHT_THEME);
+        }
+      };
+
+      if (typeof mediaQuery.addEventListener === 'function') {
+        mediaQuery.addEventListener('change', mediaListener);
+      } else if (typeof (mediaQuery as any).addListener === 'function') {
+        (mediaQuery as any).addListener(mediaListener);
+      }
+    }
+
+    // 2. Observe DOM data-theme attribute mutations on <html>
+    if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined' && document.documentElement) {
+      const observer = new MutationObserver(() => {
+        const explicit = document.documentElement.getAttribute('data-theme');
+        if (explicit === 'dark') {
+          this.theme.set(DARK_THEME);
+        } else if (explicit === 'light') {
+          this.theme.set(LIGHT_THEME);
+        } else {
+          const prefersDark =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          this.theme.set(prefersDark ? DARK_THEME : LIGHT_THEME);
+        }
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      });
+    }
+  }
 
   // Aggregated Data Signals
   readonly fleetUtilization = signal<FleetUtilizationItem[]>([]);
@@ -234,7 +299,11 @@ export class DashboardDataService {
 
   toggleTheme(): void {
     const current = this.theme();
-    this.theme.set(current.name === 'light' ? DARK_THEME : LIGHT_THEME);
+    const next = current.name === 'light' ? DARK_THEME : LIGHT_THEME;
+    this.theme.set(next);
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.setAttribute('data-theme', next.name);
+    }
   }
 
   setMobile(isMobile: boolean): void {

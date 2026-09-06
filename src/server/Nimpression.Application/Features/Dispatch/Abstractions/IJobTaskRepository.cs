@@ -35,7 +35,7 @@ public interface IJobTaskRepository
 
     Task<List<JobTaskAlertDto>> GetUnacknowledgedTaskAlertsAsync(int thresholdMinutes, DateTimeOffset referenceTime, CancellationToken cancellationToken = default);
 
-    Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, CancellationToken cancellationToken = default);
+    Task<PagedResult<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
 
     Task<DashboardMetricsDto> GetDashboardMetricsAsync(CancellationToken cancellationToken = default);
 }
