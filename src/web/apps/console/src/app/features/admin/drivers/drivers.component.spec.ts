@@ -261,4 +261,20 @@ describe('DriversComponent', () => {
     expect(component.formError()).toContain('415');
     expect(component.isAvatarModalOpen()).toBe(true);
   });
+
+  it('should automatically reload drivers and alerts when SignalR invalidation signal arrives', () => {
+    fixture.detectChanges();
+    expect(driversServiceMock.getDrivers).toHaveBeenCalledTimes(1);
+    expect(driversServiceMock.getLicenceAlerts).toHaveBeenCalledTimes(1);
+
+    const realtime = TestBed.inject(RealtimeService);
+    (realtime as any).invalidationSubject.next({
+      kind: 'driver.updated',
+      entityId: 'drv-1',
+      occurredAt: new Date().toISOString(),
+    });
+
+    expect(driversServiceMock.getDrivers).toHaveBeenCalledTimes(2);
+    expect(driversServiceMock.getLicenceAlerts).toHaveBeenCalledTimes(2);
+  });
 });
