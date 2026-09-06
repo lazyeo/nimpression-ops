@@ -67,7 +67,9 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
 
   &:hover {
     background-color: var(--color-gray-800);
@@ -179,12 +181,14 @@
   justify-content: center;
   gap: var(--space-6);
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
   }
-
 
   &.btn-logout {
     background-color: var(--color-danger-subtle);
@@ -230,4 +234,6 @@
   background-color: var(--color-danger-subtle);
   color: var(--color-danger-text);
 }
-.header-btn.btn-logout:hover { border-color: var(--color-danger-text); }
+.header-btn.btn-logout:hover {
+  border-color: var(--color-danger-text);
+}

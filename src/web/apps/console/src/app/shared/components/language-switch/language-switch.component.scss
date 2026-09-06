@@ -26,7 +26,11 @@
   cursor: pointer;
   min-height: 28px;
   box-sizing: border-box;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:hover:not(.active) {
     background-color: var(--bg-hover);

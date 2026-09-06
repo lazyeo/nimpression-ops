@@ -96,12 +96,14 @@
   white-space: nowrap;
   flex-shrink: 0;
   box-sizing: border-box;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
   }
-
 
   &.logout-btn {
     background-color: rgba(225, 29, 72, 0.15);
@@ -148,7 +150,9 @@
   justify-content: center;
   text-decoration: none;
   color: var(--color-gray-400);
-  transition: color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 
@@ -177,8 +181,12 @@
 }
 
 /* 该壳当前在两套主题下都使用固定深色 Slate 背景。 */
-.driver-layout { color: var(--color-gray-100); }
-.driver-greeting .greeting-text { color: var(--color-gray-100); }
+.driver-layout {
+  color: var(--color-gray-100);
+}
+.driver-greeting .greeting-text {
+  color: var(--color-gray-100);
+}
 .driver-avatar {
   background: var(--color-primary);
   color: var(--color-primary-contrast);
@@ -206,8 +214,13 @@
     gap: var(--space-8);
     padding-block: var(--space-12);
   }
-  .header-user { flex: 1 1 100%; min-width: 0; }
-  .driver-greeting { min-width: 0; }
+  .header-user {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .driver-greeting {
+    min-width: 0;
+  }
   .driver-greeting .greeting-text,
   .driver-greeting .app-tag {
     overflow-wrap: anywhere;
