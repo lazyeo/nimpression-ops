@@ -474,6 +474,93 @@ public class DispatchIntegrationTests : IAsyncLifetime
         result.Error!.Kind.Should().Be(ErrorKind.Forbidden);
     }
 
+    [Fact]
+    public async Task GetMyJobTasks_ActiveOnlyTrue_FiltersOutCompletedAndCancelledTasks()
+    {
+        await using var context = _fixture.CreateDbContext();
+        var baseEntities = await SeedBaseEntitiesAsync();
+        var scheduledTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+
+        // 1 Active task (Assigned)
+        var activeTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-ACT"),
+            "Active Delivery",
+            baseEntities.Area.Id,
+            scheduledTime,
+            baseEntities.User.Id,
+            "Active description",
+            TaskPriority.High,
+            new Kilometres(15m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+
+        // 1 InProgress task
+        var inProgressTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-INP"),
+            "In Progress Delivery",
+            baseEntities.Area.Id,
+            scheduledTime.AddHours(1),
+            baseEntities.User.Id,
+            "In progress description",
+            TaskPriority.Medium,
+            new Kilometres(25m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+        inProgressTask.Acknowledge(scheduledTime.AddMinutes(10));
+        inProgressTask.Start(scheduledTime.AddMinutes(20), new Kilometres(100m));
+
+        // 1 Completed task
+        var completedTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-CMP"),
+            "Completed Delivery",
+            baseEntities.Area.Id,
+            scheduledTime.AddHours(2),
+            baseEntities.User.Id,
+            "Completed description",
+            TaskPriority.Low,
+            new Kilometres(30m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+        completedTask.Acknowledge(scheduledTime.AddMinutes(10));
+        completedTask.Start(scheduledTime.AddMinutes(20), new Kilometres(100m));
+        completedTask.Complete(scheduledTime.AddMinutes(50), new Kilometres(30m), new Kilometres(130m));
+
+        // 1 Cancelled task
+        var cancelledTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-CNC"),
+            "Cancelled Delivery",
+            baseEntities.Area.Id,
+            scheduledTime.AddHours(3),
+            baseEntities.User.Id,
+            "Cancelled description",
+            TaskPriority.Low,
+            new Kilometres(10m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+        cancelledTask.Cancel("Cancelled by dispatcher", scheduledTime.AddMinutes(5));
+
+        await context.JobTasks.AddRangeAsync(activeTask, inProgressTask, completedTask, cancelledTask);
+        await context.SaveChangesAsync();
+
+        var repo = new JobTaskRepository(context);
+        var currentUser = new TestCurrentUser(baseEntities.User.Id, UserRole.Driver);
+        var handler = new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQueryHandler(repo, currentUser);
+
+        // Act: Request activeOnly = true
+        var result = await handler.Handle(new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQuery(ActiveOnly: true), CancellationToken.None);
+
+        // Assert: Only activeTask and inProgressTask should be returned
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Should().HaveCount(2);
+        result.Value.Select(x => x.Id).Should().Contain(new[] { activeTask.Id, inProgressTask.Id });
+        result.Value.Select(x => x.Id).Should().NotContain(new[] { completedTask.Id, cancelledTask.Id });
+    }
+
     #endregion
 
     private sealed class TestDateTimeProvider : IDateTimeProvider

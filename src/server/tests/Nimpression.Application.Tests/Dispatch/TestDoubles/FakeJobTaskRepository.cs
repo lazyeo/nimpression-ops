@@ -173,9 +173,16 @@ public sealed class FakeJobTaskRepository : IJobTaskRepository
         return Task.FromResult(list);
     }
 
-    public Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, CancellationToken cancellationToken = default)
+    private static readonly JobTaskStatus[] ActiveStatuses = [JobTaskStatus.Assigned, JobTaskStatus.Acknowledged, JobTaskStatus.InProgress];
+
+    public Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, CancellationToken cancellationToken = default)
     {
         var query = Tasks.Values.Where(t => t.DriverId == driverId);
+        if (activeOnly == true)
+        {
+            query = query.Where(t => ActiveStatuses.Contains(t.Status));
+        }
+
         if (status.HasValue)
         {
             query = query.Where(t => t.Status == status.Value);
