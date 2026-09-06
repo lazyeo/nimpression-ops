@@ -8,6 +8,7 @@ import { VehiclesComponent } from './vehicles.component';
 import { VehiclesService } from './services/vehicles.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { PaginatedResult, VehicleDetailDto, VehicleSummaryDto } from './models/vehicles.models';
 
 describe('VehiclesComponent', () => {

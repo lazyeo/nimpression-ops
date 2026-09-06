@@ -8,6 +8,7 @@ import { DriversComponent } from './drivers.component';
 import { DriversService } from './services/drivers.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { DriverDetailDto, DriverSummaryDto, PaginatedResult } from './models/drivers.models';
 
 describe('DriversComponent', () => {
