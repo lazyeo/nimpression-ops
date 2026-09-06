@@ -112,19 +112,33 @@
                       </td>
                       <td class="col-url">{{ item.url }}</td>
                       <td>
-                        <span class="status-pill pill-{{ item.status }}">
+                        <span
+                          class="status-pill pill-{{ item.status }}"
+                          [class.pill-permanent-failed]="item.isPermanentFailure"
+                        >
                           {{ item.status }}
                         </span>
                         @if (item.lastError) {
-                          <small class="error-detail">{{ item.lastError }}</small>
+                          <small class="error-detail">
+                            @if (item.isPermanentFailure) {
+                              [{{ 'OFFLINE.PERMANENT_FAILURE' | i18n }}]
+                            }
+                            {{ item.lastError }}
+                          </small>
                         }
                       </td>
                       <td>{{ item.retryCount }}</td>
                       <td>
                         @if (item.status === 'failed') {
-                          <button type="button" class="btn-retry" (click)="retryItem(item.id)">
-                            {{ 'OFFLINE.RETRY_ITEM' | i18n }}
-                          </button>
+                          @if (item.isPermanentFailure) {
+                            <button type="button" class="btn-remove" (click)="removeItem(item.id)">
+                              {{ 'OFFLINE.REMOVE_ITEM' | i18n }}
+                            </button>
+                          } @else {
+                            <button type="button" class="btn-retry" (click)="retryItem(item.id)">
+                              {{ 'OFFLINE.RETRY_ITEM' | i18n }}
+                            </button>
+                          }
                         }
                       </td>
                     </tr>
@@ -137,7 +151,12 @@
 
         <div class="modal-footer">
           @if (offlineQueue.hasFailures()) {
-            <button type="button" class="btn-retry-all" (click)="retryAll()">
+            <button
+              type="button"
+              class="btn-retry-all"
+              [disabled]="!offlineQueue.hasTransientFailures()"
+              (click)="retryAll()"
+            >
               {{ 'OFFLINE.RETRY_ALL' | i18n }}
             </button>
           }

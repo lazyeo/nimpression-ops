@@ -132,7 +132,9 @@
     "RETRY_ITEM": "重试",
     "EMPTY_QUEUE": "所有本地操作已全部同步完成。",
     "IDEMPOTENCY_KEY": "请求幂等ID",
-    "NO_SILENT_DISCARD": "失败项将保留在队列中，绝不静默丢弃。"
+    "NO_SILENT_DISCARD": "失败项将保留在队列中，绝不静默丢弃。",
+    "REMOVE_ITEM": "移除",
+    "PERMANENT_FAILURE": "请求不合法 (4xx)"
   },
   "DRIVER": {
     "GREETING": "你好，{name}",
@@ -153,6 +155,7 @@
     "VEHICLE": "车辆",
     "TRIP_STATUS_PENDING": "待分配",
     "TRIP_STATUS_ASSIGNED": "已指派",
+    "TRIP_STATUS_ACKNOWLEDGED": "已接单",
     "TRIP_STATUS_IN_PROGRESS": "配送中",
     "TRIP_STATUS_COMPLETED": "已完成",
     "TRIP_STATUS_CANCELLED": "已取消",

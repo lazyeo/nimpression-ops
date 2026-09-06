@@ -238,4 +238,35 @@ public sealed class GetMyJobTasksQueryHandlerTests
         Assert.True(resultCompleted.IsSuccess);
         Assert.Empty(resultCompleted.Value!.Items);
     }
+
+    [Fact]
+    public async Task Handle_MapsJobTaskStatus_ToDistinctDriverStatusStrings()
+    {
+        // Arrange
+        var baseTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+        var areaId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var vehicleId = Guid.NewGuid();
+
+        var assignedTask = new JobTask(Guid.NewGuid(), "TSK-001", "Assigned Task", areaId, baseTime, creatorId, driverId: _driverId, vehicleId: vehicleId);
+        var ackTask = new JobTask(Guid.NewGuid(), "TSK-002", "Ack Task", areaId, baseTime.AddHours(1), creatorId, driverId: _driverId, vehicleId: vehicleId);
+        ackTask.Acknowledge(baseTime.AddMinutes(10));
+
+        _repository.Tasks[assignedTask.Id] = assignedTask;
+        _repository.Tasks[ackTask.Id] = ackTask;
+
+        var currentUser = new FakeCurrentUser(_driverUserId, UserRole.Driver);
+        var handler = new GetMyJobTasksQueryHandler(_repository, currentUser);
+
+        // Act
+        var result = await handler.Handle(new GetMyJobTasksQuery(ActiveOnly: true), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var assignedItem = result.Value!.Items.Single(t => t.Id == assignedTask.Id);
+        var ackItem = result.Value!.Items.Single(t => t.Id == ackTask.Id);
+
+        Assert.Equal("ASSIGNED", assignedItem.Status);
+        Assert.Equal("ACKNOWLEDGED", ackItem.Status);
+    }
 }

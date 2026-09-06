@@ -99,6 +99,14 @@
               @if (task.status === 'ASSIGNED' || task.status === 'PENDING') {
                 <button
                   type="button"
+                  class="touch-action-btn btn-accept"
+                  (click)="updateTaskStatus(task, 'ACKNOWLEDGED')"
+                >
+                  {{ 'DRIVER.ACCEPT_TASK' | i18n }}
+                </button>
+              } @else if (task.status === 'ACKNOWLEDGED') {
+                <button
+                  type="button"
                   class="touch-action-btn btn-start"
                   (click)="updateTaskStatus(task, 'IN_PROGRESS')"
                 >

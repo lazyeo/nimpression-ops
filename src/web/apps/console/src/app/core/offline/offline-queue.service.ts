@@ -26,7 +26,20 @@ export class OfflineQueueService {
     () => this.queueItems().filter((item) => item.status === 'failed').length,
   );
 
+  readonly transientFailedCount = computed(
+    () =>
+      this.queueItems().filter((item) => item.status === 'failed' && !item.isPermanentFailure)
+        .length,
+  );
+
+  readonly permanentFailedCount = computed(
+    () =>
+      this.queueItems().filter((item) => item.status === 'failed' && item.isPermanentFailure)
+        .length,
+  );
+
   readonly hasFailures = computed(() => this.failedCount() > 0);
+  readonly hasTransientFailures = computed(() => this.transientFailedCount() > 0);
 
   constructor() {
     this.initNetworkListeners();
@@ -109,7 +122,9 @@ export class OfflineQueueService {
     this.syncStatus.set('reconnecting');
 
     const items = [...this.queueItems()];
-    const itemsToProcess = items.filter((i) => i.status === 'pending' || i.status === 'failed');
+    const itemsToProcess = items.filter(
+      (i) => i.status === 'pending' || (i.status === 'failed' && !i.isPermanentFailure),
+    );
 
     for (const item of itemsToProcess) {
       await this.processItem(item);
@@ -129,6 +144,7 @@ export class OfflineQueueService {
     if (!item) return false;
 
     item.status = 'pending' as QueueItemStatus;
+    item.isPermanentFailure = false;
     await this.indexedDb.put(STORES.OFFLINE_QUEUE, item);
     this.queueItems.update((list) => list.map((i) => (i.id === id ? { ...item } : i)));
 
@@ -138,18 +154,25 @@ export class OfflineQueueService {
 
   async retryAll(): Promise<void> {
     const updated = this.queueItems().map((item) => {
-      if (item.status === 'failed') {
+      if (item.status === 'failed' && !item.isPermanentFailure) {
         return { ...item, status: 'pending' as QueueItemStatus };
       }
       return item;
     });
 
     for (const item of updated) {
-      await this.indexedDb.put(STORES.OFFLINE_QUEUE, item);
+      if (item.status === 'pending') {
+        await this.indexedDb.put(STORES.OFFLINE_QUEUE, item);
+      }
     }
 
     this.queueItems.set(updated);
     await this.replayQueue();
+  }
+
+  async removeItem(id: string): Promise<void> {
+    await this.indexedDb.delete(STORES.OFFLINE_QUEUE, id);
+    this.queueItems.update((list) => list.filter((i) => i.id !== id));
   }
 
   private async processItem(item: OfflineQueueItem): Promise<void> {
@@ -201,9 +224,13 @@ export class OfflineQueueService {
 
       // CRITICAL REQUIREMENT: NO SILENT DISCARD
       // Retain failed items in IndexedDB and UI queue for user inspection and manual retry
+      const isClientError =
+        typeof httpErr?.status === 'number' && httpErr.status >= 400 && httpErr.status < 500;
       item.status = 'failed';
       item.retryCount += 1;
-      item.lastError = httpErr?.message || httpErr?.statusText || 'Replay Failed';
+      item.isPermanentFailure = isClientError;
+      item.lastError =
+        httpErr?.error?.message || httpErr?.message || httpErr?.statusText || 'Replay Failed';
 
       await this.indexedDb.put(STORES.OFFLINE_QUEUE, item);
       this.updateItemInState(item);
