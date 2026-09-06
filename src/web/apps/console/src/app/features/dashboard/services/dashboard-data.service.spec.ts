@@ -23,18 +23,73 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
     service = TestBed.inject(DashboardDataService);
   });
 
-  it('should initialize with default states and light theme', () => {
+  it('should initialize with default states and light theme when no dark mode is detected', () => {
     expect(service.loading()).toBe(false);
     expect(service.error()).toBeNull();
     expect(service.theme().name).toBe('light');
   });
 
-  it('should toggle between light and dark theme', () => {
+  it('R4 Requirement: should automatically initialize with DARK_THEME when prefers-color-scheme is dark without user interaction', () => {
+    const originalMatchMedia = window.matchMedia;
+    try {
+      window.matchMedia = ((query: string) => ({
+        matches: query.includes('prefers-color-scheme: dark'),
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => true,
+      })) as any;
+
+      // Clean any explicit data-theme attribute
+      document.documentElement.removeAttribute('data-theme');
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [DashboardDataService, provideHttpClient(), provideHttpClientTesting()],
+      });
+
+      const darkService = TestBed.inject(DashboardDataService);
+      expect(darkService.theme().name).toBe('dark');
+      expect(darkService.theme()).toEqual(DARK_THEME);
+    } finally {
+      window.matchMedia = originalMatchMedia;
+      document.documentElement.removeAttribute('data-theme');
+    }
+  });
+
+  it('R4 Requirement: should initialize with DARK_THEME when data-theme attribute is dark on documentElement', () => {
+    try {
+      document.documentElement.setAttribute('data-theme', 'dark');
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [DashboardDataService, provideHttpClient(), provideHttpClientTesting()],
+      });
+
+      const explicitDarkService = TestBed.inject(DashboardDataService);
+      expect(explicitDarkService.theme().name).toBe('dark');
+      expect(explicitDarkService.theme()).toEqual(DARK_THEME);
+    } finally {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  });
+
+  it('should toggle between light and dark theme and update DOM data-theme attribute', () => {
+    document.documentElement.removeAttribute('data-theme');
     expect(service.theme().name).toBe('light');
+
     service.toggleTheme();
     expect(service.theme().name).toBe('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+
     service.toggleTheme();
     expect(service.theme().name).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+
+    document.documentElement.removeAttribute('data-theme');
   });
 
   describe('F14.8 Performance Benchmark (90 days x 11 vehicles x 10 drivers)', () => {
