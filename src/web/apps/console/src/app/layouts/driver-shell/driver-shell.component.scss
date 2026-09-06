@@ -102,15 +102,6 @@
     transform: translateY(1px);
   }
 
-  &.lang-btn {
-    background-color: var(--color-gray-700);
-    color: var(--text-inverse);
-    border-color: var(--color-gray-600);
-
-    &:hover {
-      background-color: var(--color-gray-600);
-    }
-  }
 
   &.logout-btn {
     background-color: rgba(225, 29, 72, 0.15);
@@ -192,12 +183,13 @@
   background: var(--color-primary);
   color: var(--color-primary-contrast);
 }
-.touch-btn.lang-btn,
-.touch-btn.lang-btn:hover {
-  background-color: var(--color-gray-700);
-  color: var(--color-gray-100);
+.driver-header nim-language-switch {
+  --bg-subtle: var(--color-gray-700);
+  --border-default: var(--color-gray-600);
+  --text-secondary: var(--color-gray-300);
+  --text-primary: var(--color-gray-50);
+  --bg-hover: var(--color-gray-600);
 }
-.touch-btn.lang-btn:hover { border-color: var(--color-gray-100); }
 /* 局部重声明整条阴影，避免根元素 var() 已解析后仅改依赖变量却不生效。 */
 .driver-layout {
   --border-focus: var(--color-gray-50);

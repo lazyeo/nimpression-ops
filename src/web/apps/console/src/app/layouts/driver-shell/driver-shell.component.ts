@@ -6,8 +6,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { I18nPipe } from '../../core/i18n/i18n.pipe';
 import { RealtimeService } from '../../core/realtime/realtime.service';
 import { OfflineStatusComponent } from '../../core/offline/offline-status.component';
-import { SupportedLang } from '../../core/models/i18n.models';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
 
 interface DriverNavItem {
   path: string;
@@ -26,6 +26,7 @@ interface DriverNavItem {
     I18nPipe,
     OfflineStatusComponent,
     IconComponent,
+    LanguageSwitchComponent,
   ],
   templateUrl: './driver-shell.component.html',
   styleUrl: './driver-shell.component.scss',
@@ -46,15 +47,6 @@ export class DriverShellComponent implements OnInit {
 
   ngOnInit(): void {
     void this.realtime.startConnection();
-  }
-
-  get currentLang(): SupportedLang {
-    return this.i18n.currentLang();
-  }
-
-  toggleLanguage(): void {
-    const next: SupportedLang = this.currentLang === 'en-NZ' ? 'zh-CN' : 'en-NZ';
-    this.authService.updateUserLocale(next).subscribe();
   }
 
   logout(): void {

@@ -185,15 +185,6 @@
     transform: translateY(1px);
   }
 
-  &.btn-lang {
-    background-color: var(--bg-subtle);
-    border-color: var(--border-default);
-    color: var(--text-secondary);
-
-    &:hover {
-      background-color: var(--bg-muted);
-    }
-  }
 
   &.btn-logout {
     background-color: var(--color-danger-subtle);
