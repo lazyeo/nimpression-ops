@@ -1,12 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { SupportedLang } from '../../../core/models/i18n.models';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface DriverProfileDto {
@@ -39,6 +42,8 @@ export interface DriverProfileDto {
 export class DriverProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
 
@@ -74,6 +79,21 @@ export class DriverProfileComponent implements OnInit {
       });
     }
 
+    this.loadProfile();
+
+    // SignalR Realtime Invalidation Subscription
+    this.realtime.invalidation$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((msg) => msg.kind.startsWith('driver.') || msg.kind.startsWith('user.')),
+      )
+      .subscribe(() => {
+        this.loadProfile();
+      });
+  }
+
+  loadProfile(): void {
+    const user = this.authService.currentUser();
     if (user?.id) {
       this.http.get<DriverProfileDto>(`/api/drivers/${user.id}`).subscribe({
         next: (data) => {
