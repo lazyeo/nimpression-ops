@@ -5,13 +5,20 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
-import { SupportedLang } from '../../../core/models/i18n.models';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { LanguageSwitchComponent } from '../../../shared/components/language-switch/language-switch.component';
 
 @Component({
   selector: 'nim-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, I18nPipe, IconComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    I18nPipe,
+    IconComponent,
+    LanguageSwitchComponent,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,15 +39,6 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
     rememberMe: [true],
   });
-
-  get currentLang(): SupportedLang {
-    return this.i18n.currentLang();
-  }
-
-  toggleLanguage(): void {
-    const nextLang: SupportedLang = this.currentLang === 'en-NZ' ? 'zh-CN' : 'en-NZ';
-    void this.i18n.setLanguage(nextLang);
-  }
 
   onSubmit(): void {
     if (this.loginForm.invalid || this.isSubmitting()) {
