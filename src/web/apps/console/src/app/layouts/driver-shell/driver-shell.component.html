@@ -19,15 +19,8 @@
       <!-- 3-State Offline / Sync Status -->
       <nim-offline-status />
 
-      <!-- Language Toggle Button (Touch target >= 44px) -->
-      <button
-        type="button"
-        class="touch-btn lang-btn"
-        (click)="toggleLanguage()"
-        [title]="'LANG.LABEL' | i18n"
-      >
-        {{ (currentLang === 'en-NZ' ? 'LANG.ZH_CN' : 'LANG.EN_NZ') | i18n }}
-      </button>
+      <!-- Language Switcher -->
+      <nim-language-switch size="sm" />
 
       <!-- Logout Button (Touch target >= 44px) -->
       <button

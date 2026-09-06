@@ -3,14 +3,7 @@
     <div class="login-header">
       <div class="brand-row">
         <h1 class="brand-title">{{ 'COMMON.APP_TITLE' | i18n }}</h1>
-        <button
-          type="button"
-          class="lang-switch-btn"
-          (click)="toggleLanguage()"
-          [title]="'LANG.LABEL' | i18n"
-        >
-          {{ (currentLang === 'en-NZ' ? 'LANG.ZH_CN' : 'LANG.EN_NZ') | i18n }}
-        </button>
+        <nim-language-switch />
       </div>
       <h2 class="form-title">{{ 'AUTH.LOGIN_TITLE' | i18n }}</h2>
       <p class="form-subtitle">{{ 'AUTH.LOGIN_SUBTITLE' | i18n }}</p>

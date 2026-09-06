@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -9,6 +9,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
+  let fixture: ComponentFixture<LoginComponent>;
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
@@ -23,8 +24,9 @@ describe('LoginComponent', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(LoginComponent);
+    fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('initializes login form with default values and validation', () => {
@@ -34,9 +36,9 @@ describe('LoginComponent', () => {
     expect(component.loginForm.valid).toBe(true);
   });
 
-  it('toggles language between en-NZ and zh-CN', () => {
-    const initial = component.currentLang;
-    component.toggleLanguage();
-    expect(component.currentLang).not.toBe(initial);
+  it('renders language switch component in brand row', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const langSwitch = el.querySelector('nim-language-switch');
+    expect(langSwitch).toBeTruthy();
   });
 });

@@ -1,0 +1,25 @@
+<div
+  class="lang-switch-group"
+  [class.size-sm]="size() === 'sm'"
+  role="group"
+  [attr.aria-label]="'LANG.LABEL' | i18n"
+>
+  <button
+    type="button"
+    class="lang-btn"
+    [class.active]="currentLang() === 'en-NZ'"
+    [attr.aria-pressed]="currentLang() === 'en-NZ'"
+    (click)="selectLanguage('en-NZ')"
+  >
+    {{ 'LANG.EN_NZ' | i18n }}
+  </button>
+  <button
+    type="button"
+    class="lang-btn"
+    [class.active]="currentLang() === 'zh-CN'"
+    [attr.aria-pressed]="currentLang() === 'zh-CN'"
+    (click)="selectLanguage('zh-CN')"
+  >
+    {{ 'LANG.ZH_CN' | i18n }}
+  </button>
+</div>

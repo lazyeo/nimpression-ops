@@ -50,14 +50,7 @@
         <nim-offline-status />
 
         <!-- Language Switcher -->
-        <button
-          type="button"
-          class="header-btn btn-lang"
-          (click)="toggleLanguage()"
-          [title]="'LANG.LABEL' | i18n"
-        >
-          {{ (currentLang === 'en-NZ' ? 'LANG.ZH_CN' : 'LANG.EN_NZ') | i18n }}
-        </button>
+        <nim-language-switch size="sm" />
 
         <!-- Logout Button -->
         <button
