@@ -54,6 +54,7 @@ describe('TimesheetsComponent', () => {
   };
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     timesheetsService = {
       getTimesheets: vi.fn().mockReturnValue(
         of({
