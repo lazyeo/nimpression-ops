@@ -35,8 +35,8 @@
       (click)="setTab('history')"
     >
       <span>{{ 'DRIVER.TAB_HISTORY' | i18n }}</span>
-      @if (historyTasks().length > 0) {
-        <span class="tab-badge secondary">{{ historyTasks().length }}</span>
+      @if (historyTotalCount() > 0) {
+        <span class="tab-badge secondary">{{ historyTotalCount() }}</span>
       }
     </button>
   </div>
@@ -129,7 +129,7 @@
       </div>
     } @else {
       <div class="task-cards-list">
-        @for (task of pagedHistoryTasks(); track task.id) {
+        @for (task of historyTasks(); track task.id) {
           <div class="task-card history-card">
             <div class="card-top">
               <span class="trip-badge">#{{ task.tripNo }}</span>
@@ -171,7 +171,7 @@
       <!-- History Pagination -->
       <div class="history-pagination">
         <span class="page-info">
-          {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: historyPage(), total: totalHistoryPages(), count: historyTasks().length } }}
+          {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: historyPage(), total: historyTotalPages(), count: historyTotalCount() } }}
         </span>
         <div class="pagination-actions">
           <button
@@ -185,7 +185,7 @@
           <button
             type="button"
             class="touch-page-btn"
-            [disabled]="historyPage() >= totalHistoryPages()"
+            [disabled]="historyPage() >= historyTotalPages()"
             (click)="nextHistoryPage()"
           >
             {{ 'COMMON.NEXT' | i18n }}
