@@ -59,64 +59,66 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.EMAIL_TEMPLATES_LIST_LABEL' | i18n">
-        <thead>
-          <tr>
-            <th class="th-key">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</th>
-            <th class="th-subject-en">{{ 'NOTIFICATIONS.COL_SUBJECT_EN' | i18n }}</th>
-            <th class="th-subject-zh">{{ 'NOTIFICATIONS.COL_SUBJECT_ZH' | i18n }}</th>
-            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
-            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (template of templates(); track template.id) {
-            <tr (click)="openEditDialog(template)">
-              <td>
-                <span class="badge-template">{{ template.key }}</span>
-              </td>
-              <td class="cell-subject">{{ template.subjectEn }}</td>
-              <td class="cell-subject">{{ template.subjectZh }}</td>
-              <td>
-                @if (template.active) {
-                  <span class="status-indicator status-active">
-                    <span class="dot"></span>
-                    <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
-                  </span>
-                } @else {
-                  <span class="status-indicator status-inactive">
-                    <span class="dot"></span>
-                    <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
-                  </span>
-                }
-              </td>
-              <td class="cell-actions" (click)="$event.stopPropagation()">
-                <div class="action-buttons">
-                  <button
-                    type="button"
-                    class="btn-row-action"
-                    (click)="openEditDialog(template)"
-                  >
-                    <nim-icon name="target" [size]="14" />
-                    <span>{{ (authService.isAdmin() ? 'COMMON.EDIT' : 'COMMON.DETAILS') | i18n }}</span>
-                  </button>
-
-                  @if (authService.isAdmin()) {
+      <div class="table-responsive">
+        <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.EMAIL_TEMPLATES_LIST_LABEL' | i18n">
+          <thead>
+            <tr>
+              <th class="th-key">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</th>
+              <th class="th-subject-en">{{ 'NOTIFICATIONS.COL_SUBJECT_EN' | i18n }}</th>
+              <th class="th-subject-zh">{{ 'NOTIFICATIONS.COL_SUBJECT_ZH' | i18n }}</th>
+              <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+              <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (template of templates(); track template.id) {
+              <tr (click)="openEditDialog(template)">
+                <td>
+                  <span class="badge-template">{{ template.key }}</span>
+                </td>
+                <td class="cell-subject">{{ template.subjectEn }}</td>
+                <td class="cell-subject">{{ template.subjectZh }}</td>
+                <td>
+                  @if (template.active) {
+                    <span class="status-indicator status-active">
+                      <span class="dot"></span>
+                      <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+                    </span>
+                  } @else {
+                    <span class="status-indicator status-inactive">
+                      <span class="dot"></span>
+                      <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
+                    </span>
+                  }
+                </td>
+                <td class="cell-actions" (click)="$event.stopPropagation()">
+                  <div class="action-buttons">
                     <button
                       type="button"
                       class="btn-row-action"
-                      [class.btn-deactivate]="template.active"
-                      (click)="toggleTemplateActive(template, $event)"
+                      (click)="openEditDialog(template)"
                     >
-                      <span>{{ (template.active ? 'NOTIFICATIONS.DEACTIVATE' : 'NOTIFICATIONS.ACTIVATE') | i18n }}</span>
+                      <nim-icon name="target" [size]="14" />
+                      <span>{{ (authService.isAdmin() ? 'COMMON.EDIT' : 'COMMON.DETAILS') | i18n }}</span>
                     </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+
+                    @if (authService.isAdmin()) {
+                      <button
+                        type="button"
+                        class="btn-row-action"
+                        [class.btn-deactivate]="template.active"
+                        (click)="toggleTemplateActive(template, $event)"
+                      >
+                        <span>{{ (template.active ? 'NOTIFICATIONS.DEACTIVATE' : 'NOTIFICATIONS.ACTIVATE') | i18n }}</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   }
 

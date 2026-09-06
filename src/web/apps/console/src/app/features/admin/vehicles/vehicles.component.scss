@@ -3,6 +3,18 @@
   padding: var(--space-24);
   max-width: 1600px;
   margin: 0 auto;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 1024px) {
+    padding: 0;
+  }
+}
+
+.vehicles-page {
+  min-width: 0;
+  width: 100%;
 }
 
 .page-header {
@@ -196,6 +208,7 @@
 
 .data-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
   text-align: left;

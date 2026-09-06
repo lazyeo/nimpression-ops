@@ -85,7 +85,10 @@
     "PROFILE": "Profile",
     "LOGOUT": "Log out",
     "MAIN_NAV": "Main Navigation",
-    "DRIVER_NAV": "Driver Navigation"
+    "DRIVER_NAV": "Driver Navigation",
+    "TOGGLE_MENU": "Toggle navigation menu",
+    "OPEN_MENU": "Open navigation menu",
+    "CLOSE_MENU": "Close navigation menu"
   },
   "AUTH": {
     "LOGIN_TITLE": "Sign in to Nimpression Ops",

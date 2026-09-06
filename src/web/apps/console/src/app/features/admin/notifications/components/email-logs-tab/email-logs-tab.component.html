@@ -138,93 +138,95 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.EMAIL_LOGS_LIST_LABEL' | i18n">
-        <thead>
-          <tr>
-            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
-            <th class="th-recipient">{{ 'NOTIFICATIONS.COL_RECIPIENT' | i18n }}</th>
-            <th class="th-template">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</th>
-            <th class="th-subject">{{ 'NOTIFICATIONS.COL_SUBJECT' | i18n }}</th>
-            <th class="th-attempts">{{ 'NOTIFICATIONS.COL_ATTEMPTS' | i18n }}</th>
-            <th class="th-time">{{ 'NOTIFICATIONS.COL_SENT_AT' | i18n }}</th>
-            <th class="th-trigger">{{ 'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n }}</th>
-            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (log of logs(); track log.id) {
-            <tr (click)="openLogDetail(log)">
-              <td>
-                <span
-                  class="badge-status"
-                  [class.status-sent]="log.status.toLowerCase() === 'sent'"
-                  [class.status-failed]="['failed', 'deadletter'].includes(log.status.toLowerCase())"
-                  [class.status-pending]="['pending', 'sending'].includes(log.status.toLowerCase())"
-                >
-                  @if (log.status.toLowerCase() === 'sent') {
-                    <nim-icon name="check-circle" [size]="12" />
-                  } @else if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
-                    <nim-icon name="alert-triangle" [size]="12" />
-                  } @else {
-                    <nim-icon name="clock" [size]="12" />
-                  }
-                  <span>{{ log.status }}</span>
-                </span>
-              </td>
-              <td class="cell-recipient">
-                <span class="text-truncate">{{ log.toAddress }}</span>
-              </td>
-              <td>
-                <span class="badge-template">{{ log.templateKey }}</span>
-              </td>
-              <td class="cell-subject">
-                <span class="text-truncate">{{ log.subject }}</span>
-              </td>
-              <td>
-                <span
-                  class="badge-attempts"
-                  [class.attempts-warn]="log.attempts > 1"
-                  [class.attempts-danger]="log.attempts >= 3"
-                >
-                  {{ log.attempts }} {{ 'NOTIFICATIONS.ATTEMPTS_UNIT' | i18n }}
-                </span>
-              </td>
-              <td class="cell-time">
-                {{ log.sentAt ? (log.sentAt | localeDate: 'medium') : '-' }}
-              </td>
-              <td class="cell-trigger">
-                <span class="text-muted-xs">{{ log.triggeredBy }}</span>
-              </td>
-              <td class="cell-actions" (click)="$event.stopPropagation()">
-                <div class="action-buttons">
-                  <button
-                    type="button"
-                    class="btn-row-action"
-                    (click)="openLogDetail(log)"
-                    [attr.title]="'COMMON.DETAILS' | i18n"
+      <div class="table-responsive">
+        <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.EMAIL_LOGS_LIST_LABEL' | i18n">
+          <thead>
+            <tr>
+              <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+              <th class="th-recipient">{{ 'NOTIFICATIONS.COL_RECIPIENT' | i18n }}</th>
+              <th class="th-template">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</th>
+              <th class="th-subject">{{ 'NOTIFICATIONS.COL_SUBJECT' | i18n }}</th>
+              <th class="th-attempts">{{ 'NOTIFICATIONS.COL_ATTEMPTS' | i18n }}</th>
+              <th class="th-time">{{ 'NOTIFICATIONS.COL_SENT_AT' | i18n }}</th>
+              <th class="th-trigger">{{ 'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n }}</th>
+              <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs(); track log.id) {
+              <tr (click)="openLogDetail(log)">
+                <td>
+                  <span
+                    class="badge-status"
+                    [class.status-sent]="log.status.toLowerCase() === 'sent'"
+                    [class.status-failed]="['failed', 'deadletter'].includes(log.status.toLowerCase())"
+                    [class.status-pending]="['pending', 'sending'].includes(log.status.toLowerCase())"
                   >
-                    <nim-icon name="target" [size]="14" />
-                    <span>{{ 'COMMON.DETAILS' | i18n }}</span>
-                  </button>
-
-                  @if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
+                    @if (log.status.toLowerCase() === 'sent') {
+                      <nim-icon name="check-circle" [size]="12" />
+                    } @else if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
+                      <nim-icon name="alert-triangle" [size]="12" />
+                    } @else {
+                      <nim-icon name="clock" [size]="12" />
+                    }
+                    <span>{{ log.status }}</span>
+                  </span>
+                </td>
+                <td class="cell-recipient">
+                  <span class="text-truncate">{{ log.toAddress }}</span>
+                </td>
+                <td>
+                  <span class="badge-template">{{ log.templateKey }}</span>
+                </td>
+                <td class="cell-subject">
+                  <span class="text-truncate">{{ log.subject }}</span>
+                </td>
+                <td>
+                  <span
+                    class="badge-attempts"
+                    [class.attempts-warn]="log.attempts > 1"
+                    [class.attempts-danger]="log.attempts >= 3"
+                  >
+                    {{ log.attempts }} {{ 'NOTIFICATIONS.ATTEMPTS_UNIT' | i18n }}
+                  </span>
+                </td>
+                <td class="cell-time">
+                  {{ log.sentAt ? (log.sentAt | localeDate: 'medium') : '-' }}
+                </td>
+                <td class="cell-trigger">
+                  <span class="text-muted-xs">{{ log.triggeredBy }}</span>
+                </td>
+                <td class="cell-actions" (click)="$event.stopPropagation()">
+                  <div class="action-buttons">
                     <button
                       type="button"
-                      class="btn-row-action btn-resend"
-                      [disabled]="resendingId() === log.id"
-                      (click)="resendEmail(log.id, $event)"
-                      [attr.title]="'NOTIFICATIONS.RESEND_TOOLTIP' | i18n"
+                      class="btn-row-action"
+                      (click)="openLogDetail(log)"
+                      [attr.title]="'COMMON.DETAILS' | i18n"
                     >
-                      <nim-icon name="refresh" [size]="14" />
-                      <span>{{ 'NOTIFICATIONS.RESEND' | i18n }}</span>
+                      <nim-icon name="target" [size]="14" />
+                      <span>{{ 'COMMON.DETAILS' | i18n }}</span>
                     </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+
+                    @if (['failed', 'deadletter'].includes(log.status.toLowerCase())) {
+                      <button
+                        type="button"
+                        class="btn-row-action btn-resend"
+                        [disabled]="resendingId() === log.id"
+                        (click)="resendEmail(log.id, $event)"
+                        [attr.title]="'NOTIFICATIONS.RESEND_TOOLTIP' | i18n"
+                      >
+                        <nim-icon name="refresh" [size]="14" />
+                        <span>{{ 'NOTIFICATIONS.RESEND' | i18n }}</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
       <!-- Pagination -->
       <div class="pagination-bar">

@@ -163,67 +163,69 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" [attr.aria-label]="'AUDIT.TABLE_ARIA_LABEL' | i18n">
-        <thead>
-          <tr>
-            <th class="th-time">{{ 'AUDIT.COL_OCCURRED_AT' | i18n }}</th>
-            <th class="th-action">{{ 'AUDIT.COL_ACTION' | i18n }}</th>
-            <th class="th-entity-type">{{ 'AUDIT.COL_ENTITY_TYPE' | i18n }}</th>
-            <th class="th-entity-id">{{ 'AUDIT.COL_ENTITY_ID' | i18n }}</th>
-            <th class="th-actor">{{ 'AUDIT.COL_ACTOR_ROLE' | i18n }}</th>
-            <th class="th-ip">{{ 'AUDIT.COL_IP_ADDRESS' | i18n }}</th>
-            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (log of logs(); track log.id) {
-            <tr (click)="openDiffModal(log)">
-              <td class="cell-time">
-                {{ log.occurredAt | localeDate: 'medium' }}
-              </td>
-              <td>
-                <nim-status-badge
-                  [variant]="(log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')) ? 'success' : (log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')) ? 'danger' : (log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')) ? 'info' : 'neutral'"
-                  size="sm"
-                >
-                  {{ log.action }}
-                </nim-status-badge>
-              </td>
-              <td>
-                <span class="badge-entity">{{ log.entityType }}</span>
-              </td>
-              <td class="cell-id">
-                <span class="code-id">{{ log.entityId }}</span>
-              </td>
-              <td>
-                <nim-status-badge variant="neutral" size="sm">
-                  {{ log.actorRole ? ('ROLES.' + (log.actorRole === 1 || log.actorRole === 'Admin' ? 'ADMIN' : log.actorRole === 2 || log.actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
-                </nim-status-badge>
-              </td>
-              <td class="cell-ip">
-                <span class="text-ip">{{ log.ipAddress || '-' }}</span>
-              </td>
-              <td class="cell-actions" (click)="$event.stopPropagation()">
-                <button
-                  type="button"
-                  class="btn-row-action"
-                  (click)="openDiffModal(log)"
-                  [attr.title]="'AUDIT.VIEW_DIFF_TOOLTIP' | i18n"
-                >
-                  <nim-icon name="target" [size]="14" />
-                  <span>{{ 'AUDIT.VIEW_DIFF_BUTTON' | i18n }}</span>
-                </button>
-              </td>
+      <div class="table-responsive">
+        <table class="data-table" [attr.aria-label]="'AUDIT.TABLE_ARIA_LABEL' | i18n">
+          <thead>
+            <tr>
+              <th class="th-time">{{ 'AUDIT.COL_OCCURRED_AT' | i18n }}</th>
+              <th class="th-action">{{ 'AUDIT.COL_ACTION' | i18n }}</th>
+              <th class="th-entity-type">{{ 'AUDIT.COL_ENTITY_TYPE' | i18n }}</th>
+              <th class="th-entity-id">{{ 'AUDIT.COL_ENTITY_ID' | i18n }}</th>
+              <th class="th-actor">{{ 'AUDIT.COL_ACTOR_ROLE' | i18n }}</th>
+              <th class="th-ip">{{ 'AUDIT.COL_IP_ADDRESS' | i18n }}</th>
+              <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (log of logs(); track log.id) {
+              <tr (click)="openDiffModal(log)">
+                <td class="cell-time">
+                  {{ log.occurredAt | localeDate: 'medium' }}
+                </td>
+                <td>
+                  <nim-status-badge
+                    [variant]="(log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')) ? 'success' : (log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')) ? 'danger' : (log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')) ? 'info' : 'neutral'"
+                    size="sm"
+                  >
+                    {{ log.action }}
+                  </nim-status-badge>
+                </td>
+                <td>
+                  <span class="badge-entity">{{ log.entityType }}</span>
+                </td>
+                <td class="cell-id">
+                  <span class="code-id">{{ log.entityId }}</span>
+                </td>
+                <td>
+                  <nim-status-badge variant="neutral" size="sm">
+                    {{ log.actorRole ? ('ROLES.' + (log.actorRole === 1 || log.actorRole === 'Admin' ? 'ADMIN' : log.actorRole === 2 || log.actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
+                  </nim-status-badge>
+                </td>
+                <td>
+                  <span class="text-ip">{{ log.ipAddress || '-' }}</span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-row-action"
+                    (click)="openDiffModal(log); $event.stopPropagation()"
+                    [attr.aria-label]="'AUDIT.VIEW_CHANGES' | i18n"
+                  >
+                    <nim-icon name="audit" [size]="14" />
+                    <span>{{ 'AUDIT.VIEW_CHANGES' | i18n }}</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
       <!-- Pagination -->
       <div class="pagination-bar">
-        <div class="pagination-info">
-          <span>{{ 'AUDIT.TOTAL_RECORDS' | i18n: { count: totalCount() } }}</span>
-        </div>
+        <span class="page-info">
+          {{ 'COMMON.PAGE_INFO_AUDIT' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}
+        </span>
         <div class="pagination-controls">
           <button
             type="button"

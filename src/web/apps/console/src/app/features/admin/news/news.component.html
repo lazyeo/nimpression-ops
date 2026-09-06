@@ -130,98 +130,100 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" [attr.aria-label]="'NEWS.LIST_ARIA_LABEL' | i18n">
-        <thead>
-          <tr>
-            <th class="th-pin">{{ 'NEWS.COL_PIN' | i18n }}</th>
-            <th class="th-title">{{ 'NEWS.COL_TITLE' | i18n }}</th>
-            <th class="th-audience">{{ 'NEWS.COL_AUDIENCE' | i18n }}</th>
-            <th class="th-date">{{ 'NEWS.COL_PUBLISHED_AT' | i18n }}</th>
-            <th class="th-read">{{ 'NEWS.COL_READ_STATUS' | i18n }}</th>
-            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
-            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of sortedNews(); track item.id) {
-            <tr [class.pinned-row]="item.pinned" (click)="openDetailModal(item.id)">
-              <td class="cell-pin">
-                @if (item.pinned) {
-                  <span class="pin-badge" [attr.title]="'NEWS.PINNED_TOOLTIP' | i18n">
-                    <nim-icon name="target" [size]="14" />
-                    <span>{{ 'NEWS.PINNED_BADGE' | i18n }}</span>
-                  </span>
-                } @else {
-                  <span class="unpinned-dash">-</span>
-                }
-              </td>
-              <td class="cell-title">
-                <span class="news-title-text">{{ item.title }}</span>
-              </td>
-              <td>
-                <nim-status-badge variant="info" size="sm">
-                  @if (item.audience === 'All') {
-                    {{ 'NEWS.AUDIENCE_ALL' | i18n }}
-                  } @else if (item.audience === 'Drivers') {
-                    {{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}
-                  } @else if (item.audience === 'Dispatchers') {
-                    {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
+      <div class="table-responsive">
+        <table class="data-table" [attr.aria-label]="'NEWS.LIST_ARIA_LABEL' | i18n">
+          <thead>
+            <tr>
+              <th class="th-pin">{{ 'NEWS.COL_PIN' | i18n }}</th>
+              <th class="th-title">{{ 'NEWS.COL_TITLE' | i18n }}</th>
+              <th class="th-audience">{{ 'NEWS.COL_AUDIENCE' | i18n }}</th>
+              <th class="th-date">{{ 'NEWS.COL_PUBLISHED_AT' | i18n }}</th>
+              <th class="th-read">{{ 'NEWS.COL_READ_STATUS' | i18n }}</th>
+              <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+              <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of sortedNews(); track item.id) {
+              <tr [class.pinned-row]="item.pinned" (click)="openDetailModal(item.id)">
+                <td class="cell-pin">
+                  @if (item.pinned) {
+                    <span class="pin-badge" [attr.title]="'NEWS.PINNED_TOOLTIP' | i18n">
+                      <nim-icon name="target" [size]="14" />
+                      <span>{{ 'NEWS.PINNED_BADGE' | i18n }}</span>
+                    </span>
+                  } @else {
+                    <span class="unpinned-dash">-</span>
                   }
-                </nim-status-badge>
-              </td>
-              <td class="cell-date">
-                {{ item.publishedAt | localeDate: 'medium' }}
-              </td>
-              <td>
-                @if (item.isRead) {
-                  <nim-status-badge variant="success" size="sm" icon="check">
-                    <span>{{ 'NEWS.STATUS_READ' | i18n }}</span>
+                </td>
+                <td class="cell-title">
+                  <span class="news-title-text">{{ item.title }}</span>
+                </td>
+                <td>
+                  <nim-status-badge variant="info" size="sm">
+                    @if (item.audience === 'All') {
+                      {{ 'NEWS.AUDIENCE_ALL' | i18n }}
+                    } @else if (item.audience === 'Drivers') {
+                      {{ 'NEWS.AUDIENCE_DRIVERS' | i18n }}
+                    } @else if (item.audience === 'Dispatchers') {
+                      {{ 'NEWS.AUDIENCE_DISPATCHERS' | i18n }}
+                    }
                   </nim-status-badge>
-                } @else {
-                  <nim-status-badge variant="neutral" size="sm">
-                    <span>{{ 'NEWS.STATUS_UNREAD' | i18n }}</span>
-                  </nim-status-badge>
-                }
-              </td>
-              <td>
-                @if (item.isActive) {
-                  <nim-status-badge variant="success" size="sm" [dot]="true">
-                    <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
-                  </nim-status-badge>
-                } @else {
-                  <nim-status-badge variant="neutral" size="sm" [dot]="true">
-                    <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
-                  </nim-status-badge>
-                }
-              </td>
-              <td class="cell-actions" (click)="$event.stopPropagation()">
-                <div class="action-buttons">
-                  <button
-                    type="button"
-                    class="btn-row-action"
-                    (click)="openDetailModal(item.id)"
-                    [attr.title]="'NEWS.VIEW_DETAILS_AND_STATS' | i18n"
-                  >
-                    <nim-icon name="check-circle" [size]="14" />
-                    <span>{{ 'NEWS.RECEIPTS_BUTTON' | i18n }}</span>
-                  </button>
-
-                  @if (!item.isRead) {
+                </td>
+                <td class="cell-date">
+                  {{ item.publishedAt | localeDate: 'medium' }}
+                </td>
+                <td>
+                  @if (item.isRead) {
+                    <nim-status-badge variant="success" size="sm" icon="check">
+                      <span>{{ 'NEWS.STATUS_READ' | i18n }}</span>
+                    </nim-status-badge>
+                  } @else {
+                    <nim-status-badge variant="neutral" size="sm">
+                      <span>{{ 'NEWS.STATUS_UNREAD' | i18n }}</span>
+                    </nim-status-badge>
+                  }
+                </td>
+                <td>
+                  @if (item.isActive) {
+                    <nim-status-badge variant="success" size="sm" [dot]="true">
+                      <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+                    </nim-status-badge>
+                  } @else {
+                    <nim-status-badge variant="neutral" size="sm" [dot]="true">
+                      <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
+                    </nim-status-badge>
+                  }
+                </td>
+                <td class="cell-actions" (click)="$event.stopPropagation()">
+                  <div class="action-buttons">
                     <button
                       type="button"
-                      class="btn-row-action btn-mark-read"
-                      (click)="markAsRead(item, $event)"
-                      [attr.title]="'NEWS.MARK_READ_TOOLTIP' | i18n"
+                      class="btn-row-action"
+                      (click)="openDetailModal(item.id)"
+                      [attr.title]="'NEWS.VIEW_DETAILS_AND_STATS' | i18n"
                     >
-                      <span>{{ 'NEWS.MARK_AS_READ' | i18n }}</span>
+                      <nim-icon name="check-circle" [size]="14" />
+                      <span>{{ 'NEWS.RECEIPTS_BUTTON' | i18n }}</span>
                     </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+
+                    @if (!item.isRead) {
+                      <button
+                        type="button"
+                        class="btn-row-action btn-mark-read"
+                        (click)="markAsRead(item, $event)"
+                        [attr.title]="'NEWS.MARK_READ_TOOLTIP' | i18n"
+                      >
+                        <span>{{ 'NEWS.MARK_AS_READ' | i18n }}</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
       <!-- Pagination -->
       <div class="pagination-bar">

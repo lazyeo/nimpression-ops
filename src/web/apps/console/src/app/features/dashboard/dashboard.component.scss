@@ -1,3 +1,10 @@
+:host {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .dashboard-wrapper {
   min-height: 100vh;
   background: var(--bg-app);
@@ -5,6 +12,12 @@
   padding: var(--space-20);
   box-sizing: border-box;
   font-family: var(--font-family-sans);
+  min-width: 0;
+  width: 100%;
+
+  @media (max-width: 1024px) {
+    padding: 0;
+  }
 
   &.dark-theme {
     background: var(--bg-app);
