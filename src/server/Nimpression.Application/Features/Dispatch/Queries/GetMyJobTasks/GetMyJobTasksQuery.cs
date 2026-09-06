@@ -11,7 +11,7 @@ namespace Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks;
 /// 司机端查询本人名下派发任务列表查询。
 /// 严格从 JWT 提取当前用户身份并关联 Drivers 记录，绝不信任客户端传入的 driverId。
 /// </summary>
-public sealed record GetMyJobTasksQuery(JobTaskStatus? Status = null) : IRequest<Result<List<DriverTaskItemDto>>>;
+public sealed record GetMyJobTasksQuery(JobTaskStatus? Status = null, bool? ActiveOnly = null) : IRequest<Result<List<DriverTaskItemDto>>>;
 
 public sealed class GetMyJobTasksQueryHandler(
     IJobTaskRepository jobTaskRepository,
@@ -30,7 +30,7 @@ public sealed class GetMyJobTasksQueryHandler(
             return Error.Forbidden("driver_profile_not_found", "Current user is not associated with a driver profile.");
         }
 
-        var tasks = await jobTaskRepository.GetDriverTasksAsync(driverId.Value, request.Status, cancellationToken);
+        var tasks = await jobTaskRepository.GetDriverTasksAsync(driverId.Value, request.Status, request.ActiveOnly, cancellationToken);
         return Result<List<DriverTaskItemDto>>.Success(tasks);
     }
 }
