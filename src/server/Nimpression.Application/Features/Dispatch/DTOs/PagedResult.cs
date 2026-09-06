@@ -10,4 +10,6 @@ public sealed record PagedResult<T>(
     int PageSize)
 {
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / Math.Max(1, PageSize));
+    public bool HasNextPage => Page < TotalPages;
+    public bool HasPreviousPage => Page > 1;
 }
