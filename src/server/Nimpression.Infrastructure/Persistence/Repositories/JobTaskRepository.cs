@@ -258,7 +258,7 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
 
     private static readonly JobTaskStatus[] ActiveStatuses = [JobTaskStatus.Assigned, JobTaskStatus.Acknowledged, JobTaskStatus.InProgress];
 
-    public async Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         var query = from t in dbContext.JobTasks.AsNoTracking()
                     join a in dbContext.Areas.AsNoTracking() on t.AreaId equals a.Id
@@ -276,17 +276,27 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
         {
             query = query.Where(x => ActiveStatuses.Contains(x.Task.Status));
         }
+        else if (activeOnly == false)
+        {
+            query = query.Where(x => !ActiveStatuses.Contains(x.Task.Status));
+        }
 
         if (status.HasValue)
         {
             query = query.Where(x => x.Task.Status == status.Value);
         }
 
-        var items = await query
+        var totalCount = await query.CountAsync(cancellationToken);
+        var effectivePage = Math.Max(1, page);
+        var effectivePageSize = Math.Clamp(pageSize, 1, 100);
+
+        var rawItems = await query
             .OrderByDescending(x => x.Task.ScheduledFor)
+            .Skip((effectivePage - 1) * effectivePageSize)
+            .Take(effectivePageSize)
             .ToListAsync(cancellationToken);
 
-        return items.Select(x => new DriverTaskItemDto(
+        var items = rawItems.Select(x => new DriverTaskItemDto(
             x.Task.Id,
             x.Task.Ref,
             MapStatusToDriverStatus(x.Task.Status),
@@ -294,6 +304,8 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
             !string.IsNullOrWhiteSpace(x.Task.Description) ? x.Task.Description : (!string.IsNullOrWhiteSpace(x.Task.Title) ? x.Task.Title : x.AreaName),
             x.Task.ScheduledFor,
             x.VehicleRego)).ToList();
+
+        return new PagedResult<DriverTaskItemDto>(items, totalCount, effectivePage, effectivePageSize);
     }
 
     public async Task<DashboardMetricsDto> GetDashboardMetricsAsync(CancellationToken cancellationToken = default)
