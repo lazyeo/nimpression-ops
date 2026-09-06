@@ -28,6 +28,7 @@ describe('DriverShiftsComponent (Clock in/out & Shifts)', () => {
     const fixture = TestBed.createComponent(DriverShiftsComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
   });
 
   afterEach(() => {
@@ -35,16 +36,20 @@ describe('DriverShiftsComponent (Clock in/out & Shifts)', () => {
   });
 
   it('handles clock in state update', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
     // Handle initial load in ngOnInit
     const initialReq = httpMock.expectOne('/api/timesheet/current-shift');
     initialReq.flush({ status: 'NOT_STARTED', totalWorkedMinutes: 0 });
 
     expect(component.currentShift().status).toBe('NOT_STARTED');
     await component.clockIn();
+    const clockInReq = httpMock.expectOne('/api/timesheet/clock-in');
+    clockInReq.flush({ success: true });
     expect(component.currentShift().status).toBe('ACTIVE');
   });
 
   it('re-queries shift API when SignalR invalidation arrives for shift/timesheet', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
     const initialReq = httpMock.expectOne('/api/timesheet/current-shift');
     initialReq.flush({ status: 'NOT_STARTED', totalWorkedMinutes: 0 });
 
@@ -55,7 +60,7 @@ describe('DriverShiftsComponent (Clock in/out & Shifts)', () => {
       occurredAt: new Date().toISOString(),
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     const reloadReq = httpMock.expectOne('/api/timesheet/current-shift');
     reloadReq.flush({
