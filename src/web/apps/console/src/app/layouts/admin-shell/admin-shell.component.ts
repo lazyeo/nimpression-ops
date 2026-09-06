@@ -1,6 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { I18nPipe } from '../../core/i18n/i18n.pipe';
@@ -37,6 +47,9 @@ export class AdminShellComponent implements OnInit {
   readonly i18n = inject(I18nService);
   readonly realtime = inject(RealtimeService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly sidebarOpen = signal<boolean>(false);
 
   readonly navItems: NavItem[] = [
     { path: '/admin/dashboard', labelKey: 'NAV.DASHBOARD', icon: 'dashboard' },
@@ -53,8 +66,38 @@ export class AdminShellComponent implements OnInit {
     { path: '/admin/audit', labelKey: 'NAV.AUDIT', icon: 'audit' },
   ];
 
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.closeSidebar();
+      });
+  }
+
   ngOnInit(): void {
     void this.realtime.startConnection();
+  }
+
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    if (this.sidebarOpen()) {
+      this.closeSidebar();
+    }
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update((v) => !v);
+  }
+
+  openSidebar(): void {
+    this.sidebarOpen.set(true);
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen.set(false);
   }
 
   logout(): void {

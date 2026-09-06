@@ -2,6 +2,33 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-body);
+  position: relative;
+}
+
+.sidebar-toggle-btn {
+  display: none;
+}
+
+.drawer-close-btn {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.brand-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-width: 0;
 }
 
 .admin-sidebar {
@@ -18,7 +45,6 @@
   padding: var(--space-16) var(--space-20);
   display: flex;
   align-items: center;
-  gap: var(--space-12);
   border-bottom: 1px solid var(--color-gray-800);
 
   .brand-icon {
@@ -73,13 +99,23 @@
 
   &:hover {
     background-color: var(--color-gray-800);
-    color: var(--text-inverse);
+    color: var(--color-gray-50);
   }
 
   &.active {
     background-color: var(--color-primary);
     color: var(--color-primary-contrast);
     font-weight: var(--font-weight-semibold);
+
+    &:hover {
+      background-color: var(--color-primary-hover);
+      color: var(--color-primary-contrast);
+    }
+
+    &:active {
+      background-color: var(--color-primary-active);
+      color: var(--color-primary-contrast);
+    }
   }
 
   .nav-icon {
@@ -156,6 +192,15 @@
   justify-content: space-between;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
 .view-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
@@ -167,6 +212,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .header-btn {
@@ -181,6 +228,8 @@
   justify-content: center;
   gap: var(--space-6);
   border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -193,11 +242,22 @@
   &.btn-logout {
     background-color: var(--color-danger-subtle);
     border-color: var(--badge-danger-border);
-    color: var(--color-danger);
+    color: var(--color-danger-text);
 
     &:hover {
       background-color: var(--badge-danger-bg);
+      border-color: var(--color-danger-text);
     }
+  }
+
+  .logout-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .logout-text {
+    white-space: nowrap;
   }
 }
 
@@ -209,31 +269,128 @@
   min-width: 0;
 }
 
-/* 固定深色侧栏：hover 不再使用会随主题翻转的 text-inverse。 */
-.nav-link:hover {
-  background-color: var(--color-gray-800);
-  color: var(--color-gray-50);
-}
-/* 保留选中态优先级；hover/active 使用相配的实心色和文字。 */
-.nav-link.active {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-}
-.nav-link.active:hover {
-  background-color: var(--color-primary-hover);
-  color: var(--color-primary-contrast);
-}
-.nav-link.active:active {
-  background-color: var(--color-primary-active);
-  color: var(--color-primary-contrast);
+/* ==========================================================================
+   Responsive Shell Styles (R1 & R2) - Narrow Viewports (<= 1024px)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: var(--bg-backdrop);
+    z-index: var(--z-modal-backdrop);
+    backdrop-filter: blur(2px);
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: var(--z-modal);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--transition-normal),
+      visibility var(--transition-normal);
+
+    &.drawer-open {
+      transform: translateX(0);
+      visibility: visible;
+      box-shadow: var(--shadow-xl);
+    }
+  }
+
+  .sidebar-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+
+    &:hover {
+      background: var(--bg-subtle);
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+
+  .drawer-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-gray-400);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    padding: 0;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+
+    &:hover {
+      color: var(--text-inverse);
+      background: var(--color-gray-800);
+    }
+  }
+
+  .admin-header {
+    padding: 0 var(--space-12);
+    gap: var(--space-8);
+  }
+
+  .header-left {
+    gap: var(--space-8);
+  }
+
+  .view-title {
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-right {
+    gap: var(--space-6);
+  }
+
+  .admin-content {
+    padding: var(--space-12);
+  }
 }
 
-/* 悬停只加深边框，前景/背景恒定，避免 hover 降低文字对比。 */
-.header-btn.btn-logout,
-.header-btn.btn-logout:hover {
-  background-color: var(--color-danger-subtle);
-  color: var(--color-danger-text);
-}
-.header-btn.btn-logout:hover {
-  border-color: var(--color-danger-text);
+@media (max-width: 480px) {
+  .logout-text {
+    display: none;
+  }
+
+  .header-btn.btn-logout {
+    padding: var(--space-6) var(--space-8);
+    min-width: 34px;
+  }
+
+  .view-title {
+    max-width: 140px;
+  }
 }

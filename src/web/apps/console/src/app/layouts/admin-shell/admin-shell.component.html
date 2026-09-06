@@ -1,11 +1,42 @@
 <div class="admin-layout">
-  <!-- Desktop Sidebar -->
-  <aside class="admin-sidebar">
+  <!-- Mobile Drawer Backdrop Overlay -->
+  @if (sidebarOpen()) {
+    <div
+      class="sidebar-backdrop"
+      (click)="closeSidebar()"
+      [attr.aria-label]="'NAV.CLOSE_MENU' | i18n"
+      role="button"
+      tabindex="-1"
+    ></div>
+  }
+
+  <!-- Sidebar (Desktop static sidebar / Mobile drawer) -->
+  <aside
+    id="admin-sidebar"
+    class="admin-sidebar"
+    [class.drawer-open]="sidebarOpen()"
+    [attr.aria-label]="'NAV.MAIN_NAV' | i18n"
+  >
     <div class="sidebar-brand">
-      <nim-icon name="truck" [size]="28" class="brand-icon" />
-      <div class="brand-text">
-        <h1 class="brand-name">{{ 'COMMON.APP_TITLE' | i18n }}</h1>
-        <small class="brand-sub">{{ 'COMMON.SUBTITLE' | i18n }}</small>
+      <div class="brand-row">
+        <div class="brand-identity">
+          <nim-icon name="truck" [size]="28" class="brand-icon" />
+          <div class="brand-text">
+            <h1 class="brand-name">{{ 'COMMON.APP_TITLE' | i18n }}</h1>
+            <small class="brand-sub">{{ 'COMMON.SUBTITLE' | i18n }}</small>
+          </div>
+        </div>
+
+        <!-- Mobile Drawer Close Button -->
+        <button
+          type="button"
+          class="drawer-close-btn"
+          (click)="closeSidebar()"
+          [title]="'NAV.CLOSE_MENU' | i18n"
+          [attr.aria-label]="'NAV.CLOSE_MENU' | i18n"
+        >
+          <nim-icon name="x" [size]="20" />
+        </button>
       </div>
     </div>
 
@@ -13,7 +44,12 @@
       <ul class="nav-list">
         @for (item of navItems; track item.path) {
           <li class="nav-item">
-            <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              class="nav-link"
+              (click)="closeSidebar()"
+            >
               <nim-icon [name]="item.icon" [size]="18" class="nav-icon" />
               <span class="nav-label">{{ item.labelKey | i18n }}</span>
             </a>
@@ -42,6 +78,19 @@
     <!-- Header -->
     <header class="admin-header">
       <div class="header-left">
+        <!-- Mobile Menu Toggle Button -->
+        <button
+          type="button"
+          class="sidebar-toggle-btn"
+          (click)="toggleSidebar()"
+          [attr.aria-expanded]="sidebarOpen()"
+          aria-controls="admin-sidebar"
+          [title]="(sidebarOpen() ? 'NAV.CLOSE_MENU' : 'NAV.OPEN_MENU') | i18n"
+          [attr.aria-label]="(sidebarOpen() ? 'NAV.CLOSE_MENU' : 'NAV.OPEN_MENU') | i18n"
+        >
+          <nim-icon name="menu" [size]="20" />
+        </button>
+
         <span class="view-title">{{ 'ADMIN.DASHBOARD_TITLE' | i18n }}</span>
       </div>
 
@@ -58,8 +107,10 @@
           class="header-btn btn-logout"
           (click)="logout()"
           [title]="'NAV.LOGOUT' | i18n"
+          [attr.aria-label]="'NAV.LOGOUT' | i18n"
         >
-          <span>{{ 'NAV.LOGOUT' | i18n }}</span>
+          <nim-icon name="stop" [size]="14" class="logout-icon" />
+          <span class="logout-text">{{ 'NAV.LOGOUT' | i18n }}</span>
         </button>
       </div>
     </header>
