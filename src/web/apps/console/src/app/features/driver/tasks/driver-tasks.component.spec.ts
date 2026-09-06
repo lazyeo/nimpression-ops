@@ -35,7 +35,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     httpMock.verify();
   });
 
-  it('loads tasks and displays them', () => {
+  it('loads active tasks by default with activeOnly=true and displays them', () => {
     const mockTasks: DriverTaskItem[] = [
       {
         id: 't-1',
@@ -48,11 +48,53 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const req = httpMock.expectOne('/api/dispatch/my-tasks');
+    const req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true');
     req.flush(mockTasks);
 
+    expect(component.activeTab()).toBe('active');
     expect(component.tasks().length).toBe(1);
     expect(component.tasks()[0].tripNo).toBe('TRIP-101');
+  });
+
+  it('switches to history tab and paginates historical tasks correctly', () => {
+    // Flush initial active tasks request
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true');
+    initReq.flush([]);
+
+    // Create 7 completed/cancelled tasks (2 pages with pageSize = 5)
+    const mockAllTasks: DriverTaskItem[] = Array.from({ length: 7 }, (_, i) => ({
+      id: `hist-${i + 1}`,
+      tripNo: `HIST-${100 + i + 1}`,
+      status: i % 2 === 0 ? 'COMPLETED' : 'CANCELLED',
+      pickupLocation: `Pickup ${i + 1}`,
+      deliveryLocation: `Delivery ${i + 1}`,
+      scheduledTime: '2026-08-20T08:00:00Z',
+      vehiclePlate: `NIM-${100 + i}`,
+    }));
+
+    // Switch to history tab
+    component.setTab('history');
+    expect(component.activeTab()).toBe('history');
+
+    const histReq = httpMock.expectOne('/api/dispatch/my-tasks');
+    histReq.flush(mockAllTasks);
+
+    expect(component.historyTasks().length).toBe(7);
+    expect(component.totalHistoryPages()).toBe(2);
+    expect(component.historyPage()).toBe(1);
+    expect(component.pagedHistoryTasks().length).toBe(5);
+    expect(component.pagedHistoryTasks()[0].tripNo).toBe('HIST-101');
+
+    // Go to next page
+    component.nextHistoryPage();
+    expect(component.historyPage()).toBe(2);
+    expect(component.pagedHistoryTasks().length).toBe(2);
+    expect(component.pagedHistoryTasks()[0].tripNo).toBe('HIST-106');
+
+    // Go back to previous page
+    component.prevHistoryPage();
+    expect(component.historyPage()).toBe(1);
+    expect(component.pagedHistoryTasks().length).toBe(5);
   });
 
   it('re-queries API when SignalR invalidation signal arrives for driver task', async () => {
@@ -68,7 +110,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks');
+    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true');
     initialReq.flush(initialTasks);
     expect(component.tasks().length).toBe(1);
 
@@ -83,7 +125,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     // Wait for async offlineCache read to complete
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks');
+    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true');
     reloadReq.flush([
       ...initialTasks,
       {

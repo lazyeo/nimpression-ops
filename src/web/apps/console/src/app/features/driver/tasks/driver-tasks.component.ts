@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -35,9 +35,26 @@ export class DriverTasksComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   readonly offlineQueue = inject(OfflineQueueService);
 
+  readonly activeTab = signal<'active' | 'history'>('active');
   readonly tasks = signal<DriverTaskItem[]>([]);
+  readonly historyTasks = signal<DriverTaskItem[]>([]);
   readonly isLoading = signal<boolean>(true);
   readonly isUsingCache = signal<boolean>(false);
+
+  // Pagination for history view
+  readonly historyPage = signal<number>(1);
+  readonly historyPageSize = 5;
+
+  readonly totalHistoryPages = computed(() => {
+    const count = this.historyTasks().length;
+    return count === 0 ? 1 : Math.ceil(count / this.historyPageSize);
+  });
+
+  readonly pagedHistoryTasks = computed(() => {
+    const page = this.historyPage();
+    const start = (page - 1) * this.historyPageSize;
+    return this.historyTasks().slice(start, start + this.historyPageSize);
+  });
 
   ngOnInit(): void {
     void this.loadTasks();
@@ -53,7 +70,19 @@ export class DriverTasksComponent implements OnInit {
       });
   }
 
+  setTab(tab: 'active' | 'history'): void {
+    this.activeTab.set(tab);
+    if (tab === 'history' && this.historyTasks().length === 0) {
+      void this.loadHistory();
+    }
+  }
+
   async loadTasks(): Promise<void> {
+    if (this.activeTab() === 'history') {
+      await this.loadHistory();
+      return;
+    }
+
     this.isLoading.set(true);
 
     // Try loading from offline cache first
@@ -64,7 +93,7 @@ export class DriverTasksComponent implements OnInit {
     }
 
     if (this.offlineQueue.isOnline()) {
-      this.http.get<DriverTaskItem[]>('/api/dispatch/my-tasks').subscribe({
+      this.http.get<DriverTaskItem[]>('/api/dispatch/my-tasks?activeOnly=true').subscribe({
         next: async (data) => {
           this.tasks.set(data);
           this.isUsingCache.set(false);
@@ -82,12 +111,48 @@ export class DriverTasksComponent implements OnInit {
     }
   }
 
+  async loadHistory(): Promise<void> {
+    this.isLoading.set(true);
+    if (this.offlineQueue.isOnline()) {
+      this.http.get<DriverTaskItem[]>('/api/dispatch/my-tasks').subscribe({
+        next: (data) => {
+          const past = data.filter((t) => t.status === 'COMPLETED' || t.status === 'CANCELLED');
+          this.historyTasks.set(past);
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.isLoading.set(false);
+        },
+      });
+    } else {
+      this.isLoading.set(false);
+    }
+  }
+
+  prevHistoryPage(): void {
+    if (this.historyPage() > 1) {
+      this.historyPage.update((p) => p - 1);
+    }
+  }
+
+  nextHistoryPage(): void {
+    if (this.historyPage() < this.totalHistoryPages()) {
+      this.historyPage.update((p) => p + 1);
+    }
+  }
+
   async updateTaskStatus(
     task: DriverTaskItem,
     nextStatus: 'IN_PROGRESS' | 'COMPLETED',
   ): Promise<void> {
-    const updated: DriverTaskItem = { ...task, status: nextStatus };
-    this.tasks.update((list) => list.map((t) => (t.id === task.id ? updated : t)));
+    if (nextStatus === 'COMPLETED') {
+      this.tasks.update((list) => list.filter((t) => t.id !== task.id));
+      const completedItem: DriverTaskItem = { ...task, status: nextStatus };
+      this.historyTasks.update((list) => [completedItem, ...list]);
+    } else {
+      const updated: DriverTaskItem = { ...task, status: nextStatus };
+      this.tasks.update((list) => list.map((t) => (t.id === task.id ? updated : t)));
+    }
     await this.offlineCache.cacheDriverTasks(this.tasks());
 
     await this.offlineQueue.enqueue({
