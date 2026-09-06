@@ -184,3 +184,53 @@
     }
   }
 }
+
+/* 该壳当前在两套主题下都使用固定深色 Slate 背景。 */
+.driver-layout { color: var(--color-gray-100); }
+.driver-greeting .greeting-text { color: var(--color-gray-100); }
+.driver-avatar {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+.touch-btn.lang-btn,
+.touch-btn.lang-btn:hover {
+  background-color: var(--color-gray-700);
+  color: var(--color-gray-100);
+}
+.touch-btn.lang-btn:hover { border-color: var(--color-gray-100); }
+/* 局部重声明整条阴影，避免根元素 var() 已解析后仅改依赖变量却不生效。 */
+.driver-layout {
+  --border-focus: var(--color-gray-50);
+  --focus-ring-halo: var(--color-gray-900);
+  --focus-ring-primary: 0 0 0 2px var(--focus-ring-halo), 0 0 0 4px var(--border-focus);
+}
+
+@media (max-width: 600px) {
+  .driver-header {
+    height: auto;
+    min-height: 60px;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    padding-block: var(--space-12);
+  }
+  .header-user { flex: 1 1 100%; min-width: 0; }
+  .driver-greeting { min-width: 0; }
+  .driver-greeting .greeting-text,
+  .driver-greeting .app-tag {
+    overflow-wrap: anywhere;
+    line-height: var(--line-height-snug);
+  }
+  .header-actions {
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .touch-btn {
+    min-width: 44px;
+    min-height: 44px;
+    flex: 0 0 auto;
+    white-space: normal;
+  }
+}

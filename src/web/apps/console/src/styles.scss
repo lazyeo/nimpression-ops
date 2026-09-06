@@ -645,3 +645,27 @@ optgroup {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* 原 :focus-visible 保留；末尾规则补两层环，不覆盖业务 outline 以外的属性。 */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring-primary);
+}
+
+/* 比已有 .btn-primary:hover 更具体；按下态的文字颜色显式成对。 */
+.action-btn.btn-primary:active:not(:disabled),
+.table-btn.btn-primary:active:not(:disabled),
+.filter-card .filter-buttons .btn-filter.btn-primary:active:not(:disabled) {
+  background-color: var(--color-primary-active);
+  color: var(--color-primary-contrast);
+}
+
+/* 全局样式按真实组件标签限定，穿过组件宿主而不使用 ::ng-deep。 */
+nim-timesheet-heatmap-chart nim-base-chart .base-chart-container {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+nim-timesheet-heatmap-chart nim-base-chart .echarts-host {
+  background-color: transparent;
+}
