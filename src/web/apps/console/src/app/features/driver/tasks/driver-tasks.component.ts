@@ -51,6 +51,12 @@ export class DriverTasksComponent implements OnInit {
   readonly isLoading = signal<boolean>(true);
   readonly isUsingCache = signal<boolean>(false);
 
+  // Server-side pagination for active view
+  readonly activePage = signal<number>(1);
+  readonly activePageSize = 20;
+  readonly activeTotalCount = signal<number>(0);
+  readonly activeTotalPages = signal<number>(1);
+
   // Server-side pagination for history view
   readonly historyPage = signal<number>(1);
   readonly historyPageSize = 5;
@@ -76,41 +82,67 @@ export class DriverTasksComponent implements OnInit {
     if (tab === 'history') {
       void this.loadHistory(1);
     } else {
-      void this.loadTasks();
+      void this.loadTasks(1);
     }
   }
 
-  async loadTasks(): Promise<void> {
+  loadTasks(page = 1): void {
     if (this.activeTab() === 'history') {
-      await this.loadHistory(this.historyPage());
+      void this.loadHistory(this.historyPage());
       return;
     }
 
     this.isLoading.set(true);
+    this.activePage.set(page);
 
-    // Try loading from offline cache first
-    const cached = await this.offlineCache.getDriverTasks<DriverTaskItem>();
-    if (cached && cached.length > 0) {
-      this.tasks.set(cached);
-      this.isUsingCache.set(true);
+    // Try loading from offline cache asynchronously as fallback (page 1)
+    if (page === 1) {
+      void this.offlineCache.getDriverTasks<DriverTaskItem>().then((cached) => {
+        if (this.isLoading() && cached && cached.length > 0) {
+          this.tasks.set(cached);
+          this.activeTotalCount.set(cached.length);
+          this.activeTotalPages.set(1);
+          this.isUsingCache.set(true);
+        }
+      });
     }
 
     if (this.offlineQueue.isOnline()) {
-      this.http.get<PaginatedResult<DriverTaskItem>>('/api/dispatch/my-tasks?activeOnly=true&pageSize=50').subscribe({
-        next: async (data) => {
-          this.tasks.set(data.items || []);
-          this.isUsingCache.set(false);
-          this.isLoading.set(false);
-          await this.offlineCache.cacheDriverTasks(data.items || []);
-        },
-        error: () => {
-          // If request fails (e.g. backend offline), keep cached tasks
-          this.isLoading.set(false);
-          this.isUsingCache.set(true);
-        },
-      });
+      this.http
+        .get<PaginatedResult<DriverTaskItem>>(
+          `/api/dispatch/my-tasks?activeOnly=true&page=${page}&pageSize=${this.activePageSize}`,
+        )
+        .subscribe({
+          next: (data) => {
+            this.tasks.set(data.items || []);
+            this.activeTotalCount.set(data.totalCount || 0);
+            this.activeTotalPages.set(data.totalPages || 1);
+            this.isUsingCache.set(false);
+            this.isLoading.set(false);
+            if (page === 1) {
+              void this.offlineCache.cacheDriverTasks(data.items || []);
+            }
+          },
+          error: () => {
+            // If request fails (e.g. backend offline), keep cached tasks
+            this.isLoading.set(false);
+            this.isUsingCache.set(true);
+          },
+        });
     } else {
       this.isLoading.set(false);
+    }
+  }
+
+  prevActivePage(): void {
+    if (this.activePage() > 1) {
+      void this.loadTasks(this.activePage() - 1);
+    }
+  }
+
+  nextActivePage(): void {
+    if (this.activePage() < this.activeTotalPages()) {
+      void this.loadTasks(this.activePage() + 1);
     }
   }
 
@@ -153,6 +185,7 @@ export class DriverTasksComponent implements OnInit {
   ): Promise<void> {
     if (nextStatus === 'COMPLETED') {
       this.tasks.update((list) => list.filter((t) => t.id !== task.id));
+      this.activeTotalCount.update((count) => Math.max(0, count - 1));
       if (this.activeTab() === 'history') {
         void this.loadHistory(this.historyPage());
       }

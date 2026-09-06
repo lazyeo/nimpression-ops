@@ -22,8 +22,8 @@
       (click)="setTab('active')"
     >
       <span>{{ 'DRIVER.TAB_ACTIVE' | i18n }}</span>
-      @if (tasks().length > 0) {
-        <span class="tab-badge">{{ tasks().length }}</span>
+      @if (activeTotalCount() > 0) {
+        <span class="tab-badge">{{ activeTotalCount() }}</span>
       }
     </button>
     <button
@@ -117,6 +117,33 @@
           </div>
         }
       </div>
+
+      <!-- Active Tasks Pagination (shown when activeTotalPages > 1) -->
+      @if (activeTotalPages() > 1) {
+        <div class="history-pagination">
+          <span class="page-info">
+            {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: activePage(), total: activeTotalPages(), count: activeTotalCount() } }}
+          </span>
+          <div class="pagination-actions">
+            <button
+              type="button"
+              class="touch-page-btn"
+              [disabled]="activePage() <= 1"
+              (click)="prevActivePage()"
+            >
+              {{ 'COMMON.PREV' | i18n }}
+            </button>
+            <button
+              type="button"
+              class="touch-page-btn"
+              [disabled]="activePage() >= activeTotalPages()"
+              (click)="nextActivePage()"
+            >
+              {{ 'COMMON.NEXT' | i18n }}
+            </button>
+          </div>
+        </div>
+      }
     }
   }
 
