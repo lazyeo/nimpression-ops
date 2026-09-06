@@ -35,7 +35,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     httpMock.verify();
   });
 
-  it('loads active tasks by default with activeOnly=true and displays them', () => {
+  it('loads active tasks by default with activeOnly=true and displays them with totalCount', () => {
     const mockTasks: DriverTaskItem[] = [
       {
         id: 't-1',
@@ -48,12 +48,12 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&pageSize=50');
+    const req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
     req.flush({
       items: mockTasks,
       totalCount: 1,
       page: 1,
-      pageSize: 50,
+      pageSize: 20,
       totalPages: 1,
       hasPreviousPage: false,
       hasNextPage: false,
@@ -61,17 +61,91 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
 
     expect(component.activeTab()).toBe('active');
     expect(component.tasks().length).toBe(1);
+    expect(component.activeTotalCount()).toBe(1);
+    expect(component.tasks()[0].tripNo).toBe('TRIP-101');
+  });
+
+  it('R5 Requirement: paginates active tasks without silent truncation when totalCount exceeds pageSize', () => {
+    // Initial load: 52 active tasks across 3 pages (pageSize=20)
+    const mockActivePage1: DriverTaskItem[] = Array.from({ length: 20 }, (_, i) => ({
+      id: `act-${i + 1}`,
+      tripNo: `TRIP-${100 + i + 1}`,
+      status: 'ASSIGNED',
+      pickupLocation: `Pickup ${i + 1}`,
+      deliveryLocation: `Delivery ${i + 1}`,
+      scheduledTime: '2026-08-24T08:00:00Z',
+      vehiclePlate: `NIM-${100 + i}`,
+    }));
+
+    const mockActivePage2: DriverTaskItem[] = Array.from({ length: 20 }, (_, i) => ({
+      id: `act-${i + 21}`,
+      tripNo: `TRIP-${100 + i + 21}`,
+      status: 'IN_PROGRESS',
+      pickupLocation: `Pickup ${i + 21}`,
+      deliveryLocation: `Delivery ${i + 21}`,
+      scheduledTime: '2026-08-24T09:00:00Z',
+      vehiclePlate: `NIM-${120 + i}`,
+    }));
+
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: mockActivePage1,
+      totalCount: 52,
+      page: 1,
+      pageSize: 20,
+      totalPages: 3,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.tasks().length).toBe(20);
+    expect(component.activeTotalCount()).toBe(52);
+    expect(component.activeTotalPages()).toBe(3);
+    expect(component.activePage()).toBe(1);
+
+    // Navigate to page 2 of active tasks
+    component.nextActivePage();
+    const page2Req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=2&pageSize=20');
+    page2Req.flush({
+      items: mockActivePage2,
+      totalCount: 52,
+      page: 2,
+      pageSize: 20,
+      totalPages: 3,
+      hasPreviousPage: true,
+      hasNextPage: true,
+    });
+
+    expect(component.activePage()).toBe(2);
+    expect(component.tasks().length).toBe(20);
+    expect(component.tasks()[0].tripNo).toBe('TRIP-121');
+
+    // Navigate back to page 1
+    component.prevActivePage();
+    const page1Req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    page1Req.flush({
+      items: mockActivePage1,
+      totalCount: 52,
+      page: 1,
+      pageSize: 20,
+      totalPages: 3,
+      hasPreviousPage: false,
+      hasNextPage: true,
+    });
+
+    expect(component.activePage()).toBe(1);
+    expect(component.tasks().length).toBe(20);
     expect(component.tasks()[0].tripNo).toBe('TRIP-101');
   });
 
   it('switches to history tab and performs server-side pagination with activeOnly=false', () => {
     // Flush initial active tasks request
-    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&pageSize=50');
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
     initReq.flush({
       items: [],
       totalCount: 0,
       page: 1,
-      pageSize: 50,
+      pageSize: 20,
       totalPages: 1,
       hasPreviousPage: false,
       hasNextPage: false,
@@ -165,12 +239,12 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     };
 
     // Initial load in active tab
-    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&pageSize=50');
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
     initReq.flush({
       items: [activeItem],
       totalCount: 1,
       page: 1,
-      pageSize: 50,
+      pageSize: 20,
       totalPages: 1,
       hasPreviousPage: false,
       hasNextPage: false,
@@ -234,12 +308,12 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&pageSize=50');
+    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
     initialReq.flush({
       items: initialTasks,
       totalCount: 1,
       page: 1,
-      pageSize: 50,
+      pageSize: 20,
       totalPages: 1,
       hasPreviousPage: false,
       hasNextPage: false,
@@ -257,7 +331,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     // Wait for async offlineCache read to complete
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&pageSize=50');
+    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
     reloadReq.flush({
       items: [
         ...initialTasks,
@@ -273,7 +347,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       ],
       totalCount: 2,
       page: 1,
-      pageSize: 50,
+      pageSize: 20,
       totalPages: 1,
       hasPreviousPage: false,
       hasNextPage: false,
