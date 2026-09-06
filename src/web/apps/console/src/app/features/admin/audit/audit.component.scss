@@ -3,12 +3,21 @@
   padding: var(--space-24);
   max-width: 1600px;
   margin: 0 auto;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 1024px) {
+    padding: 0;
+  }
 }
 
 .audit-page {
   display: flex;
   flex-direction: column;
   gap: var(--space-24);
+  min-width: 0;
+  width: 100%;
 }
 
 .page-header {
@@ -147,10 +156,22 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  max-width: 100%;
+
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+    scrollbar-color: var(--text-muted) var(--bg-subtle);
+  }
 }
 
 .data-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
 

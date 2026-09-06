@@ -1,7 +1,16 @@
+:host {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .payroll-page {
   display: flex;
   flex-direction: column;
   gap: var(--space-24);
+  min-width: 0;
+  width: 100%;
 }
 
 .breadcrumb-back {

@@ -6,6 +6,10 @@
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
+
+  @media (max-width: 1024px) {
+    padding: 0;
+  }
 }
 
 .dispatch-page {

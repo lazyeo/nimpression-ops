@@ -88,86 +88,88 @@
   <!-- Content Table -->
   @else {
     <div class="table-container">
-      <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.PARTNER_CONTACTS_LIST_LABEL' | i18n">
-        <thead>
-          <tr>
-            <th class="th-name">{{ 'NOTIFICATIONS.COL_COMPANY_NAME' | i18n }}</th>
-            <th class="th-kind">{{ 'NOTIFICATIONS.COL_PARTNER_KIND' | i18n }}</th>
-            <th class="th-email">{{ 'NOTIFICATIONS.COL_EMAIL' | i18n }}</th>
-            <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
-            <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (partner of partners(); track partner.id) {
-            <tr (click)="openEditDialog(partner)">
-              <td class="cell-name">
-                <span class="company-title">{{ partner.companyName }}</span>
-              </td>
-              <td>
-                <span
-                  class="badge badge-kind"
-                  [class.kind-insurer]="partner.kind === 'Insurer'"
-                  [class.kind-maintenance]="partner.kind === 'Maintenance'"
-                  [class.kind-inspection]="partner.kind === 'Inspection'"
-                >
-                  @if (partner.kind === 'Insurer') {
-                    {{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}
-                  } @else if (partner.kind === 'Maintenance') {
-                    {{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}
-                  } @else {
-                    {{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}
-                  }
-                </span>
-              </td>
-              <td class="cell-email">{{ partner.email }}</td>
-              <td>
-                @if (partner.active) {
-                  <span class="status-indicator status-active">
-                    <span class="dot"></span>
-                    <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
-                  </span>
-                } @else {
-                  <span class="status-indicator status-inactive">
-                    <span class="dot"></span>
-                    <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
-                  </span>
-                }
-              </td>
-              <td class="cell-actions" (click)="$event.stopPropagation()">
-                <div class="action-buttons">
-                  <button
-                    type="button"
-                    class="btn-row-action"
-                    (click)="openEditDialog(partner)"
-                    [attr.title]="'COMMON.EDIT' | i18n"
-                  >
-                    <span>{{ 'COMMON.EDIT' | i18n }}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn-row-action"
-                    [class.btn-deactivate]="partner.active"
-                    (click)="togglePartnerActive(partner, $event)"
-                  >
-                    <span>{{ (partner.active ? 'NOTIFICATIONS.DEACTIVATE' : 'NOTIFICATIONS.ACTIVATE') | i18n }}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn-row-action btn-delete"
-                    (click)="confirmDelete(partner, $event)"
-                    [attr.title]="'COMMON.DELETE' | i18n"
-                  >
-                    <span>{{ 'COMMON.DELETE' | i18n }}</span>
-                  </button>
-                </div>
-              </td>
+      <div class="table-responsive">
+        <table class="data-table" [attr.aria-label]="'NOTIFICATIONS.PARTNER_CONTACTS_LIST_LABEL' | i18n">
+          <thead>
+            <tr>
+              <th class="th-name">{{ 'NOTIFICATIONS.COL_COMPANY_NAME' | i18n }}</th>
+              <th class="th-kind">{{ 'NOTIFICATIONS.COL_PARTNER_KIND' | i18n }}</th>
+              <th class="th-email">{{ 'NOTIFICATIONS.COL_EMAIL' | i18n }}</th>
+              <th class="th-status">{{ 'COMMON.STATUS' | i18n }}</th>
+              <th class="th-actions">{{ 'COMMON.ACTIONS' | i18n }}</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (partner of partners(); track partner.id) {
+              <tr (click)="openEditDialog(partner)">
+                <td class="cell-name">
+                  <span class="company-title">{{ partner.companyName }}</span>
+                </td>
+                <td>
+                  <span
+                    class="badge badge-kind"
+                    [class.kind-insurer]="partner.kind === 'Insurer'"
+                    [class.kind-maintenance]="partner.kind === 'Maintenance'"
+                    [class.kind-inspection]="partner.kind === 'Inspection'"
+                  >
+                    @if (partner.kind === 'Insurer') {
+                      {{ 'NOTIFICATIONS.KIND_INSURER' | i18n }}
+                    } @else if (partner.kind === 'Maintenance') {
+                      {{ 'NOTIFICATIONS.KIND_MAINTENANCE' | i18n }}
+                    } @else {
+                      {{ 'NOTIFICATIONS.KIND_INSPECTION' | i18n }}
+                    }
+                  </span>
+                </td>
+                <td class="cell-email">{{ partner.email }}</td>
+                <td>
+                  @if (partner.active) {
+                    <span class="status-indicator status-active">
+                      <span class="dot"></span>
+                      <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
+                    </span>
+                  } @else {
+                    <span class="status-indicator status-inactive">
+                      <span class="dot"></span>
+                      <span>{{ 'NEWS.INACTIVE' | i18n }}</span>
+                    </span>
+                  }
+                </td>
+                <td class="cell-actions" (click)="$event.stopPropagation()">
+                  <div class="action-buttons">
+                    <button
+                      type="button"
+                      class="btn-row-action"
+                      (click)="openEditDialog(partner)"
+                      [attr.title]="'COMMON.EDIT' | i18n"
+                    >
+                      <span>{{ 'COMMON.EDIT' | i18n }}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn-row-action"
+                      [class.btn-deactivate]="partner.active"
+                      (click)="togglePartnerActive(partner, $event)"
+                    >
+                      <span>{{ (partner.active ? 'NOTIFICATIONS.DEACTIVATE' : 'NOTIFICATIONS.ACTIVATE') | i18n }}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn-row-action btn-delete"
+                      (click)="confirmDelete(partner, $event)"
+                      [attr.title]="'COMMON.DELETE' | i18n"
+                    >
+                      <span>{{ 'COMMON.DELETE' | i18n }}</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   }
 
