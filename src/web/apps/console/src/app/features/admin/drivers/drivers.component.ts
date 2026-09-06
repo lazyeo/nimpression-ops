@@ -1,16 +1,20 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
 import { CommonModule, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { AuthService } from '../../../core/auth/auth.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { AreaLookupOption, DriversService } from './services/drivers.service';
@@ -34,6 +38,8 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 })
 export class DriversComponent implements OnInit {
   private readonly driversService = inject(DriversService);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
 
   // States
@@ -120,6 +126,17 @@ export class DriversComponent implements OnInit {
     this.loadAreas();
     this.loadDrivers();
     this.loadLicenceAlerts();
+
+    // SignalR Realtime Invalidation Subscription
+    this.realtime.invalidation$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((msg) => msg.kind.startsWith('driver.') || msg.kind.startsWith('area.')),
+      )
+      .subscribe(() => {
+        this.loadDrivers(false);
+        this.loadLicenceAlerts();
+      });
   }
 
   isAdmin(): boolean {

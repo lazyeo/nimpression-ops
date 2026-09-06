@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { OfflineCacheService } from '../../../core/offline/offline-cache.service';
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface ShiftStatusDto {
@@ -26,6 +29,8 @@ export interface ShiftStatusDto {
 export class DriverShiftsComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly offlineCache = inject(OfflineCacheService);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly offlineQueue = inject(OfflineQueueService);
 
   readonly currentShift = signal<ShiftStatusDto>({
@@ -36,6 +41,16 @@ export class DriverShiftsComponent implements OnInit {
 
   ngOnInit(): void {
     void this.loadShiftStatus();
+
+    // SignalR Realtime Invalidation Subscription
+    this.realtime.invalidation$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((msg) => msg.kind.startsWith('shift.') || msg.kind.startsWith('timesheet.')),
+      )
+      .subscribe(() => {
+        void this.loadShiftStatus();
+      });
   }
 
   async loadShiftStatus(): Promise<void> {

@@ -8,6 +8,7 @@ import { VehiclesComponent } from './vehicles.component';
 import { VehiclesService } from './services/vehicles.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { PaginatedResult, VehicleDetailDto, VehicleSummaryDto } from './models/vehicles.models';
 
 describe('VehiclesComponent', () => {
@@ -260,5 +261,19 @@ describe('VehiclesComponent', () => {
 
     expect(component.formError()).toContain('already exists');
     expect(component.isCreateModalOpen()).toBe(true);
+  });
+
+  it('should automatically reload vehicles when SignalR invalidation signal arrives for vehicle entity', () => {
+    fixture.detectChanges();
+    expect(vehiclesServiceMock.getVehicles).toHaveBeenCalledTimes(1);
+
+    const realtime = TestBed.inject(RealtimeService);
+    (realtime as any).invalidationSubject.next({
+      kind: 'vehicle.service_threshold_reached',
+      entityId: 'veh-1',
+      occurredAt: new Date().toISOString(),
+    });
+
+    expect(vehiclesServiceMock.getVehicles).toHaveBeenCalledTimes(2);
   });
 });

@@ -7,6 +7,7 @@ import { OfflineCacheService } from '../../../core/offline/offline-cache.service
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { FormatService } from '../../../core/i18n/format.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 
 describe('DriverPayslipsComponent (Offline view & currency/date formatting)', () => {
   let component: DriverPayslipsComponent;
@@ -54,5 +55,60 @@ describe('DriverPayslipsComponent (Offline view & currency/date formatting)', ()
 
     expect(component.payslips().length).toBe(1);
     expect(component.payslips()[0].netPay).toBe(1450.0);
+  });
+
+  it('re-queries payslips API when SignalR invalidation arrives for payslip', async () => {
+    const initialReq = httpMock.expectOne('/api/payroll/my-payslips');
+    initialReq.flush([
+      {
+        id: 'ps-1',
+        payPeriod: '2026-W34',
+        payDate: '2026-08-25',
+        grossPay: 1850.0,
+        netPay: 1450.0,
+        deductions: 400.0,
+        totalHours: 42.5,
+        hourlyRate: 35.0,
+        currency: 'NZD',
+      },
+    ]);
+
+    const realtime = TestBed.inject(RealtimeService);
+    (realtime as any).invalidationSubject.next({
+      kind: 'payslip.finalised',
+      entityId: 'ps-2',
+      occurredAt: new Date().toISOString(),
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const reloadReq = httpMock.expectOne('/api/payroll/my-payslips');
+    reloadReq.flush([
+      {
+        id: 'ps-1',
+        payPeriod: '2026-W34',
+        payDate: '2026-08-25',
+        grossPay: 1850.0,
+        netPay: 1450.0,
+        deductions: 400.0,
+        totalHours: 42.5,
+        hourlyRate: 35.0,
+        currency: 'NZD',
+      },
+      {
+        id: 'ps-2',
+        payPeriod: '2026-W35',
+        payDate: '2026-09-01',
+        grossPay: 1950.0,
+        netPay: 1550.0,
+        deductions: 400.0,
+        totalHours: 45.0,
+        hourlyRate: 35.0,
+        currency: 'NZD',
+      },
+    ]);
+
+    expect(component.payslips().length).toBe(2);
+    expect(component.payslips()[1].id).toBe('ps-2');
   });
 });

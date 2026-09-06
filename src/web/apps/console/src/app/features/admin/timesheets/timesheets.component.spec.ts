@@ -7,6 +7,7 @@ import { TimesheetsComponent } from './timesheets.component';
 import { TimesheetsService } from './services/timesheets.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { FormatService } from '../../../core/i18n/format.service';
+import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { ShiftEntryDto, TimesheetSummaryDto } from './models/timesheets.models';
 
 describe('TimesheetsComponent', () => {
@@ -164,5 +165,21 @@ describe('TimesheetsComponent', () => {
     component.correctionReason = 'DriverForgotToClockOut';
     component.submitCorrection();
     expect(timesheetsService.adminCorrectShift).toHaveBeenCalled();
+  });
+
+  it('should automatically reload timesheets and summary when SignalR invalidation signal arrives', () => {
+    fixture.detectChanges();
+    expect(timesheetsService.getTimesheets).toHaveBeenCalledTimes(1);
+    expect(timesheetsService.getTimesheetSummary).toHaveBeenCalledTimes(1);
+
+    const realtime = TestBed.inject(RealtimeService);
+    (realtime as any).invalidationSubject.next({
+      kind: 'shift.completed',
+      entityId: 'shift-1',
+      occurredAt: new Date().toISOString(),
+    });
+
+    expect(timesheetsService.getTimesheets).toHaveBeenCalledTimes(2);
+    expect(timesheetsService.getTimesheetSummary).toHaveBeenCalledTimes(2);
   });
 });
