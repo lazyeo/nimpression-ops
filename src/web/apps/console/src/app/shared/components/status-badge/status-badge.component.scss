@@ -1,89 +1,147 @@
-:host {
-  display: inline-flex;
-  vertical-align: middle;
-}
-
+/* 完整替换 status-badge.component.scss；不新增 TypeScript API。 */
+:host { display: inline-flex; vertical-align: middle; }
 .nim-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-4, 4px);
-  font-family: var(--font-family-sans, -apple-system, BlinkMacSystemFont, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  line-height: var(--line-height-tight, 1.25);
-  border-radius: var(--radius-full, 9999px);
+  gap: var(--space-4);
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  border-radius: var(--radius-full);
   white-space: nowrap;
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast, 0.15s ease), color var(--transition-fast, 0.15s ease), border-color var(--transition-fast, 0.15s ease);
-
-  /* Sizes */
-  &.size-sm {
-    font-size: var(--font-size-xs, 0.75rem);
-    padding: 1px var(--space-6, 6px);
-  }
-
-  &.size-md {
-    font-size: var(--font-size-xs, 0.75rem);
-    padding: 2px var(--space-8, 8px);
-  }
-
-  &.size-lg {
-    font-size: var(--font-size-sm, 0.8125rem);
-    padding: var(--space-4, 4px) var(--space-12, 12px);
-  }
-
-  /* Semantic Variants */
-  &.badge-success {
-    background-color: var(--badge-success-bg);
-    color: var(--badge-success-text);
-    border-color: var(--badge-success-border);
-  }
-
-  &.badge-warning {
-    background-color: var(--badge-warning-bg);
-    color: var(--badge-warning-text);
-    border-color: var(--badge-warning-border);
-  }
-
-  &.badge-danger {
-    background-color: var(--badge-danger-bg);
-    color: var(--badge-danger-text);
-    border-color: var(--badge-danger-border);
-  }
-
-  &.badge-info {
-    background-color: var(--badge-info-bg);
-    color: var(--badge-info-text);
-    border-color: var(--badge-info-border);
-  }
-
-  &.badge-neutral {
-    background-color: var(--badge-neutral-bg);
-    color: var(--badge-neutral-text);
-    border-color: var(--badge-neutral-border);
-  }
-
-  &.badge-purple {
-    background-color: var(--badge-purple-bg);
-    color: var(--badge-purple-text);
-    border-color: var(--badge-purple-border);
-  }
-
-  &.badge-orange {
-    background-color: var(--badge-orange-bg);
-    color: var(--badge-orange-text);
-    border-color: var(--badge-orange-border);
-  }
-
+  &.size-sm { font-size: var(--font-size-xs); padding: 1px var(--space-6); }
+  &.size-md { font-size: var(--font-size-xs); padding: 2px var(--space-8); }
+  &.size-lg { font-size: var(--font-size-sm); padding: var(--space-4) var(--space-12); }
   .badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: currentColor;
-    flex-shrink: 0;
+    width: 6px; height: 6px; flex-shrink: 0;
+    border-radius: 50%; background-color: currentColor;
   }
+  .badge-content { display: inline-flex; align-items: center; }
+}
 
-  .badge-content {
-    display: inline-flex;
-    align-items: center;
-  }
+/* success：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-success,
+:host(.appearance-tint) .nim-status-badge.badge-success {
+  background-color: var(--badge-success-bg);
+  border-color: var(--badge-success-border);
+  color: var(--badge-success-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-success {
+  background-color: var(--badge-success-text);
+  border-color: var(--badge-success-text);
+  color: var(--badge-success-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-success {
+  background-color: transparent;
+  border-color: var(--badge-success-text);
+  color: var(--badge-success-text);
+}
+
+/* warning：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-warning,
+:host(.appearance-tint) .nim-status-badge.badge-warning {
+  background-color: var(--badge-warning-bg);
+  border-color: var(--badge-warning-border);
+  color: var(--badge-warning-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-warning {
+  background-color: var(--badge-warning-text);
+  border-color: var(--badge-warning-text);
+  color: var(--badge-warning-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-warning {
+  background-color: transparent;
+  border-color: var(--badge-warning-text);
+  color: var(--badge-warning-text);
+}
+
+/* danger：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-danger,
+:host(.appearance-tint) .nim-status-badge.badge-danger {
+  background-color: var(--badge-danger-bg);
+  border-color: var(--badge-danger-border);
+  color: var(--badge-danger-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-danger {
+  background-color: var(--badge-danger-text);
+  border-color: var(--badge-danger-text);
+  color: var(--badge-danger-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-danger {
+  background-color: transparent;
+  border-color: var(--badge-danger-text);
+  color: var(--badge-danger-text);
+}
+
+/* info：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-info,
+:host(.appearance-tint) .nim-status-badge.badge-info {
+  background-color: var(--badge-info-bg);
+  border-color: var(--badge-info-border);
+  color: var(--badge-info-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-info {
+  background-color: var(--badge-info-text);
+  border-color: var(--badge-info-text);
+  color: var(--badge-info-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-info {
+  background-color: transparent;
+  border-color: var(--badge-info-text);
+  color: var(--badge-info-text);
+}
+
+/* neutral：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-neutral,
+:host(.appearance-tint) .nim-status-badge.badge-neutral {
+  background-color: var(--badge-neutral-bg);
+  border-color: var(--badge-neutral-border);
+  color: var(--badge-neutral-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-neutral {
+  background-color: var(--badge-neutral-text);
+  border-color: var(--badge-neutral-text);
+  color: var(--badge-neutral-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-neutral {
+  background-color: transparent;
+  border-color: var(--badge-neutral-text);
+  color: var(--badge-neutral-text);
+}
+
+/* purple：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-purple,
+:host(.appearance-tint) .nim-status-badge.badge-purple {
+  background-color: var(--badge-purple-bg);
+  border-color: var(--badge-purple-border);
+  color: var(--badge-purple-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-purple {
+  background-color: var(--badge-purple-text);
+  border-color: var(--badge-purple-text);
+  color: var(--badge-purple-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-purple {
+  background-color: transparent;
+  border-color: var(--badge-purple-text);
+  color: var(--badge-purple-text);
+}
+
+/* orange：默认 tint，显式 appearance-tint 也适用。 */
+.nim-status-badge.badge-orange,
+:host(.appearance-tint) .nim-status-badge.badge-orange {
+  background-color: var(--badge-orange-bg);
+  border-color: var(--badge-orange-border);
+  color: var(--badge-orange-text);
+}
+:host(.appearance-solid) .nim-status-badge.badge-orange {
+  background-color: var(--badge-orange-text);
+  border-color: var(--badge-orange-text);
+  color: var(--badge-orange-bg);
+}
+:host(.appearance-outline) .nim-status-badge.badge-orange {
+  background-color: transparent;
+  border-color: var(--badge-orange-text);
+  color: var(--badge-orange-text);
 }
