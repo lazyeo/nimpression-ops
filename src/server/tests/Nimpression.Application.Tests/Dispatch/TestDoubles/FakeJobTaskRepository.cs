@@ -175,12 +175,16 @@ public sealed class FakeJobTaskRepository : IJobTaskRepository
 
     private static readonly JobTaskStatus[] ActiveStatuses = [JobTaskStatus.Assigned, JobTaskStatus.Acknowledged, JobTaskStatus.InProgress];
 
-    public Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, CancellationToken cancellationToken = default)
+    public Task<PagedResult<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         var query = Tasks.Values.Where(t => t.DriverId == driverId);
         if (activeOnly == true)
         {
             query = query.Where(t => ActiveStatuses.Contains(t.Status));
+        }
+        else if (activeOnly == false)
+        {
+            query = query.Where(t => !ActiveStatuses.Contains(t.Status));
         }
 
         if (status.HasValue)
@@ -188,8 +192,14 @@ public sealed class FakeJobTaskRepository : IJobTaskRepository
             query = query.Where(t => t.Status == status.Value);
         }
 
+        var totalCount = query.Count();
+        var effectivePage = Math.Max(1, page);
+        var effectivePageSize = Math.Clamp(pageSize, 1, 100);
+
         var list = query
             .OrderByDescending(t => t.ScheduledFor)
+            .Skip((effectivePage - 1) * effectivePageSize)
+            .Take(effectivePageSize)
             .Select(t => new DriverTaskItemDto(
                 t.Id,
                 t.Ref,
@@ -209,7 +219,7 @@ public sealed class FakeJobTaskRepository : IJobTaskRepository
                 "VEH-01"))
             .ToList();
 
-        return Task.FromResult(list);
+        return Task.FromResult(new PagedResult<DriverTaskItemDto>(list, totalCount, effectivePage, effectivePageSize));
     }
 
     public Task<DashboardMetricsDto> GetDashboardMetricsAsync(CancellationToken cancellationToken = default)

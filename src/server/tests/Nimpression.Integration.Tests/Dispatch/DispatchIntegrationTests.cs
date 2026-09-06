@@ -446,10 +446,11 @@ public class DispatchIntegrationTests : IAsyncLifetime
         // Assert: 严格只能查出 Driver A 自己的任务，绝对拿不到 Driver B 的任务
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Should().HaveCount(2);
-        result.Value.Select(x => x.Id).Should().Contain(new[] { taskA1.Id, taskA2.Id });
-        result.Value.Select(x => x.Id).Should().NotContain(taskB1.Id);
-        result.Value.Should().AllSatisfy(x =>
+        result.Value!.Items.Should().HaveCount(2);
+        result.Value.TotalCount.Should().Be(2);
+        result.Value.Items.Select(x => x.Id).Should().Contain(new[] { taskA1.Id, taskA2.Id });
+        result.Value.Items.Select(x => x.Id).Should().NotContain(taskB1.Id);
+        result.Value.Items.Should().AllSatisfy(x =>
         {
             x.Status.Should().Be("ASSIGNED");
             x.PickupLocation.Should().NotBeNullOrWhiteSpace();
@@ -556,9 +557,80 @@ public class DispatchIntegrationTests : IAsyncLifetime
         // Assert: Only activeTask and inProgressTask should be returned
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Should().HaveCount(2);
-        result.Value.Select(x => x.Id).Should().Contain(new[] { activeTask.Id, inProgressTask.Id });
-        result.Value.Select(x => x.Id).Should().NotContain(new[] { completedTask.Id, cancelledTask.Id });
+        result.Value!.Items.Should().HaveCount(2);
+        result.Value.Items.Select(x => x.Id).Should().Contain(new[] { activeTask.Id, inProgressTask.Id });
+        result.Value.Items.Select(x => x.Id).Should().NotContain(new[] { completedTask.Id, cancelledTask.Id });
+    }
+
+    [Fact]
+    public async Task GetMyJobTasks_ActiveOnlyFalse_FiltersOutActiveTasksAndReturnsHistoricalOnly()
+    {
+        await using var context = _fixture.CreateDbContext();
+        var baseEntities = await SeedBaseEntitiesAsync();
+        var scheduledTime = new DateTimeOffset(2026, 8, 24, 8, 0, 0, TimeSpan.Zero);
+
+        // 1 Active task (Assigned)
+        var activeTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-ACT2"),
+            "Active Delivery",
+            baseEntities.Area.Id,
+            scheduledTime,
+            baseEntities.User.Id,
+            "Active description",
+            TaskPriority.High,
+            new Kilometres(15m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+
+        // 1 Completed task
+        var completedTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-CMP2"),
+            "Completed Delivery",
+            baseEntities.Area.Id,
+            scheduledTime.AddHours(2),
+            baseEntities.User.Id,
+            "Completed description",
+            TaskPriority.Low,
+            new Kilometres(30m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+        completedTask.Acknowledge(scheduledTime.AddMinutes(10));
+        completedTask.Start(scheduledTime.AddMinutes(20), new Kilometres(100m));
+        completedTask.Complete(scheduledTime.AddMinutes(50), new Kilometres(30m), new Kilometres(130m));
+
+        // 1 Cancelled task
+        var cancelledTask = new JobTask(
+            Guid.NewGuid(),
+            GenerateRef("TSK-CNC2"),
+            "Cancelled Delivery",
+            baseEntities.Area.Id,
+            scheduledTime.AddHours(3),
+            baseEntities.User.Id,
+            "Cancelled description",
+            TaskPriority.Low,
+            new Kilometres(10m),
+            baseEntities.Driver.Id,
+            baseEntities.Vehicle.Id);
+        cancelledTask.Cancel("Cancelled by dispatcher", scheduledTime.AddMinutes(5));
+
+        await context.JobTasks.AddRangeAsync(activeTask, completedTask, cancelledTask);
+        await context.SaveChangesAsync();
+
+        var repo = new JobTaskRepository(context);
+        var currentUser = new TestCurrentUser(baseEntities.User.Id, UserRole.Driver);
+        var handler = new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQueryHandler(repo, currentUser);
+
+        // Act: Request activeOnly = false
+        var result = await handler.Handle(new Nimpression.Application.Features.Dispatch.Queries.GetMyJobTasks.GetMyJobTasksQuery(ActiveOnly: false), CancellationToken.None);
+
+        // Assert: Only completedTask and cancelledTask should be returned
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Items.Should().HaveCount(2);
+        result.Value.Items.Select(x => x.Id).Should().Contain(new[] { completedTask.Id, cancelledTask.Id });
+        result.Value.Items.Select(x => x.Id).Should().NotContain(activeTask.Id);
     }
 
     #endregion
