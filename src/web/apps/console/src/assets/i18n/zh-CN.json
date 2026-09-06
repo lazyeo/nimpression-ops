@@ -85,7 +85,10 @@
     "PROFILE": "个人中心",
     "LOGOUT": "退出登录",
     "MAIN_NAV": "主导航",
-    "DRIVER_NAV": "司机导航"
+    "DRIVER_NAV": "司机导航",
+    "TOGGLE_MENU": "切换导航菜单",
+    "OPEN_MENU": "打开导航菜单",
+    "CLOSE_MENU": "关闭导航菜单"
   },
   "AUTH": {
     "LOGIN_TITLE": "登录 Nimpression 运营中台",
