@@ -329,7 +329,7 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
     {
         JobTaskStatus.Draft => "PENDING",
         JobTaskStatus.Assigned => "ASSIGNED",
-        JobTaskStatus.Acknowledged => "ASSIGNED",
+        JobTaskStatus.Acknowledged => "ACKNOWLEDGED",
         JobTaskStatus.InProgress => "IN_PROGRESS",
         JobTaskStatus.Completed => "COMPLETED",
         JobTaskStatus.Cancelled => "CANCELLED",
