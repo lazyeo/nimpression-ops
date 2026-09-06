@@ -121,4 +121,21 @@ describe('LanguageSwitchComponent', () => {
     const group = el.querySelector('.lang-switch-group');
     expect(group?.classList.contains('size-sm')).toBe(true);
   });
+
+  it('supports keyboard focus and activation via standard button semantics', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const buttons = el.querySelectorAll('button.lang-btn');
+    const zhButton = buttons[1] as HTMLButtonElement;
+
+    // Focus on button
+    zhButton.focus();
+    expect(document.activeElement).toBe(zhButton);
+
+    // Keyboard click / dispatch enter/space
+    zhButton.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    zhButton.click();
+    fixture.detectChanges();
+
+    expect(component.currentLang()).toBe('zh-CN');
+  });
 });
