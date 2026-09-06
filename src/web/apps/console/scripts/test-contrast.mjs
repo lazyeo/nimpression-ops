@@ -10,14 +10,16 @@ import {
   compositeColors,
   getContrastRatio,
   runBenchmarkSelfCheck,
-  evaluateThemeContrast,
   runContrastGuard,
 } from './check-contrast.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
-const themePath = path.join(projectRoot, 'src', 'styles', 'theme.scss');
+const fixturesDir = path.join(__dirname, 'fixtures');
+const preW22Fixture = path.join(fixturesDir, 'theme-pre-w22.scss');
+const postW22Fixture = path.join(fixturesDir, 'theme-post-w22.scss');
+const liveThemePath = path.join(projectRoot, 'src', 'styles', 'theme.scss');
 
 let totalTests = 0;
 let passedTests = 0;
@@ -161,18 +163,20 @@ assert(
   'Composites 50% white over black to 128 gray',
 );
 
-// 6. AC 1: Evaluation on current theme.scss (must report exactly 1 failure: --text-inverse on --color-primary = 4.10:1)
-console.log('\n[Suite 6] Current theme.scss Verification (AC 1)');
-const currentResult = runContrastGuard(themePath);
-assert(!currentResult.success, 'Current theme.scss fails contrast guard as expected');
+// 6. Pre-W22 Regression Fixture (R1: Catches historical 4.10:1 accident)
+console.log('\n[Suite 6] Pre-W22 Historical Incident Regression (Frozen Fixture)');
+const preW22Result = runContrastGuard(preW22Fixture);
+assert(!preW22Result.success, 'Pre-W22 fixture fails contrast guard as expected');
 assert(
-  currentResult.violations.length === 1,
-  `Current theme.scss has exactly 1 violation (found ${currentResult.violations.length})`,
+  preW22Result.violations.length === 1,
+  `Pre-W22 fixture has exactly 1 violation (found ${preW22Result.violations.length})`,
 );
-if (currentResult.violations.length === 1) {
-  const v = currentResult.violations[0];
-  assert(v.fgToken === '--text-inverse', 'Violation fgToken is --text-inverse');
-  assert(v.bgToken === '--color-primary', 'Violation bgToken is --color-primary');
+if (preW22Result.violations.length === 1) {
+  const v = preW22Result.violations[0];
+  assert(
+    v.fgToken === '--text-inverse' && v.bgToken === '--color-primary',
+    'Violation is --text-inverse on --color-primary',
+  );
   assert(
     v.formattedRatio === '4.10:1',
     `Violation contrast ratio is 4.10:1 (got ${v.formattedRatio})`,
@@ -180,29 +184,21 @@ if (currentResult.violations.length === 1) {
   assert(v.theme === 'light', 'Violation occurs in light theme');
 }
 
-// 7. AC 2: Evaluation on fixed theme.scss (--color-primary: #006eb6)
-console.log('\n[Suite 7] Fixed theme.scss Verification (AC 2)');
-const origThemeContent = fs.readFileSync(themePath, 'utf8');
-const fixedThemeContent = origThemeContent.replace(
-  '--color-primary: #0284c7;',
-  '--color-primary: #006eb6;',
-);
-const tmpFixedPath = path.join('/tmp', `theme-fixed-${Date.now()}.scss`);
-fs.writeFileSync(tmpFixedPath, fixedThemeContent, 'utf8');
+// 7. Post-W22 Fixed Theme Fixture (R2: Fully compliant theme passes with exit 0)
+console.log('\n[Suite 7] Post-W22 Fixed Theme Fixture (Frozen Fixture)');
+const postW22Result = runContrastGuard(postW22Fixture);
+assert(postW22Result.success, 'Post-W22 fixture passes contrast guard with exit code 0');
+assert(postW22Result.violations.length === 0, 'Post-W22 fixture has 0 violations');
 
-const fixedResult = runContrastGuard(tmpFixedPath);
-fs.unlinkSync(tmpFixedPath);
-assert(fixedResult.success, 'Fixed theme.scss passes contrast guard with exit code 0');
-assert(fixedResult.violations.length === 0, 'Fixed theme.scss has 0 violations');
-
-// 8. AC 3: Reverse mutation test (mutating badge text to match bg in clean copy)
+// 8. Reverse Mutation Verification (AC 3: Mutating badge text in clean copy)
 console.log('\n[Suite 8] Reverse Mutation Verification (AC 3)');
-const mutatedThemeContent = fixedThemeContent.replace(
+const postW22Content = fs.readFileSync(postW22Fixture, 'utf8');
+const mutatedContent = postW22Content.replace(
   '--badge-success-text: #166534;',
   '--badge-success-text: #bbf7d0;',
 );
 const tmpMutatedPath = path.join('/tmp', `theme-mutated-${Date.now()}.scss`);
-fs.writeFileSync(tmpMutatedPath, mutatedThemeContent, 'utf8');
+fs.writeFileSync(tmpMutatedPath, mutatedContent, 'utf8');
 
 const mutatedResult = runContrastGuard(tmpMutatedPath);
 fs.unlinkSync(tmpMutatedPath);
@@ -213,8 +209,17 @@ assert(
 );
 if (mutatedResult.violations.length === 1) {
   const v = mutatedResult.violations[0];
-  assert(v.fgToken === '--badge-success-text', 'Mutated violation is on --badge-success-text');
-  assert(v.bgToken === '--badge-success-bg', 'Mutated violation is against --badge-success-bg');
+  assert(
+    v.fgToken === '--badge-success-text' && v.bgToken === '--badge-success-bg',
+    'Mutated violation is on --badge-success-text vs --badge-success-bg',
+  );
+}
+
+// 9. Live Theme Sanity Check
+console.log('\n[Suite 9] Live Workspace theme.scss Sanity Check');
+if (fs.existsSync(liveThemePath)) {
+  const liveResult = runContrastGuard(liveThemePath);
+  assert(liveResult.success, 'Live workspace theme.scss passes contrast guard with 0 violations');
 }
 
 console.log(
