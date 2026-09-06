@@ -114,6 +114,12 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       data: HOURS,
       splitArea: {
         show: true,
+        areaStyle: {
+          color:
+            theme.name === 'dark'
+              ? ['rgba(255, 255, 255, 0.02)', 'transparent']
+              : ['rgba(0, 0, 0, 0.02)', 'transparent'],
+        },
       },
       axisLine: {
         lineStyle: {
@@ -132,6 +138,12 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
       data: weekdaysList,
       splitArea: {
         show: true,
+        areaStyle: {
+          color:
+            theme.name === 'dark'
+              ? ['rgba(255, 255, 255, 0.02)', 'transparent']
+              : ['rgba(0, 0, 0, 0.02)', 'transparent'],
+        },
       },
       axisLine: {
         lineStyle: {
@@ -168,6 +180,11 @@ export function buildTimesheetHeatmapOptions(params: TimesheetHeatmapOptionsPara
         name: seriesNameText,
         type: 'heatmap',
         data: seriesData,
+        itemStyle: {
+          borderColor: theme.name === 'dark' ? '#0F172A' : '#FFFFFF',
+          borderWidth: 1,
+          borderRadius: 2,
+        },
         label: {
           show: !isMobile && maxHours > 0,
           formatter: (p: any) => {
