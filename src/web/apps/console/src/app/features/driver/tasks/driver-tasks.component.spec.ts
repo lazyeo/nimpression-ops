@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DriverTasksComponent, DriverTaskItem } from './driver-tasks.component';
@@ -9,6 +9,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 
 describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
+  let fixture: ComponentFixture<DriverTasksComponent>;
   let component: DriverTasksComponent;
   let httpMock: HttpTestingController;
 
@@ -25,7 +26,7 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(DriverTasksComponent);
+    fixture = TestBed.createComponent(DriverTasksComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
@@ -355,5 +356,143 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
 
     expect(component.tasks().length).toBe(2);
     expect(component.tasks()[1].tripNo).toBe('TRIP-102');
+  });
+
+  it('AC 3: when task status is ASSIGNED, UI renders Accept action and must NOT render Start action', async () => {
+    const assignedTask: DriverTaskItem = {
+      id: 't-assigned-1',
+      tripNo: 'TRIP-301',
+      status: 'ASSIGNED',
+      pickupLocation: 'Depot North',
+      deliveryLocation: 'Depot South',
+      scheduledTime: '2026-08-24T08:00:00Z',
+      vehiclePlate: 'NIM-123',
+    };
+
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: [assignedTask],
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
+
+    fixture.detectChanges();
+
+    const rootEl = fixture.nativeElement as HTMLElement;
+    const acceptBtn = rootEl.querySelector('.btn-accept') as HTMLButtonElement;
+    const startBtn = rootEl.querySelector('.btn-start') as HTMLButtonElement;
+    const completeBtn = rootEl.querySelector('.btn-complete') as HTMLButtonElement;
+
+    // Must render Accept button
+    expect(acceptBtn).not.toBeNull();
+    // Must NOT render Start or Complete button
+    expect(startBtn).toBeNull();
+    expect(completeBtn).toBeNull();
+
+    // Clicking Accept updates status to ACKNOWLEDGED and enqueues status update
+    acceptBtn.click();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(component.tasks()[0].status).toBe('ACKNOWLEDGED');
+
+    const postReq = httpMock.expectOne('/api/dispatch/tasks/t-assigned-1/status');
+    expect(postReq.request.body).toEqual({ status: 'ACKNOWLEDGED' });
+    postReq.flush({});
+  });
+
+  it('when task status is ACKNOWLEDGED, UI renders Start action (not Accept); clicking it transitions to IN_PROGRESS', async () => {
+    const ackTask: DriverTaskItem = {
+      id: 't-ack-1',
+      tripNo: 'TRIP-302',
+      status: 'ACKNOWLEDGED',
+      pickupLocation: 'Depot North',
+      deliveryLocation: 'Depot South',
+      scheduledTime: '2026-08-24T08:00:00Z',
+      vehiclePlate: 'NIM-123',
+    };
+
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: [ackTask],
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
+
+    fixture.detectChanges();
+
+    const rootEl = fixture.nativeElement as HTMLElement;
+    const acceptBtn = rootEl.querySelector('.btn-accept') as HTMLButtonElement;
+    const startBtn = rootEl.querySelector('.btn-start') as HTMLButtonElement;
+    const completeBtn = rootEl.querySelector('.btn-complete') as HTMLButtonElement;
+
+    // Must render Start button
+    expect(startBtn).not.toBeNull();
+    // Must NOT render Accept or Complete button
+    expect(acceptBtn).toBeNull();
+    expect(completeBtn).toBeNull();
+
+    // Clicking Start updates status to IN_PROGRESS and enqueues status update
+    startBtn.click();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(component.tasks()[0].status).toBe('IN_PROGRESS');
+
+    const postReq = httpMock.expectOne('/api/dispatch/tasks/t-ack-1/status');
+    expect(postReq.request.body).toEqual({ status: 'IN_PROGRESS' });
+    postReq.flush({});
+  });
+
+  it('when task status is IN_PROGRESS, UI renders Complete action; clicking it transitions to COMPLETED', async () => {
+    const inProgressTask: DriverTaskItem = {
+      id: 't-prog-1',
+      tripNo: 'TRIP-303',
+      status: 'IN_PROGRESS',
+      pickupLocation: 'Depot North',
+      deliveryLocation: 'Depot South',
+      scheduledTime: '2026-08-24T08:00:00Z',
+      vehiclePlate: 'NIM-123',
+    };
+
+    const initReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    initReq.flush({
+      items: [inProgressTask],
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
+
+    fixture.detectChanges();
+
+    const rootEl = fixture.nativeElement as HTMLElement;
+    const acceptBtn = rootEl.querySelector('.btn-accept') as HTMLButtonElement;
+    const startBtn = rootEl.querySelector('.btn-start') as HTMLButtonElement;
+    const completeBtn = rootEl.querySelector('.btn-complete') as HTMLButtonElement;
+
+    // Must render Complete button
+    expect(completeBtn).not.toBeNull();
+    // Must NOT render Accept or Start button
+    expect(acceptBtn).toBeNull();
+    expect(startBtn).toBeNull();
+
+    // Clicking Complete removes from active tasks and enqueues status update
+    completeBtn.click();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(component.tasks().length).toBe(0);
+
+    const postReq = httpMock.expectOne('/api/dispatch/tasks/t-prog-1/status');
+    expect(postReq.request.body).toEqual({ status: 'COMPLETED' });
+    postReq.flush({});
   });
 });

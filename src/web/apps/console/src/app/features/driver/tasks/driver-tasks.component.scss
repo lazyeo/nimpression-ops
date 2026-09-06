@@ -260,12 +260,18 @@
     transform: translateY(1px);
   }
 
+  &.btn-accept,
   &.btn-start {
     background-color: var(--color-primary);
     color: var(--color-primary-contrast);
 
     &:hover {
       background-color: var(--color-primary-hover);
+    }
+
+    &:active {
+      background-color: var(--color-primary-active);
+      color: var(--color-primary-contrast);
     }
   }
 
@@ -351,7 +357,8 @@
   color: var(--badge-warning-text);
   border: 1px solid var(--badge-warning-border);
 }
-.status-pill.status-in_progress {
+.status-pill.status-in_progress,
+.status-pill.status-acknowledged {
   background-color: var(--badge-info-bg);
   color: var(--badge-info-text);
   border: 1px solid var(--badge-info-border);

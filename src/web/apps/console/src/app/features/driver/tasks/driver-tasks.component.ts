@@ -13,7 +13,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 export interface DriverTaskItem {
   id: string;
   tripNo: string;
-  status: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'ASSIGNED' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   pickupLocation: string;
   deliveryLocation: string;
   scheduledTime: string;
@@ -181,7 +181,7 @@ export class DriverTasksComponent implements OnInit {
 
   async updateTaskStatus(
     task: DriverTaskItem,
-    nextStatus: 'IN_PROGRESS' | 'COMPLETED',
+    nextStatus: 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'COMPLETED',
   ): Promise<void> {
     if (nextStatus === 'COMPLETED') {
       this.tasks.update((list) => list.filter((t) => t.id !== task.id));
