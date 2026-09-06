@@ -207,8 +207,6 @@
   "DASHBOARD": {
     "TITLE": "运营管理仪表盘",
     "SUBTITLE": "Nimpression Ops — 智能车队监控、工时热力与运营多维图表 (F14)",
-    "RENDER_DURATION": "渲染耗时: {ms} ms",
-    "RENDER_PASS": "PASS (<500ms)",
     "THEME_DARK": "暗黑主题",
     "THEME_LIGHT": "明亮主题",
     "REFRESH_DATA": "刷新数据",

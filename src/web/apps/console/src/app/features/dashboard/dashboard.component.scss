@@ -59,26 +59,6 @@
     gap: var(--space-8);
     flex-wrap: wrap;
 
-    .perf-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-6);
-      background: var(--badge-success-bg);
-      color: var(--badge-success-text);
-      border: 1px solid var(--badge-success-border);
-      padding: var(--space-4) var(--space-10);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-
-      .perf-status-tag {
-        font-weight: var(--font-weight-bold);
-        background: var(--color-success);
-        color: var(--color-success-contrast);
-        padding: 1px 5px;
-        border-radius: var(--radius-full);
-      }
-    }
-
     .btn-ctrl {
       padding: var(--space-6) var(--space-12);
       background: var(--bg-surface);

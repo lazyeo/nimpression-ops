@@ -10,15 +10,6 @@
     </div>
 
     <div class="header-controls">
-      <!-- Performance measure live indicator (F14.8) -->
-      @if (dataService.lastRenderDurationMs() > 0) {
-        <div class="perf-badge" [title]="'DASHBOARD.RENDER_PASS' | i18n">
-          <nim-icon name="zap" [size]="14" />
-          {{ 'DASHBOARD.RENDER_DURATION' | i18n: { ms: dataService.lastRenderDurationMs() } }}
-          <span class="perf-status-tag">{{ 'DASHBOARD.RENDER_PASS' | i18n }}</span>
-        </div>
-      }
-
       <button
         type="button"
         class="btn-ctrl"

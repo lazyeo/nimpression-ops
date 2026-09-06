@@ -207,8 +207,6 @@
   "DASHBOARD": {
     "TITLE": "Operations Dashboard",
     "SUBTITLE": "Nimpression Ops — Fleet monitoring, timesheets, and multidimensional charts (F14)",
-    "RENDER_DURATION": "Render Time: {ms} ms",
-    "RENDER_PASS": "PASS (<500ms)",
     "THEME_DARK": "Dark Theme",
     "THEME_LIGHT": "Light Theme",
     "REFRESH_DATA": "Refresh Data",
