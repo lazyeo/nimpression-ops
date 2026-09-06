@@ -268,15 +268,20 @@ public sealed class DispatchEndpoints : IEndpointModule
         // R1: 司机端专用本人派发任务列表查询
         group.MapGet("/my-tasks", async (
             [FromQuery] JobTaskStatus? status,
+            [FromQuery] bool? activeOnly,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new GetMyJobTasksQuery(status), ct);
+            var result = await sender.Send(new GetMyJobTasksQuery(status, activeOnly), ct);
             return result.ToHttpResult();
         })
         .RequireAuthorization(AuthorizationPolicies.DriverOnly)
         .WithName("GetMyJobTasks")
-        .WithSummary("司机端查询本人名下派发任务列表（严格由 JWT 解析身份，禁止客户端传入 driverId）");
+        .WithSummary("司机端查询本人名下派发任务列表（严格由 JWT 解析身份，禁止客户端传入 driverId）")
+        .WithDescription(
+            "司机端查询本人派发任务列表。当 activeOnly 为 true 时，仅返回未完成的活跃状态任务（Assigned, Acknowledged, InProgress）。" +
+            "当同时传入 activeOnly 与 status 时，将同时应用两者过滤（即 status 必须在活跃状态集合中才会有结果）。" +
+            "当 activeOnly 为 null 或 false 时，不限制必须为活跃状态。");
 
         // 司机端任务状态统一更新接口
         group.MapPost("/tasks/{id:guid}/status", async (
