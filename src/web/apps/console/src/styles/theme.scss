@@ -1,77 +1,86 @@
-/* ==========================================================================
-   Theme & Semantic Colors - Single Source of Truth
-   Complies with W14 Specification (R1) & WCAG AA Contrast (>= 4.5:1)
-   Supports Light & Dark modes via prefers-color-scheme & [data-theme]
-   ========================================================================== */
-
+/* Nimpression Ops — 完整颜色层替换提案
+ * 替换目标：src/web/apps/console/src/styles/theme.scss（不是 tokens.scss）。
+ * 保留现有 82 个颜色层属性名；tokens.scss 的 58 个结构令牌保持原样。
+ * 本文件含 84 个生效属性：原 82 个 + 2 个有具体接入补丁的新增项。
+ * 延续旧提案已给出的 sRGB 色值；固定 Slate 灰阶不改为主题别名，避免反转司机/侧栏底色。
+ * 对比度重新计算见 contrast-fixes.md；不沿用旧交付“60 项通过”的未附证据结论。
+ * Assigned / Acknowledged = warning；InProgress = info，主令牌集不改变语义。
+ */
 /* ── Light Mode (Default) ─────────────────────────────────────────────────── */
 :root,
 [data-theme='light'] {
   /* Surfaces & Backgrounds */
-  --bg-app: #f8fafc;
-  --bg-body: #f8fafc;
+  /* 新增 --color-primary-active：src/web/apps/console/src/styles.scss 的
+   * .action-btn.btn-primary:active、.table-btn.btn-primary:active，以及
+   * dispatch.component.scss 的 .btn-primary:active 使用；接入见 token-adoption.md。 */
+  --color-primary-active: #004984;
+  /* 新增 --focus-ring-halo：本主题 --focus-ring-primary 使用；
+   * styles.scss 的 :focus-visible 与现有输入框 :focus 消费双层焦点阴影。 */
+  --focus-ring-halo: #ffffff;
+  --bg-app: #f3f5f8;
+  --bg-body: #f3f5f8;
   --bg-surface: #ffffff;
-  --bg-subtle: #f1f5f9;
-  --bg-muted: #e2e8f0;
+  --bg-subtle: #f7fafd;
+  --bg-muted: #eaedf1;
   --bg-card: #ffffff;
-  --bg-hover: #f8fafc;
-  --bg-active: #f1f5f9;
-  --bg-backdrop: rgba(15, 23, 42, 0.5);
+  --bg-hover: #ecf1f5;
+  --bg-active: #e2e8ef;
+  --bg-backdrop: rgba(13, 18, 23, 0.55);
 
   /* Text & Foreground */
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-primary: #171f27;
+  --text-secondary: #48515b;
+  --text-muted: #606a75;
   --text-inverse: #ffffff;
-  --text-disabled: #94a3b8;
+  --text-disabled: #9299a2;
 
   /* Borders & Dividers */
-  --border-subtle: #f1f5f9;
-  --border-default: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-focus: #0284c7;
+  --border-subtle: #e4e8ed;
+  --border-default: #d2d7de;
+  --border-strong: #8a929a;
+  --border-focus: #006eb6;
 
   /* Brand / Primary */
-  --color-primary: #0284c7;
-  --color-primary-hover: #0369a1;
-  --color-primary-subtle: #f0f9ff;
-  --color-primary-text: #0369a1;
+  --color-primary: #006eb1;
+  --color-primary-hover: #00599a;
+  --color-primary-subtle: #e6f6ff;
+  --color-primary-text: #005fa3;
   --color-primary-contrast: #ffffff;
-  --focus-ring-primary: 0 0 0 2px rgba(2, 132, 199, 0.25);
+  --focus-ring-primary: 0 0 0 2px var(--focus-ring-halo), 0 0 0 4px var(--border-focus);
 
   /* Semantic - Success */
-  --color-success: #16a34a;
-  --color-success-hover: #15803d;
-  --color-success-subtle: #f0fdf4;
-  --color-success-text: #15803d;
+  --color-success: #218543;
+  --color-success-hover: #00702f;
+  --color-success-subtle: #e6fae9;
+  --color-success-text: #006326;
   --color-success-contrast: #ffffff;
 
   /* Semantic - Warning */
-  --color-warning: #d97706;
-  --color-warning-hover: #b45309;
-  --color-warning-subtle: #fffbeb;
-  --color-warning-text: #92400e;
-  --color-warning-contrast: #ffffff;
+  --color-warning: #c07c00;
+  --color-warning-hover: #eda839; // 深色前景要求 hover 加亮，沿用旧提案已有的琥珀亮档。
+  --color-warning-subtle: #fff1dc;
+  --color-warning-text: #7d4000;
+  --color-warning-contrast: #2a1b03;
 
   /* Semantic - Danger / Error */
-  --color-danger: #dc2626;
-  --color-danger-hover: #b91c1c;
-  --color-danger-subtle: #fef2f2;
-  --color-danger-text: #991b1b;
+  --color-danger: #c13832;
+  --color-danger-hover: #a91d1d;
+  --color-danger-subtle: #ffeae6;
+  --color-danger-text: #9f1c1c;
   --color-danger-contrast: #ffffff;
 
   /* Semantic - Info */
-  --color-info: #0284c7;
-  --color-info-hover: #0369a1;
-  --color-info-subtle: #f0f9ff;
-  --color-info-text: #0369a1;
+  --color-info: #007f8d;
+  --color-info-hover: #006a78;
+  --color-info-subtle: #e1f9fc;
+  --color-info-text: #006773;
   --color-info-contrast: #ffffff;
 
   /* Semantic - Neutral */
-  --color-neutral: #475569;
-  --color-neutral-hover: #334155;
-  --color-neutral-subtle: #f1f5f9;
-  --color-neutral-text: #334155;
+  --color-neutral: #535c66;
+  --color-neutral-hover: #3f4750;
+  --color-neutral-subtle: #eff2f6;
+  --color-neutral-text: #48515b;
   --color-neutral-contrast: #ffffff;
 
   /* Neutral Slate Scale */
@@ -91,25 +100,25 @@
   --color-success-300: #4ade80;
 
   /* Status Badges - Semantic Mapping */
-  --badge-success-bg: #dcfce7;
-  --badge-success-text: #166534;
-  --badge-success-border: #bbf7d0;
+  --badge-success-bg: #e2efe7;
+  --badge-success-text: #006326;
+  --badge-success-border: #bce3c3;
 
-  --badge-warning-bg: #fef3c7;
-  --badge-warning-text: #92400e;
-  --badge-warning-border: #fde68a;
+  --badge-warning-bg: #f7eede;
+  --badge-warning-text: #7d4000;
+  --badge-warning-border: #f2d2a6;
 
-  --badge-danger-bg: #fee2e2;
-  --badge-danger-text: #991b1b;
-  --badge-danger-border: #fecaca;
+  --badge-danger-bg: #f7e5e4;
+  --badge-danger-text: #9f1c1c;
+  --badge-danger-border: #ffc4bc;
 
-  --badge-info-bg: #e0f2fe;
-  --badge-info-text: #075985;
-  --badge-info-border: #bae6fd;
+  --badge-info-bg: #deeef0;
+  --badge-info-text: #006773;
+  --badge-info-border: #b0e2e8;
 
-  --badge-neutral-bg: #f1f5f9;
-  --badge-neutral-text: #475569;
-  --badge-neutral-border: #e2e8f0;
+  --badge-neutral-bg: #eeeff0;
+  --badge-neutral-text: #48515b;
+  --badge-neutral-border: #d7dbe1;
 
   --badge-purple-bg: #f3e8ff;
   --badge-purple-text: #6b21a8;
@@ -123,63 +132,70 @@
 /* ── Dark Mode (Media Query fallback) ─────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg-app: #090d16;
-    --bg-body: #090d16;
-    --bg-surface: #0f172a;
-    --bg-subtle: #1e293b;
-    --bg-muted: #334155;
-    --bg-card: #0f172a;
-    --bg-hover: #1e293b;
-    --bg-active: #334155;
-    --bg-backdrop: rgba(0, 0, 0, 0.75);
+    /* 新增 --color-primary-active：src/web/apps/console/src/styles.scss 的
+     * .action-btn.btn-primary:active、.table-btn.btn-primary:active，以及
+     * dispatch.component.scss 的 .btn-primary:active 使用；接入见 token-adoption.md。 */
+    --color-primary-active: #8ccbff;
+    /* 新增 --focus-ring-halo：本主题 --focus-ring-primary 使用；
+     * styles.scss 的 :focus-visible 与现有输入框 :focus 消费双层焦点阴影。 */
+    --focus-ring-halo: #0b1015;
+    --bg-app: #0d1217;
+    --bg-body: #0d1217;
+    --bg-surface: #161c22;
+    --bg-subtle: #1b2128;
+    --bg-muted: #252d35;
+    --bg-card: #161c22;
+    --bg-hover: #252d35;
+    --bg-active: #2f3841;
+    --bg-backdrop: rgba(5, 8, 11, 0.72);
 
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --text-inverse: #0f172a;
-    --text-disabled: #64748b;
+    --text-primary: #f1f4f6;
+    --text-secondary: #bfc5cc;
+    --text-muted: #929ba5;
+    --text-inverse: #0d1217;
+    --text-disabled: #677079;
 
-    --border-subtle: #1e293b;
-    --border-default: #334155;
-    --border-strong: #475569;
-    --border-focus: #38bdf8;
+    --border-subtle: #2c343c;
+    --border-default: #3d4650;
+    --border-strong: #67717d;
+    --border-focus: #63b9fe;
 
-    --color-primary: #38bdf8;
-    --color-primary-hover: #0284c7;
-    --color-primary-subtle: rgba(56, 189, 248, 0.15);
-    --color-primary-text: #7dd3fc;
-    --color-primary-contrast: #0f172a;
-    --focus-ring-primary: 0 0 0 2px rgba(56, 189, 248, 0.35);
+    --color-primary: #499fe3;
+    --color-primary-hover: #6bb9f8;
+    --color-primary-subtle: rgba(73, 159, 227, 0.14);
+    --color-primary-text: #6fb8f5;
+    --color-primary-contrast: #06131e;
+    --focus-ring-primary: 0 0 0 2px var(--focus-ring-halo), 0 0 0 4px var(--border-focus);
 
-    --color-success: #4ade80;
-    --color-success-hover: #22c55e;
-    --color-success-subtle: rgba(74, 222, 128, 0.15);
-    --color-success-text: #86efac;
-    --color-success-contrast: #0f172a;
+    --color-success: #4cb86a;
+    --color-success-hover: #6fd087;
+    --color-success-subtle: rgba(76, 184, 106, 0.14);
+    --color-success-text: #74cd89;
+    --color-success-contrast: #07150a;
 
-    --color-warning: #fbbf24;
-    --color-warning-hover: #f59e0b;
-    --color-warning-subtle: rgba(251, 191, 36, 0.15);
-    --color-warning-text: #fde68a;
-    --color-warning-contrast: #0f172a;
+    --color-warning: #d48e00;
+    --color-warning-hover: #eda839; // 深色前景要求 hover 加亮，沿用旧提案已有的琥珀亮档。
+    --color-warning-subtle: rgba(212, 142, 0, 0.16);
+    --color-warning-text: #e8a846;
+    --color-warning-contrast: #1e1100;
 
-    --color-danger: #f87171;
-    --color-danger-hover: #ef4444;
-    --color-danger-subtle: rgba(248, 113, 113, 0.15);
-    --color-danger-text: #fca5a5;
-    --color-danger-contrast: #0f172a;
+    --color-danger: #eb776c;
+    --color-danger-hover: #ff9488;
+    --color-danger-subtle: rgba(235, 119, 108, 0.14);
+    --color-danger-text: #fe9488;
+    --color-danger-contrast: #1d0c0a;
 
-    --color-info: #60a5fa;
-    --color-info-hover: #3b82f6;
-    --color-info-subtle: rgba(96, 165, 250, 0.15);
-    --color-info-text: #93c5fd;
-    --color-info-contrast: #0f172a;
+    --color-info: #1db2c0;
+    --color-info-hover: #4fccd9;
+    --color-info-subtle: rgba(29, 178, 192, 0.14);
+    --color-info-text: #55c9d6;
+    --color-info-contrast: #06171a;
 
-    --color-neutral: #94a3b8;
-    --color-neutral-hover: #cbd5e1;
-    --color-neutral-subtle: rgba(148, 163, 184, 0.15);
-    --color-neutral-text: #cbd5e1;
-    --color-neutral-contrast: #0f172a;
+    --color-neutral: #9199a3;
+    --color-neutral-hover: #b0b7bf;
+    --color-neutral-subtle: rgba(145, 153, 163, 0.14);
+    --color-neutral-text: #b0b7bf;
+    --color-neutral-contrast: #0d1217;
 
     /* Neutral Slate Scale */
     --color-gray-50: #f8fafc;
@@ -197,95 +213,102 @@
     --color-primary-400: #38bdf8;
     --color-success-300: #4ade80;
 
-    --badge-success-bg: rgba(34, 197, 94, 0.18);
-    --badge-success-text: #86efac;
-    --badge-success-border: rgba(34, 197, 94, 0.35);
+    --badge-success-bg: #213b30;
+    --badge-success-text: #74cd89;
+    --badge-success-border: rgba(76, 184, 106, 0.38);
 
-    --badge-warning-bg: rgba(245, 158, 11, 0.18);
-    --badge-warning-text: #fde68a;
-    --badge-warning-border: rgba(245, 158, 11, 0.35);
+    --badge-warning-bg: #3c331b;
+    --badge-warning-text: #e8a846;
+    --badge-warning-border: rgba(212, 142, 0, 0.40);
 
-    --badge-danger-bg: rgba(239, 68, 68, 0.18);
-    --badge-danger-text: #fca5a5;
-    --badge-danger-border: rgba(239, 68, 68, 0.35);
+    --badge-danger-bg: #412e31;
+    --badge-danger-text: #fe9488;
+    --badge-danger-border: rgba(235, 119, 108, 0.38);
 
-    --badge-info-bg: rgba(56, 189, 248, 0.18);
-    --badge-info-text: #7dd3fc;
-    --badge-info-border: rgba(56, 189, 248, 0.35);
+    --badge-info-bg: #173a42;
+    --badge-info-text: #55c9d6;
+    --badge-info-border: rgba(29, 178, 192, 0.38);
 
-    --badge-neutral-bg: rgba(148, 163, 184, 0.18);
-    --badge-neutral-text: #cbd5e1;
-    --badge-neutral-border: rgba(148, 163, 184, 0.3);
+    --badge-neutral-bg: #2a3037;
+    --badge-neutral-text: #b0b7bf;
+    --badge-neutral-border: rgba(145, 153, 163, 0.32);
 
-    --badge-purple-bg: rgba(168, 85, 247, 0.18);
+    --badge-purple-bg: #302648;
     --badge-purple-text: #d8b4fe;
-    --badge-purple-border: rgba(168, 85, 247, 0.35);
+    --badge-purple-border: #49306d;
 
-    --badge-orange-bg: rgba(249, 115, 22, 0.18);
+    --badge-orange-bg: #3f2c20;
     --badge-orange-text: #fdba74;
-    --badge-orange-border: rgba(249, 115, 22, 0.35);
+    --badge-orange-border: #653a1e;
   }
 }
 
 /* ── Dark Mode (Explicit data-theme="dark" attribute) ─────────────────────── */
 [data-theme='dark'] {
-  --bg-app: #090d16;
-  --bg-body: #090d16;
-  --bg-surface: #0f172a;
-  --bg-subtle: #1e293b;
-  --bg-muted: #334155;
-  --bg-card: #0f172a;
-  --bg-hover: #1e293b;
-  --bg-active: #334155;
-  --bg-backdrop: rgba(0, 0, 0, 0.75);
+  /* 新增 --color-primary-active：src/web/apps/console/src/styles.scss 的
+   * .action-btn.btn-primary:active、.table-btn.btn-primary:active，以及
+   * dispatch.component.scss 的 .btn-primary:active 使用；接入见 token-adoption.md。 */
+  --color-primary-active: #8ccbff;
+  /* 新增 --focus-ring-halo：本主题 --focus-ring-primary 使用；
+   * styles.scss 的 :focus-visible 与现有输入框 :focus 消费双层焦点阴影。 */
+  --focus-ring-halo: #0b1015;
+  --bg-app: #0d1217;
+  --bg-body: #0d1217;
+  --bg-surface: #161c22;
+  --bg-subtle: #1b2128;
+  --bg-muted: #252d35;
+  --bg-card: #161c22;
+  --bg-hover: #252d35;
+  --bg-active: #2f3841;
+  --bg-backdrop: rgba(5, 8, 11, 0.72);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-inverse: #0f172a;
-  --text-disabled: #64748b;
+  --text-primary: #f1f4f6;
+  --text-secondary: #bfc5cc;
+  --text-muted: #929ba5;
+  --text-inverse: #0d1217;
+  --text-disabled: #677079;
 
-  --border-subtle: #1e293b;
-  --border-default: #334155;
-  --border-strong: #475569;
-  --border-focus: #38bdf8;
+  --border-subtle: #2c343c;
+  --border-default: #3d4650;
+  --border-strong: #67717d;
+  --border-focus: #63b9fe;
 
-  --color-primary: #38bdf8;
-  --color-primary-hover: #0284c7;
-  --color-primary-subtle: rgba(56, 189, 248, 0.15);
-  --color-primary-text: #7dd3fc;
-  --color-primary-contrast: #0f172a;
-  --focus-ring-primary: 0 0 0 2px rgba(56, 189, 248, 0.35);
+  --color-primary: #499fe3;
+  --color-primary-hover: #6bb9f8;
+  --color-primary-subtle: rgba(73, 159, 227, 0.14);
+  --color-primary-text: #6fb8f5;
+  --color-primary-contrast: #06131e;
+  --focus-ring-primary: 0 0 0 2px var(--focus-ring-halo), 0 0 0 4px var(--border-focus);
 
-  --color-success: #4ade80;
-  --color-success-hover: #22c55e;
-  --color-success-subtle: rgba(74, 222, 128, 0.15);
-  --color-success-text: #86efac;
-  --color-success-contrast: #0f172a;
+  --color-success: #4cb86a;
+  --color-success-hover: #6fd087;
+  --color-success-subtle: rgba(76, 184, 106, 0.14);
+  --color-success-text: #74cd89;
+  --color-success-contrast: #07150a;
 
-  --color-warning: #fbbf24;
-  --color-warning-hover: #f59e0b;
-  --color-warning-subtle: rgba(251, 191, 36, 0.15);
-  --color-warning-text: #fde68a;
-  --color-warning-contrast: #0f172a;
+  --color-warning: #d48e00;
+  --color-warning-hover: #eda839; // 深色前景要求 hover 加亮，沿用旧提案已有的琥珀亮档。
+  --color-warning-subtle: rgba(212, 142, 0, 0.16);
+  --color-warning-text: #e8a846;
+  --color-warning-contrast: #1e1100;
 
-  --color-danger: #f87171;
-  --color-danger-hover: #ef4444;
-  --color-danger-subtle: rgba(248, 113, 113, 0.15);
-  --color-danger-text: #fca5a5;
-  --color-danger-contrast: #0f172a;
+  --color-danger: #eb776c;
+  --color-danger-hover: #ff9488;
+  --color-danger-subtle: rgba(235, 119, 108, 0.14);
+  --color-danger-text: #fe9488;
+  --color-danger-contrast: #1d0c0a;
 
-  --color-info: #60a5fa;
-  --color-info-hover: #3b82f6;
-  --color-info-subtle: rgba(96, 165, 250, 0.15);
-  --color-info-text: #93c5fd;
-  --color-info-contrast: #0f172a;
+  --color-info: #1db2c0;
+  --color-info-hover: #4fccd9;
+  --color-info-subtle: rgba(29, 178, 192, 0.14);
+  --color-info-text: #55c9d6;
+  --color-info-contrast: #06171a;
 
-  --color-neutral: #94a3b8;
-  --color-neutral-hover: #cbd5e1;
-  --color-neutral-subtle: rgba(148, 163, 184, 0.15);
-  --color-neutral-text: #cbd5e1;
-  --color-neutral-contrast: #0f172a;
+  --color-neutral: #9199a3;
+  --color-neutral-hover: #b0b7bf;
+  --color-neutral-subtle: rgba(145, 153, 163, 0.14);
+  --color-neutral-text: #b0b7bf;
+  --color-neutral-contrast: #0d1217;
 
   /* Neutral Slate Scale */
   --color-gray-50: #f8fafc;
@@ -303,31 +326,65 @@
   --color-primary-400: #38bdf8;
   --color-success-300: #4ade80;
 
-  --badge-success-bg: rgba(34, 197, 94, 0.18);
-  --badge-success-text: #86efac;
-  --badge-success-border: rgba(34, 197, 94, 0.35);
+  --badge-success-bg: #213b30;
+  --badge-success-text: #74cd89;
+  --badge-success-border: rgba(76, 184, 106, 0.38);
 
-  --badge-warning-bg: rgba(245, 158, 11, 0.18);
-  --badge-warning-text: #fde68a;
-  --badge-warning-border: rgba(245, 158, 11, 0.35);
+  --badge-warning-bg: #3c331b;
+  --badge-warning-text: #e8a846;
+  --badge-warning-border: rgba(212, 142, 0, 0.40);
 
-  --badge-danger-bg: rgba(239, 68, 68, 0.18);
-  --badge-danger-text: #fca5a5;
-  --badge-danger-border: rgba(239, 68, 68, 0.35);
+  --badge-danger-bg: #412e31;
+  --badge-danger-text: #fe9488;
+  --badge-danger-border: rgba(235, 119, 108, 0.38);
 
-  --badge-info-bg: rgba(56, 189, 248, 0.18);
-  --badge-info-text: #7dd3fc;
-  --badge-info-border: rgba(56, 189, 248, 0.35);
+  --badge-info-bg: #173a42;
+  --badge-info-text: #55c9d6;
+  --badge-info-border: rgba(29, 178, 192, 0.38);
 
-  --badge-neutral-bg: rgba(148, 163, 184, 0.18);
-  --badge-neutral-text: #cbd5e1;
-  --badge-neutral-border: rgba(148, 163, 184, 0.3);
+  --badge-neutral-bg: #2a3037;
+  --badge-neutral-text: #b0b7bf;
+  --badge-neutral-border: rgba(145, 153, 163, 0.32);
 
-  --badge-purple-bg: rgba(168, 85, 247, 0.18);
+  --badge-purple-bg: #302648;
   --badge-purple-text: #d8b4fe;
-  --badge-purple-border: rgba(168, 85, 247, 0.35);
+  --badge-purple-border: #49306d;
 
-  --badge-orange-bg: rgba(249, 115, 22, 0.18);
+  --badge-orange-bg: #3f2c20;
   --badge-orange-text: #fdba74;
-  --badge-orange-border: rgba(249, 115, 22, 0.35);
+  --badge-orange-border: #653a1e;
 }
+
+/*
+未经业务确认，启用前须确认
+
+以下整块默认关闭。确认范围：仅 Assigned 与 InProgress；Acknowledged、High、
+Overdue 及其他 warning/info 使用者不交换。绝不能在全局 21 个徽章令牌中对调 warning/info 的六个属性。
+
+接入前提（本轮不改模板）：真实 status-badge.component.html 的既有 span.nim-status-badge
+须由集成方增加 [attr.data-task-status]="status()"。Angular [status] 输入不会自动映射为
+DOM 属性，因此未增加该绑定时，以下前两条不会生效。该钩子仅供业务确认后的实施；
+不改 VARIANT_LOOKUP，不增加组件 input。保留三形态在最后使用的主题值。
+司机端后两条使用当前真实模板已有的动态类，须先接入 contrast-fixes.md 的司机状态令牌补丁。移除本段外层注释即可整块启用/关闭样式。
+
+.nim-status-badge[data-task-status='Assigned'] {
+  --badge-warning-bg: var(--badge-info-bg);
+  --badge-warning-text: var(--badge-info-text);
+  --badge-warning-border: var(--badge-info-border);
+}
+.nim-status-badge[data-task-status='InProgress'] {
+  --badge-info-bg: var(--badge-warning-bg);
+  --badge-info-text: var(--badge-warning-text);
+  --badge-info-border: var(--badge-warning-border);
+}
+.driver-page .status-pill.status-assigned {
+  --badge-warning-bg: var(--badge-info-bg);
+  --badge-warning-text: var(--badge-info-text);
+  --badge-warning-border: var(--badge-info-border);
+}
+.driver-page .status-pill.status-in_progress {
+  --badge-info-bg: var(--badge-warning-bg);
+  --badge-info-text: var(--badge-warning-text);
+  --badge-info-border: var(--badge-warning-border);
+}
+*/

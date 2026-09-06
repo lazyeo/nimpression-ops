@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -14,13 +14,32 @@ import { DARK_THEME, LIGHT_THEME } from '../../../shared/charts/theme/chart-them
 
 describe('DashboardDataService & F14.8 Performance Benchmark', () => {
   let service: DashboardDataService;
+  let originalMatchMedia: typeof window.matchMedia;
 
   beforeEach(() => {
+    originalMatchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => true,
+    })) as any;
+    document.documentElement.removeAttribute('data-theme');
+
     TestBed.configureTestingModule({
       providers: [DashboardDataService, provideHttpClient(), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(DashboardDataService);
+  });
+
+  afterEach(() => {
+    window.matchMedia = originalMatchMedia;
+    document.documentElement.removeAttribute('data-theme');
   });
 
   it('should initialize with default states and light theme when no dark mode is detected', () => {

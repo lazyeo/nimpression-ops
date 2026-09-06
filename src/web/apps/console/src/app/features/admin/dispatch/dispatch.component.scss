@@ -663,3 +663,29 @@ textarea.input-control {
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
 }
+
+.btn-primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+  color: var(--color-primary-contrast);
+}
+
+@media (min-width: 1024px) and (max-width: 1600px) {
+  :host { padding-inline: var(--space-16); }
+  .data-table th,
+  .data-table td { padding-inline: var(--space-8); }
+  .data-table td:nth-child(2) { white-space: normal; }
+  .title-cell { min-width: 0; max-inline-size: 30ch; }
+  .task-title,
+  .task-area {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: var(--line-height-snug);
+  }
+  /* 第七列是当前模板的状态列；不改变组件内部 span 的封装样式。 */
+  .data-table td:nth-child(7) { white-space: normal; }
+  .data-table td:nth-child(7) nim-status-badge { display: flex; width: fit-content; }
+  .data-table td:nth-child(7) nim-status-badge + nim-status-badge { margin-top: var(--space-4); }
+  .data-table td { line-height: var(--line-height-snug); }
+}
+/* 继续保留横向滚动；只改滚动条颜色，避免用 overflow:hidden 隐藏缺陷。 */
+.table-responsive { scrollbar-color: var(--text-muted) var(--bg-subtle); }
