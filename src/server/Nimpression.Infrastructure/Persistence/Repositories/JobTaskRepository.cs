@@ -256,7 +256,9 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
             (int)(referenceTime - x.ScheduledFor).TotalMinutes)).ToList();
     }
 
-    public async Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, CancellationToken cancellationToken = default)
+    private static readonly JobTaskStatus[] ActiveStatuses = [JobTaskStatus.Assigned, JobTaskStatus.Acknowledged, JobTaskStatus.InProgress];
+
+    public async Task<List<DriverTaskItemDto>> GetDriverTasksAsync(Guid driverId, JobTaskStatus? status = null, bool? activeOnly = null, CancellationToken cancellationToken = default)
     {
         var query = from t in dbContext.JobTasks.AsNoTracking()
                     join a in dbContext.Areas.AsNoTracking() on t.AreaId equals a.Id
@@ -269,6 +271,11 @@ public sealed class JobTaskRepository(AppDbContext dbContext) : IJobTaskReposito
                         AreaName = a.Name,
                         VehicleRego = v != null ? v.Rego.Value : string.Empty
                     };
+
+        if (activeOnly == true)
+        {
+            query = query.Where(x => ActiveStatuses.Contains(x.Task.Status));
+        }
 
         if (status.HasValue)
         {
