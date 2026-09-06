@@ -14,6 +14,7 @@ export interface OfflineQueueItem {
   status: QueueItemStatus;
   lastError?: string;
   description?: string;
+  isPermanentFailure?: boolean;
 }
 
 export interface CachedRecord<T = unknown> {

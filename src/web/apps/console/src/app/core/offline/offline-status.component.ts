@@ -29,6 +29,10 @@ export class OfflineStatusComponent {
     await this.offlineQueue.retryItem(id);
   }
 
+  async removeItem(id: string): Promise<void> {
+    await this.offlineQueue.removeItem(id);
+  }
+
   async retryAll(): Promise<void> {
     await this.offlineQueue.retryAll();
   }

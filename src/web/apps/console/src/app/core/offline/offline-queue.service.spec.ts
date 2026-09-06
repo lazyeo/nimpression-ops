@@ -211,4 +211,89 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     expect(service.failedCount()).toBe(0);
     expect(mockIndexedDb.data['failed-id']).toBeUndefined();
   });
+
+  it('handles 4xx permanent failure: marks as permanent failure, excludes from retryAll, and allows removal (AC 4)', async () => {
+    service.isOnline.set(false);
+
+    const item = await service.enqueue({
+      url: '/api/dispatch/tasks/invalid-uuid/status',
+      method: 'POST',
+      body: { status: 'IN_PROGRESS' },
+      description: 'Invalid Transition',
+    });
+
+    service.isOnline.set(true);
+    const replayPromise = service.replayQueue();
+
+    const req = httpMock.expectOne('/api/dispatch/tasks/invalid-uuid/status');
+    req.flush(
+      { error: 'invalid_transition', message: 'Cannot transition JobTask from Assigned to InProgress.' },
+      { status: 422, statusText: 'Unprocessable Entity' },
+    );
+
+    await replayPromise;
+
+    // Item must be marked as failed AND isPermanentFailure = true
+    expect(service.failedCount()).toBe(1);
+    expect(service.permanentFailedCount()).toBe(1);
+    expect(service.transientFailedCount()).toBe(0);
+    expect(service.hasTransientFailures()).toBe(false);
+
+    const queueItem = service.queueItems()[0];
+    expect(queueItem.status).toBe('failed');
+    expect(queueItem.isPermanentFailure).toBe(true);
+    expect(mockIndexedDb.data[item.id].isPermanentFailure).toBe(true);
+
+    // retryAll should NOT retry permanent failures (no HTTP request should be sent)
+    await service.retryAll();
+    httpMock.expectNone('/api/dispatch/tasks/invalid-uuid/status');
+    expect(service.queueItems()[0].status).toBe('failed');
+
+    // User can explicitly remove the permanently failed item
+    await service.removeItem(item.id);
+    expect(service.queueItems().length).toBe(0);
+    expect(service.failedCount()).toBe(0);
+    expect(mockIndexedDb.data[item.id]).toBeUndefined();
+  });
+
+  it('handles transient 5xx/network failure: marks as transient failure and allows retryAll to replay (AC 4)', async () => {
+    service.isOnline.set(false);
+
+    const item = await service.enqueue({
+      url: '/api/dispatch/tasks/valid-uuid/status',
+      method: 'POST',
+      body: { status: 'ACKNOWLEDGED' },
+      description: 'Accept Task',
+    });
+
+    service.isOnline.set(true);
+    const replayPromise = service.replayQueue();
+
+    const req = httpMock.expectOne('/api/dispatch/tasks/valid-uuid/status');
+    req.flush('Bad Gateway', { status: 502, statusText: 'Bad Gateway' });
+
+    await replayPromise;
+
+    // Item must be marked as failed AND isPermanentFailure = false
+    expect(service.failedCount()).toBe(1);
+    expect(service.permanentFailedCount()).toBe(0);
+    expect(service.transientFailedCount()).toBe(1);
+    expect(service.hasTransientFailures()).toBe(true);
+
+    const queueItem = service.queueItems()[0];
+    expect(queueItem.status).toBe('failed');
+    expect(queueItem.isPermanentFailure).toBe(false);
+
+    // retryAll should retry transient failures
+    const retryAllPromise = service.retryAll();
+    await Promise.resolve();
+    await Promise.resolve();
+    const retryReq = httpMock.expectOne('/api/dispatch/tasks/valid-uuid/status');
+    retryReq.flush({ success: true });
+
+    await retryAllPromise;
+    expect(service.queueItems().length).toBe(0);
+    expect(service.failedCount()).toBe(0);
+    expect(mockIndexedDb.data[item.id]).toBeUndefined();
+  });
 });

@@ -269,7 +269,8 @@
     background: var(--badge-info-bg);
     color: var(--badge-info-text);
   }
-  &.pill-failed {
+  &.pill-failed,
+  &.pill-permanent-failed {
     background: var(--badge-danger-bg);
     color: var(--badge-danger-text);
   }
@@ -300,8 +301,35 @@
   cursor: pointer;
   transition: background-color var(--transition-fast), transform var(--transition-fast);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--color-primary-hover);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.btn-remove {
+  height: 32px;
+  padding: 0 var(--space-12);
+  background: var(--bg-subtle);
+  color: var(--color-danger);
+  border: 1px solid var(--badge-danger-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+
+  &:hover {
+    background: var(--badge-danger-bg);
   }
 
   &:active {
