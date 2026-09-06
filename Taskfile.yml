@@ -132,9 +132,10 @@ tasks:
       - dotnet test {{.SERVER}}/tests/Nimpression.Integration.Tests --nologo --filter "Category=Timing"
 
   test:web:
-    desc: 跑 Angular 单元测试
+    desc: 跑 Angular 单元测试与对比度守卫测试
     cmds:
       - "{{.PNPM}} -F {{.WEB_APP}} exec ng test --watch=false"
+      - "{{.PNPM}} -F {{.WEB_APP}} run test:contrast"
 
   test:e2e:
     desc: 跑 Playwright 端到端测试
