@@ -9,10 +9,9 @@
     "check:emoji": "node scripts/check-emoji.mjs",
     "check:enum": "node scripts/check-enum-contract.mjs",
     "check:tokens": "node scripts/check-design-tokens.mjs",
-    "check:tokens": "node scripts/check-design-tokens.mjs",
     "check:secrets": "node scripts/check-hardcoded-secrets.mjs",
-    "check:api": "node scripts/check-api-contract.mjs",
-    "build": "node scripts/check-hardcoded-secrets.mjs && node scripts/check-api-contract.mjs && node scripts/check-enum-contract.mjs && node scripts/check-i18n.mjs && node scripts/check-emoji.mjs && node scripts/check-design-tokens.mjs && ng build",
+    "check:realtime": "node scripts/check-realtime-wiring.mjs",
+    "build": "node scripts/check-hardcoded-secrets.mjs && node scripts/check-api-contract.mjs && node scripts/check-enum-contract.mjs && node scripts/check-i18n.mjs && node scripts/check-emoji.mjs && node scripts/check-design-tokens.mjs && node scripts/check-realtime-wiring.mjs && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
