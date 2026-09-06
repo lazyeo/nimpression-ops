@@ -55,13 +55,15 @@ function checkRealtimeWiring() {
       continue;
     }
 
+    // Strip comments to inspect active code only
+    const code = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+
     // 2. Check for RealtimeService invalidation subscription
-    const hasRealtimeImport = content.includes('RealtimeService');
+    const hasRealtimeImport = code.includes('RealtimeService');
     const hasInvalidationSub =
-      /invalidation\$\s*(?:\.pipe\([^)]*\))?\s*\.subscribe\s*\(/.test(content) ||
-      content.includes('realtime.invalidation$');
+      code.includes('invalidation$') && code.includes('.subscribe(');
     const hasDestroyCleanup =
-      content.includes('takeUntilDestroyed') || content.includes('unsubscribe');
+      code.includes('takeUntilDestroyed') || code.includes('unsubscribe');
 
     if (hasRealtimeImport && hasInvalidationSub && hasDestroyCleanup) {
       wired.push(displayPath);
