@@ -287,5 +287,58 @@ describe('DashboardDataService & F14.8 Performance Benchmark', () => {
         `[F14.8 Performance Benchmark] Render duration for 90d x 11v x 10d: ${latestMeasure.duration.toFixed(2)}ms (Limit: 500ms)`,
       );
     });
+
+    it('aggregates payroll correctly with ordinaryHours and driverName from backend DTO', () => {
+      const currentPayslips: PayslipDto[] = [
+        {
+          id: 'ps-1',
+          payPeriodId: 'pp-1',
+          driverId: 'drv-1',
+          driverName: 'Liam Smith',
+          employeeNo: 'EMP-001',
+          startsOn: '2026-08-09',
+          endsOn: '2026-08-22',
+          ordinaryHours: 66.5,
+          overtimeHours: 2.0,
+          publicHolidayHours: 0,
+          ordinaryPay: 2261.0,
+          overtimePay: 102.0,
+          publicHolidayPay: 0,
+          grossPay: 2363.0,
+          netPay: 2363.0,
+        },
+      ];
+
+      const previousPayslips: PayslipDto[] = [
+        {
+          id: 'ps-0',
+          payPeriodId: 'pp-0',
+          driverId: 'drv-1',
+          driverName: 'Liam Smith',
+          employeeNo: 'EMP-001',
+          startsOn: '2026-07-26',
+          endsOn: '2026-08-08',
+          ordinaryHours: 80.0,
+          overtimeHours: 0.0,
+          publicHolidayHours: 0,
+          ordinaryPay: 2720.0,
+          overtimePay: 0,
+          publicHolidayPay: 0,
+          grossPay: 2720.0,
+          netPay: 2720.0,
+        },
+      ];
+
+      const result = service.aggregatePayroll(currentPayslips, previousPayslips);
+
+      expect(result.length).toBe(1);
+      expect(result[0].driverName).toBe('Liam Smith');
+      expect(result[0].employeeNo).toBe('EMP-001');
+      expect(result[0].currentPeriod.regularHours).toBe(66.5);
+      expect(result[0].currentPeriod.overtimeHours).toBe(2.0);
+      expect(result[0].currentPeriod.regularPay).toBe(2261.0);
+      expect(result[0].currentPeriod.overtimePay).toBe(102.0);
+      expect(result[0].currentPeriod.totalGross).toBe(2363.0);
+    });
   });
 });

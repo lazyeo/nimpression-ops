@@ -111,4 +111,24 @@ describe('DriverPayslipsComponent (Offline view & currency/date formatting)', ()
     expect(component.payslips().length).toBe(2);
     expect(component.payslips()[1].id).toBe('ps-2');
   });
+
+  it('renders correctly when payDate is null for unpaid pay period', () => {
+    const req = httpMock.expectOne('/api/payroll/my-payslips');
+    req.flush([
+      {
+        id: 'ps-unpaid',
+        payPeriod: '2026-08-09 ~ 2026-08-22',
+        payDate: null,
+        grossPay: 2340.0,
+        netPay: 2340.0,
+        deductions: 0.0,
+        totalHours: 68.5,
+        hourlyRate: 34.0,
+        currency: 'NZD',
+      },
+    ]);
+
+    expect(component.payslips().length).toBe(1);
+    expect(component.payslips()[0].payDate).toBeNull();
+  });
 });

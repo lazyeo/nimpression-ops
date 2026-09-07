@@ -8,6 +8,7 @@ using Nimpression.Domain.Entities.Driver;
 using Nimpression.Domain.Entities.Payroll;
 using Nimpression.Domain.Entities.Timesheet;
 using Nimpression.Domain.Enums;
+using Nimpression.Domain.Services;
 
 namespace Nimpression.Infrastructure.Persistence.Repositories;
 
@@ -149,6 +150,7 @@ public sealed class PayrollRepository(AppDbContext dbContext) : IPayrollReposito
 
         var driver = await dbContext.Drivers.AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == filter.DriverId, cancellationToken);
+        var driverName = await GetDriverDisplayNameAsync(filter.DriverId, cancellationToken);
 
         var dtos = payslips.Select(p =>
         {
@@ -157,8 +159,9 @@ public sealed class PayrollRepository(AppDbContext dbContext) : IPayrollReposito
                 payslip: p,
                 startsOn: period?.StartsOn ?? DateOnly.MinValue,
                 endsOn: period?.EndsOn ?? DateOnly.MaxValue,
-                driverName: null,
-                employeeNo: driver?.EmployeeNo);
+                driverName: driverName,
+                employeeNo: driver?.EmployeeNo,
+                paidAt: period?.PaidAt);
         }).ToList();
 
         return new PagedResult<PayslipDto>(dtos, totalCount, page, pageSize);
@@ -191,6 +194,25 @@ public sealed class PayrollRepository(AppDbContext dbContext) : IPayrollReposito
             .FirstOrDefaultAsync(d => d.UserId == userId, cancellationToken);
     }
 
+    public async Task<string?> GetDriverDisplayNameAsync(Guid driverId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Drivers
+            .AsNoTracking()
+            .Where(d => d.Id == driverId)
+            .Join(dbContext.Users.AsNoTracking(), d => d.UserId, u => u.Id, (_, u) => u.DisplayName)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetDriverDisplayNamesAsync(IEnumerable<Guid> driverIds, CancellationToken cancellationToken = default)
+    {
+        var ids = driverIds.Distinct().ToList();
+        return await dbContext.Drivers
+            .AsNoTracking()
+            .Where(d => ids.Contains(d.Id))
+            .Join(dbContext.Users.AsNoTracking(), d => d.UserId, u => u.Id, (d, u) => new { d.Id, u.DisplayName })
+            .ToDictionaryAsync(x => x.Id, x => x.DisplayName, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Driver>> GetActiveDriversAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Drivers
@@ -210,13 +232,21 @@ public sealed class PayrollRepository(AppDbContext dbContext) : IPayrollReposito
         var fromUtc = TimeZoneInfo.ConvertTimeToUtc(fromLocal, NzTimeZone.Info);
         var toUtc = TimeZoneInfo.ConvertTimeToUtc(toLocal, NzTimeZone.Info);
 
-        return await dbContext.ShiftEntries
+        var dbShifts = await dbContext.ShiftEntries
             .Where(s => s.DriverId == driverId &&
                         s.ClockInAt >= fromUtc &&
                         s.ClockInAt <= toUtc &&
                         s.ClockOutAt.HasValue)
             .OrderBy(s => s.ClockInAt)
             .ToListAsync(cancellationToken);
+
+        return dbShifts
+            .Where(s =>
+            {
+                var dur = ShiftDurationCalculator.Calculate(s);
+                return dur.AttributedDate >= startsOn && dur.AttributedDate <= endsOn;
+            })
+            .ToList();
     }
 
     public async Task<IReadOnlyList<JobTask>> GetCompletedJobTasksForDriverAndPeriodAsync(
@@ -230,13 +260,21 @@ public sealed class PayrollRepository(AppDbContext dbContext) : IPayrollReposito
         var fromUtc = TimeZoneInfo.ConvertTimeToUtc(fromLocal, NzTimeZone.Info);
         var toUtc = TimeZoneInfo.ConvertTimeToUtc(toLocal, NzTimeZone.Info);
 
-        return await dbContext.JobTasks
+        var dbTasks = await dbContext.JobTasks
             .Where(t => t.DriverId == driverId &&
                         t.CompletedAt.HasValue &&
                         t.CompletedAt.Value >= fromUtc &&
                         t.CompletedAt.Value <= toUtc)
             .OrderBy(t => t.CompletedAt)
             .ToListAsync(cancellationToken);
+
+        return dbTasks
+            .Where(t =>
+            {
+                var date = NzTimeZone.ToNzDateOnly(t.CompletedAt!.Value);
+                return date >= startsOn && date <= endsOn;
+            })
+            .ToList();
     }
 
     public async Task<IReadOnlyList<Fine>> GetFinesForDriverAndPeriodAsync(

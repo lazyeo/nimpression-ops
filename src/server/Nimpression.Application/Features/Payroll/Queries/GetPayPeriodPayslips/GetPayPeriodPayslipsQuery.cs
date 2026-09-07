@@ -26,17 +26,21 @@ public sealed class GetPayPeriodPayslipsQueryHandler(
         }
 
         var payslips = await payrollRepository.GetPayslipsByPeriodIdAsync(request.PayPeriodId, cancellationToken);
+        var driverIds = payslips.Select(p => p.DriverId).Distinct().ToList();
+        var driverNames = await payrollRepository.GetDriverDisplayNamesAsync(driverIds, cancellationToken);
         var result = new List<PayslipDto>();
 
         foreach (var payslip in payslips)
         {
             var driver = await payrollRepository.GetDriverByIdAsync(payslip.DriverId, cancellationToken);
+            driverNames.TryGetValue(payslip.DriverId, out var driverName);
             result.Add(PayslipDto.FromEntity(
                 payslip: payslip,
                 startsOn: payPeriod.StartsOn,
                 endsOn: payPeriod.EndsOn,
-                driverName: null,
-                employeeNo: driver?.EmployeeNo));
+                driverName: driverName,
+                employeeNo: driver?.EmployeeNo,
+                paidAt: payPeriod.PaidAt));
         }
 
         return result;

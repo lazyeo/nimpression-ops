@@ -91,4 +91,39 @@ public sealed class CalculatePayPeriodPayrollCommandHandlerTests
         Assert.Equal(ErrorKind.UnprocessableEntity, result.Error!.Kind);
         Assert.Equal("period_finalised", result.Error.Code);
     }
+
+    [Fact]
+    public async Task CalculatePayroll_Populates_DriverName_And_Excludes_Out_Of_Period_Shifts()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var driver = CreateDriver("DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+        _repository.DriverDisplayNames[driver.Id] = "Liam Smith";
+
+        var nzOffset = TimeSpan.FromHours(12);
+
+        // In period shift (8/18)
+        var shiftIn = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, 18, 8, 0, 0, nzOffset));
+        shiftIn.ClockOut(new DateTimeOffset(2026, 8, 18, 16, 0, 0, nzOffset));
+        _repository.Shifts.Add(shiftIn);
+
+        // Out of period shift (8/31)
+        var shiftOut = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, 31, 8, 0, 0, nzOffset));
+        shiftOut.ClockOut(new DateTimeOffset(2026, 8, 31, 16, 0, 0, nzOffset));
+        _repository.Shifts.Add(shiftOut);
+
+        var handler = new CalculatePayPeriodPayrollCommandHandler(
+            _repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
+
+        var command = new CalculatePayPeriodPayrollCommand(period.Id);
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value);
+        Assert.Equal("Liam Smith", result.Value[0].DriverName);
+        Assert.Single(result.Value[0].ShiftDetails);
+        Assert.Equal(shiftIn.Id, result.Value[0].ShiftDetails[0].ShiftId);
+    }
 }

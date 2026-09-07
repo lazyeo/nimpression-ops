@@ -204,4 +204,127 @@ public sealed class PayrollQueriesHandlerTests
         Assert.Equal(120.00m, result.Value.Fines[0].Amount);
         Assert.Contains("Wages Protection Act 1983", result.Value.FinesLegalNotice);
     }
+
+    [Fact]
+    public async Task GetPayslipById_Populates_DriverName_And_PaidAt_When_Available()
+    {
+        var adminUser = new FakeCurrentUser(role: UserRole.Admin);
+        var driver = CreateDriver(Guid.NewGuid(), "DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+        _repository.DriverDisplayNames[driver.Id] = "Liam Smith";
+
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 7, 26), new DateOnly(2026, 8, 8));
+        var paidAt = new DateTimeOffset(2026, 8, 11, 10, 0, 0, TimeSpan.FromHours(12));
+        period.Finalise(paidAt.AddDays(-2));
+        period.MarkPaid(paidAt);
+        _repository.PayPeriods[period.Id] = period;
+
+        var payslip = PayrollCalculatorV2.Calculate(driver, period, [], []);
+        payslip.Finalise(paidAt.AddDays(-2));
+        _repository.Payslips[payslip.Id] = payslip;
+
+        var handler = new GetPayslipByIdQueryHandler(_repository, adminUser);
+        var result = await handler.Handle(new GetPayslipByIdQuery(payslip.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Liam Smith", result.Value.DriverName);
+        Assert.Equal("DRV-001", result.Value.EmployeeNo);
+        Assert.Equal(paidAt, result.Value.PaidAt);
+    }
+
+    [Fact]
+    public async Task GetPayPeriodPayslips_Populates_DriverName_And_PaidAt_For_All_Drivers()
+    {
+        var adminUser = new FakeCurrentUser(role: UserRole.Admin);
+        var driver1 = CreateDriver(Guid.NewGuid(), "DRV-001");
+        var driver2 = CreateDriver(Guid.NewGuid(), "DRV-002");
+        _repository.Drivers[driver1.Id] = driver1;
+        _repository.Drivers[driver2.Id] = driver2;
+        _repository.DriverDisplayNames[driver1.Id] = "Liam Smith";
+        _repository.DriverDisplayNames[driver2.Id] = "Noah Williams";
+
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 9), new DateOnly(2026, 8, 22));
+        _repository.PayPeriods[period.Id] = period;
+
+        var payslip1 = PayrollCalculatorV2.Calculate(driver1, period, [], []);
+        var payslip2 = PayrollCalculatorV2.Calculate(driver2, period, [], []);
+        _repository.Payslips[payslip1.Id] = payslip1;
+        _repository.Payslips[payslip2.Id] = payslip2;
+
+        var handler = new GetPayPeriodPayslipsQueryHandler(_repository, adminUser);
+        var result = await handler.Handle(new GetPayPeriodPayslipsQuery(period.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value.Count);
+        var p1 = result.Value.First(p => p.DriverId == driver1.Id);
+        var p2 = result.Value.First(p => p.DriverId == driver2.Id);
+
+        Assert.Equal("Liam Smith", p1.DriverName);
+        Assert.Equal("Noah Williams", p2.DriverName);
+        Assert.Null(p1.PaidAt); // Unpaid period has null PaidAt
+    }
+
+    [Fact]
+    public async Task GetPayslipById_Traceability_StrictlyExcludes_Out_Of_Period_Shifts_And_Tasks()
+    {
+        // Arrange (W28 R2 验收：追溯数据必须严格属于该工资周期，周期外班次/趟次不可泄漏)
+        var adminUser = new FakeCurrentUser(role: UserRole.Admin);
+        var driver = CreateDriver(Guid.NewGuid(), "DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 9), new DateOnly(2026, 8, 22));
+        _repository.PayPeriods[period.Id] = period;
+        var nzOffset = TimeSpan.FromHours(12);
+
+        // 周期内班次 (8/15)
+        var inPeriodShift = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, 15, 8, 0, 0, nzOffset));
+        inPeriodShift.ClockOut(new DateTimeOffset(2026, 8, 15, 17, 0, 0, nzOffset), breakMinutes: 30);
+        _repository.Shifts.Add(inPeriodShift);
+
+        // 周期外班次 (8/08 前一周期 & 8/23 23/08–07/09 后一周期)
+        var prePeriodShift = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, 8, 8, 0, 0, nzOffset));
+        prePeriodShift.ClockOut(new DateTimeOffset(2026, 8, 8, 17, 0, 0, nzOffset), breakMinutes: 30);
+        _repository.Shifts.Add(prePeriodShift);
+
+        var postPeriodShift = new ShiftEntry(Guid.NewGuid(), driver.Id, new DateTimeOffset(2026, 8, 23, 8, 0, 0, nzOffset));
+        postPeriodShift.ClockOut(new DateTimeOffset(2026, 8, 23, 17, 0, 0, nzOffset), breakMinutes: 30);
+        _repository.Shifts.Add(postPeriodShift);
+
+        // 周期内任务 (8/15)
+        var inPeriodTask = new JobTask(
+            Guid.NewGuid(), "TSK-IN-01", "In Period Task", Guid.NewGuid(),
+            new DateTimeOffset(2026, 8, 15, 8, 0, 0, nzOffset), Guid.NewGuid(),
+            description: null, priority: TaskPriority.Medium,
+            plannedDistanceKm: new Kilometres(20m), driverId: driver.Id, vehicleId: Guid.NewGuid());
+        inPeriodTask.Acknowledge(new DateTimeOffset(2026, 8, 15, 8, 30, 0, nzOffset));
+        inPeriodTask.Start(new DateTimeOffset(2026, 8, 15, 9, 0, 0, nzOffset));
+        inPeriodTask.Complete(new DateTimeOffset(2026, 8, 15, 12, 0, 0, nzOffset), actualDistanceKm: new Kilometres(22m));
+        _repository.Tasks.Add(inPeriodTask);
+
+        // 周期外任务 (8/25)
+        var postPeriodTask = new JobTask(
+            Guid.NewGuid(), "TSK-OUT-01", "Out Period Task", Guid.NewGuid(),
+            new DateTimeOffset(2026, 8, 25, 8, 0, 0, nzOffset), Guid.NewGuid(),
+            description: null, priority: TaskPriority.Medium,
+            plannedDistanceKm: new Kilometres(20m), driverId: driver.Id, vehicleId: Guid.NewGuid());
+        postPeriodTask.Acknowledge(new DateTimeOffset(2026, 8, 25, 8, 30, 0, nzOffset));
+        postPeriodTask.Start(new DateTimeOffset(2026, 8, 25, 9, 0, 0, nzOffset));
+        postPeriodTask.Complete(new DateTimeOffset(2026, 8, 25, 12, 0, 0, nzOffset), actualDistanceKm: new Kilometres(22m));
+        _repository.Tasks.Add(postPeriodTask);
+
+        var payslip = PayrollCalculatorV2.Calculate(driver, period, [inPeriodShift], [inPeriodTask]);
+        _repository.Payslips[payslip.Id] = payslip;
+
+        var handler = new GetPayslipByIdQueryHandler(_repository, adminUser);
+        var result = await handler.Handle(new GetPayslipByIdQuery(payslip.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        // 验证 ShiftDetails 只有周期内的 1 条班次，8/08 和 8/23 的班次绝不混入
+        Assert.Single(result.Value.ShiftDetails);
+        Assert.Equal(inPeriodShift.Id, result.Value.ShiftDetails[0].ShiftId);
+
+        // 验证 TripDetails 只有周期内的 1 条任务，8/25 的任务绝不混入
+        Assert.Single(result.Value.TripDetails);
+        Assert.Equal(inPeriodTask.Id, result.Value.TripDetails[0].JobTaskId);
+    }
 }

@@ -740,49 +740,55 @@ export class DashboardDataService {
       const driverName = cur?.driverName || prev?.driverName || 'Driver';
       const employeeNo = cur?.employeeNo || prev?.employeeNo || 'EMP';
 
-      const curRegHours = cur?.regularHours || 0;
-      const curOtHours = cur?.overtimeHours || 0;
-      const curHolHours = cur?.holidayHours || 0;
-      const curGross = cur?.grossPay || 0;
+      const curRegHours = cur?.ordinaryHours ?? cur?.regularHours ?? 0;
+      const curOtHours = cur?.overtimeHours ?? 0;
+      const curHolHours = cur?.publicHolidayHours ?? cur?.holidayHours ?? 0;
+      const curGross = cur?.grossPay ?? 0;
 
       const curRegPay =
-        curGross > 0
+        cur?.ordinaryPay ??
+        (curGross > 0
           ? Math.round(
               curGross *
                 (curRegHours / Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2)),
             )
-          : 0;
+          : 0);
       const curOtPay =
-        curGross > 0
+        cur?.overtimePay ??
+        (curGross > 0
           ? Math.round(
               curGross *
                 ((curOtHours * 1.5) /
                   Math.max(1, curRegHours + curOtHours * 1.5 + curHolHours * 2)),
             )
-          : 0;
-      const curHolPay = Math.max(0, curGross - curRegPay - curOtPay);
+          : 0);
+      const curHolPay =
+        cur?.publicHolidayPay ?? Math.max(0, curGross - curRegPay - curOtPay);
 
-      const prevRegHours = prev?.regularHours || 0;
-      const prevOtHours = prev?.overtimeHours || 0;
-      const prevHolHours = prev?.holidayHours || 0;
-      const prevGross = prev?.grossPay || 0;
+      const prevRegHours = prev?.ordinaryHours ?? prev?.regularHours ?? 0;
+      const prevOtHours = prev?.overtimeHours ?? 0;
+      const prevHolHours = prev?.publicHolidayHours ?? prev?.holidayHours ?? 0;
+      const prevGross = prev?.grossPay ?? 0;
 
       const prevRegPay =
-        prevGross > 0
+        prev?.ordinaryPay ??
+        (prevGross > 0
           ? Math.round(
               prevGross *
                 (prevRegHours / Math.max(1, prevRegHours + prevOtHours * 1.5 + prevHolHours * 2)),
             )
-          : 0;
+          : 0);
       const prevOtPay =
-        prevGross > 0
+        prev?.overtimePay ??
+        (prevGross > 0
           ? Math.round(
               prevGross *
                 ((prevOtHours * 1.5) /
                   Math.max(1, prevRegHours + prevOtHours * 1.5 + prevHolHours * 2)),
             )
-          : 0;
-      const prevHolPay = Math.max(0, prevGross - prevRegPay - prevOtPay);
+          : 0);
+      const prevHolPay =
+        prev?.publicHolidayPay ?? Math.max(0, prevGross - prevRegPay - prevOtPay);
 
       result.push({
         driverId,

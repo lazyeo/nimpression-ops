@@ -186,7 +186,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             {
                 id = p.Id,
                 payPeriod = $"{p.PeriodStartsOn:yyyy-MM-dd} ~ {p.PeriodEndsOn:yyyy-MM-dd}",
-                payDate = p.PeriodEndsOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                payDate = p.PaidAt.HasValue ? p.PaidAt.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : null,
                 grossPay = p.GrossPay,
                 netPay = p.GrossPay,
                 deductions = 0.0m,
