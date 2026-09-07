@@ -131,13 +131,39 @@ public sealed class F11_2_EmailTemplateIntegrationTests : IAsyncLifetime, IDispo
         var templateId = await createResp.Content.ReadFromJsonAsync<Guid>();
         templateId.Should().NotBeEmpty();
 
-        // Query by key
-        var getByKeyResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/templates/by-key/{customKey.ToUpperInvariant()}");
+        // Query by key (Admin)
+        var getByKeyResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Get, $"/api/notifications/templates/by-key/{customKey.ToUpperInvariant()}");
         getByKeyResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var dto = await getByKeyResp.Content.ReadFromJsonAsync<EmailTemplateDto>();
         dto.Should().NotBeNull();
         dto!.Key.Should().Be(customKey.ToUpperInvariant());
         dto.SubjectEn.Should().Be("Service {{VehicleRego}}");
+    }
+
+    [Fact]
+    public async Task GetEmailTemplateByKey_WhenDispatcherAttemptsRead_ReturnsForbidden()
+    {
+        var customKey = $"DISP_READ_{Guid.NewGuid():N}";
+        var req = new CreateEmailTemplateRequest(
+            customKey,
+            "Service {{VehicleRego}}",
+            "保养 {{VehicleRego}}",
+            "Vehicle {{VehicleRego}} at {{CurrentOdometer}} km",
+            "车辆 {{VehicleRego}} 里程 {{CurrentOdometer}} 公里",
+            true);
+
+        var createResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, "/api/notifications/templates", req);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var getByKeyResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/templates/by-key/{customKey.ToUpperInvariant()}");
+        getByKeyResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetEmailTemplatesList_WhenDispatcherAttemptsRead_ReturnsForbidden()
+    {
+        var resp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, "/api/notifications/templates");
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
