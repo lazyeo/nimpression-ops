@@ -216,6 +216,7 @@ export class FinesComponent implements OnInit {
 
   submitFine(): void {
     if (
+      !this.newDriverId ||
       !this.newVehicleId ||
       !this.newIssuedOn ||
       !this.newAuthority ||
@@ -250,7 +251,14 @@ export class FinesComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmittingFine.set(false);
-        this.submitError.set(err.error?.message || err.message || 'Failed to submit fine.');
+        const detail =
+          err.error?.detail ||
+          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
+          err.error?.message ||
+          err.error?.title ||
+          err.message ||
+          'Failed to submit fine.';
+        this.submitError.set(detail);
       },
     });
   }
@@ -262,7 +270,14 @@ export class FinesComponent implements OnInit {
         this.loadFines();
       },
       error: (err) => {
-        alert(err.error?.message || 'Failed to start review.');
+        const detail =
+          err.error?.detail ||
+          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
+          err.error?.message ||
+          err.error?.title ||
+          err.message ||
+          'Failed to start review.';
+        alert(detail);
       },
     });
   }
@@ -315,7 +330,14 @@ export class FinesComponent implements OnInit {
       },
       error: (err) => {
         this.isReviewSubmitting.set(false);
-        this.reviewError.set(err.error?.message || err.message || 'Failed to submit review.');
+        const detail =
+          err.error?.detail ||
+          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
+          err.error?.message ||
+          err.error?.title ||
+          err.message ||
+          'Failed to submit review.';
+        this.reviewError.set(detail);
       },
     });
   }

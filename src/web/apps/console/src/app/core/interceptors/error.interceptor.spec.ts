@@ -61,6 +61,30 @@ describe('errorInterceptor (W26 R2 422 ProblemDetails Fallback)', () => {
     expect(latest?.detail).not.toContain('Http failure response');
   });
 
+  it('captures structured ProblemDetails validation errors for 400 Bad Request', () => {
+    httpClient.post('/api/fines', { vehicleId: 'veh-1' }).subscribe({
+      next: () => expect.unreachable('Should have failed with 400'),
+      error: () => {},
+    });
+
+    const req = httpMock.expectOne('/api/fines');
+    const problemDetails = {
+      type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
+      title: 'driver_id_required',
+      status: 400,
+      detail: 'DriverId is mandatory for management fine submission.',
+    };
+
+    req.flush(problemDetails, { status: 400, statusText: 'Bad Request' });
+
+    const latest = errorService.latestError();
+    expect(latest).not.toBeNull();
+    expect(latest?.statusCode).toBe(400);
+    expect(latest?.title).toBe('driver_id_required');
+    expect(latest?.detail).toBe('DriverId is mandatory for management fine submission.');
+    expect(latest?.detail).not.toContain('Http failure response');
+  });
+
   it('AC 4: when backend returns 422 without detail, provides meaningful fallback key', () => {
     httpClient.post('/api/dispatch/tasks/TSK-001/status', {}).subscribe({
       error: () => {},

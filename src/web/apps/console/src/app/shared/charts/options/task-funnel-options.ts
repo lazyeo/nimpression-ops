@@ -21,6 +21,13 @@ export interface TaskFunnelLabels {
   avgStayLabelText?: string;
   tasksCountUnit?: string;
   formatDurationFn?: (minutes: number) => string;
+  stageCountFormatter?: (count: number) => string;
+  prevConversionFormatter?: (rate: number) => string;
+  overallConversionFormatter?: (rate: number) => string;
+  avgDurationFormatter?: (duration: string) => string;
+  conversionLabelFormatter?: (rate: number) => string;
+  avgStayLabelFormatter?: (duration: string) => string;
+  tasksCountFormatter?: (count: number) => string;
 }
 
 export interface TaskFunnelOptionsParams {
@@ -95,6 +102,48 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
     };
   });
 
+  const formatStageCount = (count: number) => {
+    if (labels.stageCountFormatter) return labels.stageCountFormatter(count);
+    if (stageCountLabel.includes('{count}')) return stageCountLabel.replace('{count}', String(count));
+    return `${stageCountLabel}: <strong>${count}</strong>`;
+  };
+
+  const formatPrevConversion = (rate: number) => {
+    if (labels.prevConversionFormatter) return labels.prevConversionFormatter(rate);
+    if (prevConversionLabel.includes('{rate}')) return prevConversionLabel.replace('{rate}', rate.toFixed(1));
+    return `${prevConversionLabel}: <strong>${rate.toFixed(1)}%</strong>`;
+  };
+
+  const formatOverallConversion = (rate: number) => {
+    if (labels.overallConversionFormatter) return labels.overallConversionFormatter(rate);
+    if (overallConversionLabel.includes('{rate}')) return overallConversionLabel.replace('{rate}', rate.toFixed(1));
+    return `${overallConversionLabel}: <strong>${rate.toFixed(1)}%</strong>`;
+  };
+
+  const formatAvgDuration = (durationStr: string) => {
+    if (labels.avgDurationFormatter) return labels.avgDurationFormatter(durationStr);
+    if (avgDurationLabel.includes('{duration}')) return avgDurationLabel.replace('{duration}', durationStr);
+    return `${avgDurationLabel}: <strong>${durationStr}</strong>`;
+  };
+
+  const formatConversionTag = (rate: number) => {
+    if (labels.conversionLabelFormatter) return labels.conversionLabelFormatter(rate);
+    if (conversionTag.includes('{rate}')) return conversionTag.replace('{rate}', rate.toFixed(1));
+    return `${conversionTag}: ${rate.toFixed(1)}%`;
+  };
+
+  const formatAvgStayTag = (durationStr: string) => {
+    if (labels.avgStayLabelFormatter) return labels.avgStayLabelFormatter(durationStr);
+    if (avgStayTag.includes('{duration}')) return avgStayTag.replace('{duration}', durationStr);
+    return `${avgStayTag}: ${durationStr}`;
+  };
+
+  const formatTasksCount = (count: number) => {
+    if (labels.tasksCountFormatter) return labels.tasksCountFormatter(count);
+    if (tasksUnit.includes('{count}')) return tasksUnit.replace('{count}', String(count));
+    return `${count} ${tasksUnit}`;
+  };
+
   const option: EChartsOption = {
     backgroundColor: 'transparent',
     tooltip: {
@@ -115,14 +164,19 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
         const stage = p.data.dataRef;
         const durationStr = durationFormatter(stage.avgStayMinutes);
 
+        const countLine = formatStageCount(stage.count);
+        const prevLine = formatPrevConversion(stage.conversionRate);
+        const overallLine = formatOverallConversion(stage.overallConversionRate);
+        const durationLine = formatAvgDuration(durationStr);
+
         return `
           <div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">
             <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.color};margin-right:6px;"></span>${stage.stageName} (${stage.stage})
           </div>
-          <div style="font-size:12px;margin:2px 0;">${stageCountLabel}: <strong>${stage.count}</strong></div>
-          <div style="font-size:12px;margin:2px 0;">${prevConversionLabel}: <strong>${stage.conversionRate.toFixed(1)}%</strong></div>
-          <div style="font-size:12px;margin:2px 0;">${overallConversionLabel}: <strong>${stage.overallConversionRate.toFixed(1)}%</strong></div>
-          <div style="font-size:12px;margin:2px 0;color:${OKABE_ITO_PALETTE.orange};">${avgDurationLabel}: <strong>${durationStr}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${countLine}</div>
+          <div style="font-size:12px;margin:2px 0;">${prevLine}</div>
+          <div style="font-size:12px;margin:2px 0;">${overallLine}</div>
+          <div style="font-size:12px;margin:2px 0;color:${OKABE_ITO_PALETTE.orange};">${durationLine}</div>
         `;
       },
     },
@@ -139,10 +193,10 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
       {
         name: seriesNameText,
         type: 'funnel',
-        left: isMobile ? '5%' : '12%',
+        left: isMobile ? '5%' : '8%',
         top: isMobile ? 48 : 56,
         bottom: 24,
-        width: isMobile ? '90%' : '76%',
+        width: isMobile ? '90%' : '56%',
         min: 0,
         max: Math.max(...data.map((d) => d.count), 1),
         minSize: '18%',
@@ -158,7 +212,10 @@ export function buildTaskFunnelOptions(params: TaskFunnelOptionsParams): ECharts
             if (isMobile) {
               return `${item.stageName}: ${item.count} (${item.conversionRate.toFixed(0)}%)`;
             }
-            return `{title|${item.stageName}}\n{stat|${conversionTag}: ${item.conversionRate.toFixed(1)}%  |  ${avgStayTag}: ${durationFormatter(item.avgStayMinutes)}}\n{count|${item.count} ${tasksUnit}}`;
+            const convText = formatConversionTag(item.conversionRate);
+            const stayText = formatAvgStayTag(durationFormatter(item.avgStayMinutes));
+            const countText = formatTasksCount(item.count);
+            return `{title|${item.stageName}}\n{stat|${convText}  |  ${stayText}}\n{count|${countText}}`;
           },
           rich: {
             title: {

@@ -332,6 +332,19 @@ export class DispatchComponent implements OnInit {
     if (!this.createForm.title || !this.createForm.areaId || !this.createForm.scheduledFor) {
       return;
     }
+
+    if (
+      this.createForm.plannedDistanceKm !== null &&
+      this.createForm.plannedDistanceKm !== undefined &&
+      (this.createForm.plannedDistanceKm as unknown) !== ''
+    ) {
+      const dist = Number(this.createForm.plannedDistanceKm);
+      if (isNaN(dist) || dist <= 0) {
+        this.formError.set('Planned distance must be greater than zero.');
+        return;
+      }
+    }
+
     this.isSubmitting.set(true);
     this.formError.set(null);
 
@@ -363,7 +376,14 @@ export class DispatchComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
-        this.formError.set(err.error?.message || err.error?.detail || err.message || 'Failed to create task');
+        const detail =
+          err.error?.detail ||
+          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
+          err.error?.message ||
+          err.error?.title ||
+          err.message ||
+          'Failed to create task';
+        this.formError.set(detail);
       },
     });
   }
@@ -571,7 +591,14 @@ export class DispatchComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to cancel task');
+          const detail =
+            err.error?.detail ||
+            (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
+            err.error?.message ||
+            err.error?.title ||
+            err.message ||
+            'Failed to cancel task';
+          this.formError.set(detail);
         },
       });
   }
@@ -579,6 +606,15 @@ export class DispatchComponent implements OnInit {
   openDetailsModal(task: JobTaskDetailDto): void {
     this.selectedTask.set(task);
     this.isDetailsModalOpen.set(true);
+
+    this.dispatchService.getTaskById(task.id).subscribe({
+      next: (detail) => {
+        this.selectedTask.set(detail);
+      },
+      error: () => {
+        // Fallback to basic task already set
+      },
+    });
   }
 
   closeDetailsModal(): void {
