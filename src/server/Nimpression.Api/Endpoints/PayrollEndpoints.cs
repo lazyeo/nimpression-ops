@@ -37,7 +37,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             var result = await sender.Send(command, ct);
             return result.ToHttpResult(StatusCodes.Status201Created);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("CreatePayPeriod")
         .WithSummary("创建薪资周期（双周薪期，周一起算，不可重叠）");
 
@@ -61,7 +61,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             var result = await sender.Send(new GetPayPeriodsListQuery(filter), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetPayPeriodsList")
         .WithSummary("获取薪资周期列表（支持状态与日期筛选）");
 
@@ -74,7 +74,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             var result = await sender.Send(new GetPayPeriodByIdQuery(id), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetPayPeriodById")
         .WithSummary("按 ID 获取薪资周期详情");
 
@@ -94,7 +94,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             var result = await sender.Send(command, ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("CalculatePayPeriodPayroll")
         .WithSummary("薪资试算与计算（可重复试算；定版后不可修改）");
 
@@ -136,7 +136,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             var result = await sender.Send(new GetPayPeriodPayslipsQuery(id), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetPayPeriodPayslips")
         .WithSummary("获取指定薪资周期下的全员工资单列表");
 
@@ -220,7 +220,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             var result = await sender.Send(query, ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetDriverPayslips")
         .WithSummary("管理端查询指定司机的工资单历史");
 
