@@ -17,13 +17,15 @@ public class PostgreSqlContainerFixture : IAsyncLifetime
         .WithCleanUp(true)
         .Build();
 
-    public IContainer MailpitContainer { get; } = new ContainerBuilder("axllent/mailpit:latest")
+    public IContainer MailpitContainer { get; } = new ContainerBuilder("axllent/mailpit:v1.31.0")
         .WithPortBinding(1025, true)
         .WithPortBinding(8025, true)
         .WithEnvironment("MP_MAX_MESSAGES", "5000")
         .WithEnvironment("MP_SMTP_AUTH_ACCEPT_ANY", "1")
         .WithEnvironment("MP_SMTP_AUTH_ALLOW_INSECURE", "1")
-        .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(8025)))
+        .WithWaitStrategy(Wait.ForUnixContainer()
+            .UntilInternalTcpPortIsAvailable(1025)
+            .UntilHttpRequestIsSucceeded(r => r.ForPort(8025)))
         .WithCleanUp(true)
         .Build();
 
