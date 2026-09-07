@@ -53,7 +53,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetPartnerContactsListQuery(filter), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetPartnerContactsList")
         .WithSummary("获取外部伙伴联系人列表");
 
@@ -65,7 +65,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetPartnerContactByIdQuery(id), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetPartnerContactById")
         .WithSummary("按 ID 获取外部伙伴联系人详情");
 
@@ -83,7 +83,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(command, ct);
             return result.ToHttpResult(StatusCodes.Status201Created);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("CreatePartnerContact")
         .WithSummary("创建外部伙伴联系人（三类伙伴：Insurer/Maintenance/Inspection）");
 
@@ -102,7 +102,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(command, ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("UpdatePartnerContact")
         .WithSummary("更新外部伙伴联系人信息");
 
@@ -114,7 +114,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new ActivatePartnerContactCommand(id), ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("ActivatePartnerContact")
         .WithSummary("启用外部伙伴联系人");
 
@@ -126,7 +126,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new DeactivatePartnerContactCommand(id), ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("DeactivatePartnerContact")
         .WithSummary("停用外部伙伴联系人（停用后不再接收任何邮件）");
 
@@ -138,7 +138,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new DeletePartnerContactCommand(id), ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("DeletePartnerContact")
         .WithSummary("删除外部伙伴联系人");
 
@@ -157,7 +157,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetEmailTemplatesListQuery(filter), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetEmailTemplatesList")
         .WithSummary("获取邮件模板列表");
 
@@ -169,7 +169,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetEmailTemplateByIdQuery(id), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetEmailTemplateById")
         .WithSummary("按 ID 获取邮件模板详情");
 
@@ -181,7 +181,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetEmailTemplateByKeyQuery(key), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetEmailTemplateByKey")
         .WithSummary("按 Key 获取邮件模板详情");
 
@@ -272,7 +272,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetEmailLogsListQuery(filter), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetEmailLogsList")
         .WithSummary("获取邮件发送日志列表（包含状态、重试次数与错误信息）");
 
@@ -284,7 +284,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new GetEmailLogByIdQuery(id), ct);
             return result.ToHttpResult();
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetEmailLogById")
         .WithSummary("按 ID 获取邮件发送日志详情");
 
@@ -296,7 +296,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new ResendEmailCommand(id), ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("ResendEmailLog")
         .WithSummary("手动重发失败邮件");
 
@@ -308,7 +308,7 @@ public sealed class NotificationEndpoints : IEndpointModule
             var result = await sender.Send(new TriggerComplianceScanCommand(), ct);
             return result.ToHttpResult(StatusCodes.Status200OK);
         })
-        .RequireAuthorization(AuthorizationPolicies.Dispatcher)
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("TriggerComplianceScan")
         .WithSummary("手动触发车辆合规到期预警扫描（WOF/COF/保险在 30/14/7 天内到期）");
     }

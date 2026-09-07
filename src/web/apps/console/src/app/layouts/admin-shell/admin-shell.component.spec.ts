@@ -185,4 +185,40 @@ describe('AdminShellComponent', () => {
 
     expect(component.navItems.some((item) => item.path === '/admin/payroll')).toBe(false);
   });
+
+  it('displays notifications nav item for Admin role', () => {
+    authService.setSession({
+      accessToken: 'dev-only-insecure-admin-token',
+      expiresIn: 3600,
+      tokenType: 'Bearer',
+      user: {
+        id: 'a-1',
+        email: 'admin@nim.co.nz',
+        displayName: 'Admin User',
+        role: 'Admin',
+        locale: 'en-NZ',
+      },
+    });
+    fixture.detectChanges();
+
+    expect(component.navItems.some((item) => item.path === '/admin/notifications')).toBe(true);
+  });
+
+  it('hides notifications nav item for Dispatcher role', () => {
+    authService.setSession({
+      accessToken: 'dev-only-insecure-disp-token',
+      expiresIn: 3600,
+      tokenType: 'Bearer',
+      user: {
+        id: 'd-1',
+        email: 'disp@nim.co.nz',
+        displayName: 'Dispatcher User',
+        role: 'Dispatcher',
+        locale: 'en-NZ',
+      },
+    });
+    fixture.detectChanges();
+
+    expect(component.navItems.some((item) => item.path === '/admin/notifications')).toBe(false);
+  });
 });
