@@ -136,8 +136,6 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
 
             await payrollRepository.AddPayslipAsync(payslip, cancellationToken);
 
-            var shiftDtos = shifts.Select(PayslipShiftDetailDto.FromEntity).ToList();
-            var taskDtos = tasks.Select(PayslipTripDetailDto.FromEntity).ToList();
             var fineDtos = fines.Select(PayslipFineDto.FromEntity).ToList();
 
             driverNames.TryGetValue(driver.Id, out var driverName);
@@ -149,8 +147,6 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
                 driverName: driverName,
                 employeeNo: driver.EmployeeNo,
                 paidAt: payPeriod.PaidAt,
-                shiftDetails: shiftDtos,
-                tripDetails: taskDtos,
                 fines: fineDtos));
         }
 
