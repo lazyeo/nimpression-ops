@@ -1,4 +1,3 @@
-using System.Globalization;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
@@ -186,7 +185,7 @@ public sealed class PayrollEndpoints : IEndpointModule
             {
                 id = p.Id,
                 payPeriod = $"{p.PeriodStartsOn:yyyy-MM-dd} ~ {p.PeriodEndsOn:yyyy-MM-dd}",
-                payDate = p.PaidAt.HasValue ? p.PaidAt.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : null,
+                payDate = p.PaidAt,
                 grossPay = p.GrossPay,
                 netPay = p.GrossPay,
                 deductions = 0.0m,
