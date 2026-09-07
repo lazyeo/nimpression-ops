@@ -11,4 +11,6 @@ public sealed record AreaAssignmentDto(
     Guid DriverId,
     DateOnly EffectiveFrom,
     DateOnly? EffectiveTo,
-    bool IsActive);
+    bool IsActive,
+    string? DriverName = null,
+    string? DriverEmployeeNo = null);
