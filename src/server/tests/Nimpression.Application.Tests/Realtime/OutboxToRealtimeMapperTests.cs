@@ -74,6 +74,34 @@ public sealed class OutboxToRealtimeMapperTests
     }
 
     [Fact]
+    public void Map_JobTaskStarted_ReturnsPureInvalidationSignal_AndRoutesCorrectly()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
+        var occurredAt = FixedNow;
+        var payload = JsonSerializer.Serialize(new
+        {
+            JobTaskId = taskId,
+            DriverId = driverId,
+            OccurredAt = occurredAt
+        });
+
+        var outbox = new OutboxMessage(Guid.NewGuid(), "JobTaskStarted", payload, occurredAt);
+
+        // Act
+        var result = _mapper.Map(outbox);
+
+        // Assert
+        result.Message.Kind.Should().Be(RealtimeEventKinds.TaskStarted);
+        result.Message.EntityId.Should().Be(taskId);
+        result.TargetDriverId.Should().Be(driverId);
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Driver(driverId));
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()));
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Admin.ToString()));
+    }
+
+    [Fact]
     public void Map_JobTaskCompleted_ReturnsPureInvalidationSignal_AndRoutesCorrectly()
     {
         // Arrange
@@ -96,6 +124,61 @@ public sealed class OutboxToRealtimeMapperTests
         result.Message.Kind.Should().Be(RealtimeEventKinds.TaskCompleted);
         result.Message.EntityId.Should().Be(taskId);
         result.TargetDriverId.Should().Be(driverId);
+    }
+
+    [Fact]
+    public void Map_JobTaskCancelled_WithDriver_ReturnsPureInvalidationSignal_AndRoutesCorrectly()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
+        var occurredAt = FixedNow;
+        var payload = JsonSerializer.Serialize(new
+        {
+            JobTaskId = taskId,
+            DriverId = driverId,
+            Reason = "Operational change",
+            OccurredAt = occurredAt
+        });
+
+        var outbox = new OutboxMessage(Guid.NewGuid(), "JobTaskCancelled", payload, occurredAt);
+
+        // Act
+        var result = _mapper.Map(outbox);
+
+        // Assert
+        result.Message.Kind.Should().Be(RealtimeEventKinds.TaskCancelled);
+        result.Message.EntityId.Should().Be(taskId);
+        result.TargetDriverId.Should().Be(driverId);
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Driver(driverId));
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()));
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Admin.ToString()));
+    }
+
+    [Fact]
+    public void Map_JobTaskCancelled_WithoutDriver_RoutesToDispatchersAndAdminOnly()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var occurredAt = FixedNow;
+        var payload = JsonSerializer.Serialize(new
+        {
+            JobTaskId = taskId,
+            Reason = "Draft cancelled",
+            OccurredAt = occurredAt
+        });
+
+        var outbox = new OutboxMessage(Guid.NewGuid(), "JobTaskCancelled", payload, occurredAt);
+
+        // Act
+        var result = _mapper.Map(outbox);
+
+        // Assert
+        result.Message.Kind.Should().Be(RealtimeEventKinds.TaskCancelled);
+        result.Message.EntityId.Should().Be(taskId);
+        result.TargetDriverId.Should().BeNull();
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()));
+        result.TargetGroups.Should().Contain(RealtimeGroupNames.Role(UserRole.Admin.ToString()));
     }
 
     [Fact]
