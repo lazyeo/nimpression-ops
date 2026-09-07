@@ -24,7 +24,7 @@ services:
   # 本地 SMTP 捕获器。F11 的邮件验收标准（"Mailpit 中断言仅 1 封"）依赖它，
   # 且能避免开发期把测试邮件真的发到伙伴公司邮箱。
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.31.0
     container_name: nimpression-mailpit
     environment:
       MP_MAX_MESSAGES: 5000
