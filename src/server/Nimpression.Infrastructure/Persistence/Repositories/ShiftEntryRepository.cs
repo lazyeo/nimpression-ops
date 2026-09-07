@@ -171,6 +171,7 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
     {
         var completedCalculatedShifts = shifts
             .Where(s => s.Status == ShiftStatus.Completed && s.ClockOutAt.HasValue)
+            .Where(s => !driverId.HasValue || s.DriverId == driverId.Value)
             .Select(s =>
             {
                 var duration = ShiftDurationCalculator.Calculate(s);
@@ -202,11 +203,23 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
             var dayPayableHours = group.Sum(x => x.Duration.PayableHours.Value);
             var dayBreakMinutes = group.Sum(x => x.Shift.BreakMinutes);
 
-            var ordinary = Math.Min(8.00m, dayPayableHours);
-            var overtime = Math.Max(0m, dayPayableHours - 8.00m);
+            // 加班阈值（8小时/天）必须按（日期 x 司机）个体法定概念计算，聚合发生在阈值应用之后
+            decimal dayOrdinaryHours = 0m;
+            decimal dayOvertimeHours = 0m;
 
-            totalOrdinaryHours += ordinary;
-            totalOvertimeHours += overtime;
+            var driverGroups = group.GroupBy(x => x.Shift.DriverId);
+            foreach (var driverGroup in driverGroups)
+            {
+                var driverDayPayable = driverGroup.Sum(x => x.Duration.PayableHours.Value);
+                var driverOrdinary = Math.Min(8.00m, driverDayPayable);
+                var driverOvertime = Math.Max(0m, driverDayPayable - 8.00m);
+
+                dayOrdinaryHours += driverOrdinary;
+                dayOvertimeHours += driverOvertime;
+            }
+
+            totalOrdinaryHours += dayOrdinaryHours;
+            totalOvertimeHours += dayOvertimeHours;
             totalPayableHours += dayPayableHours;
             totalBreakMinutes += dayBreakMinutes;
 
@@ -214,8 +227,8 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
                 Date: date,
                 ShiftCount: shiftCount,
                 PayableHours: dayPayableHours,
-                OrdinaryHours: ordinary,
-                OvertimeHours: overtime,
+                OrdinaryHours: dayOrdinaryHours,
+                OvertimeHours: dayOvertimeHours,
                 BreakMinutes: dayBreakMinutes));
         }
 
