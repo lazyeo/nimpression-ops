@@ -487,9 +487,10 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         payslipResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var detail = await payslipResp.Content.ReadFromJsonAsync<PayslipDto>();
 
-        // Assert F7.11: ShiftDetails & TripDetails
-        detail!.ShiftDetails.Should().ContainSingle(s => s.ShiftId == shift.Id && s.PayableHours == 7.50m);
-        detail.TripDetails.Should().ContainSingle(t => t.JobTaskId == task.Id && t.Ref == "TSK-TRACE-01" && t.EffectiveDistanceKm == 28.00m);
+        // Assert F7.11 & W37: Lines snapshot
+        detail!.Lines.Should().Contain(l => l.Basis == PayBasis.Hourly && l.Kind == "OrdinaryHours" && l.Hours == 7.50m);
+        detail.Lines.Should().Contain(l => l.Basis == PayBasis.Trip && l.Kind == "TripBase" && l.Qty == 1);
+        detail.Lines.Should().Contain(l => l.Basis == PayBasis.Trip && l.Kind == "Mileage" && l.Distance == 28.00m);
 
         // Assert F7.12: Fines partition with legal notice, gross pay untouched by fine
         detail.Fines.Should().ContainSingle(f => f.Reference == "INF-NZTA-001" && f.Amount == 200.00m);

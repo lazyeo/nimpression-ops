@@ -44,26 +44,13 @@ public sealed class GetPayslipByIdQueryHandler(
                     "Drivers can only view finalised payslips.");
             }
         }
-        else if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.Dispatcher)
+        else if (currentUser.Role != UserRole.Admin)
         {
             return Error.Forbidden("forbidden", "Unauthorized to view payslips.");
         }
 
         var startsOn = payPeriod?.StartsOn ?? DateOnly.MinValue;
         var endsOn = payPeriod?.EndsOn ?? DateOnly.MaxValue;
-
-        // F7.11: 工时明细可追溯到 ShiftEntry，趟次明细可追溯到 JobTask
-        var shifts = await payrollRepository.GetCompletedShiftsForDriverAndPeriodAsync(
-            payslip.DriverId,
-            startsOn,
-            endsOn,
-            cancellationToken);
-
-        var tasks = await payrollRepository.GetCompletedJobTasksForDriverAndPeriodAsync(
-            payslip.DriverId,
-            startsOn,
-            endsOn,
-            cancellationToken);
 
         // F7.12: 工资单金额与罚款无计算关联；UI/API 分区展示并附法规说明
         var fines = await payrollRepository.GetFinesForDriverAndPeriodAsync(
@@ -73,8 +60,6 @@ public sealed class GetPayslipByIdQueryHandler(
             cancellationToken);
 
         var driverName = await payrollRepository.GetDriverDisplayNameAsync(payslip.DriverId, cancellationToken);
-        var shiftDtos = shifts.Select(PayslipShiftDetailDto.FromEntity).ToList();
-        var taskDtos = tasks.Select(PayslipTripDetailDto.FromEntity).ToList();
         var fineDtos = fines.Select(PayslipFineDto.FromEntity).ToList();
 
         return PayslipDto.FromEntity(
@@ -84,8 +69,6 @@ public sealed class GetPayslipByIdQueryHandler(
             driverName: driverName,
             employeeNo: driver?.EmployeeNo,
             paidAt: payPeriod?.PaidAt,
-            shiftDetails: shiftDtos,
-            tripDetails: taskDtos,
             fines: fineDtos);
     }
 }

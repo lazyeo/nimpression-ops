@@ -123,8 +123,8 @@ public sealed class CalculatePayPeriodPayrollCommandHandlerTests
         Assert.True(result.IsSuccess);
         Assert.Single(result.Value);
         Assert.Equal("Liam Smith", result.Value[0].DriverName);
-        Assert.Single(result.Value[0].ShiftDetails);
-        Assert.Equal(shiftIn.Id, result.Value[0].ShiftDetails[0].ShiftId);
+        var ordLine = Assert.Single(result.Value[0].Lines, l => l.Kind == "OrdinaryHours");
+        Assert.Equal(8.00m, ordLine.Hours);
     }
 
     [Fact]

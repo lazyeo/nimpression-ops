@@ -62,7 +62,7 @@ export class PayrollComponent implements OnInit {
 
   // View state: 'periods' | 'payslips'
   readonly currentView = signal<'periods' | 'payslips'>('periods');
-  readonly activeTraceTab = signal<'shifts' | 'trips' | 'lines'>('shifts');
+  readonly activeTraceTab = signal<'lines' | 'shifts' | 'trips'>('lines');
 
   // Filters
   readonly selectedStatus = signal<string>('');
@@ -180,7 +180,7 @@ export class PayrollComponent implements OnInit {
   viewPayslipDetail(payslip: PayslipDto): void {
     this.isDetailLoading.set(true);
     this.isDetailModalOpen.set(true);
-    this.activeTraceTab.set('shifts');
+    this.activeTraceTab.set('lines');
 
     this.payrollService.getPayslipById(payslip.id).subscribe({
       next: (fullDetail) => {
