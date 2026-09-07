@@ -25,6 +25,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { VehicleDto } from '../../../core/api/models/api-models';
 import { toDateInputValue } from '../../../core/utils/date-utils';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 
 @Component({
   selector: 'nim-admin-fines',
@@ -44,6 +45,7 @@ import { toDateInputValue } from '../../../core/utils/date-utils';
 })
 export class FinesComponent implements OnInit {
   private readonly finesService = inject(FinesService);
+  readonly toScreamingSnake = toScreamingSnake;
 
   readonly isLoading = signal<boolean>(false);
   readonly isDetailLoading = signal<boolean>(false);

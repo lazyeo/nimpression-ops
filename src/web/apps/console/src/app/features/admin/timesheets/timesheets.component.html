@@ -59,19 +59,30 @@
           </div>
           <div class="kpi-card highlight">
             <span class="kpi-label">{{ 'TIMESHEETS.TOTAL_PAYABLE_HOURS' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalPayableHours || 0 | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
+            <span class="kpi-val"
+              >{{ summary()?.totalPayableHours || 0 | localeNumber: 1 : 2 }}
+              {{ 'COMMON.UNITS.HRS' | i18n }}</span
+            >
           </div>
           <div class="kpi-card">
             <span class="kpi-label">{{ 'TIMESHEETS.ORDINARY_HOURS' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalOrdinaryHours || 0 | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
+            <span class="kpi-val"
+              >{{ summary()?.totalOrdinaryHours || 0 | localeNumber: 1 : 2 }}
+              {{ 'COMMON.UNITS.HRS' | i18n }}</span
+            >
           </div>
           <div class="kpi-card">
             <span class="kpi-label">{{ 'TIMESHEETS.OVERTIME_HOURS' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalOvertimeHours || 0 | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HRS' | i18n }}</span>
+            <span class="kpi-val"
+              >{{ summary()?.totalOvertimeHours || 0 | localeNumber: 1 : 2 }}
+              {{ 'COMMON.UNITS.HRS' | i18n }}</span
+            >
           </div>
           <div class="kpi-card">
             <span class="kpi-label">{{ 'TIMESHEETS.BREAK_MINUTES' | i18n }}</span>
-            <span class="kpi-val">{{ summary()?.totalBreakMinutes || 0 }} {{ 'COMMON.UNITS.MINS' | i18n }}</span>
+            <span class="kpi-val"
+              >{{ summary()?.totalBreakMinutes || 0 }} {{ 'COMMON.UNITS.MINS' | i18n }}</span
+            >
           </div>
         }
       </div>
@@ -80,7 +91,9 @@
     <!-- Filter Bar -->
     <div class="filter-card">
       <div class="filter-group">
-        <label for="driver-filter" class="filter-label">{{ 'TIMESHEETS.FILTER_DRIVER' | i18n }}</label>
+        <label for="driver-filter" class="filter-label">{{
+          'TIMESHEETS.FILTER_DRIVER' | i18n
+        }}</label>
         <select
           id="driver-filter"
           class="form-control"
@@ -95,7 +108,9 @@
       </div>
 
       <div class="filter-group">
-        <label for="status-filter" class="filter-label">{{ 'TIMESHEETS.FILTER_STATUS' | i18n }}</label>
+        <label for="status-filter" class="filter-label">{{
+          'TIMESHEETS.FILTER_STATUS' | i18n
+        }}</label>
         <select
           id="status-filter"
           class="form-control"
@@ -105,7 +120,7 @@
           <option value="">{{ 'TIMESHEETS.FILTER_ALL_STATUSES' | i18n }}</option>
           <option value="Active">{{ 'TIMESHEETS.STATUS_ACTIVE' | i18n }}</option>
           <option value="Completed">{{ 'TIMESHEETS.STATUS_COMPLETED' | i18n }}</option>
-          <option value="AutoClosed">{{ 'TIMESHEETS.STATUS_AUTOCLOSED' | i18n }}</option>
+          <option value="AutoClosed">{{ 'TIMESHEETS.STATUS_AUTO_CLOSED' | i18n }}</option>
           <option value="Cancelled">{{ 'TIMESHEETS.STATUS_CANCELLED' | i18n }}</option>
         </select>
       </div>
@@ -187,7 +202,9 @@
               @for (shift of timesheets(); track shift.id) {
                 <tr>
                   <td class="driver-cell">
-                    <span class="driver-name">{{ shift.driverName || 'Driver ' + shift.driverId.substring(0, 8) }}</span>
+                    <span class="driver-name">{{
+                      shift.driverName || 'Driver ' + shift.driverId.substring(0, 8)
+                    }}</span>
                   </td>
                   <td>{{ shift.attributedDate || (shift.clockInAt | localeDate: 'short') }}</td>
                   <td>{{ shift.clockInAt | localeDate: 'short' }}</td>
@@ -195,40 +212,59 @@
                     @if (shift.clockOutAt) {
                       {{ shift.clockOutAt | localeDate: 'short' }}
                     } @else {
-                      <nim-status-badge status="Active">{{ 'TIMESHEETS.STATUS_ACTIVE' | i18n }}</nim-status-badge>
+                      <nim-status-badge status="Active">{{
+                        'TIMESHEETS.STATUS_ACTIVE' | i18n
+                      }}</nim-status-badge>
                     }
                   </td>
                   <td>{{ shift.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
                   <td>
                     @if (shift.rawDurationHours !== null && shift.rawDurationHours !== undefined) {
-                      {{ shift.rawDurationHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}
+                      {{ shift.rawDurationHours | localeNumber: 1 : 2
+                      }}{{ 'COMMON.UNITS.H' | i18n }}
                     } @else {
                       -
                     }
                   </td>
                   <td class="payable-cell">
                     @if (shift.payableHours !== null && shift.payableHours !== undefined) {
-                      <strong>{{ shift.payableHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong>
+                      <strong
+                        >{{ shift.payableHours | localeNumber: 1 : 2
+                        }}{{ 'COMMON.UNITS.H' | i18n }}</strong
+                      >
                     } @else {
                       -
                     }
                   </td>
                   <td>
-                    <nim-status-badge [status]="shift.status" [variant]="shift.adminCorrectionReason ? 'warning' : undefined">
+                    <nim-status-badge
+                      [status]="shift.status"
+                      [variant]="shift.adminCorrectionReason ? 'warning' : undefined"
+                    >
                       @if (shift.adminCorrectionReason) {
                         {{ 'TIMESHEETS.STATUS_CORRECTED' | i18n }}
                       } @else {
-                        {{ 'TIMESHEETS.STATUS_' + shift.status.toUpperCase() | i18n }}
+                        {{ 'TIMESHEETS.STATUS_' + toScreamingSnake(shift.status) | i18n }}
                       }
                     </nim-status-badge>
                   </td>
                   <td>
                     @if (shift.locationUnavailable) {
-                      <nim-status-badge status="NoGps" variant="neutral" icon="alert-triangle" [title]="'TIMESHEETS.GPS_UNAVAILABLE' | i18n">
+                      <nim-status-badge
+                        status="NoGps"
+                        variant="neutral"
+                        icon="alert-triangle"
+                        [title]="'TIMESHEETS.GPS_UNAVAILABLE' | i18n"
+                      >
                         {{ 'TIMESHEETS.NO_GPS' | i18n }}
                       </nim-status-badge>
                     } @else {
-                      <nim-status-badge status="HasGps" variant="success" icon="navigation" [title]="'TIMESHEETS.GPS_RECORDED' | i18n">
+                      <nim-status-badge
+                        status="HasGps"
+                        variant="success"
+                        icon="navigation"
+                        [title]="'TIMESHEETS.GPS_RECORDED' | i18n"
+                      >
                         {{ 'TIMESHEETS.HAS_GPS' | i18n }}
                       </nim-status-badge>
                     }
@@ -260,7 +296,10 @@
         <!-- Pagination -->
         <div class="pagination-bar">
           <span class="page-info">
-            {{ 'COMMON.PAGE_INFO_TIMESHEETS' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
+            {{
+              'COMMON.PAGE_INFO_TIMESHEETS'
+                | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() }
+            }}
           </span>
           <div class="pagination-controls">
             <button
@@ -295,7 +334,9 @@
             <nim-icon name="timesheets" [size]="20" />
             <h3 class="modal-title">{{ 'TIMESHEETS.DIALOG_DETAILS_TITLE' | i18n }}</h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeDetailsModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeDetailsModal()">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <div class="details-grid">
@@ -313,7 +354,11 @@
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_CLOCK_OUT' | i18n }}</label>
-              <span>{{ selectedShift()?.clockOutAt ? (selectedShift()?.clockOutAt | localeDate: 'medium') : ('TIMESHEETS.STATUS_ACTIVE' | i18n) }}</span>
+              <span>{{
+                selectedShift()?.clockOutAt
+                  ? (selectedShift()?.clockOutAt | localeDate: 'medium')
+                  : ('TIMESHEETS.STATUS_ACTIVE' | i18n)
+              }}</span>
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_BREAK' | i18n }}</label>
@@ -321,14 +366,26 @@
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_PAYABLE' | i18n }}</label>
-              <strong>{{ selectedShift()?.payableHours | localeNumber: 1 : 2 }} {{ 'COMMON.UNITS.HOURS' | i18n }}</strong>
+              <strong
+                >{{ selectedShift()?.payableHours | localeNumber: 1 : 2 }}
+                {{ 'COMMON.UNITS.HOURS' | i18n }}</strong
+              >
             </div>
             <div class="detail-item full-width">
               <label>{{ 'TIMESHEETS.COL_LOCATION' | i18n }}</label>
               @if (selectedShift()?.locationUnavailable) {
                 <span class="text-muted">{{ 'TIMESHEETS.GPS_UNAVAILABLE' | i18n }}</span>
               } @else {
-                <span>{{ 'TIMESHEETS.LOCATION_NOTE' | i18n: { inLat: selectedShift()?.clockInLat ?? '-', inLng: selectedShift()?.clockInLng ?? '-', outLat: selectedShift()?.clockOutLat ?? '-', outLng: selectedShift()?.clockOutLng ?? '-' } }}</span>
+                <span>{{
+                  'TIMESHEETS.LOCATION_NOTE'
+                    | i18n
+                      : {
+                          inLat: selectedShift()?.clockInLat ?? '-',
+                          inLng: selectedShift()?.clockInLng ?? '-',
+                          outLat: selectedShift()?.clockOutLat ?? '-',
+                          outLng: selectedShift()?.clockOutLng ?? '-',
+                        }
+                }}</span>
               }
             </div>
             @if (selectedShift()?.note) {
@@ -340,8 +397,16 @@
             @if (selectedShift()?.adminCorrectionReason) {
               <div class="detail-item full-width audit-box">
                 <label class="audit-title">{{ 'TIMESHEETS.CORRECTION_HISTORY' | i18n }}</label>
-                <p><strong>{{ 'TIMESHEETS.REASON_LABEL' | i18n }}:</strong> {{ selectedShift()?.adminCorrectionReason }}</p>
-                <p><small>{{ 'TIMESHEETS.CORRECTED_AT' | i18n }}: {{ selectedShift()?.correctedAt | localeDate: 'short' }}</small></p>
+                <p>
+                  <strong>{{ 'TIMESHEETS.REASON_LABEL' | i18n }}:</strong>
+                  {{ selectedShift()?.adminCorrectionReason }}
+                </p>
+                <p>
+                  <small
+                    >{{ 'TIMESHEETS.CORRECTED_AT' | i18n }}:
+                    {{ selectedShift()?.correctedAt | localeDate: 'short' }}</small
+                  >
+                </p>
               </div>
             }
           </div>
@@ -364,7 +429,9 @@
             <nim-icon name="wrench" [size]="20" />
             <h3 class="modal-title">{{ 'TIMESHEETS.DIALOG_CORRECT_TITLE' | i18n }}</h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeCorrectModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeCorrectModal()">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <p class="form-desc">{{ 'TIMESHEETS.DIALOG_CORRECT_SUB' | i18n }}</p>
@@ -378,7 +445,12 @@
 
           <div class="form-group">
             <label class="form-label">{{ 'TIMESHEETS.ORIGINAL_IN' | i18n }}</label>
-            <input type="text" class="form-control readonly" readonly [value]="correctingShift()?.clockInAt | localeDate: 'medium'" />
+            <input
+              type="text"
+              class="form-control readonly"
+              readonly
+              [value]="correctingShift()?.clockInAt | localeDate: 'medium'"
+            />
           </div>
 
           <div class="form-group">
@@ -393,11 +465,7 @@
 
           <div class="form-group">
             <label class="form-label">{{ 'TIMESHEETS.NEW_CLOCK_OUT' | i18n }}</label>
-            <input
-              type="datetime-local"
-              class="form-control"
-              [(ngModel)]="correctionClockOut"
-            />
+            <input type="datetime-local" class="form-control" [(ngModel)]="correctionClockOut" />
           </div>
 
           <div class="form-group">
@@ -424,7 +492,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeCorrectModal()" [disabled]="isSubmittingCorrection()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeCorrectModal()"
+            [disabled]="isSubmittingCorrection()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button

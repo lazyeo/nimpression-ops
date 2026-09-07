@@ -16,11 +16,7 @@
         <nim-icon name="refresh" [size]="16" />
         <span>{{ 'COMMON.REFRESH' | i18n }}</span>
       </button>
-      <button
-        type="button"
-        class="action-btn btn-primary"
-        (click)="openSubmitModal()"
-      >
+      <button type="button" class="action-btn btn-primary" (click)="openSubmitModal()">
         <nim-icon name="fines" [size]="16" />
         <span>{{ 'FINES.NEW_FINE' | i18n }}</span>
       </button>
@@ -195,11 +191,13 @@
                       <small class="text-muted">({{ fine.employeeNo }})</small>
                     }
                   </td>
-                  <td><span class="rego-badge">{{ fine.vehicleRego }}</span></td>
+                  <td>
+                    <span class="rego-badge">{{ fine.vehicleRego }}</span>
+                  </td>
                   <td class="amount-cell">{{ fine.amount | localeCurrency: fine.currency }}</td>
                   <td>
                     <nim-status-badge [status]="fine.status">
-                      {{ 'FINES.STATUS_' + fine.status.replace(' ', '_').toUpperCase() | i18n }}
+                      {{ 'FINES.STATUS_' + toScreamingSnake(fine.status) | i18n }}
                     </nim-status-badge>
                   </td>
                   <td class="actions-cell">
@@ -259,7 +257,11 @@
                     }
 
                     <!-- Terminal State Tag (Accepted/Disputed/Waived) -->
-                    @if (fine.status === 'Accepted' || fine.status === 'Disputed' || fine.status === 'Waived') {
+                    @if (
+                      fine.status === 'Accepted' ||
+                      fine.status === 'Disputed' ||
+                      fine.status === 'Waived'
+                    ) {
                       <span class="terminal-badge" [title]="'FINES.TERMINAL_STATE_BADGE' | i18n">
                         <nim-icon name="target" [size]="12" />
                       </span>
@@ -274,7 +276,10 @@
         <!-- Pagination -->
         <div class="pagination-bar">
           <span class="page-info">
-            {{ 'COMMON.PAGE_INFO_FINES' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
+            {{
+              'COMMON.PAGE_INFO_FINES'
+                | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() }
+            }}
           </span>
           <div class="pagination-controls">
             <button
@@ -307,15 +312,21 @@
         <div class="modal-header">
           <div class="modal-title-wrap">
             <nim-icon name="fines" [size]="20" />
-            <h3 class="modal-title">{{ activeFineDetail()?.reference }} ({{ activeFineDetail()?.authority }})</h3>
+            <h3 class="modal-title">
+              {{ activeFineDetail()?.reference }} ({{ activeFineDetail()?.authority }})
+            </h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeDetailModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeDetailModal()">
+            &times;
+          </button>
         </div>
 
         <div class="modal-body">
           @if (isDetailLoading()) {
             <div class="skeleton-table">
-              <div class="skeleton-row" *ngFor="let i of [1, 2, 3]"><div class="skeleton-cell"></div></div>
+              <div class="skeleton-row" *ngFor="let i of [1, 2, 3]">
+                <div class="skeleton-cell"></div>
+              </div>
             </div>
           } @else {
             <div class="details-grid">
@@ -333,11 +344,15 @@
               </div>
               <div class="detail-item">
                 <label>{{ 'FINES.COL_AMOUNT' | i18n }}</label>
-                <strong class="fine-amount-highlight">{{ activeFineDetail()?.amount | localeCurrency: activeFineDetail()?.currency }}</strong>
+                <strong class="fine-amount-highlight">{{
+                  activeFineDetail()?.amount | localeCurrency: activeFineDetail()?.currency
+                }}</strong>
               </div>
               <div class="detail-item">
                 <label>{{ 'FINES.COL_DRIVER' | i18n }}</label>
-                <span>{{ activeFineDetail()?.driverName }} ({{ activeFineDetail()?.employeeNo }})</span>
+                <span
+                  >{{ activeFineDetail()?.driverName }} ({{ activeFineDetail()?.employeeNo }})</span
+                >
               </div>
               <div class="detail-item">
                 <label>{{ 'FINES.COL_VEHICLE' | i18n }}</label>
@@ -381,15 +396,27 @@
               @if (activeFineDetail()?.reviewedAt || activeFineDetail()?.reviewNote) {
                 <div class="detail-item full-width review-history-box">
                   <label class="review-title">{{ 'FINES.REVIEW_INFO_TITLE' | i18n }}</label>
-                  <p><strong>{{ 'FINES.COL_STATUS' | i18n }}:</strong> {{ activeFineDetail()?.status }}</p>
+                  <p>
+                    <strong>{{ 'FINES.COL_STATUS' | i18n }}:</strong>
+                    {{ activeFineDetail()?.status }}
+                  </p>
                   @if (activeFineDetail()?.reviewerName) {
-                    <p><strong>{{ 'FINES.REVIEWED_BY' | i18n }}:</strong> {{ activeFineDetail()?.reviewerName }}</p>
+                    <p>
+                      <strong>{{ 'FINES.REVIEWED_BY' | i18n }}:</strong>
+                      {{ activeFineDetail()?.reviewerName }}
+                    </p>
                   }
                   @if (activeFineDetail()?.reviewedAt) {
-                    <p><strong>{{ 'FINES.REVIEWED_AT' | i18n }}:</strong> {{ activeFineDetail()?.reviewedAt | localeDate: 'short' }}</p>
+                    <p>
+                      <strong>{{ 'FINES.REVIEWED_AT' | i18n }}:</strong>
+                      {{ activeFineDetail()?.reviewedAt | localeDate: 'short' }}
+                    </p>
                   }
                   @if (activeFineDetail()?.reviewNote) {
-                    <p><strong>{{ 'FINES.REVIEW_NOTE' | i18n }}:</strong> {{ activeFineDetail()?.reviewNote }}</p>
+                    <p>
+                      <strong>{{ 'FINES.REVIEW_NOTE' | i18n }}:</strong>
+                      {{ activeFineDetail()?.reviewNote }}
+                    </p>
                   }
                 </div>
               }
@@ -415,7 +442,9 @@
             <nim-icon name="fines" [size]="20" />
             <h3 class="modal-title">{{ 'FINES.DIALOG_SUBMIT_TITLE' | i18n }}</h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeSubmitModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeSubmitModal()">
+            &times;
+          </button>
         </div>
 
         <div class="modal-body">
@@ -497,7 +526,10 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">{{ 'FINES.PHOTO_UPLOAD_LABEL' | i18n }} {{ 'FINES.PHOTO_KEY_OPTIONAL' | i18n }}</label>
+            <label class="form-label"
+              >{{ 'FINES.PHOTO_UPLOAD_LABEL' | i18n }}
+              {{ 'FINES.PHOTO_KEY_OPTIONAL' | i18n }}</label
+            >
             <input
               type="text"
               class="form-control"
@@ -508,14 +540,27 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeSubmitModal()" [disabled]="isSubmittingFine()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeSubmitModal()"
+            [disabled]="isSubmittingFine()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button
             type="button"
             class="btn-dialog btn-primary"
             (click)="submitFine()"
-            [disabled]="isSubmittingFine() || !newVehicleId || !newIssuedOn || !newAuthority || !newReference || !newAmount || !newReason"
+            [disabled]="
+              isSubmittingFine() ||
+              !newVehicleId ||
+              !newIssuedOn ||
+              !newAuthority ||
+              !newReference ||
+              !newAmount ||
+              !newReason
+            "
           >
             {{ 'COMMON.SUBMIT' | i18n }}
           </button>
@@ -532,19 +577,29 @@
           <div class="modal-title-wrap">
             <nim-icon name="fines" [size]="20" />
             <h3 class="modal-title">
-              @if (reviewMode() === 'accept') { {{ 'FINES.DIALOG_ACCEPT_TITLE' | i18n }} }
-              @else if (reviewMode() === 'dispute') { {{ 'FINES.DIALOG_DISPUTE_TITLE' | i18n }} }
-              @else { {{ 'FINES.DIALOG_WAIVE_TITLE' | i18n }} }
+              @if (reviewMode() === 'accept') {
+                {{ 'FINES.DIALOG_ACCEPT_TITLE' | i18n }}
+              } @else if (reviewMode() === 'dispute') {
+                {{ 'FINES.DIALOG_DISPUTE_TITLE' | i18n }}
+              } @else {
+                {{ 'FINES.DIALOG_WAIVE_TITLE' | i18n }}
+              }
             </h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeReviewModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeReviewModal()">
+            &times;
+          </button>
         </div>
 
         <div class="modal-body">
           <p class="form-desc">
-            @if (reviewMode() === 'accept') { {{ 'FINES.DIALOG_ACCEPT_DESC' | i18n }} }
-            @else if (reviewMode() === 'dispute') { {{ 'FINES.DIALOG_DISPUTE_DESC' | i18n }} }
-            @else { {{ 'FINES.DIALOG_WAIVE_DESC' | i18n }} }
+            @if (reviewMode() === 'accept') {
+              {{ 'FINES.DIALOG_ACCEPT_DESC' | i18n }}
+            } @else if (reviewMode() === 'dispute') {
+              {{ 'FINES.DIALOG_DISPUTE_DESC' | i18n }}
+            } @else {
+              {{ 'FINES.DIALOG_WAIVE_DESC' | i18n }}
+            }
           </p>
 
           @if (reviewError()) {
@@ -554,7 +609,9 @@
           <div class="form-group">
             <label class="form-label">
               {{ 'FINES.REVIEW_NOTE_LABEL' | i18n }}
-              @if (reviewMode() !== 'accept') { * }
+              @if (reviewMode() !== 'accept') {
+                *
+              }
             </label>
             <textarea
               class="form-control textarea"
@@ -571,7 +628,12 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeReviewModal()" [disabled]="isReviewSubmitting()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeReviewModal()"
+            [disabled]="isReviewSubmitting()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button
@@ -580,7 +642,7 @@
             [ngClass]="{
               'btn-success': reviewMode() === 'accept',
               'btn-danger': reviewMode() === 'dispute',
-              'btn-primary': reviewMode() === 'waive'
+              'btn-primary': reviewMode() === 'waive',
             }"
             (click)="submitReviewDecision()"
             [disabled]="isReviewSubmitting() || (reviewMode() !== 'accept' && !reviewNote().trim())"

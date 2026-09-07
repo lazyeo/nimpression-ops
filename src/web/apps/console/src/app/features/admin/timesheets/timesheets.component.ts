@@ -25,6 +25,7 @@ import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 
 @Component({
   selector: 'nim-admin-timesheets',
@@ -46,6 +47,7 @@ export class TimesheetsComponent implements OnInit {
   private readonly timesheetsService = inject(TimesheetsService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly toScreamingSnake = toScreamingSnake;
 
   readonly isLoading = signal<boolean>(false);
   readonly isSummaryLoading = signal<boolean>(false);
