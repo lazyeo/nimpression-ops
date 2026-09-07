@@ -753,7 +753,7 @@
           <button
             type="button"
             class="btn-primary"
-            style="background: #dc2626"
+            style="background: var(--color-danger)"
             [disabled]="isSubmitting() || !cancelReason.trim()"
             (click)="submitCancelTask()"
           >
@@ -889,7 +889,7 @@
             @if (selectedTask()!.description) {
               <div class="detail-group full-width">
                 <h4>{{ 'DISPATCH.FIELD_DESCRIPTION' | i18n }}</h4>
-                <p style="margin: 0; font-size: 0.8125rem; color: #334155">
+                <p style="margin: 0; font-size: var(--font-size-sm); color: var(--color-gray-700)">
                   {{ selectedTask()!.description }}
                 </p>
               </div>
