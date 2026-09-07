@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  computed,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -9,6 +17,7 @@ import { OfflineCacheService } from '../../../core/offline/offline-cache.service
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 
 export interface DriverTaskItem {
   id: string;
@@ -43,6 +52,7 @@ export class DriverTasksComponent implements OnInit {
   private readonly offlineCache = inject(OfflineCacheService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly toScreamingSnake = toScreamingSnake;
   readonly offlineQueue = inject(OfflineQueueService);
 
   readonly activeTab = signal<'active' | 'history'>('active');
@@ -151,17 +161,21 @@ export class DriverTasksComponent implements OnInit {
     this.historyPage.set(page);
 
     if (this.offlineQueue.isOnline()) {
-      this.http.get<PaginatedResult<DriverTaskItem>>(`/api/dispatch/my-tasks?activeOnly=false&page=${page}&pageSize=${this.historyPageSize}`).subscribe({
-        next: (data) => {
-          this.historyTasks.set(data.items || []);
-          this.historyTotalCount.set(data.totalCount || 0);
-          this.historyTotalPages.set(data.totalPages || 1);
-          this.isLoading.set(false);
-        },
-        error: () => {
-          this.isLoading.set(false);
-        },
-      });
+      this.http
+        .get<PaginatedResult<DriverTaskItem>>(
+          `/api/dispatch/my-tasks?activeOnly=false&page=${page}&pageSize=${this.historyPageSize}`,
+        )
+        .subscribe({
+          next: (data) => {
+            this.historyTasks.set(data.items || []);
+            this.historyTotalCount.set(data.totalCount || 0);
+            this.historyTotalPages.set(data.totalPages || 1);
+            this.isLoading.set(false);
+          },
+          error: () => {
+            this.isLoading.set(false);
+          },
+        });
     } else {
       this.isLoading.set(false);
     }

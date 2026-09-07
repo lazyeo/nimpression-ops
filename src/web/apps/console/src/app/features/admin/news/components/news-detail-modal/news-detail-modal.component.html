@@ -145,10 +145,7 @@
 
               <!-- Progress Bar -->
               <div class="progress-bar-track">
-                <div
-                  class="progress-bar-fill"
-                  [style.width.%]="st.readRate * 100"
-                ></div>
+                <div class="progress-bar-fill" [style.width.%]="st.readRate * 100"></div>
               </div>
             </div>
           }
@@ -189,7 +186,7 @@
                         <td class="cell-email">{{ user.email }}</td>
                         <td>
                           <span class="badge badge-role">
-                            {{ 'ROLES.' + user.role.toUpperCase() | i18n }}
+                            {{ 'ROLES.' + toScreamingSnake(user.role) | i18n }}
                           </span>
                         </td>
                       </tr>

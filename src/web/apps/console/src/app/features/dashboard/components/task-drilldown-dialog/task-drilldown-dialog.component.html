@@ -70,7 +70,7 @@
                     </td>
                     <td class="cell-status">
                       <span class="status-badge" [ngClass]="getStatusClass(task.status)">
-                        {{ getStatusKey(task.status) | i18n }}
+                        {{ 'CHARTS.TASK_FUNNEL.STAGES.' + toScreamingSnake(task.status) | i18n }}
                       </span>
                     </td>
                     <td class="cell-time">

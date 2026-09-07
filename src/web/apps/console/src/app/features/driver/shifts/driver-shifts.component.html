@@ -6,7 +6,9 @@
   <div class="shift-card">
     <div class="shift-status-badge">
       <span class="status-indicator status-{{ currentShift().status.toLowerCase() }}"></span>
-      <span class="status-text">{{ 'DRIVER.SHIFT_STATUS_' + currentShift().status | i18n }}</span>
+      <span class="status-text">{{
+        'DRIVER.SHIFT_STATUS_' + toScreamingSnake(currentShift().status) | i18n
+      }}</span>
     </div>
 
     <div class="timer-display">

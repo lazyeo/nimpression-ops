@@ -14,11 +14,8 @@ import { I18nPipe } from '../../../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../../../core/i18n/locale-date.pipe';
 import { IconComponent } from '../../../../../shared/components/icon/icon.component';
 import { NewsService } from '../../services/news.service';
-import {
-  NewsPostDetailDto,
-  NewsReadStatsDto,
-  UnreadUserDto,
-} from '../../models/news.models';
+import { NewsPostDetailDto, NewsReadStatsDto, UnreadUserDto } from '../../models/news.models';
+import { toScreamingSnake } from '../../../../../core/utils/case.utils';
 
 @Component({
   selector: 'nim-news-detail-modal',
@@ -30,6 +27,7 @@ import {
 })
 export class NewsDetailModalComponent implements OnInit {
   private readonly newsService = inject(NewsService);
+  readonly toScreamingSnake = toScreamingSnake;
 
   readonly newsId = input.required<string>();
   readonly closeModal = output<void>();
