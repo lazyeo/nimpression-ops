@@ -167,7 +167,7 @@
     display: inline-block;
     font-size: var(--font-size-xs);
     color: var(--color-primary-400);
-    background-color: rgba(56, 189, 248, 0.1);
+    background-color: var(--color-primary-subtle);
     padding: 1px var(--space-6);
     border-radius: var(--radius-sm);
     line-height: var(--line-height-tight);
