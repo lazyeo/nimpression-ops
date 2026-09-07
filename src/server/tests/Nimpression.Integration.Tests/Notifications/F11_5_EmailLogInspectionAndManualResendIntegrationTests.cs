@@ -25,7 +25,9 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
     private HttpClient _client = null!;
 
     private readonly Guid _adminUserId = Guid.NewGuid();
+    private readonly Guid _dispatcherUserId = Guid.NewGuid();
     private string _adminToken = string.Empty;
+    private string _dispatcherToken = string.Empty;
 
     public F11_5_EmailLogInspectionAndManualResendIntegrationTests(PostgreSqlContainerFixture fixture)
     {
@@ -37,13 +39,16 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
         _mailpit = _fixture.CreateMailpitClient();
 
         var adminEmail = TestDataFactory.CreateEmailAddress("admin");
+        var dispatcherEmail = TestDataFactory.CreateEmailAddress("disp");
 
         await using (var db = _fixture.CreateDbContext())
         {
             await db.Database.MigrateAsync();
 
             var admin = new User(_adminUserId, adminEmail, "HashPass123!", UserRole.Admin, "Admin");
+            var dispatcher = new User(_dispatcherUserId, dispatcherEmail, "HashPass123!", UserRole.Dispatcher, "Dispatcher");
             await db.Users.AddAsync(admin);
+            await db.Users.AddAsync(dispatcher);
             await db.SaveChangesAsync();
         }
 
@@ -56,6 +61,7 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
 
         var jwtGenerator = _factory.Services.GetRequiredService<IJwtTokenGenerator>();
         (_adminToken, _) = jwtGenerator.GenerateAccessToken(_adminUserId, adminEmail.Value, UserRole.Admin.ToString(), "Admin");
+        (_dispatcherToken, _) = jwtGenerator.GenerateAccessToken(_dispatcherUserId, dispatcherEmail.Value, UserRole.Dispatcher.ToString(), "Dispatcher");
     }
 
     public Task DisposeAsync()
@@ -116,6 +122,22 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
         // ── 5. 对已成功的邮件再次重发应返回 422 业务报错 ──
         var duplicateResendResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/notifications/logs/{logId}/resend");
         duplicateResendResp.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task EmailLogs_WhenDispatcherAttemptsQueryOrResend_ReturnsForbidden()
+    {
+        // 1. Dispatcher attempting GET list
+        var listResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, "/api/notifications/logs");
+        listResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 2. Dispatcher attempting GET by ID
+        var getResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/logs/{Guid.NewGuid()}");
+        getResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 3. Dispatcher attempting POST resend
+        var resendResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Post, $"/api/notifications/logs/{Guid.NewGuid()}/resend");
+        resendResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(string token, HttpMethod method, string url, object? body = null)
