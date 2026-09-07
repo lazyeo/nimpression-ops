@@ -168,7 +168,7 @@ export function runHardcodedColorsGuard(targetSrcDir = srcDir, options = {}) {
     console.error(`\n[hardcoded-colors-guard] FAILED: Found ${violations.length} hardcoded color violation(s):`);
     violations.forEach((v, i) => console.error(`  ${i + 1}. ${v.message}`));
     console.error(
-      '\nBuild aborted: Hardcoded color values are prohibited. Use design tokens from tokens.scss / theme.scss, or explicitly register an item-by-item exemption with // allow-hardcoded-color: <reason>.\n',
+      '\n[hardcoded-colors-guard] Policy Notice: Hardcoded color values are prohibited. Use design tokens from tokens.scss / theme.scss, or explicitly register an item-by-item exemption with // allow-hardcoded-color: <reason>.\n[hardcoded-colors-guard] Note: 当前存量违规将在后续波次清理，清理完成后本守卫进入 build 阻断链。\n',
     );
     return {
       success: false,
