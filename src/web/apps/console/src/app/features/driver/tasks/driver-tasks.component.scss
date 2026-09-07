@@ -44,7 +44,7 @@
 
   &:hover:not(.tab-active) {
     color: var(--color-gray-200);
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--color-gray-700);
   }
 
   &.tab-active {
@@ -58,7 +58,7 @@
   font-size: var(--font-size-xs);
   padding: 1px var(--space-6);
   border-radius: var(--radius-full);
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: var(--color-primary-subtle);
   color: var(--color-primary-contrast);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
@@ -94,9 +94,9 @@
 }
 
 .cached-banner {
-  background-color: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #fde68a;
+  background-color: var(--badge-warning-bg);
+  border: 1px solid var(--badge-warning-border);
+  color: var(--badge-warning-text);
   border-radius: var(--radius-lg);
   padding: var(--space-10) var(--space-14);
   font-size: var(--font-size-sm);
@@ -140,7 +140,7 @@
 
   &.card-active {
     border-color: var(--color-primary);
-    box-shadow: 0 0 15px rgba(2, 132, 199, 0.2);
+    box-shadow: 0 0 15px var(--color-primary-subtle);
   }
 }
 
@@ -165,19 +165,19 @@
   line-height: var(--line-height-tight);
 
   &.status-in_progress {
-    background-color: rgba(2, 132, 199, 0.2);
-    color: var(--color-primary-400);
+    background-color: var(--badge-info-bg);
+    color: var(--badge-info-text);
   }
 
   &.status-assigned,
   &.status-pending {
-    background-color: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
+    background-color: var(--badge-warning-bg);
+    color: var(--badge-warning-text);
   }
 
   &.status-completed {
-    background-color: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
+    background-color: var(--badge-success-bg);
+    color: var(--badge-success-text);
   }
 }
 
