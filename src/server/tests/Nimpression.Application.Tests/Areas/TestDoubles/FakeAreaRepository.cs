@@ -142,6 +142,9 @@ public sealed class FakeAreaRepository : IAreaRepository
         Assignments.Remove(assignment.Id);
     }
 
+    public Dictionary<Guid, string> DriverDisplayNames { get; } = [];
+    public Dictionary<Guid, string> DriverEmployeeNumbers { get; } = [];
+
     public Task<List<AreaAssignmentDto>> GetAreaAssignmentsAsync(Guid? areaId, Guid? driverId, DateOnly referenceDate, CancellationToken cancellationToken = default)
     {
         var query = Assignments.Values.AsEnumerable();
@@ -155,7 +158,9 @@ public sealed class FakeAreaRepository : IAreaRepository
                 var areaName = Areas.TryGetValue(aa.AreaId, out var a) ? a.Name : "Area";
                 var areaCode = Areas.TryGetValue(aa.AreaId, out a) ? a.Code : "CODE";
                 var isActive = aa.EffectiveFrom <= referenceDate && (aa.EffectiveTo == null || aa.EffectiveTo >= referenceDate);
-                return new AreaAssignmentDto(aa.Id, aa.AreaId, areaName, areaCode, aa.DriverId, aa.EffectiveFrom, aa.EffectiveTo, isActive);
+                DriverDisplayNames.TryGetValue(aa.DriverId, out var driverName);
+                DriverEmployeeNumbers.TryGetValue(aa.DriverId, out var empNo);
+                return new AreaAssignmentDto(aa.Id, aa.AreaId, areaName, areaCode, aa.DriverId, aa.EffectiveFrom, aa.EffectiveTo, isActive, driverName, empNo);
             })
             .ToList();
 
