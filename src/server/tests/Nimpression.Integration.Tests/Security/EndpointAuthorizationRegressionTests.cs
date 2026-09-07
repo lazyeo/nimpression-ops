@@ -339,6 +339,175 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Drivers cannot record odometer readings for unassigned vehicles");
     }
+
+    [Fact]
+    public async Task PayrollApi_DispatcherToken_AttemptingGetPayPeriods_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_payroll_get"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/payroll/periods");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query pay periods");
+    }
+
+    [Fact]
+    public async Task PayrollApi_DispatcherToken_AttemptingGetPeriodById_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_payroll_id"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/payroll/periods/{Guid.NewGuid()}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query pay period by ID");
+    }
+
+    [Fact]
+    public async Task PayrollApi_DispatcherToken_AttemptingGetPeriodPayslips_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_payroll_slips"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/payroll/periods/{Guid.NewGuid()}/payslips");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query period payslips");
+    }
+
+    [Fact]
+    public async Task PayrollApi_DispatcherToken_AttemptingGetDriverPayslips_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_payroll_drv"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/payroll/drivers/{Guid.NewGuid()}/payslips");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query driver payslips");
+    }
+
+    [Fact]
+    public async Task PayrollApi_DispatcherToken_AttemptingCreatePayPeriod_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_payroll_create"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        var createRequest = new CreatePayPeriodRequest(new DateOnly(2026, 9, 7));
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/payroll/periods")
+        {
+            Content = JsonContent.Create(createRequest)
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot create pay periods");
+    }
+
+    [Fact]
+    public async Task PayrollApi_DispatcherToken_AttemptingCalculatePayroll_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_payroll_calc"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/payroll/periods/{Guid.NewGuid()}/calculate")
+        {
+            Content = JsonContent.Create(new CalculatePayrollRequest())
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot calculate payroll");
+    }
 }
 
 public sealed class EndpointAuthTestAppFactory : WebApplicationFactory<Program>

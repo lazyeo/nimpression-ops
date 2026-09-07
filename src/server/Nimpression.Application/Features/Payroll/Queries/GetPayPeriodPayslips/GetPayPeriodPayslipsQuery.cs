@@ -14,9 +14,9 @@ public sealed class GetPayPeriodPayslipsQueryHandler(
 {
     public async Task<Result<IReadOnlyList<PayslipDto>>> Handle(GetPayPeriodPayslipsQuery request, CancellationToken cancellationToken)
     {
-        if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.Dispatcher)
+        if (currentUser.Role != UserRole.Admin)
         {
-            return Error.Forbidden("forbidden", "Only administrators or dispatchers can view period payslips.");
+            return Error.Forbidden("forbidden", "Only administrators can view period payslips.");
         }
 
         var payPeriod = await payrollRepository.GetPayPeriodByIdAsync(request.PayPeriodId, cancellationToken);

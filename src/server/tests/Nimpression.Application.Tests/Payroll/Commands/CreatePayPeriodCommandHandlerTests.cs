@@ -63,4 +63,18 @@ public sealed class CreatePayPeriodCommandHandlerTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
     }
+
+    [Fact]
+    public async Task CreatePayPeriod_ForbiddenForDispatchers()
+    {
+        _currentUser.Role = UserRole.Dispatcher;
+        var handler = new CreatePayPeriodCommandHandler(_repository, _unitOfWork, _currentUser, _auditSink);
+
+        var command = new CreatePayPeriodCommand(new DateOnly(2026, 9, 7));
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
 }

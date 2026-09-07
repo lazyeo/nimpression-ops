@@ -43,9 +43,9 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
         CalculatePayPeriodPayrollCommand request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.Dispatcher)
+        if (currentUser.Role != UserRole.Admin)
         {
-            return Error.Forbidden("forbidden", "Only administrators or dispatchers can calculate payroll.");
+            return Error.Forbidden("forbidden", "Only administrators can calculate payroll.");
         }
 
         var payPeriod = await payrollRepository.GetPayPeriodByIdAsync(request.PayPeriodId, cancellationToken);

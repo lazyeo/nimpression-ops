@@ -39,9 +39,9 @@ public sealed class CreatePayPeriodCommandHandler(
 {
     public async Task<Result<PayPeriodDto>> Handle(CreatePayPeriodCommand request, CancellationToken cancellationToken)
     {
-        if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.Dispatcher)
+        if (currentUser.Role != UserRole.Admin)
         {
-            return Error.Forbidden("forbidden", "Only administrators or dispatchers can create pay periods.");
+            return Error.Forbidden("forbidden", "Only administrators can create pay periods.");
         }
 
         var startsOn = request.StartsOn;

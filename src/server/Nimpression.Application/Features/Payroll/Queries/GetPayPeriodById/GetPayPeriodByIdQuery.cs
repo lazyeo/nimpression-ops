@@ -14,9 +14,9 @@ public sealed class GetPayPeriodByIdQueryHandler(
 {
     public async Task<Result<PayPeriodDto>> Handle(GetPayPeriodByIdQuery request, CancellationToken cancellationToken)
     {
-        if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.Dispatcher)
+        if (currentUser.Role != UserRole.Admin)
         {
-            return Error.Forbidden("forbidden", "Only administrators or dispatchers can view pay period details.");
+            return Error.Forbidden("forbidden", "Only administrators can view pay period details.");
         }
 
         var period = await payrollRepository.GetPayPeriodByIdAsync(request.Id, cancellationToken);

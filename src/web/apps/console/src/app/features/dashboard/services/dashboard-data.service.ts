@@ -352,9 +352,7 @@ export class DashboardDataService {
         }),
       ),
       periodsRes: this.api.getPayPeriods({ pageSize: 10 }).pipe(
-        catchError((err) => {
-          throw new Error(`Failed to load pay periods: ${err.message || err.statusText}`);
-        }),
+        catchError(() => of({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 })),
       ),
     }).subscribe({
       next: ({ vehiclesRes, tasksRes, timesheetsRes, finesRes, periodsRes }) => {
