@@ -110,6 +110,7 @@ public sealed class CreateJobTaskCommandHandler(
             return Error.Conflict("job_task_ref_conflict", $"Job task with reference '{refCode}' already exists.");
         }
 
+        request.CreatedId = task.Id;
         return task.Id;
     }
 }

@@ -21,7 +21,9 @@ public sealed record CreateJobTaskCommand(
     Guid? VehicleId = null,
     bool OverrideAreaWarning = false) : IRequest<Result<Guid>>, ICommandMarker, IAuditableCommand
 {
+    public Guid? CreatedId { get; set; }
+
     public string AuditEntityType => "JobTask";
-    public Guid? AuditEntityId => null;
+    public Guid? AuditEntityId => CreatedId;
     public string AuditAction => "CreateJobTask";
 }
