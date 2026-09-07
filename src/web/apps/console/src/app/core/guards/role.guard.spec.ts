@@ -112,4 +112,27 @@ describe('RoleGuard (Role routing & redirection)', () => {
     expect(result instanceof UrlTree).toBe(true);
     expect((result as UrlTree).toString()).toBe('/admin');
   });
+
+  it('redirects Dispatcher cleanly to /admin when accessing Admin-only notifications route', () => {
+    authService.setSession({
+      accessToken: 'dev-only-insecure-dispatcher-token',
+      expiresIn: 3600,
+      tokenType: 'Bearer',
+      user: {
+        id: 'disp-1',
+        email: 'disp@nim.co.nz',
+        displayName: 'Dispatcher',
+        role: 'Dispatcher',
+        locale: 'zh-CN',
+      },
+    });
+
+    const adminOnlyRoute = {
+      data: { roles: ['Admin'] },
+    } as unknown as ActivatedRouteSnapshot;
+    const result = TestBed.runInInjectionContext(() => roleGuard(adminOnlyRoute, {} as any));
+
+    expect(result instanceof UrlTree).toBe(true);
+    expect((result as UrlTree).toString()).toBe('/admin');
+  });
 });
