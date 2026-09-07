@@ -110,4 +110,19 @@ describe('PayrollComparisonOptions Pure Function (F14.6)', () => {
     expect(formatted).toContain('Overtime: $450 (12h)');
     expect(formatted).toContain('Period Change: +$450 (+20.5%)');
   });
+
+  it('replaces diff and percent placeholders in payroll tooltip (BUG-17)', () => {
+    const opt = buildPayrollComparisonOptions({
+      data: mockData,
+      labels: {
+        diffChange: 'Period Change: {diff} ({percent}%)',
+      },
+    });
+    const tooltip = opt.tooltip as { formatter: (p: unknown) => string };
+    const formatted = tooltip.formatter([{ dataIndex: 0 }]);
+
+    expect(formatted).not.toContain('{diff}');
+    expect(formatted).not.toContain('{percent}');
+    expect(formatted).toContain('Period Change: +$450 (+20.5%)');
+  });
 });

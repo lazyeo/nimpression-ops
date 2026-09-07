@@ -35,6 +35,7 @@ export interface PayrollComparisonLabels {
   diffChange?: string;
   grossPayAxis?: string;
   comparisonTitleSuffix?: string;
+  diffChangeFormatter?: (diff: string, percent: string) => string;
 }
 
 export interface PayrollComparisonOptionsParams {
@@ -139,6 +140,20 @@ export function buildPayrollComparisonOptions(
         const diffPercent = prevTotal > 0 ? ((diff / prevTotal) * 100).toFixed(1) : '+100.0';
         const diffSign = diff >= 0 ? `+` : '';
 
+        const diffText = `${diffSign}$${diff.toLocaleString()}`;
+        const percentText = `${diffSign}${diffPercent}`;
+
+        let diffChangeDisplay: string;
+        if (labels.diffChangeFormatter) {
+          diffChangeDisplay = labels.diffChangeFormatter(diffText, percentText);
+        } else if (diffChangeLabel.includes('{diff}') || diffChangeLabel.includes('{percent}')) {
+          diffChangeDisplay = diffChangeLabel
+            .replace('{diff}', diffText)
+            .replace('{percent}', percentText);
+        } else {
+          diffChangeDisplay = `${diffChangeLabel}: ${diffSign}$${diff.toLocaleString()} (${diffSign}${diffPercent}%)`;
+        }
+
         return `
           <div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">
             ${item.driverName} (${item.employeeNo}) — ${compSuffix}
@@ -159,7 +174,7 @@ export function buildPayrollComparisonOptions(
           </div>
 
           <div style="font-size:12px;border-top:1px dashed ${theme.tooltipBorderColor};padding-top:4px;color:${diff >= 0 ? OKABE_ITO_PALETTE.bluishGreen : OKABE_ITO_PALETTE.vermilion};font-weight:bold;">
-            ${diffChangeLabel}: ${diffSign}$${diff.toLocaleString()} (${diffSign}${diffPercent}%)
+            ${diffChangeDisplay}
           </div>
         `;
       },
@@ -186,7 +201,7 @@ export function buildPayrollComparisonOptions(
       top: isMobile ? 64 : 60,
       left: isMobile ? 36 : 56,
       right: isMobile ? 16 : 36,
-      bottom: isMobile ? 70 : 48,
+      bottom: isMobile ? 76 : 52,
       containLabel: true,
     },
     xAxis: {
@@ -201,7 +216,9 @@ export function buildPayrollComparisonOptions(
         color: theme.textSecondaryColor,
         fontSize: isMobile ? 10 : 12,
         interval: 0,
-        rotate: isMobile ? 45 : driverNames.length > 8 ? 30 : 0,
+        rotate: isMobile ? 45 : driverNames.length > 6 ? 30 : 0,
+        overflow: 'truncate',
+        width: isMobile ? 60 : 90,
       },
     },
     yAxis: {

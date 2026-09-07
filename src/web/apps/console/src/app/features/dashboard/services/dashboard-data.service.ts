@@ -247,13 +247,20 @@ export class DashboardDataService {
       labels: {
         noData: this.i18n.t('CHARTS.TASK_FUNNEL.NO_DATA'),
         seriesName: this.i18n.t('CHARTS.TASK_FUNNEL.SERIES_NAME'),
-        stageCountText: this.i18n.t('CHARTS.TASK_FUNNEL.STAGE_COUNT'),
-        prevConversionText: this.i18n.t('CHARTS.TASK_FUNNEL.PREV_CONVERSION'),
-        overallConversionText: this.i18n.t('CHARTS.TASK_FUNNEL.OVERALL_CONVERSION'),
-        avgDurationText: this.i18n.t('CHARTS.TASK_FUNNEL.AVG_DURATION'),
-        conversionLabelText: this.i18n.t('CHARTS.TASK_FUNNEL.CONVERSION_LABEL'),
-        avgStayLabelText: this.i18n.t('CHARTS.TASK_FUNNEL.AVG_STAY_LABEL'),
-        tasksCountUnit: this.i18n.t('CHARTS.TASK_FUNNEL.TASKS_COUNT'),
+        stageCountFormatter: (count: number) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.STAGE_COUNT', { count }),
+        prevConversionFormatter: (rate: number) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.PREV_CONVERSION', { rate: rate.toFixed(1) }),
+        overallConversionFormatter: (rate: number) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.OVERALL_CONVERSION', { rate: rate.toFixed(1) }),
+        avgDurationFormatter: (duration: string) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.AVG_DURATION', { duration }),
+        conversionLabelFormatter: (rate: number) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.CONVERSION_LABEL', { rate: rate.toFixed(1) }),
+        avgStayLabelFormatter: (duration: string) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.AVG_STAY_LABEL', { duration }),
+        tasksCountFormatter: (count: number) =>
+          this.i18n.t('CHARTS.TASK_FUNNEL.TASKS_COUNT', { count }),
         formatDurationFn: (mins: number) => {
           if (mins < 1) return this.i18n.t('CHARTS.COMMON.MINUTES', { count: '<1' });
           if (mins < 60) return this.i18n.t('CHARTS.COMMON.MINUTES', { count: Math.round(mins) });
@@ -291,7 +298,8 @@ export class DashboardDataService {
         prevRegular: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREV_REGULAR'),
         prevOvertime: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREV_OVERTIME'),
         prevHoliday: this.i18n.t('CHARTS.PAYROLL_COMPARISON.PREV_HOLIDAY'),
-        diffChange: this.i18n.t('CHARTS.PAYROLL_COMPARISON.DIFF_CHANGE'),
+        diffChangeFormatter: (diff: string, percent: string) =>
+          this.i18n.t('CHARTS.PAYROLL_COMPARISON.DIFF_CHANGE', { diff, percent }),
         grossPayAxis: this.i18n.t('CHARTS.PAYROLL_COMPARISON.GROSS_PAY_AXIS'),
       },
     });

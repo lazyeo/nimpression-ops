@@ -95,4 +95,47 @@ describe('TaskFunnelOptions Pure Function (F14.5)', () => {
     expect(desktopSeries.label.position).toBe('right');
     expect(mobileSeries.label.position).toBe('inside');
   });
+
+  it('replaces interpolation placeholders cleanly without leaving raw template variables (BUG-17)', () => {
+    const opt = buildTaskFunnelOptions({
+      data: mockStages,
+      labels: {
+        stageCountText: 'Tasks at Stage: {count}',
+        prevConversionText: 'Conversion from Previous: {rate}%',
+        overallConversionText: 'Overall Conversion: {rate}%',
+        avgDurationText: 'Avg Stay Duration: {duration}',
+        conversionLabelText: 'Conv: {rate}%',
+        avgStayLabelText: 'Avg: {duration}',
+        tasksCountUnit: '{count} tasks',
+      },
+    });
+
+    const tooltip = opt.tooltip as { formatter: (p: unknown) => string };
+    const tooltipText = tooltip.formatter({
+      name: 'In Progress',
+      value: 80,
+      color: '#CC79A7',
+      data: { dataRef: mockStages[3] },
+    });
+
+    expect(tooltipText).not.toContain('{rate}');
+    expect(tooltipText).not.toContain('{count}');
+    expect(tooltipText).not.toContain('{duration}');
+    expect(tooltipText).toContain('Tasks at Stage: 80');
+    expect(tooltipText).toContain('Conversion from Previous: 94.1%');
+    expect(tooltipText).toContain('Overall Conversion: 80.0%');
+    expect(tooltipText).toContain('Avg Stay Duration: 2h 15m');
+
+    const series = (opt.series as Array<{ label: { formatter: (p: unknown) => string } }>)[0];
+    const labelText = series.label.formatter({
+      data: { dataRef: mockStages[3] },
+    });
+
+    expect(labelText).not.toContain('{rate}');
+    expect(labelText).not.toContain('{count}');
+    expect(labelText).not.toContain('{duration}');
+    expect(labelText).toContain('Conv: 94.1%');
+    expect(labelText).toContain('Avg: 2h 15m');
+    expect(labelText).toContain('80 tasks');
+  });
 });
