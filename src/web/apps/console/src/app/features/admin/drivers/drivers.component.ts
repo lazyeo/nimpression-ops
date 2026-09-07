@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   OnInit,
@@ -32,7 +33,15 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-drivers',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, SlicePipe, IconComponent, StatusBadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    I18nPipe,
+    LocaleDatePipe,
+    SlicePipe,
+    IconComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './drivers.component.html',
   styleUrl: './drivers.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,6 +81,18 @@ export class DriversComponent implements OnInit {
 
   readonly selectedDriver = signal<DriverSummaryDto | null>(null);
   readonly selectedDriverDetail = signal<DriverDetailDto | null>(null);
+
+  readonly activeAreaAssignments = computed(() => {
+    const detail = this.selectedDriverDetail();
+    if (!detail) return [];
+    return (detail.areaAssignments || []).filter((a) => a.isActive);
+  });
+
+  readonly historicalAreaAssignments = computed(() => {
+    const detail = this.selectedDriverDetail();
+    if (!detail) return [];
+    return (detail.areaAssignments || []).filter((a) => !a.isActive);
+  });
 
   // Avatar Upload State
   selectedAvatarFile: File | null = null;
@@ -330,7 +351,9 @@ export class DriversComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || err.message || 'Failed to create driver');
+          this.formError.set(
+            err.error?.message || err.error?.detail || err.message || 'Failed to create driver',
+          );
         },
       });
   }
@@ -402,7 +425,9 @@ export class DriversComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || err.message || 'Failed to update driver');
+          this.formError.set(
+            err.error?.message || err.error?.detail || err.message || 'Failed to update driver',
+          );
         },
       });
   }
@@ -502,7 +527,9 @@ export class DriversComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to deactivate driver');
+          this.formError.set(
+            err.error?.message || err.error?.detail || 'Failed to deactivate driver',
+          );
         },
       });
   }

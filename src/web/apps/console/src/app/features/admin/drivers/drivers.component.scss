@@ -117,7 +117,9 @@
   line-height: var(--line-height-tight);
   background: var(--bg-surface);
   color: var(--text-primary);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
   &:focus {
     outline: none;
@@ -139,7 +141,10 @@
   line-height: var(--line-height-tight);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
   white-space: nowrap;
 
   &:active:not(:disabled) {
@@ -225,7 +230,9 @@
   background: var(--color-warning-subtle);
 }
 
-.avatar-cell { width: 44px; }
+.avatar-cell {
+  width: 44px;
+}
 .driver-avatar {
   width: 32px;
   height: 32px;
@@ -264,7 +271,9 @@
   color: var(--text-secondary);
 }
 
-.rate-line { white-space: nowrap; }
+.rate-line {
+  white-space: nowrap;
+}
 
 .area-tags {
   display: flex;
@@ -300,7 +309,10 @@
   background: var(--bg-subtle);
   color: var(--text-secondary);
   white-space: nowrap;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -377,7 +389,9 @@
   line-height: var(--line-height-tight);
   cursor: pointer;
   color: var(--text-secondary);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 
   &:hover:not(:disabled) {
     background: var(--bg-subtle);
@@ -403,19 +417,32 @@
 
 .skeleton-cell {
   height: 1.125rem;
-  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-muted) 50%, var(--bg-subtle) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--bg-muted) 50%,
+    var(--bg-subtle) 75%
+  );
   background-size: 200% 100%;
   animation: shim 1.5s infinite;
   border-radius: var(--radius-sm);
   flex: 1;
 }
 
-.cell-sm { flex: 0.5; }
-.cell-lg { flex: 2; }
+.cell-sm {
+  flex: 0.5;
+}
+.cell-lg {
+  flex: 2;
+}
 
 @keyframes shim {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .state-card {
@@ -431,9 +458,15 @@
   box-shadow: var(--shadow-sm);
 }
 
-.icon-empty { color: var(--text-muted); }
-.icon-error { color: var(--color-danger); }
-.icon-forbidden { color: var(--color-warning); }
+.icon-empty {
+  color: var(--text-muted);
+}
+.icon-error {
+  color: var(--color-danger);
+}
+.icon-forbidden {
+  color: var(--color-warning);
+}
 .state-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
@@ -473,7 +506,9 @@
   border: 1px solid var(--border-default);
 }
 
-.dialog-lg { max-width: 680px; }
+.dialog-lg {
+  max-width: 680px;
+}
 .dialog-header {
   display: flex;
   justify-content: space-between;
@@ -526,8 +561,14 @@
   gap: var(--space-12);
 }
 
-.full-width { grid-column: span 2; }
-.form-field { display: flex; flex-direction: column; gap: var(--space-4); }
+.full-width {
+  grid-column: span 2;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
 .form-field label {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -544,7 +585,9 @@
   box-sizing: border-box;
   background: var(--bg-surface);
   color: var(--text-primary);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
   &:focus {
     outline: none;
@@ -629,8 +672,13 @@
   line-height: var(--line-height-normal);
 }
 
-.detail-label { color: var(--text-muted); }
-.detail-val { font-weight: var(--font-weight-medium); color: var(--text-primary); }
+.detail-label {
+  color: var(--text-muted);
+}
+.detail-val {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
 
 .error-banner {
   background: var(--color-danger-subtle);
@@ -640,4 +688,81 @@
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
+}
+
+.btn-deact-dialog {
+  background: var(--color-danger);
+  color: var(--color-danger-contrast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-danger-hover);
+  }
+}
+
+.icon-avatar-upload {
+  color: var(--text-muted);
+}
+
+.action-dash {
+  color: var(--text-muted);
+}
+
+.licence-status-expired {
+  color: var(--color-danger-text);
+  font-weight: var(--font-weight-bold);
+}
+
+.licence-status-expiring {
+  color: var(--color-warning-text);
+  font-weight: var(--font-weight-bold);
+}
+
+.licence-status-valid {
+  color: var(--color-success-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-muted-sm {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.assigned-areas-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.area-subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.area-subgroup-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.area-chip-active {
+  background: var(--color-success-subtle);
+  color: var(--color-success-text);
+  border: 1px solid var(--badge-success-border);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.area-chip-history {
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  opacity: 0.9;
+}
+
+.area-date-range {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-left: var(--space-4);
 }
