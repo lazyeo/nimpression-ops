@@ -434,6 +434,7 @@
     "FIELD_SCHEDULED_FOR": "计划执行时间",
     "FIELD_PRIORITY": "任务优先级",
     "FIELD_PLANNED_DISTANCE": "计划里程 (km)",
+    "ERROR_DISTANCE_POSITIVE": "计划里程必须大于 0 km",
     "FIELD_ACTUAL_DISTANCE": "实际里程 (km)",
     "FIELD_START_ODOMETER": "起始里程表 (km)",
     "FIELD_END_ODOMETER": "终点里程表 (km)",

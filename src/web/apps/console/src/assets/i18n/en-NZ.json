@@ -434,6 +434,7 @@
     "FIELD_SCHEDULED_FOR": "Scheduled Time",
     "FIELD_PRIORITY": "Priority",
     "FIELD_PLANNED_DISTANCE": "Planned Distance (km)",
+    "ERROR_DISTANCE_POSITIVE": "Planned distance must be greater than zero.",
     "FIELD_ACTUAL_DISTANCE": "Actual Distance (km)",
     "FIELD_START_ODOMETER": "Start Odometer (km)",
     "FIELD_END_ODOMETER": "End Odometer (km)",

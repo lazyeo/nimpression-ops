@@ -29,6 +29,7 @@ describe('DispatchComponent', () => {
     startTask: ReturnType<typeof vi.fn>;
     completeTask: ReturnType<typeof vi.fn>;
     cancelTask: ReturnType<typeof vi.fn>;
+    getTaskById: ReturnType<typeof vi.fn>;
     checkAreaEligibility: ReturnType<typeof vi.fn>;
   };
   let authServiceMock: {
@@ -95,6 +96,7 @@ describe('DispatchComponent', () => {
       startTask: vi.fn().mockReturnValue(of(mockTasks[0])),
       completeTask: vi.fn().mockReturnValue(of(mockTasks[0])),
       cancelTask: vi.fn().mockReturnValue(of(mockTasks[0])),
+      getTaskById: vi.fn().mockReturnValue(of(mockTasks[0])),
       checkAreaEligibility: vi.fn().mockReturnValue(of({ isAssignedToArea: true, requiresWarning: false })),
     };
 
@@ -212,6 +214,73 @@ describe('DispatchComponent', () => {
       }),
     );
     expect(component.isCreateModalOpen()).toBe(false);
+  });
+
+  it('rejects non-positive planned distance (0 or -1) on task creation (BUG-15)', () => {
+    fixture.detectChanges();
+    component.openCreateModal();
+
+    component.createForm.title = 'Invalid Distance Task';
+    component.createForm.areaId = 'area-1';
+    component.createForm.scheduledFor = '2026-09-05T10:00';
+    component.createForm.plannedDistanceKm = 0;
+
+    component.submitCreateTask();
+    expect(component.formError()).toBe('Planned distance must be greater than zero.');
+    expect(dispatchServiceMock.createTask).not.toHaveBeenCalled();
+
+    component.createForm.plannedDistanceKm = -5;
+    component.submitCreateTask();
+    expect(component.formError()).toBe('Planned distance must be greater than zero.');
+    expect(dispatchServiceMock.createTask).not.toHaveBeenCalled();
+  });
+
+  it('captures structured ProblemDetails validation errors when creating task', () => {
+    fixture.detectChanges();
+    component.openCreateModal();
+
+    component.createForm.title = 'Test Task';
+    component.createForm.areaId = 'area-1';
+    component.createForm.scheduledFor = '2026-09-05T10:00';
+    component.createForm.plannedDistanceKm = 10;
+
+    dispatchServiceMock.createTask.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        error: {
+          type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
+          title: 'One or more validation errors occurred.',
+          status: 400,
+          errors: {
+            PlannedDistanceKm: ['Planned distance must be greater than zero.'],
+          },
+        },
+      })),
+    );
+
+    component.submitCreateTask();
+    expect(component.formError()).toBe('Planned distance must be greater than zero.');
+  });
+
+  it('fetches full task details and renders cancellation reason and timestamp in details modal (BUG-16)', () => {
+    const cancelledDetail: JobTaskDetailDto = {
+      ...mockTasks[0],
+      status: 'Cancelled',
+      cancelledAt: '2026-09-05T14:30:00Z',
+      cancellationReason: 'Customer requested reschedule',
+    };
+    dispatchServiceMock.getTaskById.mockReturnValue(of(cancelledDetail));
+
+    fixture.detectChanges();
+    component.openDetailsModal(mockTasks[0]);
+    fixture.detectChanges();
+
+    expect(dispatchServiceMock.getTaskById).toHaveBeenCalledWith('task-1');
+    expect(component.selectedTask()?.cancelledAt).toBe('2026-09-05T14:30:00Z');
+    expect(component.selectedTask()?.cancellationReason).toBe('Customer requested reschedule');
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Customer requested reschedule');
   });
 
   it('should automatically reload data via HTTP when SignalR invalidation signal arrives (Realtime AC)', () => {

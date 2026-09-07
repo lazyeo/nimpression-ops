@@ -599,6 +599,16 @@
     border-color: var(--border-focus);
     box-shadow: var(--focus-ring-primary);
   }
+
+  &.is-invalid {
+    border-color: var(--color-danger);
+  }
+}
+
+.field-error-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  line-height: var(--line-height-tight);
 }
 
 textarea.input-control {
