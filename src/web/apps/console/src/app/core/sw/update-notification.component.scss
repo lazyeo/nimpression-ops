@@ -84,14 +84,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  min-width: 44px;
-  padding: var(--space-8) var(--space-14);
+  min-height: 32px;
+  min-width: 32px;
+  padding: var(--space-6) var(--space-12);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
   cursor: pointer;
   border: 1px solid transparent;
+  box-sizing: border-box;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast);
@@ -118,11 +120,24 @@
     background-color: transparent;
     color: var(--text-muted);
     border-color: var(--border-subtle);
-    padding: var(--space-8);
+    padding: var(--space-6);
 
     &:hover {
       background-color: var(--bg-hover);
       color: var(--text-primary);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .touch-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--space-12) var(--space-16);
+    line-height: var(--line-height-snug);
+
+    &.btn-dismiss {
+      padding: var(--space-12);
     }
   }
 }
