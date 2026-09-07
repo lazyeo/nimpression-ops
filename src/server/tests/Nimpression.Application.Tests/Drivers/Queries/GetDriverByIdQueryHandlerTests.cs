@@ -136,4 +136,53 @@ public sealed class GetDriverByIdQueryHandlerTests
         result.Error!.Kind.Should().Be(ErrorKind.NotFound);
         result.Error.Code.Should().Be("driver_not_found");
     }
+
+    [Fact]
+    public async Task Handle_driver_viewing_own_profile_returns_consistent_identity_and_licence()
+    {
+        var sut = CreateSut();
+        var driverId = new Guid("30000000-0000-0000-0000-000000000001");
+        var userId = new Guid("20000000-0000-0000-0000-000000000001");
+
+        var detail = new DriverDetailDto(
+            driverId,
+            userId,
+            "DRV-001",
+            "Liam Smith",
+            "liam.smith@nimpression.co.nz",
+            "Class 4",
+            new DateOnly(2027, 5, 20),
+            false,
+            false,
+            270,
+            DriverStatus.Active,
+            new DateOnly(2024, 1, 15),
+            32.50m,
+            "NZD",
+            45.00m,
+            "NZD",
+            0.85m,
+            "NZD",
+            "+6421000001",
+            "10 Queen St",
+            "+6421999999",
+            "en-NZ",
+            null,
+            null,
+            []);
+
+        _driverRepository.GetDriverDetailByIdAsync(userId, new DateOnly(2026, 8, 24), Arg.Any<CancellationToken>())
+            .Returns(detail);
+        _currentUser.Role.Returns(UserRole.Driver);
+        _currentUser.UserId.Returns(userId);
+
+        var query = new GetDriverByIdQuery(userId);
+        var result = await sut.Handle(query, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.EmployeeNo.Should().Be("DRV-001");
+        result.Value.LicenceClass.Should().Be("Class 4");
+        result.Value.LicenceExpiry.Should().Be(new DateOnly(2027, 5, 20));
+        result.Value.DisplayName.Should().Be("Liam Smith");
+    }
 }

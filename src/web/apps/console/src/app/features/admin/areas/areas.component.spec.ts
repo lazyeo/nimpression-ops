@@ -80,7 +80,19 @@ describe('AreasComponent', () => {
       endAreaAssignment: vi.fn().mockReturnValue(of(mockAssignments[0])),
       getAreaAssignments: vi.fn().mockReturnValue(of(mockAssignments)),
       getAllAreaAssignments: vi.fn().mockReturnValue(of(mockAssignments)),
-      getDrivers: vi.fn().mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 100, totalPages: 1, hasPreviousPage: false, hasNextPage: false })),
+      getDrivers: vi
+        .fn()
+        .mockReturnValue(
+          of({
+            items: [],
+            totalCount: 0,
+            page: 1,
+            pageSize: 100,
+            totalPages: 1,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          }),
+        ),
     };
 
     authServiceMock = {
@@ -196,7 +208,8 @@ describe('AreasComponent', () => {
       status: 422,
       statusText: 'Unprocessable Entity',
       error: {
-        message: 'Driver area assignment dates overlap with existing assignment (2026-01-01 to 2026-06-30).',
+        message:
+          'Driver area assignment dates overlap with existing assignment (2026-01-01 to 2026-06-30).',
       },
     });
     areasServiceMock.assignDriverToArea.mockReturnValue(throwError(() => overlapError));
@@ -205,5 +218,21 @@ describe('AreasComponent', () => {
 
     expect(component.formError()).toContain('overlap with existing assignment');
     expect(component.isAssignModalOpen()).toBe(true);
+  });
+
+  it('should display driver name and employee number in assignments modal', () => {
+    fixture.detectChanges();
+
+    component.openDriversModal(mockAreas[0]);
+    fixture.detectChanges();
+
+    expect(component.isDriversModalOpen()).toBe(true);
+    expect(areasServiceMock.getAreaAssignments).toHaveBeenCalledWith(mockAreas[0].id);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const tableText = compiled.querySelector('.assignments-table tbody')?.textContent;
+
+    expect(tableText).toContain('John Driver');
+    expect(tableText).toContain('(DRV-1001)');
   });
 });

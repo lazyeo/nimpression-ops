@@ -143,19 +143,32 @@ public sealed class AreaRepository(AppDbContext dbContext) : IAreaRepository
             query = query.Where(aa => aa.DriverId == driverId.Value);
         }
 
-        return await query
-            .Join(dbContext.Areas.AsNoTracking(), aa => aa.AreaId, a => a.Id, (aa, a) => new { aa, a })
-            .OrderByDescending(x => x.aa.EffectiveFrom)
-            .Select(x => new AreaAssignmentDto(
-                x.aa.Id,
-                x.aa.AreaId,
-                x.a.Name,
-                x.a.Code,
-                x.aa.DriverId,
-                x.aa.EffectiveFrom,
-                x.aa.EffectiveTo,
-                x.aa.EffectiveFrom <= referenceDate && (x.aa.EffectiveTo == null || x.aa.EffectiveTo >= referenceDate)))
-            .ToListAsync(cancellationToken);
+        var raw = await (from aa in query
+                         join a in dbContext.Areas.AsNoTracking() on aa.AreaId equals a.Id
+                         join d in dbContext.Drivers.AsNoTracking() on aa.DriverId equals d.Id into dGroup
+                         from d in dGroup.DefaultIfEmpty()
+                         join u in dbContext.Users.AsNoTracking() on d.UserId equals u.Id into uGroup
+                         from u in uGroup.DefaultIfEmpty()
+                         orderby aa.EffectiveFrom descending
+                         select new
+                         {
+                             Assignment = aa,
+                             Area = a,
+                             Driver = d,
+                             User = u
+                         }).ToListAsync(cancellationToken);
+
+        return raw.Select(x => new AreaAssignmentDto(
+            x.Assignment.Id,
+            x.Assignment.AreaId,
+            x.Area.Name,
+            x.Area.Code,
+            x.Assignment.DriverId,
+            x.Assignment.EffectiveFrom,
+            x.Assignment.EffectiveTo,
+            x.Assignment.EffectiveFrom <= referenceDate && (x.Assignment.EffectiveTo == null || x.Assignment.EffectiveTo >= referenceDate),
+            x.User != null ? x.User.DisplayName : null,
+            x.Driver != null ? x.Driver.EmployeeNo : null)).ToList();
     }
 
     public async Task<bool> IsDriverAssignedToAreaOnDateAsync(Guid driverId, Guid areaId, DateOnly date, CancellationToken cancellationToken = default)

@@ -47,17 +47,19 @@ describe('DriverProfileComponent (Language switcher & profile)', () => {
     const req = httpMock.expectOne('/api/drivers/d-1');
     req.flush({
       id: 'd-1',
-      displayName: 'John Driver',
-      email: 'driver@nim.co.nz',
+      displayName: 'Liam Smith',
+      email: 'liam.smith@nimpression.co.nz',
       phone: '+64 21 123 4567',
       emergencyContact: 'Jane - 021 999 8888',
-      employeeNo: 'EMP-001',
-      licenceClass: 'Class 4 Heavy',
-      licenceExpiry: '2027-12-31',
+      employeeNo: 'DRV-001',
+      licenceClass: 'Class 4',
+      licenceExpiry: '2027-05-20',
       locale: 'en-NZ',
     });
 
-    expect(component.profile()?.displayName).toBe('John Driver');
+    expect(component.profile()?.displayName).toBe('Liam Smith');
+    expect(component.profile()?.employeeNo).toBe('DRV-001');
+    expect(component.profile()?.licenceClass).toBe('Class 4');
     expect(component.profileForm.controls.locale.value).toBe('en-NZ');
     expect(component.profileForm.controls.phone.value).toBe('+64 21 123 4567');
   });
@@ -67,13 +69,13 @@ describe('DriverProfileComponent (Language switcher & profile)', () => {
     const initialReq = httpMock.expectOne('/api/drivers/d-1');
     initialReq.flush({
       id: 'd-1',
-      displayName: 'John Driver',
-      email: 'driver@nim.co.nz',
+      displayName: 'Liam Smith',
+      email: 'liam.smith@nimpression.co.nz',
       phone: '+64 21 123 4567',
       emergencyContact: 'Jane - 021 999 8888',
-      employeeNo: 'EMP-001',
-      licenceClass: 'Class 4 Heavy',
-      licenceExpiry: '2027-12-31',
+      employeeNo: 'DRV-001',
+      licenceClass: 'Class 4',
+      licenceExpiry: '2027-05-20',
       locale: 'en-NZ',
     });
 
@@ -87,17 +89,55 @@ describe('DriverProfileComponent (Language switcher & profile)', () => {
     const reloadReq = httpMock.expectOne('/api/drivers/d-1');
     reloadReq.flush({
       id: 'd-1',
-      displayName: 'John Updated',
-      email: 'driver@nim.co.nz',
+      displayName: 'Liam Updated',
+      email: 'liam.smith@nimpression.co.nz',
       phone: '+64 21 999 0000',
       emergencyContact: 'Jane - 021 999 8888',
-      employeeNo: 'EMP-001',
+      employeeNo: 'DRV-001',
       licenceClass: 'Class 5',
-      licenceExpiry: '2028-12-31',
+      licenceExpiry: '2028-05-20',
       locale: 'en-NZ',
     });
 
-    expect(component.profile()?.displayName).toBe('John Updated');
+    expect(component.profile()?.displayName).toBe('Liam Updated');
     expect(component.profileForm.controls.phone.value).toBe('+64 21 999 0000');
+  });
+
+  it('saves profile and updates locale', () => {
+    component.ngOnInit();
+    const initialReq = httpMock.expectOne('/api/drivers/d-1');
+    initialReq.flush({
+      id: 'd-1',
+      displayName: 'Liam Smith',
+      email: 'liam.smith@nimpression.co.nz',
+      phone: '+64 21 123 4567',
+      emergencyContact: 'Jane - 021 999 8888',
+      employeeNo: 'DRV-001',
+      licenceClass: 'Class 4',
+      licenceExpiry: '2027-05-20',
+      locale: 'en-NZ',
+    });
+
+    component.profileForm.patchValue({
+      phone: '+64 21 987 6543',
+      emergencyContact: 'Emergency Contact',
+      locale: 'zh-CN',
+    });
+
+    component.saveProfile();
+
+    const saveReq = httpMock.expectOne('/api/drivers/d-1/profile');
+    expect(saveReq.request.method).toBe('PUT');
+    expect(saveReq.request.body).toEqual({
+      phone: '+64 21 987 6543',
+      emergencyContact: 'Emergency Contact',
+      locale: 'zh-CN',
+    });
+    saveReq.flush(null);
+
+    const localeReq = httpMock.expectOne('/api/drivers/d-1/profile');
+    localeReq.flush(null);
+
+    expect(component.saveSuccess()).toBe(true);
   });
 });

@@ -61,6 +61,8 @@ public sealed class AreaQueriesHandlerTests
         _repo.Areas[area.Id] = area;
 
         var driverId = Guid.NewGuid();
+        _repo.DriverDisplayNames[driverId] = "Liam Smith";
+        _repo.DriverEmployeeNumbers[driverId] = "DRV-001";
         var assignment = new AreaAssignment(
             Guid.NewGuid(),
             area.Id,
@@ -77,6 +79,10 @@ public sealed class AreaQueriesHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().ContainSingle(a => a.AreaCode == "AKL-SOUTH" && a.DriverId == driverId);
+        result.Value.Should().ContainSingle(a =>
+            a.AreaCode == "AKL-SOUTH" &&
+            a.DriverId == driverId &&
+            a.DriverName == "Liam Smith" &&
+            a.DriverEmployeeNo == "DRV-001");
     }
 }

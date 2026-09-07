@@ -92,6 +92,16 @@ describe('DriversComponent', () => {
         effectiveFrom: '2025-01-15',
         isActive: true,
       },
+      {
+        id: 'asg-2',
+        areaId: 'area-2',
+        areaName: 'North Shore',
+        areaCode: 'AKL-NS',
+        driverId: 'drv-1',
+        effectiveFrom: '2024-01-15',
+        effectiveTo: '2024-07-24',
+        isActive: false,
+      },
     ],
   };
 
@@ -114,7 +124,19 @@ describe('DriversComponent', () => {
       updateDriver: vi.fn().mockReturnValue(of(mockDetail)),
       deactivateDriver: vi.fn().mockReturnValue(of(undefined)),
       uploadAvatar: vi.fn().mockReturnValue(of({ avatarKey: 'key', avatarUrl: 'url' })),
-      getAreas: vi.fn().mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 100, totalPages: 1, hasPreviousPage: false, hasNextPage: false })),
+      getAreas: vi
+        .fn()
+        .mockReturnValue(
+          of({
+            items: [],
+            totalCount: 0,
+            page: 1,
+            pageSize: 100,
+            totalPages: 1,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          }),
+        ),
     };
 
     authServiceMock = {
@@ -277,5 +299,27 @@ describe('DriversComponent', () => {
 
     expect(driversServiceMock.getDrivers).toHaveBeenCalledTimes(2);
     expect(driversServiceMock.getLicenceAlerts).toHaveBeenCalledTimes(2);
+  });
+
+  it('should distinguish current and historical assigned areas in details modal', () => {
+    fixture.detectChanges();
+
+    component.openDetailsModal(mockDrivers[0]);
+    fixture.detectChanges();
+
+    expect(component.isDetailsModalOpen()).toBe(true);
+    expect(component.activeAreaAssignments().length).toBe(1);
+    expect(component.activeAreaAssignments()[0].areaName).toBe('Auckland Central');
+    expect(component.historicalAreaAssignments().length).toBe(1);
+    expect(component.historicalAreaAssignments()[0].areaName).toBe('North Shore');
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const activeChips = compiled.querySelectorAll('.area-chip-active');
+    const historyChips = compiled.querySelectorAll('.area-chip-history');
+
+    expect(activeChips.length).toBe(1);
+    expect(activeChips[0].textContent).toContain('Auckland Central');
+    expect(historyChips.length).toBe(1);
+    expect(historyChips[0].textContent).toContain('North Shore');
   });
 });

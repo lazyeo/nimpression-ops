@@ -18,7 +18,7 @@ public sealed class DriverRepository(AppDbContext dbContext) : IDriverRepository
     public async Task<Driver?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await dbContext.Drivers
-            .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(d => d.Id == id || d.UserId == id, cancellationToken);
     }
 
     public async Task<Driver?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -191,7 +191,7 @@ public sealed class DriverRepository(AppDbContext dbContext) : IDriverRepository
     {
         var raw = await (from d in dbContext.Drivers.AsNoTracking()
                          join u in dbContext.Users.AsNoTracking() on d.UserId equals u.Id
-                         where d.Id == id
+                         where d.Id == id || d.UserId == id
                          select new
                          {
                              Driver = d,
@@ -205,7 +205,7 @@ public sealed class DriverRepository(AppDbContext dbContext) : IDriverRepository
 
         var areaAssignments = await (from aa in dbContext.AreaAssignments.AsNoTracking()
                                      join a in dbContext.Areas.AsNoTracking() on aa.AreaId equals a.Id
-                                     where aa.DriverId == id
+                                     where aa.DriverId == raw.Driver.Id
                                      orderby aa.EffectiveFrom descending
                                      select new AreaAssignmentDto(
                                          aa.Id,
@@ -299,9 +299,14 @@ public sealed class DriverRepository(AppDbContext dbContext) : IDriverRepository
         DateOnly referenceDate,
         CancellationToken cancellationToken = default)
     {
+        var actualDriverId = await dbContext.Drivers.AsNoTracking()
+            .Where(d => d.Id == driverId || d.UserId == driverId)
+            .Select(d => (Guid?)d.Id)
+            .FirstOrDefaultAsync(cancellationToken) ?? driverId;
+
         return await (from aa in dbContext.AreaAssignments.AsNoTracking()
                       join a in dbContext.Areas.AsNoTracking() on aa.AreaId equals a.Id
-                      where aa.DriverId == driverId
+                      where aa.DriverId == actualDriverId
                       orderby aa.EffectiveFrom descending
                       select new AreaAssignmentDto(
                           aa.Id,
