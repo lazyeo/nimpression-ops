@@ -76,7 +76,8 @@ export const routes: Routes = [
       },
       {
         path: 'payroll',
-        data: { labelKey: 'NAV.PAYROLL', icon: 'payroll' },
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'], labelKey: 'NAV.PAYROLL', icon: 'payroll' },
         loadComponent: () =>
           import('./features/admin/payroll/payroll.component').then(
             (m) => m.PayrollComponent,

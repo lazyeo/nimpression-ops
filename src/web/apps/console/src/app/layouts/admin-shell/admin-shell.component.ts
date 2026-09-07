@@ -19,11 +19,13 @@ import { OfflineStatusComponent } from '../../core/offline/offline-status.compon
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
 import { toScreamingSnake } from '../../core/utils/case.utils';
+import { UserRole } from '../../core/models/auth.models';
 
 interface NavItem {
   path: string;
   labelKey: string;
   icon: string;
+  roles?: UserRole[];
 }
 
 @Component({
@@ -53,20 +55,27 @@ export class AdminShellComponent implements OnInit {
 
   readonly sidebarOpen = signal<boolean>(false);
 
-  readonly navItems: NavItem[] = [
+  private readonly allNavItems: NavItem[] = [
     { path: '/admin/dashboard', labelKey: 'NAV.DASHBOARD', icon: 'dashboard' },
     { path: '/admin/dispatch', labelKey: 'NAV.DISPATCH', icon: 'dispatch' },
     { path: '/admin/drivers', labelKey: 'NAV.DRIVERS', icon: 'drivers' },
     { path: '/admin/vehicles', labelKey: 'NAV.VEHICLES', icon: 'vehicles' },
     { path: '/admin/areas', labelKey: 'NAV.AREAS', icon: 'areas' },
     { path: '/admin/timesheets', labelKey: 'NAV.TIMESHEETS', icon: 'timesheets' },
-    { path: '/admin/payroll', labelKey: 'NAV.PAYROLL', icon: 'payroll' },
+    { path: '/admin/payroll', labelKey: 'NAV.PAYROLL', icon: 'payroll', roles: ['Admin'] },
     { path: '/admin/incidents', labelKey: 'NAV.INCIDENTS', icon: 'incidents' },
     { path: '/admin/fines', labelKey: 'NAV.FINES', icon: 'fines' },
     { path: '/admin/news', labelKey: 'NAV.NEWS', icon: 'news' },
     { path: '/admin/notifications', labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
     { path: '/admin/audit', labelKey: 'NAV.AUDIT', icon: 'audit' },
   ];
+
+  get navItems(): NavItem[] {
+    const role = this.authService.userRole();
+    return this.allNavItems.filter(
+      (item) => !item.roles || (role !== null && item.roles.includes(role)),
+    );
+  }
 
   constructor() {
     this.router.events
