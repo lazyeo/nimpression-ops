@@ -105,7 +105,8 @@ export const routes: Routes = [
       },
       {
         path: 'notifications',
-        data: { labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'], labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
         loadComponent: () =>
           import('./features/admin/notifications/notifications.component').then(
             (m) => m.NotificationsComponent,
