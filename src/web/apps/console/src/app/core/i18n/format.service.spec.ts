@@ -60,4 +60,28 @@ describe('FormatService (F13.4)', () => {
     const zh = formatService.formatCurrency(amount, 'NZD');
     expect(zh).toContain('500.00');
   });
+
+  it('formats datetime presets with time components (R3)', () => {
+    const date = new Date(2026, 8, 7, 17, 59, 0); // 7 Sep 2026 17:59:00
+
+    const enShortDt = formatService.formatDate(date, 'shortDateTime', 'en-NZ');
+    const zhShortDt = formatService.formatDate(date, 'shortDateTime', 'zh-CN');
+
+    // en-NZ short datetime includes date and 12-hour or 24-hour time
+    expect(enShortDt).toContain('2026');
+    expect(enShortDt).toContain('59');
+
+    // zh-CN short datetime includes date and time
+    expect(zhShortDt).toContain('2026');
+    expect(zhShortDt).toContain('17:59');
+
+    const enMediumDt = formatService.formatDate(date, 'mediumDateTime', 'en-NZ');
+    expect(enMediumDt).toContain('2026');
+    expect(enMediumDt).toContain('59');
+
+    const dtMethod = formatService.formatDateTime(date, 'medium', 'en-NZ');
+    expect(dtMethod).toContain('2026');
+    expect(dtMethod).toContain('59');
+  });
 });
+
