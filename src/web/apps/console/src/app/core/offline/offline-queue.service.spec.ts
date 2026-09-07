@@ -227,7 +227,10 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
 
     const req = httpMock.expectOne('/api/dispatch/tasks/invalid-uuid/status');
     req.flush(
-      { error: 'invalid_transition', message: 'Cannot transition JobTask from Assigned to InProgress.' },
+      {
+        error: 'invalid_transition',
+        message: 'Cannot transition JobTask from Assigned to InProgress.',
+      },
       { status: 422, statusText: 'Unprocessable Entity' },
     );
 
@@ -242,7 +245,12 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     const queueItem = service.queueItems()[0];
     expect(queueItem.status).toBe('failed');
     expect(queueItem.isPermanentFailure).toBe(true);
+    expect(queueItem.lastError).toBe('Cannot transition JobTask from Assigned to InProgress.');
+    expect(queueItem.lastError).not.toContain('Http failure response');
     expect(mockIndexedDb.data[item.id].isPermanentFailure).toBe(true);
+    expect(mockIndexedDb.data[item.id].lastError).toBe(
+      'Cannot transition JobTask from Assigned to InProgress.',
+    );
 
     // retryAll should NOT retry permanent failures (no HTTP request should be sent)
     await service.retryAll();

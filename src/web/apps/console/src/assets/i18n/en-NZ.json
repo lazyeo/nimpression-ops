@@ -63,7 +63,10 @@
     "PAGE_INFO_INCIDENTS": "Page {page} of {total} ({count} incidents)",
     "PAGE_INFO_TIMESHEETS": "Page {page} of {total} ({count} timesheets)",
     "PAGE_INFO_PAYROLL": "Page {page} of {total} ({count} pay periods)",
-    "PAGE_INFO_AUDIT": "Page {page} of {total} ({count} audit records)"
+    "PAGE_INFO_AUDIT": "Page {page} of {total} ({count} audit records)",
+    "INVALID_OPERATION": "Invalid Operation",
+    "INVALID_STATE_TRANSITION": "Cannot perform this action in current status",
+    "LATER": "Later"
   },
   "NAV": {
     "DASHBOARD": "Dashboard",
@@ -1211,5 +1214,14 @@
     "ACTION_ACTIVATE": "Activate",
     "ACTION_DEACTIVATE": "Deactivate",
     "TABLE_ARIA_LABEL": "Audit Logs Table"
+  },
+  "SW": {
+    "UPDATE_AVAILABLE_TITLE": "Update Available",
+    "UPDATE_AVAILABLE_DESC": "A new version of Nimpression Ops is available. Reload to apply updates.",
+    "UPDATE_ACTION": "Update Now",
+    "DISMISS": "Later",
+    "UNRECOVERABLE_TITLE": "Application Cache Error",
+    "UNRECOVERABLE_DESC": "An unrecoverable cache error occurred. Please reload the application.",
+    "RELOAD": "Reload Application"
   }
 }

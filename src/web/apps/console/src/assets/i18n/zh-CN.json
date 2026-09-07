@@ -63,7 +63,10 @@
     "PAGE_INFO_INCIDENTS": "第 {page} 页，共 {total} 页（共 {count} 起事故）",
     "PAGE_INFO_TIMESHEETS": "第 {page} 页，共 {total} 页（共 {count} 条工时）",
     "PAGE_INFO_PAYROLL": "第 {page} 页，共 {total} 页（共 {count} 个薪期）",
-    "PAGE_INFO_AUDIT": "第 {page} 页，共 {total} 页（共 {count} 条审计记录）"
+    "PAGE_INFO_AUDIT": "第 {page} 页，共 {total} 页（共 {count} 条审计记录）",
+    "INVALID_OPERATION": "操作无效",
+    "INVALID_STATE_TRANSITION": "当前状态下无法执行此操作",
+    "LATER": "稍后"
   },
   "NAV": {
     "DASHBOARD": "运营大盘",
@@ -1211,5 +1214,14 @@
     "ACTION_ACTIVATE": "激活",
     "ACTION_DEACTIVATE": "停用",
     "TABLE_ARIA_LABEL": "审计日志表格"
+  },
+  "SW": {
+    "UPDATE_AVAILABLE_TITLE": "发现新版本",
+    "UPDATE_AVAILABLE_DESC": "Nimpression Ops 有新版本可用，请刷新以应用更新。",
+    "UPDATE_ACTION": "立即更新",
+    "DISMISS": "稍后",
+    "UNRECOVERABLE_TITLE": "应用缓存异常",
+    "UNRECOVERABLE_DESC": "检测到无法恢复的缓存异常，请重新加载应用。",
+    "RELOAD": "重新加载应用"
   }
 }

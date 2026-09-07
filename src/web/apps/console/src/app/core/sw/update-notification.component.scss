@@ -1,0 +1,139 @@
+:host {
+  position: fixed;
+  bottom: var(--space-20);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  width: calc(100% - var(--space-32));
+  max-width: 540px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.sw-banner-container {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(8px);
+  animation: slideUp var(--transition-normal) ease-out;
+
+  &.update-banner {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-focus);
+    color: var(--text-primary);
+
+    .update-icon {
+      color: var(--color-primary-text);
+    }
+  }
+
+  &.unrecoverable-banner {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--color-danger);
+    color: var(--text-primary);
+
+    .alert-icon {
+      color: var(--color-danger-text);
+    }
+  }
+}
+
+.banner-icon-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.banner-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  line-height: var(--line-height-snug);
+}
+
+.banner-desc {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-shrink: 0;
+}
+
+.touch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--space-8) var(--space-14);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &.btn-update {
+    background-color: var(--color-primary);
+    color: var(--color-primary-contrast);
+
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
+  }
+
+  &.btn-reload {
+    background-color: var(--color-danger);
+    color: var(--color-danger-contrast);
+
+    &:hover {
+      background-color: var(--color-danger-hover);
+    }
+  }
+
+  &.btn-dismiss {
+    background-color: transparent;
+    color: var(--text-muted);
+    border-color: var(--border-subtle);
+    padding: var(--space-8);
+
+    &:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
