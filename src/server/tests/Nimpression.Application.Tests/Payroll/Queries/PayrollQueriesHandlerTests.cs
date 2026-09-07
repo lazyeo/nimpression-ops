@@ -1,4 +1,5 @@
 using Nimpression.Application.Common.Results;
+using Nimpression.Application.Features.Payroll.DTOs;
 using Nimpression.Application.Features.Payroll.Queries.GetDriverPayslips;
 using Nimpression.Application.Features.Payroll.Queries.GetPayPeriodById;
 using Nimpression.Application.Features.Payroll.Queries.GetPayPeriodPayslips;
@@ -326,5 +327,144 @@ public sealed class PayrollQueriesHandlerTests
         // 验证 TripDetails 只有周期内的 1 条任务，8/25 的任务绝不混入
         Assert.Single(result.Value.TripDetails);
         Assert.Equal(inPeriodTask.Id, result.Value.TripDetails[0].JobTaskId);
+    }
+
+    [Fact]
+    public async Task Dispatcher_QueryingPayPeriodsList_Returns403Forbidden()
+    {
+        var dispatcherUser = new FakeCurrentUser(role: UserRole.Dispatcher);
+        var handler = new GetPayPeriodsListQueryHandler(_repository, dispatcherUser);
+
+        var filter = new PayPeriodFilter(null, null, null, 1, 20);
+        var result = await handler.Handle(new GetPayPeriodsListQuery(filter), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Admin_QueryingPayPeriodsList_Success()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var adminUser = new FakeCurrentUser(role: UserRole.Admin);
+        var handler = new GetPayPeriodsListQueryHandler(_repository, adminUser);
+
+        var filter = new PayPeriodFilter(null, null, null, 1, 20);
+        var result = await handler.Handle(new GetPayPeriodsListQuery(filter), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value.Items);
+    }
+
+    [Fact]
+    public async Task Dispatcher_QueryingPayPeriodById_Returns403Forbidden()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var dispatcherUser = new FakeCurrentUser(role: UserRole.Dispatcher);
+        var handler = new GetPayPeriodByIdQueryHandler(_repository, dispatcherUser);
+
+        var result = await handler.Handle(new GetPayPeriodByIdQuery(period.Id), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Admin_QueryingPayPeriodById_Success()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var adminUser = new FakeCurrentUser(role: UserRole.Admin);
+        var handler = new GetPayPeriodByIdQueryHandler(_repository, adminUser);
+
+        var result = await handler.Handle(new GetPayPeriodByIdQuery(period.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(period.Id, result.Value.Id);
+    }
+
+    [Fact]
+    public async Task Dispatcher_QueryingPayPeriodPayslips_Returns403Forbidden()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var dispatcherUser = new FakeCurrentUser(role: UserRole.Dispatcher);
+        var handler = new GetPayPeriodPayslipsQueryHandler(_repository, dispatcherUser);
+
+        var result = await handler.Handle(new GetPayPeriodPayslipsQuery(period.Id), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Dispatcher_QueryingDriverPayslips_Returns403Forbidden()
+    {
+        var driver = CreateDriver(Guid.NewGuid(), "DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+
+        var dispatcherUser = new FakeCurrentUser(role: UserRole.Dispatcher);
+        var handler = new GetDriverPayslipsQueryHandler(_repository, dispatcherUser);
+
+        var result = await handler.Handle(new GetDriverPayslipsQuery(DriverId: driver.Id), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Driver_QueryingOwnDriverPayslipsList_Success()
+    {
+        var driverUser = Guid.NewGuid();
+        var driver = CreateDriver(driverUser, "DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var payslip = PayrollCalculatorV2.Calculate(driver, period, [], []);
+        payslip.Finalise(DateTimeOffset.UtcNow);
+        _repository.Payslips[payslip.Id] = payslip;
+
+        var driverCurrentUser = new FakeCurrentUser(userId: driverUser, role: UserRole.Driver);
+        var handler = new GetDriverPayslipsQueryHandler(_repository, driverCurrentUser);
+
+        // Driver querying without specifying DriverId (auto-resolved from token)
+        var result = await handler.Handle(new GetDriverPayslipsQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value.Items);
+        Assert.Equal(payslip.Id, result.Value.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task Driver_QueryingOtherDriverPayslipsList_Returns403Forbidden()
+    {
+        var driver1User = Guid.NewGuid();
+        var driver2User = Guid.NewGuid();
+        var driver1 = CreateDriver(driver1User, "DRV-001");
+        var driver2 = CreateDriver(driver2User, "DRV-002");
+        _repository.Drivers[driver1.Id] = driver1;
+        _repository.Drivers[driver2.Id] = driver2;
+
+        var driver1CurrentUser = new FakeCurrentUser(userId: driver1User, role: UserRole.Driver);
+        var handler = new GetDriverPayslipsQueryHandler(_repository, driver1CurrentUser);
+
+        // Driver 1 attempts to pass Driver 2's ID
+        var result = await handler.Handle(new GetDriverPayslipsQuery(DriverId: driver2.Id), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
     }
 }

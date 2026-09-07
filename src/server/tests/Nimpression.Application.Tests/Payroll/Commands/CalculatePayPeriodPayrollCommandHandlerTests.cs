@@ -126,4 +126,22 @@ public sealed class CalculatePayPeriodPayrollCommandHandlerTests
         Assert.Single(result.Value[0].ShiftDetails);
         Assert.Equal(shiftIn.Id, result.Value[0].ShiftDetails[0].ShiftId);
     }
+
+    [Fact]
+    public async Task CalculatePayroll_ForbiddenForDispatchers()
+    {
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var dispatcherUser = new FakeCurrentUser(role: UserRole.Dispatcher);
+        var handler = new CalculatePayPeriodPayrollCommandHandler(
+            _repository, _unitOfWork, dispatcherUser, _auditSink, _dateTimeProvider);
+
+        var command = new CalculatePayPeriodPayrollCommand(period.Id);
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
 }
