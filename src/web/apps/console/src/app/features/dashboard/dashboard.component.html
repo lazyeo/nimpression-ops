@@ -57,7 +57,7 @@
     <div class="kpi-card">
       <div class="kpi-header">
         <span class="kpi-title">{{ 'DASHBOARD.KPI.IN_TRANSIT' | i18n }}</span>
-        <span class="kpi-icon" style="background: #e0f2fe; color: #0072b2">
+        <span class="kpi-icon" style="background: var(--color-primary-subtle); color: var(--color-primary-text)">
           <nim-icon name="car" [size]="20" />
         </span>
       </div>
@@ -73,11 +73,11 @@
     <div class="kpi-card">
       <div class="kpi-header">
         <span class="kpi-title">{{ 'DASHBOARD.KPI.MAINTENANCE' | i18n }}</span>
-        <span class="kpi-icon" style="background: #fee2e2; color: #d55e00">
+        <span class="kpi-icon" style="background: var(--color-danger-subtle); color: var(--color-danger-text)">
           <nim-icon name="wrench" [size]="20" />
         </span>
       </div>
-      <div class="kpi-value" [style.color]="maintenanceDueCount() > 0 ? '#d55e00' : 'inherit'">
+      <div class="kpi-value" [style.color]="maintenanceDueCount() > 0 ? 'var(--color-danger-text)' : 'inherit'">
         {{ maintenanceDueCount() }}
         <span class="kpi-unit">{{ 'DASHBOARD.KPI.MAINTENANCE_UNIT' | i18n }}</span>
       </div>
@@ -87,7 +87,7 @@
     <div class="kpi-card">
       <div class="kpi-header">
         <span class="kpi-title">{{ 'DASHBOARD.KPI.FINES' | i18n }}</span>
-        <span class="kpi-icon" style="background: #fef3c7; color: #d97706">
+        <span class="kpi-icon" style="background: var(--color-warning-subtle); color: var(--color-warning-text)">
           <nim-icon name="fines" [size]="20" />
         </span>
       </div>
@@ -98,7 +98,7 @@
     <div class="kpi-card">
       <div class="kpi-header">
         <span class="kpi-title">{{ 'DASHBOARD.KPI.CONVERSION' | i18n }}</span>
-        <span class="kpi-icon" style="background: #e6f7ed; color: #009e73">
+        <span class="kpi-icon" style="background: var(--color-success-subtle); color: var(--color-success-text)">
           <nim-icon name="target" [size]="20" />
         </span>
       </div>

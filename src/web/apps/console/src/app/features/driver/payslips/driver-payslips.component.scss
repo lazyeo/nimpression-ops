@@ -42,9 +42,9 @@
 }
 
 .cached-banner {
-  background-color: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #fde68a;
+  background-color: var(--badge-warning-bg);
+  border: 1px solid var(--badge-warning-border);
+  color: var(--badge-warning-text);
   border-radius: var(--radius-lg);
   padding: var(--space-10) var(--space-14);
   font-size: var(--font-size-sm);
@@ -126,9 +126,9 @@
   flex-direction: column;
   align-items: center;
   padding: var(--space-12);
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(15, 23, 42, 0.4) 100%);
+  background: linear-gradient(135deg, var(--color-primary-subtle) 0%, var(--color-gray-900) 100%);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--badge-info-border);
 
   .net-label {
     font-size: var(--font-size-xs);

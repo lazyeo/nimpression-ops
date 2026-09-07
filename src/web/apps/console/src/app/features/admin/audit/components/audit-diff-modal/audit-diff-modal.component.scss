@@ -249,9 +249,9 @@
   }
 
   .diff-row {
-    &.row-added { background: rgba(236,253,245,0.4); }
-    &.row-removed { background: rgba(254,242,242,0.4); }
-    &.row-modified { background: rgba(254,243,199,0.25); }
+    &.row-added { background: var(--color-success-subtle); }
+    &.row-removed { background: var(--color-danger-subtle); }
+    &.row-modified { background: var(--color-warning-subtle); }
     &.row-unchanged { background: var(--bg-surface); opacity: 0.75; }
   }
 }

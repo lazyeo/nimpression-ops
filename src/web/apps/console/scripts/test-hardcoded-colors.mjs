@@ -100,15 +100,18 @@ assert(exemptResult.success, 'Explicitly exempted hardcoded color passes guard w
 // Clean up temporary test files
 fs.rmSync(tmpDir, { recursive: true, force: true });
 
-// 4. Baseline Count Verification (AC 3)
-console.log('\n[Suite 4] Current Workspace Hardcoded Color Baseline (AC 3)');
+// 4. Workspace Clean Status Verification (W39 Cleanup)
+console.log('\n[Suite 4] Full Workspace Hardcoded Color Audit (W39 Cleanup)');
 const wsViolations = scanHardcodedColors();
 const wsFiles = new Set(wsViolations.map((v) => v.file));
 const scssCount = Array.from(wsFiles).filter((f) => f.endsWith('.scss')).length;
 const htmlCount = Array.from(wsFiles).filter((f) => f.endsWith('.html')).length;
-assert(scssCount === 9, `Workspace has exactly 9 SCSS files with hardcoded colors (found ${scssCount})`);
-assert(htmlCount === 3, `Workspace has 3 HTML files with hardcoded colors (down from 5 after W30 tokenized areas/drivers, found ${htmlCount})`);
-assert(wsViolations.length === 40, `Workspace has exactly 40 hardcoded color locations across all files (found ${wsViolations.length})`);
+assert(scssCount === 0, `Workspace has 0 SCSS files with hardcoded colors (found ${scssCount})`);
+assert(htmlCount === 0, `Workspace has 0 HTML files with hardcoded colors (found ${htmlCount})`);
+assert(wsViolations.length === 0, `Workspace has 0 hardcoded color locations across all files (found ${wsViolations.length})`);
+
+const guardResult = runHardcodedColorsGuard();
+assert(guardResult.success, 'runHardcodedColorsGuard() returns success on clean workspace');
 
 console.log(
   `\n--- Test Summary: ${passedTests}/${totalTests} tests passed (${failedTests} failures) ---\n`,

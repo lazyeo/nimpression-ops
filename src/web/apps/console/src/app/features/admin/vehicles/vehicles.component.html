@@ -185,17 +185,17 @@
                       {{ 'VEHICLES.SERVICE_OK' | i18n }}
                     </nim-status-badge>
                   }
-                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem">
+                  <div style="font-size: var(--font-size-xs); color: var(--color-gray-500); margin-top: 0.2rem">
                     {{ veh.distanceSinceLastServiceKm }} {{ 'COMMON.UNITS.SLASH_KM' | i18n }}
                     {{ veh.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}
                   </div>
                 </td>
                 <td>
-                  <div style="font-size: 0.8125rem">
+                  <div style="font-size: var(--font-size-sm)">
                     {{ 'VEHICLES.WOF_LABEL' | i18n }}
                     {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
                   </div>
-                  <div style="font-size: 0.8125rem; color: #64748b">
+                  <div style="font-size: var(--font-size-sm); color: var(--color-gray-500)">
                     {{ 'VEHICLES.COF_LABEL' | i18n }}
                     {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
                   </div>
@@ -754,11 +754,11 @@
                 <span class="detail-label">{{ 'VEHICLES.SERVICE_STATUS' | i18n }}</span>
                 <span class="detail-val">
                   @if (selectedVehicleDetail()!.isServiceDue) {
-                    <span style="color: #dc2626; font-weight: 700">{{
+                    <span style="color: var(--color-danger-text); font-weight: 700">{{
                       'VEHICLES.SERVICE_DUE' | i18n
                     }}</span>
                   } @else {
-                    <span style="color: #16a34a; font-weight: 600">{{
+                    <span style="color: var(--color-success-text); font-weight: 600">{{
                       'VEHICLES.SERVICE_OK' | i18n
                     }}</span>
                   }
@@ -808,7 +808,7 @@
             <div class="detail-group full-width">
               <h4>{{ 'VEHICLES.ODOMETER_HISTORY_TITLE' | i18n }}</h4>
               @if (odometerReadings().length === 0) {
-                <p style="color: #94a3b8; font-size: 0.8125rem; margin: 0">
+                <p style="color: var(--color-gray-400); font-size: var(--font-size-sm); margin: 0">
                   {{ 'VEHICLES.NO_ODOMETER_HISTORY' | i18n }}
                 </p>
               } @else {
