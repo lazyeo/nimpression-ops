@@ -40,11 +40,11 @@ public sealed class GetDriverPayslipsQueryHandler(
 
             targetDriverId = driver.Id;
         }
-        else if (currentUser.Role == UserRole.Admin || currentUser.Role == UserRole.Dispatcher)
+        else if (currentUser.Role == UserRole.Admin)
         {
             if (!request.DriverId.HasValue)
             {
-                return Error.Validation("driver_id_required", "DriverId is required for admin/dispatcher querying driver payslips.");
+                return Error.Validation("driver_id_required", "DriverId is required for admin querying driver payslips.");
             }
 
             targetDriverId = request.DriverId.Value;
