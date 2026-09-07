@@ -7,7 +7,7 @@
   max-width: 600px;
   margin: 0 auto;
   position: relative;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
 }
 
 .driver-header {
@@ -82,8 +82,7 @@
 }
 
 .touch-btn {
-  padding: var(--space-6) var(--space-8);
-  min-height: 44px;
+  padding: var(--space-6) var(--space-10);
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -106,12 +105,13 @@
   }
 
   &.logout-btn {
-    background-color: rgba(225, 29, 72, 0.15);
-    color: #fda4af;
-    border-color: rgba(225, 29, 72, 0.3);
+    background-color: var(--color-danger-subtle);
+    color: var(--color-danger-text);
+    border-color: var(--badge-danger-border);
 
     &:hover {
-      background-color: rgba(225, 29, 72, 0.25);
+      background-color: var(--badge-danger-bg);
+      border-color: var(--color-danger-text);
     }
   }
 }
@@ -121,7 +121,7 @@
   padding: var(--space-16);
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
   overflow-y: auto;
-  background-color: #0b1329;
+  background-color: var(--color-gray-900);
 }
 
 .driver-bottom-nav {
@@ -235,6 +235,9 @@
   .touch-btn {
     min-width: 44px;
     min-height: 44px;
+    padding: var(--space-12) var(--space-16);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-snug);
     flex: 0 0 auto;
     white-space: normal;
   }
