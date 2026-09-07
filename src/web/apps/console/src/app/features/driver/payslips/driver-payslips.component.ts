@@ -69,22 +69,24 @@ export class DriverPayslipsComponent implements OnInit {
       });
   }
 
-  async loadPayslips(): Promise<void> {
+  loadPayslips(): void {
     this.isLoading.set(true);
 
-    const cached = await this.offlineCache.getDriverPayslips<DriverPayslipItem>();
-    if (cached && cached.length > 0) {
-      this.payslips.set(cached);
-      this.isUsingCache.set(true);
-    }
+    // Try loading from offline cache asynchronously as fallback
+    void this.offlineCache.getDriverPayslips<DriverPayslipItem>().then((cached) => {
+      if (this.isLoading() && cached && cached.length > 0) {
+        this.payslips.set(cached);
+        this.isUsingCache.set(true);
+      }
+    });
 
     if (this.offlineQueue.isOnline()) {
       this.http.get<DriverPayslipItem[]>('/api/payroll/my-payslips').subscribe({
-        next: async (data) => {
-          this.payslips.set(data);
+        next: (data) => {
+          this.payslips.set(data || []);
           this.isUsingCache.set(false);
           this.isLoading.set(false);
-          await this.offlineCache.cacheDriverPayslips(data);
+          void this.offlineCache.cacheDriverPayslips(data || []);
         },
         error: () => {
           this.isLoading.set(false);
@@ -93,6 +95,7 @@ export class DriverPayslipsComponent implements OnInit {
       });
     } else {
       this.isLoading.set(false);
+      this.isUsingCache.set(true);
     }
   }
 }

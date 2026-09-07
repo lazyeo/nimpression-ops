@@ -131,4 +131,32 @@ describe('DriverPayslipsComponent (Offline view & currency/date formatting)', ()
     expect(component.payslips().length).toBe(1);
     expect(component.payslips()[0].payDate).toBeNull();
   });
+
+  it('keeps isUsingCache false when online request successfully loads data (BUG-11)', () => {
+    const req = httpMock.expectOne('/api/payroll/my-payslips');
+    req.flush([
+      {
+        id: 'ps-1',
+        payPeriod: '2026-W34',
+        payDate: '2026-08-25',
+        grossPay: 1850.0,
+        netPay: 1450.0,
+        deductions: 400.0,
+        totalHours: 42.5,
+        hourlyRate: 35.0,
+        currency: 'NZD',
+      },
+    ]);
+
+    expect(component.isUsingCache()).toBe(false);
+    expect(component.isLoading()).toBe(false);
+  });
+
+  it('sets isUsingCache true when online request fails (W20 fallback pattern)', () => {
+    const req = httpMock.expectOne('/api/payroll/my-payslips');
+    req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+
+    expect(component.isUsingCache()).toBe(true);
+    expect(component.isLoading()).toBe(false);
+  });
 });
