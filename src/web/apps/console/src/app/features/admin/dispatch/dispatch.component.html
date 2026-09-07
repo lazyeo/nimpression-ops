@@ -225,7 +225,7 @@
                   }
                 </td>
                 <td>
-                  <span>{{ task.scheduledFor | localeDate: 'short' }}</span>
+                  <span>{{ task.scheduledFor | localeDate: 'shortDateTime' }}</span>
                 </td>
                 <td>
                   <nim-status-badge [status]="task.priority">
@@ -729,7 +729,7 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_SCHEDULED_FOR' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.scheduledFor | localeDate: 'medium' }}</span>
+                <span class="detail-val">{{ selectedTask()!.scheduledFor | localeDate: 'mediumDateTime' }}</span>
               </div>
             </div>
 
@@ -737,20 +737,20 @@
               <h4>{{ 'DISPATCH.TIMELINE_TITLE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_ACKNOWLEDGED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedTask()!.acknowledgedAt | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{ (selectedTask()!.acknowledgedAt | localeDate: 'mediumDateTime') || '-' }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_STARTED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedTask()!.startedAt | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{ (selectedTask()!.startedAt | localeDate: 'mediumDateTime') || '-' }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_COMPLETED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedTask()!.completedAt | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{ (selectedTask()!.completedAt | localeDate: 'mediumDateTime') || '-' }}</span>
               </div>
               @if (selectedTask()!.cancelledAt) {
                 <div class="detail-row">
                   <span class="detail-label">{{ 'DISPATCH.FIELD_CANCELLED_AT' | i18n }}</span>
-                  <span class="detail-val">{{ selectedTask()!.cancelledAt | localeDate: 'medium' }}</span>
+                  <span class="detail-val">{{ selectedTask()!.cancelledAt | localeDate: 'mediumDateTime' }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'DISPATCH.FIELD_CANCEL_REASON' | i18n }}</span>

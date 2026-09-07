@@ -12,6 +12,8 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { JobTaskDetailDto, PaginatedResult } from './models/dispatch.models';
 import { RealtimeMessage } from '../../../core/models/realtime.models';
 
+declare const process: { env: Record<string, string | undefined> };
+
 describe('DispatchComponent', () => {
   let component: DispatchComponent;
   let fixture: ComponentFixture<DispatchComponent>;
@@ -227,4 +229,98 @@ describe('DispatchComponent', () => {
     expect(dispatchServiceMock.getTasks).toHaveBeenCalledTimes(2);
     expect(dispatchServiceMock.getUnacknowledgedAlerts).toHaveBeenCalledTimes(2);
   });
+
+  describe('Timezone & Wall-Clock Echo Tests (AC 1, AC 2, R1)', () => {
+    const originalTz = process.env['TZ'];
+
+    afterEach(() => {
+      if (originalTz !== undefined) {
+        process.env['TZ'] = originalTz;
+      } else {
+        delete process.env['TZ'];
+      }
+    });
+
+    it('submits create task and echoes in assign modal with matching wall-clock in Pacific/Auckland (UTC+12)', () => {
+      process.env['TZ'] = 'Pacific/Auckland';
+
+      fixture.detectChanges();
+      component.openCreateModal();
+
+      // User creates task at 17:59 local wall-clock
+      component.createForm.title = 'Evening Freight';
+      component.createForm.areaId = 'area-1';
+      component.createForm.scheduledFor = '2026-09-07T17:59';
+
+      component.submitCreateTask();
+
+      // In UTC+12, 17:59 NZST is 05:59 UTC
+      expect(dispatchServiceMock.createTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scheduledFor: '2026-09-07T05:59:00.000Z',
+        }),
+      );
+
+      // Server returns task with UTC scheduledFor
+      const createdTask: JobTaskDetailDto = {
+        ...mockTasks[0],
+        id: 'task-new',
+        scheduledFor: '2026-09-07T05:59:00.000Z',
+      };
+
+      // User opens assign modal for the created task
+      component.openAssignModal(createdTask);
+
+      // Assign modal MUST echo 17:59 (NOT 05:59)
+      expect(component.assignForm.scheduledFor).toBe('2026-09-07T17:59');
+
+      // User submits assign task without editing scheduled time
+      component.assignForm.driverId = 'drv-1';
+      component.assignForm.vehicleId = 'veh-1';
+      component.submitAssignTask();
+
+      expect(dispatchServiceMock.assignTask).toHaveBeenCalledWith(
+        'task-new',
+        expect.objectContaining({
+          scheduledFor: '2026-09-07T05:59:00.000Z',
+        }),
+      );
+    });
+
+    it('preserves exact wall-clock across NZ Daylight Saving Time (DST) boundaries (AC 2)', () => {
+      process.env['TZ'] = 'Pacific/Auckland';
+      fixture.detectChanges();
+
+      // 1. Before DST (NZST = UTC+12): Sat 26 Sep 2026 18:00
+      const preDstTask: JobTaskDetailDto = {
+        ...mockTasks[0],
+        id: 'task-pre-dst',
+        scheduledFor: '2026-09-26T06:00:00.000Z',
+      };
+      component.openAssignModal(preDstTask);
+      expect(component.assignForm.scheduledFor).toBe('2026-09-26T18:00');
+
+      // 2. After DST (NZDT = UTC+13): Mon 28 Sep 2026 18:00
+      const postDstTask: JobTaskDetailDto = {
+        ...mockTasks[0],
+        id: 'task-post-dst',
+        scheduledFor: '2026-09-28T05:00:00.000Z',
+      };
+      component.openAssignModal(postDstTask);
+      expect(component.assignForm.scheduledFor).toBe('2026-09-28T18:00');
+
+      // Submitting assign form on post-DST date correctly uses UTC+13 (05:00 UTC)
+      component.assignForm.driverId = 'drv-1';
+      component.assignForm.vehicleId = 'veh-1';
+      component.submitAssignTask();
+
+      expect(dispatchServiceMock.assignTask).toHaveBeenCalledWith(
+        'task-post-dst',
+        expect.objectContaining({
+          scheduledFor: '2026-09-28T05:00:00.000Z',
+        }),
+      );
+    });
+  });
 });
+
