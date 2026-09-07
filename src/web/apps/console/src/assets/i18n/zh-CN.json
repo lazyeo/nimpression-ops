@@ -127,6 +127,8 @@
     "STATUS_OFFLINE": "离线",
     "STATUS_SYNCING": "同步中...",
     "STATUS_SYNCED": "已同步",
+    "STATUS_DISCONNECTED": "未连接",
+    "STATUS_RECONNECTING": "重连中...",
     "OFFLINE_BANNER": "当前处于离线状态，您的操作已暂存本地，联网后将自动同步。",
     "PENDING_OPERATIONS": "本地队列有 {count} 个待同步变更",
     "SYNC_FAILED_TITLE": "同步失败",

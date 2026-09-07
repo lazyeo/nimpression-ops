@@ -1,15 +1,15 @@
 <div class="offline-status-container">
   <!-- 3-State Indicator Badge -->
-  @switch (offlineQueue.syncStatus()) {
+  @switch (effectiveStatus()) {
     @case ('offline') {
       <button
         type="button"
         class="status-badge badge-offline"
         (click)="openQueueModal()"
-        [title]="'OFFLINE.STATUS_OFFLINE' | i18n"
+        [title]="statusLabelKey() | i18n"
       >
         <span class="status-dot"></span>
-        <span class="status-label">{{ 'OFFLINE.STATUS_OFFLINE' | i18n }}</span>
+        <span class="status-label">{{ statusLabelKey() | i18n }}</span>
         @if (offlineQueue.pendingCount() > 0) {
           <span class="badge-count">{{ offlineQueue.pendingCount() }}</span>
         }
@@ -20,10 +20,10 @@
         type="button"
         class="status-badge badge-syncing"
         (click)="openQueueModal()"
-        [title]="'OFFLINE.STATUS_SYNCING' | i18n"
+        [title]="statusLabelKey() | i18n"
       >
         <span class="spinner-icon"></span>
-        <span class="status-label">{{ 'OFFLINE.STATUS_SYNCING' | i18n }}</span>
+        <span class="status-label">{{ statusLabelKey() | i18n }}</span>
         @if (offlineQueue.pendingCount() > 0) {
           <span class="badge-count">{{ offlineQueue.pendingCount() }}</span>
         }
@@ -38,17 +38,6 @@
       >
         <nim-icon name="check-circle" [size]="14" class="check-icon" />
         <span class="status-label">{{ 'OFFLINE.STATUS_SYNCED' | i18n }}</span>
-      </button>
-    }
-    @default {
-      <button
-        type="button"
-        class="status-badge badge-synced"
-        (click)="openQueueModal()"
-        [title]="'OFFLINE.STATUS_ONLINE' | i18n"
-      >
-        <nim-icon name="check-circle" [size]="14" class="check-icon" />
-        <span class="status-label">{{ 'OFFLINE.STATUS_ONLINE' | i18n }}</span>
       </button>
     }
   }
