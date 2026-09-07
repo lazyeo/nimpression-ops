@@ -59,9 +59,23 @@ export class VehiclesComponent implements OnInit {
   readonly odometerReadings = signal<OdometerReadingDto[]>([]);
 
   // Computed
-  readonly serviceDueCount = computed(
-    () => this.vehicles().filter((v) => v.isServiceDue).length,
-  );
+  readonly serviceDueCount = computed(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const thirtyDaysAhead = new Date(today);
+    thirtyDaysAhead.setDate(thirtyDaysAhead.getDate() + 30);
+
+    return this.vehicles().filter((v) => {
+      if (v.isServiceDue) {
+        return true;
+      }
+      return (
+        this.isDateExpiredOrExpiring(v.wofExpiry, thirtyDaysAhead) ||
+        this.isDateExpiredOrExpiring(v.cofExpiry, thirtyDaysAhead) ||
+        this.isDateExpiredOrExpiring(v.insuranceExpiry, thirtyDaysAhead)
+      );
+    }).length;
+  });
 
   // Filters & Pagination
   readonly searchTerm = signal<string>('');
@@ -512,5 +526,18 @@ export class VehiclesComponent implements OnInit {
     this.isDetailsModalOpen.set(false);
     this.selectedVehicleDetail.set(null);
     this.odometerReadings.set([]);
+  }
+
+  private isDateExpiredOrExpiring(dateStr?: string | null, thresholdDate?: Date): boolean {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const threshold = thresholdDate ?? (() => {
+      const t = new Date();
+      t.setHours(0, 0, 0, 0);
+      t.setDate(t.getDate() + 30);
+      return t;
+    })();
+    return d <= threshold;
   }
 }

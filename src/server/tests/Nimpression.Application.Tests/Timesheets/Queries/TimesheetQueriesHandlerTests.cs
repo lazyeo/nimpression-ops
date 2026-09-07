@@ -287,4 +287,32 @@ public sealed class TimesheetQueriesHandlerTests
         noahSummary.TotalOvertimeHours.Should().Be(1.50m);
         noahSummary.TotalPayableHours.Should().Be(81.00m);
     }
+
+    [Fact]
+    public void ComputeSummary_WithNullDateRange_AggregatesAllShifts_AndSetsEffectiveDates()
+    {
+        // Arrange
+        var driverId = Guid.NewGuid();
+        var nzOffset = TimeSpan.FromHours(12);
+
+        var shift1 = new ShiftEntry(Guid.NewGuid(), driverId, new DateTimeOffset(2026, 7, 10, 8, 0, 0, nzOffset));
+        shift1.ClockOut(new DateTimeOffset(2026, 7, 10, 16, 0, 0, nzOffset), breakMinutes: 0);
+
+        var shift2 = new ShiftEntry(Guid.NewGuid(), driverId, new DateTimeOffset(2026, 8, 20, 8, 0, 0, nzOffset));
+        shift2.ClockOut(new DateTimeOffset(2026, 8, 20, 17, 0, 0, nzOffset), breakMinutes: 0);
+
+        var shifts = new List<ShiftEntry> { shift1, shift2 };
+
+        // Act: passing null for both fromDate and toDate
+        var summary = ShiftEntryRepository.ComputeSummary(driverId, "Test Driver", null, null, shifts);
+
+        // Assert
+        summary.TotalShifts.Should().Be(2);
+        summary.TotalPayableHours.Should().Be(17.0m);
+        summary.TotalOrdinaryHours.Should().Be(16.0m);
+        summary.TotalOvertimeHours.Should().Be(1.0m);
+        summary.FromDate.Should().Be(new DateOnly(2026, 7, 10));
+        summary.ToDate.Should().Be(new DateOnly(2026, 8, 20));
+        summary.DailySummaries.Should().HaveCount(2);
+    }
 }

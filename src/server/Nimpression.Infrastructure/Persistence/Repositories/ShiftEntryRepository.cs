@@ -120,27 +120,33 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
         TimesheetSummaryFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var fromDate = filter.FromDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-13));
-        var toDate = filter.ToDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var fromDate = filter.FromDate;
+        var toDate = filter.ToDate;
 
-        if (toDate < fromDate)
+        if (fromDate.HasValue && toDate.HasValue && toDate.Value < fromDate.Value)
         {
             (fromDate, toDate) = (toDate, fromDate);
         }
 
-        var fromLocal = fromDate.ToDateTime(TimeOnly.MinValue);
-        var fromUtc = TimeZoneInfo.ConvertTimeToUtc(fromLocal, NzTimeZone.Info);
-
-        var toLocal = toDate.ToDateTime(TimeOnly.MaxValue);
-        var toUtc = TimeZoneInfo.ConvertTimeToUtc(toLocal, NzTimeZone.Info);
-
-        var query = dbContext.ShiftEntries
-            .AsNoTracking()
-            .Where(s => s.ClockInAt >= fromUtc && s.ClockInAt <= toUtc);
+        var query = dbContext.ShiftEntries.AsNoTracking().AsQueryable();
 
         if (filter.DriverId.HasValue)
         {
             query = query.Where(s => s.DriverId == filter.DriverId.Value);
+        }
+
+        if (fromDate.HasValue)
+        {
+            var fromLocal = fromDate.Value.ToDateTime(TimeOnly.MinValue);
+            var fromUtc = TimeZoneInfo.ConvertTimeToUtc(fromLocal, NzTimeZone.Info);
+            query = query.Where(s => s.ClockInAt >= fromUtc);
+        }
+
+        if (toDate.HasValue)
+        {
+            var toLocal = toDate.Value.ToDateTime(TimeOnly.MaxValue);
+            var toUtc = TimeZoneInfo.ConvertTimeToUtc(toLocal, NzTimeZone.Info);
+            query = query.Where(s => s.ClockInAt <= toUtc);
         }
 
         var shifts = await query.ToListAsync(cancellationToken);
@@ -161,14 +167,20 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
     /// <summary>
     /// 统一工时汇总计算逻辑（纯逻辑，无 IO）。
     /// 司机端与管理端完全共享此聚合算法，确保两端数字完全一致、误差为 0。
+    /// 当 fromDate / toDate 未指定（null）时，聚合全量有效班次并以实际班次跨度作为起止日期。
     /// </summary>
     public static TimesheetSummaryDto ComputeSummary(
         Guid? driverId,
         string? driverName,
-        DateOnly fromDate,
-        DateOnly toDate,
+        DateOnly? fromDate,
+        DateOnly? toDate,
         IEnumerable<ShiftEntry> shifts)
     {
+        if (fromDate.HasValue && toDate.HasValue && toDate.Value < fromDate.Value)
+        {
+            (fromDate, toDate) = (toDate, fromDate);
+        }
+
         var completedCalculatedShifts = shifts
             .Where(s => s.Status == ShiftStatus.Completed && s.ClockOutAt.HasValue)
             .Where(s => !driverId.HasValue || s.DriverId == driverId.Value)
@@ -181,7 +193,8 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
                     Duration = duration
                 };
             })
-            .Where(x => x.Duration.AttributedDate >= fromDate && x.Duration.AttributedDate <= toDate)
+            .Where(x => (!fromDate.HasValue || x.Duration.AttributedDate >= fromDate.Value)
+                     && (!toDate.HasValue || x.Duration.AttributedDate <= toDate.Value))
             .ToList();
 
         var dailyGroups = completedCalculatedShifts
@@ -232,11 +245,14 @@ public sealed class ShiftEntryRepository(AppDbContext dbContext) : IShiftEntryRe
                 BreakMinutes: dayBreakMinutes));
         }
 
+        var effectiveFromDate = fromDate ?? (dailySummaries.Count > 0 ? dailySummaries.Min(d => d.Date) : DateOnly.FromDateTime(DateTime.UtcNow));
+        var effectiveToDate = toDate ?? (dailySummaries.Count > 0 ? dailySummaries.Max(d => d.Date) : DateOnly.FromDateTime(DateTime.UtcNow));
+
         return new TimesheetSummaryDto(
             DriverId: driverId,
             DriverName: driverName,
-            FromDate: fromDate,
-            ToDate: toDate,
+            FromDate: effectiveFromDate,
+            ToDate: effectiveToDate,
             TotalShifts: totalShifts,
             TotalPayableHours: totalPayableHours,
             TotalOrdinaryHours: totalOrdinaryHours,

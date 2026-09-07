@@ -276,4 +276,56 @@ describe('VehiclesComponent', () => {
 
     expect(vehiclesServiceMock.getVehicles).toHaveBeenCalledTimes(2);
   });
+
+  it('should count vehicles with expired or expiring compliance in alert count even if isServiceDue is false', () => {
+    const expiredVehicles: VehicleSummaryDto[] = [
+      {
+        id: 'veh-exp-1',
+        rego: 'NIM005',
+        make: 'Isuzu',
+        model: 'Forward',
+        year: 2021,
+        odometerKm: 50000,
+        serviceIntervalKm: 15000,
+        lastServiceOdometerKm: 48000,
+        distanceSinceLastServiceKm: 2000,
+        isServiceDue: false,
+        wofExpiry: '2026-08-30', // expired
+        status: 'Active',
+      },
+      {
+        id: 'veh-exp-2',
+        rego: 'NIM006',
+        make: 'Hino',
+        model: '500',
+        year: 2020,
+        odometerKm: 80000,
+        serviceIntervalKm: 20000,
+        lastServiceOdometerKm: 75000,
+        distanceSinceLastServiceKm: 5000,
+        isServiceDue: false,
+        insuranceExpiry: '2026-09-06', // expired
+        status: 'Active',
+      },
+      {
+        id: 'veh-ok-1',
+        rego: 'NIM099',
+        make: 'Scania',
+        model: 'R500',
+        year: 2024,
+        odometerKm: 10000,
+        serviceIntervalKm: 30000,
+        lastServiceOdometerKm: 10000,
+        distanceSinceLastServiceKm: 0,
+        isServiceDue: false,
+        wofExpiry: '2027-12-31', // far future
+        cofExpiry: '2027-12-31',
+        insuranceExpiry: '2027-12-31',
+        status: 'Active',
+      },
+    ];
+
+    component.vehicles.set(expiredVehicles);
+    expect(component.serviceDueCount()).toBe(2);
+  });
 });
