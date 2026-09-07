@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -64,17 +71,17 @@ export class DriverProfileComponent implements OnInit {
         id: user.id,
         displayName: user.displayName,
         email: user.email,
-        phone: '+64 21 000 0000',
-        emergencyContact: '+64 21 999 9999',
-        employeeNo: 'EMP-001',
-        licenceClass: 'Class 4 Heavy',
-        licenceExpiry: '2027-12-31',
+        phone: '',
+        emergencyContact: '',
+        employeeNo: '',
+        licenceClass: '',
+        licenceExpiry: '',
         locale: user.locale || this.i18n.currentLang(),
       });
 
       this.profileForm.patchValue({
-        phone: '+64 21 000 0000',
-        emergencyContact: '+64 21 999 9999',
+        phone: '',
+        emergencyContact: '',
         locale: user.locale || this.i18n.currentLang(),
       });
     }
@@ -99,8 +106,8 @@ export class DriverProfileComponent implements OnInit {
         next: (data) => {
           this.profile.set(data);
           this.profileForm.patchValue({
-            phone: data.phone,
-            emergencyContact: data.emergencyContact,
+            phone: data.phone || '',
+            emergencyContact: data.emergencyContact || '',
             locale: data.locale || this.i18n.currentLang(),
           });
         },
@@ -121,15 +128,22 @@ export class DriverProfileComponent implements OnInit {
     const { phone, emergencyContact, locale } = this.profileForm.getRawValue();
     const nextLang = (locale as SupportedLang) || 'en-NZ';
 
-    this.authService.updateUserLocale(nextLang).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.saveSuccess.set(true);
-        setTimeout(() => this.saveSuccess.set(false), 3000);
-      },
-      error: () => {
-        this.isSaving.set(false);
-      },
-    });
+    this.http
+      .put<void>(`/api/drivers/${user.id}/profile`, {
+        phone: phone || '',
+        emergencyContact: emergencyContact || '',
+        locale: nextLang,
+      })
+      .subscribe({
+        next: () => {
+          this.authService.updateUserLocale(nextLang).subscribe();
+          this.isSaving.set(false);
+          this.saveSuccess.set(true);
+          setTimeout(() => this.saveSuccess.set(false), 3000);
+        },
+        error: () => {
+          this.isSaving.set(false);
+        },
+      });
   }
 }
