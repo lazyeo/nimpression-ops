@@ -745,7 +745,7 @@
     "NO_GPS": "无 GPS",
     "STATUS_ACTIVE": "进行中",
     "STATUS_COMPLETED": "已正常打卡",
-    "STATUS_AUTOCLOSED": "系统自动关闭",
+    "STATUS_AUTO_CLOSED": "系统自动关闭",
     "STATUS_CANCELLED": "已作废",
     "STATUS_CORRECTED": "管理员已更正",
     "DIALOG_DETAILS_TITLE": "班次打卡详情",
