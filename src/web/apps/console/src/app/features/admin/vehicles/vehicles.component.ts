@@ -19,10 +19,8 @@ import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { DriverLookupOption, VehiclesService } from './services/vehicles.service';
-import {
-  toDateTimeLocalValue,
-  parseDateTimeLocalToIso,
-} from '../../../core/utils/date-utils';
+import { toDateTimeLocalValue, parseDateTimeLocalToIso } from '../../../core/utils/date-utils';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 import {
   OdometerReadingDto,
   VehicleDetailDto,
@@ -36,7 +34,14 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-vehicles',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent, StatusBadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    I18nPipe,
+    LocaleDatePipe,
+    IconComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './vehicles.component.html',
   styleUrl: './vehicles.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -237,20 +242,7 @@ export class VehiclesComponent implements OnInit {
     this.loadVehicles();
   }
 
-  getStatusKey(status: string): string {
-    switch (status) {
-      case 'Active':
-        return 'ACTIVE';
-      case 'Maintenance':
-        return 'MAINTENANCE';
-      case 'Inactive':
-        return 'INACTIVE';
-      case 'Decommissioned':
-        return 'DECOMMISSIONED';
-      default:
-        return status.toUpperCase();
-    }
-  }
+  readonly toScreamingSnake = toScreamingSnake;
 
   // --- Modals ---
 
@@ -315,7 +307,9 @@ export class VehiclesComponent implements OnInit {
           if (err.status === 409) {
             this.formError.set('Vehicle registration plate already exists.');
           } else {
-            this.formError.set(err.error?.message || err.error?.detail || err.message || 'Failed to add vehicle');
+            this.formError.set(
+              err.error?.message || err.error?.detail || err.message || 'Failed to add vehicle',
+            );
           }
         },
       });
@@ -405,7 +399,9 @@ export class VehiclesComponent implements OnInit {
           if (err.status === 409) {
             this.formError.set('Vehicle already has an active driver assignment. Release first.');
           } else {
-            this.formError.set(err.error?.message || err.error?.detail || 'Failed to assign vehicle');
+            this.formError.set(
+              err.error?.message || err.error?.detail || 'Failed to assign vehicle',
+            );
           }
         },
       });
@@ -502,7 +498,9 @@ export class VehiclesComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to record odometer reading');
+          this.formError.set(
+            err.error?.message || err.error?.detail || 'Failed to record odometer reading',
+          );
         },
       });
   }
@@ -532,12 +530,14 @@ export class VehiclesComponent implements OnInit {
     if (!dateStr) return false;
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return false;
-    const threshold = thresholdDate ?? (() => {
-      const t = new Date();
-      t.setHours(0, 0, 0, 0);
-      t.setDate(t.getDate() + 30);
-      return t;
-    })();
+    const threshold =
+      thresholdDate ??
+      (() => {
+        const t = new Date();
+        t.setHours(0, 0, 0, 0);
+        t.setDate(t.getDate() + 30);
+        return t;
+      })();
     return d <= threshold;
   }
 }

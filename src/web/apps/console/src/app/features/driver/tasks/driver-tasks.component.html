@@ -63,7 +63,7 @@
             <div class="card-top">
               <span class="trip-badge">#{{ task.tripNo }}</span>
               <span class="status-pill status-{{ task.status.toLowerCase() }}">
-                {{ 'DRIVER.TRIP_STATUS_' + task.status | i18n }}
+                {{ 'DRIVER.TRIP_STATUS_' + toScreamingSnake(task.status) | i18n }}
               </span>
             </div>
 
@@ -130,7 +130,10 @@
       @if (activeTotalPages() > 1) {
         <div class="history-pagination">
           <span class="page-info">
-            {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: activePage(), total: activeTotalPages(), count: activeTotalCount() } }}
+            {{
+              'COMMON.PAGE_INFO_TASKS'
+                | i18n: { page: activePage(), total: activeTotalPages(), count: activeTotalCount() }
+            }}
           </span>
           <div class="pagination-actions">
             <button
@@ -169,7 +172,7 @@
             <div class="card-top">
               <span class="trip-badge">#{{ task.tripNo }}</span>
               <span class="status-pill status-{{ task.status.toLowerCase() }}">
-                {{ 'DRIVER.TRIP_STATUS_' + task.status | i18n }}
+                {{ 'DRIVER.TRIP_STATUS_' + toScreamingSnake(task.status) | i18n }}
               </span>
             </div>
 
@@ -206,7 +209,11 @@
       <!-- History Pagination -->
       <div class="history-pagination">
         <span class="page-info">
-          {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: historyPage(), total: historyTotalPages(), count: historyTotalCount() } }}
+          {{
+            'COMMON.PAGE_INFO_TASKS'
+              | i18n
+                : { page: historyPage(), total: historyTotalPages(), count: historyTotalCount() }
+          }}
         </span>
         <div class="pagination-actions">
           <button

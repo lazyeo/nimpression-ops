@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,6 +17,7 @@ import { OfflineCacheService } from '../../../core/offline/offline-cache.service
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 
 export interface ShiftStatusDto {
   id?: string;
@@ -32,6 +40,7 @@ export class DriverShiftsComponent implements OnInit {
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
   readonly offlineQueue = inject(OfflineQueueService);
+  readonly toScreamingSnake = toScreamingSnake;
 
   readonly currentShift = signal<ShiftStatusDto>({
     status: 'NOT_STARTED',

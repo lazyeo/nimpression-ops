@@ -4,6 +4,7 @@ import { JobTaskDto } from '../../../../core/api/models/api-models';
 import { I18nPipe } from '../../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../../core/i18n/locale-date.pipe';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { toScreamingSnake } from '../../../../core/utils/case.utils';
 
 @Component({
   selector: 'nim-task-drilldown-dialog',
@@ -42,22 +43,5 @@ export class TaskDrilldownDialogComponent {
     }
   }
 
-  getStatusKey(status: string): string {
-    switch (status) {
-      case 'Completed':
-        return 'CHARTS.TASK_FUNNEL.STAGES.COMPLETED';
-      case 'InProgress':
-        return 'CHARTS.TASK_FUNNEL.STAGES.IN_PROGRESS';
-      case 'Acknowledged':
-        return 'CHARTS.TASK_FUNNEL.STAGES.ACKNOWLEDGED';
-      case 'Assigned':
-        return 'CHARTS.TASK_FUNNEL.STAGES.ASSIGNED';
-      case 'Draft':
-        return 'CHARTS.TASK_FUNNEL.STAGES.DRAFT';
-      case 'Cancelled':
-        return 'CHARTS.TASK_FUNNEL.STAGES.CANCELLED';
-      default:
-        return status;
-    }
-  }
+  readonly toScreamingSnake = toScreamingSnake;
 }

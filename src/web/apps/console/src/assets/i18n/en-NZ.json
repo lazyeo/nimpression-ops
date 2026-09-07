@@ -745,7 +745,7 @@
     "NO_GPS": "No GPS",
     "STATUS_ACTIVE": "On Duty",
     "STATUS_COMPLETED": "Completed",
-    "STATUS_AUTOCLOSED": "Auto Closed",
+    "STATUS_AUTO_CLOSED": "Auto Closed",
     "STATUS_CANCELLED": "Cancelled",
     "STATUS_CORRECTED": "Admin Corrected",
     "DIALOG_DETAILS_TITLE": "Shift Details",

@@ -41,11 +41,7 @@
             <nim-icon name="refresh" [size]="16" />
             <span>{{ 'COMMON.REFRESH' | i18n }}</span>
           </button>
-          <button
-            type="button"
-            class="action-btn btn-primary"
-            (click)="openCreateModal()"
-          >
+          <button type="button" class="action-btn btn-primary" (click)="openCreateModal()">
             <nim-icon name="calendar" [size]="16" />
             <span>{{ 'PAYROLL.NEW_PERIOD' | i18n }}</span>
           </button>
@@ -55,7 +51,9 @@
       <!-- Filters -->
       <div class="filter-card">
         <div class="filter-group">
-          <label for="payroll-status-filter" class="filter-label">{{ 'PAYROLL.COL_STATUS' | i18n }}</label>
+          <label for="payroll-status-filter" class="filter-label">{{
+            'PAYROLL.COL_STATUS' | i18n
+          }}</label>
           <select
             id="payroll-status-filter"
             class="form-control"
@@ -71,7 +69,9 @@
         </div>
 
         <div class="filter-group">
-          <label for="payroll-from-date" class="filter-label">{{ 'TIMESHEETS.FILTER_FROM' | i18n }}</label>
+          <label for="payroll-from-date" class="filter-label">{{
+            'TIMESHEETS.FILTER_FROM' | i18n
+          }}</label>
           <input
             type="date"
             id="payroll-from-date"
@@ -82,7 +82,9 @@
         </div>
 
         <div class="filter-group">
-          <label for="payroll-to-date" class="filter-label">{{ 'TIMESHEETS.FILTER_TO' | i18n }}</label>
+          <label for="payroll-to-date" class="filter-label">{{
+            'TIMESHEETS.FILTER_TO' | i18n
+          }}</label>
           <input
             type="date"
             id="payroll-to-date"
@@ -145,11 +147,13 @@
                     </td>
                     <td>
                       <nim-status-badge [status]="period.status">
-                        {{ 'PAYROLL.STATUS_' + period.status.toUpperCase() | i18n }}
+                        {{ 'PAYROLL.STATUS_' + toScreamingSnake(period.status) | i18n }}
                       </nim-status-badge>
                     </td>
                     <td>{{ period.payslipCount }}</td>
-                    <td>{{ period.finalisedAt ? (period.finalisedAt | localeDate: 'short') : '-' }}</td>
+                    <td>
+                      {{ period.finalisedAt ? (period.finalisedAt | localeDate: 'short') : '-' }}
+                    </td>
                     <td>{{ period.paidAt ? (period.paidAt | localeDate: 'short') : '-' }}</td>
                     <td class="actions-cell">
                       <!-- Action: View payslips -->
@@ -172,7 +176,12 @@
                           [title]="'PAYROLL.ACTION_CALCULATE' | i18n"
                         >
                           <nim-icon name="target" [size]="14" />
-                          <span>{{ (period.status === 'Calculating' ? 'PAYROLL.ACTION_RECALCULATE' : 'PAYROLL.ACTION_CALCULATE') | i18n }}</span>
+                          <span>{{
+                            (period.status === 'Calculating'
+                              ? 'PAYROLL.ACTION_RECALCULATE'
+                              : 'PAYROLL.ACTION_CALCULATE'
+                            ) | i18n
+                          }}</span>
                         </button>
                       }
 
@@ -211,7 +220,10 @@
           <!-- Pagination -->
           <div class="pagination-bar">
             <span class="page-info">
-              {{ 'COMMON.PAGE_INFO_PAYROLL' | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() } }}
+              {{
+                'COMMON.PAGE_INFO_PAYROLL'
+                  | i18n: { page: currentPage(), total: totalPages(), count: totalRecords() }
+              }}
             </span>
             <div class="pagination-controls">
               <button
@@ -248,10 +260,15 @@
             </button>
           </div>
           <h1 class="page-title">
-            {{ selectedPeriod()?.startsOn }} ~ {{ selectedPeriod()?.endsOn }} ({{ 'PAYROLL.TAB_PAYSLIPS' | i18n }})
+            {{ selectedPeriod()?.startsOn }} ~ {{ selectedPeriod()?.endsOn }} ({{
+              'PAYROLL.TAB_PAYSLIPS' | i18n
+            }})
           </h1>
           <p class="page-subtitle">
-            {{ 'PAYROLL.STATUS_SUMMARY' | i18n: { status: selectedPeriod()?.status || '', count: periodPayslips().length } }}
+            {{
+              'PAYROLL.STATUS_SUMMARY'
+                | i18n: { status: selectedPeriod()?.status || '', count: periodPayslips().length }
+            }}
           </p>
         </div>
         <div class="header-actions">
@@ -312,20 +329,35 @@
                 @for (slip of periodPayslips(); track slip.id) {
                   <tr>
                     <td class="driver-cell">
-                      <span class="driver-name">{{ slip.driverName || 'Driver ' + slip.driverId.substring(0, 8) }}</span>
+                      <span class="driver-name">{{
+                        slip.driverName || 'Driver ' + slip.driverId.substring(0, 8)
+                      }}</span>
                     </td>
                     <td>{{ slip.employeeNo || '-' }}</td>
                     <td class="gross-cell">
                       <strong>{{ slip.grossPay | localeCurrency: slip.currency }}</strong>
                     </td>
                     <td>
-                      <nim-status-badge [status]="slip.basisUsed" [variant]="slip.basisUsed === 'Hourly' ? 'info' : 'purple'">
-                        {{ (slip.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n }}
+                      <nim-status-badge
+                        [status]="slip.basisUsed"
+                        [variant]="slip.basisUsed === 'Hourly' ? 'info' : 'purple'"
+                      >
+                        {{
+                          (slip.basisUsed === 'Hourly'
+                            ? 'PAYROLL.BASIS_HOURLY'
+                            : 'PAYROLL.BASIS_TRIP'
+                          ) | i18n
+                        }}
                       </nim-status-badge>
                     </td>
                     <td>
                       @if (slip.minimumWageTopUp) {
-                        <nim-status-badge status="TopUpApplied" variant="warning" icon="alert-triangle" [title]="'PAYROLL.MIN_WAGE_NOTICE' | i18n">
+                        <nim-status-badge
+                          status="TopUpApplied"
+                          variant="warning"
+                          icon="alert-triangle"
+                          [title]="'PAYROLL.MIN_WAGE_NOTICE' | i18n"
+                        >
                           {{ 'PAYROLL.TOPUP_APPLIED' | i18n }}
                         </nim-status-badge>
                       } @else {
@@ -364,34 +396,71 @@
             <nim-icon name="payslips" [size]="22" />
             <div>
               <h3 class="modal-title">{{ 'PAYROLL.PAYSLIP_DETAIL_TITLE' | i18n }}</h3>
-              <small class="text-muted">{{ activePayslip()?.driverName }} ({{ activePayslip()?.employeeNo }}) | {{ activePayslip()?.periodStartsOn }} ~ {{ activePayslip()?.periodEndsOn }}</small>
+              <small class="text-muted"
+                >{{ activePayslip()?.driverName }} ({{ activePayslip()?.employeeNo }}) |
+                {{ activePayslip()?.periodStartsOn }} ~ {{ activePayslip()?.periodEndsOn }}</small
+              >
             </div>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeDetailModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeDetailModal()">
+            &times;
+          </button>
         </div>
 
         <div class="modal-body">
           @if (isDetailLoading()) {
             <div class="skeleton-table">
-              <div class="skeleton-row" *ngFor="let r of [1, 2, 3]"><div class="skeleton-cell"></div></div>
+              <div class="skeleton-row" *ngFor="let r of [1, 2, 3]">
+                <div class="skeleton-cell"></div>
+              </div>
             </div>
           } @else {
             <!-- Settlement Summary & Basis Banner -->
             <div class="settlement-hero">
               <div class="hero-left">
                 <span class="hero-label">{{ 'PAYROLL.PAYSLIP_SUMMARY_CARD' | i18n }}</span>
-                <span class="hero-gross">{{ activePayslip()?.grossPay | localeCurrency: activePayslip()?.currency }}</span>
-                <span class="hero-sub">{{ 'PAYROLL.GROSS_PAY_CALCULATED' | i18n: { basis: (activePayslip()?.calculatedAt | localeDate: 'short') || '' } }}</span>
+                <span class="hero-gross">{{
+                  activePayslip()?.grossPay | localeCurrency: activePayslip()?.currency
+                }}</span>
+                <span class="hero-sub">{{
+                  'PAYROLL.GROSS_PAY_CALCULATED'
+                    | i18n: { basis: (activePayslip()?.calculatedAt | localeDate: 'short') || '' }
+                }}</span>
               </div>
               <div class="hero-right">
-                <div class="basis-callout" [ngClass]="activePayslip()?.basisUsed === 'Hourly' ? 'callout-hourly' : 'callout-trip'">
-                  <span class="callout-tag">{{ 'PAYROLL.COL_BASIS_USED' | i18n }}: {{ (activePayslip()?.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n }}</span>
+                <div
+                  class="basis-callout"
+                  [ngClass]="
+                    activePayslip()?.basisUsed === 'Hourly' ? 'callout-hourly' : 'callout-trip'
+                  "
+                >
+                  <span class="callout-tag"
+                    >{{ 'PAYROLL.COL_BASIS_USED' | i18n }}:
+                    {{
+                      (activePayslip()?.basisUsed === 'Hourly'
+                        ? 'PAYROLL.BASIS_HOURLY'
+                        : 'PAYROLL.BASIS_TRIP'
+                      ) | i18n
+                    }}</span
+                  >
                   <p class="callout-desc">
-                    {{ 'PAYROLL.SETTLED_BASIS_BANNER' | i18n: {
-                      basis: (activePayslip()?.basisUsed === 'Hourly' ? 'PAYROLL.BASIS_HOURLY' : 'PAYROLL.BASIS_TRIP') | i18n,
-                      hoursGross: (activePayslip()?.hoursBasedGross | localeCurrency: activePayslip()?.currency),
-                      tripGross: (activePayslip()?.tripBasedGross | localeCurrency: activePayslip()?.currency)
-                    } }}
+                    {{
+                      'PAYROLL.SETTLED_BASIS_BANNER'
+                        | i18n
+                          : {
+                              basis:
+                                (activePayslip()?.basisUsed === 'Hourly'
+                                  ? 'PAYROLL.BASIS_HOURLY'
+                                  : 'PAYROLL.BASIS_TRIP'
+                                ) | i18n,
+                              hoursGross:
+                                (activePayslip()?.hoursBasedGross
+                                | localeCurrency: activePayslip()?.currency),
+                              tripGross:
+                                (activePayslip()?.tripBasedGross
+                                | localeCurrency: activePayslip()?.currency),
+                            }
+                    }}
                   </p>
                 </div>
               </div>
@@ -413,7 +482,10 @@
             <!-- Dual-Basis Comparison Grid (BOTH Always Shown) -->
             <div class="dual-basis-grid">
               <!-- Card 1: Hours-Based Gross -->
-              <div class="basis-card" [class.selected-basis]="activePayslip()?.basisUsed === 'Hourly'">
+              <div
+                class="basis-card"
+                [class.selected-basis]="activePayslip()?.basisUsed === 'Hourly'"
+              >
                 <div class="basis-card-header">
                   <h4>{{ 'PAYROLL.HOURS_BASIS_CARD' | i18n }}</h4>
                   @if (activePayslip()?.basisUsed === 'Hourly') {
@@ -425,25 +497,43 @@
                 <div class="basis-card-body">
                   <div class="basis-row">
                     <span>{{ 'PAYROLL.ORDINARY_HOURS_LABEL' | i18n }}</span>
-                    <strong>{{ activePayslip()?.ordinaryHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }} @ {{ activePayslip()?.hourlyRateSnapshot | localeCurrency: activePayslip()?.currency }}/{{ 'COMMON.UNITS.H' | i18n }}</strong>
+                    <strong
+                      >{{ activePayslip()?.ordinaryHours | localeNumber: 1 : 2
+                      }}{{ 'COMMON.UNITS.H' | i18n }} @
+                      {{
+                        activePayslip()?.hourlyRateSnapshot
+                          | localeCurrency: activePayslip()?.currency
+                      }}/{{ 'COMMON.UNITS.H' | i18n }}</strong
+                    >
                   </div>
                   <div class="basis-row">
                     <span>{{ 'PAYROLL.OVERTIME_HOURS_LABEL' | i18n }}</span>
-                    <strong>{{ activePayslip()?.overtimeHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong>
+                    <strong
+                      >{{ activePayslip()?.overtimeHours | localeNumber: 1 : 2
+                      }}{{ 'COMMON.UNITS.H' | i18n }}</strong
+                    >
                   </div>
                   <div class="basis-row">
                     <span>{{ 'PAYROLL.HOLIDAY_HOURS_LABEL' | i18n }}</span>
-                    <strong>{{ activePayslip()?.holidayHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong>
+                    <strong
+                      >{{ activePayslip()?.holidayHours | localeNumber: 1 : 2
+                      }}{{ 'COMMON.UNITS.H' | i18n }}</strong
+                    >
                   </div>
                   <div class="basis-row subtotal">
                     <span>{{ 'PAYROLL.HOURS_GROSS_TOTAL' | i18n }}:</span>
-                    <strong class="subtotal-val">{{ activePayslip()?.hoursBasedGross | localeCurrency: activePayslip()?.currency }}</strong>
+                    <strong class="subtotal-val">{{
+                      activePayslip()?.hoursBasedGross | localeCurrency: activePayslip()?.currency
+                    }}</strong>
                   </div>
                 </div>
               </div>
 
               <!-- Card 2: Trip-Based Gross -->
-              <div class="basis-card" [class.selected-basis]="activePayslip()?.basisUsed === 'Trip'">
+              <div
+                class="basis-card"
+                [class.selected-basis]="activePayslip()?.basisUsed === 'Trip'"
+              >
                 <div class="basis-card-header">
                   <h4>{{ 'PAYROLL.TRIP_BASIS_CARD' | i18n }}</h4>
                   @if (activePayslip()?.basisUsed === 'Trip') {
@@ -455,19 +545,44 @@
                 <div class="basis-card-body">
                   <div class="basis-row">
                     <span>{{ 'PAYROLL.COMPLETED_TRIPS_LABEL' | i18n }}</span>
-                    <strong>{{ activePayslip()?.completedTripCount }} {{ 'COMMON.UNITS.TRIPS' | i18n }} @ {{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }}{{ 'COMMON.UNITS.PER_TRIP' | i18n }}</strong>
+                    <strong
+                      >{{ activePayslip()?.completedTripCount }} {{ 'COMMON.UNITS.TRIPS' | i18n }} @
+                      {{
+                        activePayslip()?.perTripRateSnapshot
+                          | localeCurrency: activePayslip()?.currency
+                      }}{{ 'COMMON.UNITS.PER_TRIP' | i18n }}</strong
+                    >
                   </div>
                   <div class="basis-row">
                     <span>{{ 'PAYROLL.TOTAL_DISTANCE_LABEL' | i18n }}</span>
-                    <strong>{{ activePayslip()?.totalDistanceKm | localeNumber: 1 : 1 }} {{ 'COMMON.UNITS.KM' | i18n }} @ {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}{{ 'COMMON.UNITS.PER_KM' | i18n }}</strong>
+                    <strong
+                      >{{ activePayslip()?.totalDistanceKm | localeNumber: 1 : 1 }}
+                      {{ 'COMMON.UNITS.KM' | i18n }} @
+                      {{
+                        activePayslip()?.perKmRateSnapshot
+                          | localeCurrency: activePayslip()?.currency
+                      }}{{ 'COMMON.UNITS.PER_KM' | i18n }}</strong
+                    >
                   </div>
                   <div class="basis-row">
                     <span>{{ 'PAYROLL.SNAPSHOTS_LABEL' | i18n }}</span>
-                    <small>{{ activePayslip()?.perTripRateSnapshot | localeCurrency: activePayslip()?.currency }} / {{ activePayslip()?.perKmRateSnapshot | localeCurrency: activePayslip()?.currency }}</small>
+                    <small
+                      >{{
+                        activePayslip()?.perTripRateSnapshot
+                          | localeCurrency: activePayslip()?.currency
+                      }}
+                      /
+                      {{
+                        activePayslip()?.perKmRateSnapshot
+                          | localeCurrency: activePayslip()?.currency
+                      }}</small
+                    >
                   </div>
                   <div class="basis-row subtotal">
                     <span>{{ 'PAYROLL.TRIP_GROSS_TOTAL' | i18n }}:</span>
-                    <strong class="subtotal-val">{{ activePayslip()?.tripBasedGross | localeCurrency: activePayslip()?.currency }}</strong>
+                    <strong class="subtotal-val">{{
+                      activePayslip()?.tripBasedGross | localeCurrency: activePayslip()?.currency
+                    }}</strong>
                   </div>
                 </div>
               </div>
@@ -483,7 +598,10 @@
                   [class.active]="activeTraceTab() === 'shifts'"
                   (click)="activeTraceTab.set('shifts')"
                 >
-                  {{ 'PAYROLL.TAB_SHIFTS_TRACE' | i18n: { count: activePayslip()?.shiftDetails?.length || 0 } }}
+                  {{
+                    'PAYROLL.TAB_SHIFTS_TRACE'
+                      | i18n: { count: activePayslip()?.shiftDetails?.length || 0 }
+                  }}
                 </button>
                 <button
                   type="button"
@@ -491,7 +609,10 @@
                   [class.active]="activeTraceTab() === 'trips'"
                   (click)="activeTraceTab.set('trips')"
                 >
-                  {{ 'PAYROLL.TAB_TRIPS_TRACE' | i18n: { count: activePayslip()?.tripDetails?.length || 0 } }}
+                  {{
+                    'PAYROLL.TAB_TRIPS_TRACE'
+                      | i18n: { count: activePayslip()?.tripDetails?.length || 0 }
+                  }}
                 </button>
                 <button
                   type="button"
@@ -499,14 +620,18 @@
                   [class.active]="activeTraceTab() === 'lines'"
                   (click)="activeTraceTab.set('lines')"
                 >
-                  {{ 'PAYROLL.TAB_LINES_TRACE' | i18n: { count: activePayslip()?.lines?.length || 0 } }}
+                  {{
+                    'PAYROLL.TAB_LINES_TRACE' | i18n: { count: activePayslip()?.lines?.length || 0 }
+                  }}
                 </button>
               </div>
 
               <!-- Traceability Content -->
               <div class="trace-content">
                 @if (activeTraceTab() === 'shifts') {
-                  @if (!activePayslip()?.shiftDetails || activePayslip()?.shiftDetails?.length === 0) {
+                  @if (
+                    !activePayslip()?.shiftDetails || activePayslip()?.shiftDetails?.length === 0
+                  ) {
                     <p class="empty-trace">{{ 'PAYROLL.NO_SHIFTS_LINKED' | i18n }}</p>
                   } @else {
                     <table class="nested-table">
@@ -524,9 +649,20 @@
                           <tr>
                             <td>{{ s.attributedDate }}</td>
                             <td>{{ s.clockInAt | localeDate: 'short' }}</td>
-                            <td>{{ s.clockOutAt ? (s.clockOutAt | localeDate: 'short') : ('TIMESHEETS.STATUS_ACTIVE' | i18n) }}</td>
+                            <td>
+                              {{
+                                s.clockOutAt
+                                  ? (s.clockOutAt | localeDate: 'short')
+                                  : ('TIMESHEETS.STATUS_ACTIVE' | i18n)
+                              }}
+                            </td>
                             <td>{{ s.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
-                            <td><strong>{{ s.payableHours | localeNumber: 1 : 2 }}{{ 'COMMON.UNITS.H' | i18n }}</strong></td>
+                            <td>
+                              <strong
+                                >{{ s.payableHours | localeNumber: 1 : 2
+                                }}{{ 'COMMON.UNITS.H' | i18n }}</strong
+                              >
+                            </td>
                           </tr>
                         }
                       </tbody>
@@ -535,7 +671,9 @@
                 }
 
                 @if (activeTraceTab() === 'trips') {
-                  @if (!activePayslip()?.tripDetails || activePayslip()?.tripDetails?.length === 0) {
+                  @if (
+                    !activePayslip()?.tripDetails || activePayslip()?.tripDetails?.length === 0
+                  ) {
                     <p class="empty-trace">{{ 'PAYROLL.NO_TASKS_LINKED' | i18n }}</p>
                   } @else {
                     <table class="nested-table">
@@ -550,10 +688,20 @@
                       <tbody>
                         @for (t of activePayslip()?.tripDetails; track t.jobTaskId) {
                           <tr>
-                            <td><strong>{{ t.ref }}</strong></td>
+                            <td>
+                              <strong>{{ t.ref }}</strong>
+                            </td>
                             <td>{{ t.title }}</td>
                             <td>{{ t.completedAt | localeDate: 'short' }}</td>
-                            <td>{{ t.effectiveDistanceKm ? (t.effectiveDistanceKm | localeNumber: 1 : 1) + ' ' + ('COMMON.UNITS.KM' | i18n) : '-' }}</td>
+                            <td>
+                              {{
+                                t.effectiveDistanceKm
+                                  ? (t.effectiveDistanceKm | localeNumber: 1 : 1) +
+                                    ' ' +
+                                    ('COMMON.UNITS.KM' | i18n)
+                                  : '-'
+                              }}
+                            </td>
                           </tr>
                         }
                       </tbody>
@@ -579,12 +727,25 @@
                       <tbody>
                         @for (l of activePayslip()?.lines; track l.id) {
                           <tr>
-                            <td><span class="basis-mini-badge">{{ l.basis }}</span></td>
+                            <td>
+                              <span class="basis-mini-badge">{{ l.basis }}</span>
+                            </td>
                             <td>{{ l.kind }}</td>
                             <td>{{ l.description }}</td>
                             <td>{{ l.rate | localeCurrency: l.currency }}</td>
-                            <td>{{ l.hours ? (l.hours | localeNumber: 1 : 2) + ('COMMON.UNITS.H' | i18n) : (l.distance ? (l.distance | localeNumber: 1 : 1) + ('COMMON.UNITS.KM' | i18n) : (l.qty || '-')) }}</td>
-                            <td><strong>{{ l.amount | localeCurrency: l.currency }}</strong></td>
+                            <td>
+                              {{
+                                l.hours
+                                  ? (l.hours | localeNumber: 1 : 2) + ('COMMON.UNITS.H' | i18n)
+                                  : l.distance
+                                    ? (l.distance | localeNumber: 1 : 1) +
+                                      ('COMMON.UNITS.KM' | i18n)
+                                    : l.qty || '-'
+                              }}
+                            </td>
+                            <td>
+                              <strong>{{ l.amount | localeCurrency: l.currency }}</strong>
+                            </td>
                           </tr>
                         }
                       </tbody>
@@ -601,7 +762,11 @@
                   <nim-icon name="fines" [size]="20" />
                   <h4>{{ 'PAYROLL.FINES_PARTITION_TITLE' | i18n }}</h4>
                 </div>
-                <nim-status-badge class="zero-deduction-badge" status="ZeroDeduction" variant="success">
+                <nim-status-badge
+                  class="zero-deduction-badge"
+                  status="ZeroDeduction"
+                  variant="success"
+                >
                   {{ 'PAYROLL.ZERO_WAGE_DEDUCTION' | i18n }}
                 </nim-status-badge>
               </div>
@@ -629,10 +794,14 @@
                   <tbody>
                     @for (f of activePayslip()?.fines; track f.fineId) {
                       <tr>
-                        <td><strong>{{ f.reference }}</strong></td>
+                        <td>
+                          <strong>{{ f.reference }}</strong>
+                        </td>
                         <td>{{ f.authority }}</td>
                         <td>{{ f.issuedOn }}</td>
-                        <td class="fine-amount-cell">{{ f.amount | localeCurrency: f.currency }}</td>
+                        <td class="fine-amount-cell">
+                          {{ f.amount | localeCurrency: f.currency }}
+                        </td>
                         <td><nim-status-badge [status]="f.status" /></td>
                         <td>{{ f.reason }}</td>
                       </tr>
@@ -662,7 +831,9 @@
             <nim-icon name="calendar" [size]="20" />
             <h3 class="modal-title">{{ 'PAYROLL.DIALOG_CREATE_TITLE' | i18n }}</h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeCreateModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeCreateModal()">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <p class="form-desc">{{ 'PAYROLL.DIALOG_CREATE_DESC' | i18n }}</p>
@@ -681,7 +852,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeCreateModal()" [disabled]="isActionInProgress()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeCreateModal()"
+            [disabled]="isActionInProgress()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button
@@ -706,7 +882,9 @@
             <nim-icon name="target" [size]="20" />
             <h3 class="modal-title">{{ 'PAYROLL.CALCULATE_DIALOG_TITLE' | i18n }}</h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeCalculateModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeCalculateModal()">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <p class="form-desc">{{ 'PAYROLL.CALCULATE_DIALOG_DESC' | i18n }}</p>
@@ -727,7 +905,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeCalculateModal()" [disabled]="isActionInProgress()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeCalculateModal()"
+            [disabled]="isActionInProgress()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button
@@ -752,7 +935,9 @@
             <nim-icon name="alert-triangle" [size]="20" class="state-icon warning" />
             <h3 class="modal-title">{{ 'PAYROLL.FINALISE_DIALOG_TITLE' | i18n }}</h3>
           </div>
-          <button type="button" class="modal-close-btn" (click)="closeFinaliseModal()">&times;</button>
+          <button type="button" class="modal-close-btn" (click)="closeFinaliseModal()">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <div class="alert-box alert-warning">
@@ -764,7 +949,12 @@
           }
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeFinaliseModal()" [disabled]="isActionInProgress()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeFinaliseModal()"
+            [disabled]="isActionInProgress()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button
@@ -808,7 +998,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-dialog btn-secondary" (click)="closeVoidModal()" [disabled]="isActionInProgress()">
+          <button
+            type="button"
+            class="btn-dialog btn-secondary"
+            (click)="closeVoidModal()"
+            [disabled]="isActionInProgress()"
+          >
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
           <button

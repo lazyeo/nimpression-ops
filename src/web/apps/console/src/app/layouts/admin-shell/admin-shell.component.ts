@@ -18,6 +18,7 @@ import { RealtimeService } from '../../core/realtime/realtime.service';
 import { OfflineStatusComponent } from '../../core/offline/offline-status.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { toScreamingSnake } from '../../core/utils/case.utils';
 
 interface NavItem {
   path: string;
@@ -43,6 +44,7 @@ interface NavItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminShellComponent implements OnInit {
+  readonly toScreamingSnake = toScreamingSnake;
   readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
   readonly realtime = inject(RealtimeService);
