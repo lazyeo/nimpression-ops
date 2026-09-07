@@ -20,6 +20,10 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { DriverLookupOption, VehiclesService } from './services/vehicles.service';
 import {
+  toDateTimeLocalValue,
+  parseDateTimeLocalToIso,
+} from '../../../core/utils/date-utils';
+import {
   OdometerReadingDto,
   VehicleDetailDto,
   VehicleFilter,
@@ -349,11 +353,9 @@ export class VehiclesComponent implements OnInit {
 
   openAssignModal(veh: VehicleSummaryDto): void {
     this.selectedVehicle.set(veh);
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     this.assignForm = {
       driverId: this.drivers().length > 0 ? this.drivers()[0].id : '',
-      assignedAt: now.toISOString().slice(0, 16),
+      assignedAt: toDateTimeLocalValue(new Date()),
     };
     this.formError.set(null);
     this.isAssignModalOpen.set(true);
@@ -375,7 +377,7 @@ export class VehiclesComponent implements OnInit {
       .assignVehicle(veh.id, {
         driverId: this.assignForm.driverId,
         assignedAt: this.assignForm.assignedAt
-          ? new Date(this.assignForm.assignedAt).toISOString()
+          ? parseDateTimeLocalToIso(this.assignForm.assignedAt)
           : undefined,
       })
       .subscribe({

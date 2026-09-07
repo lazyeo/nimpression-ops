@@ -17,6 +17,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { toDateInputValue } from '../../../core/utils/date-utils';
 import { AreaLookupOption, DriversService } from './services/drivers.service';
 import {
   DriverDetailDto,
@@ -87,7 +88,7 @@ export class DriversComponent implements OnInit {
     employeeNo: '',
     licenceClass: 'Class 2 Heavy Rigid',
     licenceExpiry: '',
-    hiredOn: new Date().toISOString().slice(0, 10),
+    hiredOn: toDateInputValue(new Date()),
     phone: '',
     address: '',
     emergencyContact: '',
@@ -256,7 +257,7 @@ export class DriversComponent implements OnInit {
       employeeNo: '',
       licenceClass: 'Class 2 Heavy Rigid',
       licenceExpiry: '',
-      hiredOn: new Date().toISOString().slice(0, 10),
+      hiredOn: toDateInputValue(new Date()),
       phone: '',
       address: '',
       emergencyContact: '',

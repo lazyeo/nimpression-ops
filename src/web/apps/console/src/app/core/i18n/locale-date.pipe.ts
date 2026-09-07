@@ -1,5 +1,5 @@
 import { inject, Pipe, PipeTransform } from '@angular/core';
-import { FormatService } from './format.service';
+import { DatePreset, FormatService } from './format.service';
 import { SupportedLang } from '../models/i18n.models';
 
 @Pipe({
@@ -12,7 +12,7 @@ export class LocaleDatePipe implements PipeTransform {
 
   transform(
     value: Date | string | number | null | undefined,
-    preset: 'short' | 'medium' | 'long' | 'full' = 'medium',
+    preset: DatePreset = 'medium',
     customLocale?: SupportedLang,
   ): string {
     return this.formatService.formatDate(value, preset, customLocale);

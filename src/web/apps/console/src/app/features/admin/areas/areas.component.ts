@@ -13,6 +13,7 @@ import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { toDateInputValue } from '../../../core/utils/date-utils';
 import { AreasService, DriverOption } from './services/areas.service';
 import {
   AreaAssignmentDto,
@@ -80,7 +81,7 @@ export class AreasComponent implements OnInit {
 
   assignForm = {
     driverId: '',
-    effectiveFrom: new Date().toISOString().slice(0, 10),
+    effectiveFrom: toDateInputValue(new Date()),
     effectiveTo: '',
   };
 
@@ -276,7 +277,7 @@ export class AreasComponent implements OnInit {
     this.selectedArea.set(area);
     this.assignForm = {
       driverId: this.drivers().length > 0 ? this.drivers()[0].id : '',
-      effectiveFrom: new Date().toISOString().slice(0, 10),
+      effectiveFrom: toDateInputValue(new Date()),
       effectiveTo: '',
     };
     this.formError.set(null);
@@ -338,7 +339,7 @@ export class AreasComponent implements OnInit {
   }
 
   endAssignment(assignment: AreaAssignmentDto): void {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateInputValue(new Date());
     this.areasService.endAreaAssignment(assignment.id, { effectiveTo: today }).subscribe({
       next: () => {
         const area = this.selectedArea();

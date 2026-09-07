@@ -23,6 +23,11 @@ import {
   VehicleOption,
 } from './services/dispatch.service';
 import {
+  toDateTimeLocalValue,
+  toDateInputValue,
+  parseDateTimeLocalToIso,
+} from '../../../core/utils/date-utils';
+import {
   JobTaskAlertDto,
   JobTaskDetailDto,
   JobTaskFilter,
@@ -279,9 +284,7 @@ export class DispatchComponent implements OnInit {
   // --- Modals & Actions ---
 
   openCreateModal(): void {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    const defaultScheduled = now.toISOString().slice(0, 16);
+    const defaultScheduled = toDateTimeLocalValue(new Date());
 
     this.createForm = {
       ref: '',
@@ -332,11 +335,18 @@ export class DispatchComponent implements OnInit {
     this.isSubmitting.set(true);
     this.formError.set(null);
 
+    const scheduledForIso = parseDateTimeLocalToIso(this.createForm.scheduledFor);
+    if (!scheduledForIso) {
+      this.isSubmitting.set(false);
+      this.formError.set('Invalid scheduled time');
+      return;
+    }
+
     const payload = {
       ref: this.createForm.ref || undefined,
       title: this.createForm.title,
       areaId: this.createForm.areaId,
-      scheduledFor: new Date(this.createForm.scheduledFor).toISOString(),
+      scheduledFor: scheduledForIso,
       priority: this.createForm.priority,
       description: this.createForm.description || undefined,
       plannedDistanceKm: this.createForm.plannedDistanceKm ?? undefined,
@@ -360,11 +370,9 @@ export class DispatchComponent implements OnInit {
 
   openAssignModal(task: JobTaskDetailDto): void {
     this.selectedTask.set(task);
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     const defaultScheduled = task.scheduledFor
-      ? new Date(task.scheduledFor).toISOString().slice(0, 16)
-      : now.toISOString().slice(0, 16);
+      ? toDateTimeLocalValue(task.scheduledFor)
+      : toDateTimeLocalValue(new Date());
 
     this.assignForm = {
       driverId: task.driverId || '',
@@ -388,7 +396,11 @@ export class DispatchComponent implements OnInit {
       this.areaWarning.set(null);
       return;
     }
-    const scheduledDate = (this.assignForm.scheduledFor || task.scheduledFor).slice(0, 10);
+    const scheduledDate = (
+      this.assignForm.scheduledFor
+        ? toDateInputValue(this.assignForm.scheduledFor)
+        : (task.scheduledFor ? toDateInputValue(task.scheduledFor) : '')
+    ).slice(0, 10);
     this.dispatchService
       .checkAreaEligibility(this.assignForm.driverId, task.areaId, scheduledDate)
       .subscribe({
@@ -415,7 +427,7 @@ export class DispatchComponent implements OnInit {
         driverId: this.assignForm.driverId,
         vehicleId: this.assignForm.vehicleId,
         scheduledFor: this.assignForm.scheduledFor
-          ? new Date(this.assignForm.scheduledFor).toISOString()
+          ? parseDateTimeLocalToIso(this.assignForm.scheduledFor)
           : undefined,
         overrideAreaWarning: this.assignForm.overrideAreaWarning,
       })
@@ -443,11 +455,9 @@ export class DispatchComponent implements OnInit {
 
   openStartModal(task: JobTaskDetailDto): void {
     this.selectedTask.set(task);
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 
     this.startForm = {
-      startedAt: now.toISOString().slice(0, 16),
+      startedAt: toDateTimeLocalValue(new Date()),
       startOdometerKm: task.startOdometerKm ?? null,
     };
     this.formError.set(null);
@@ -468,7 +478,7 @@ export class DispatchComponent implements OnInit {
 
     this.dispatchService
       .startTask(task.id, {
-        startedAt: this.startForm.startedAt ? new Date(this.startForm.startedAt).toISOString() : undefined,
+        startedAt: this.startForm.startedAt ? parseDateTimeLocalToIso(this.startForm.startedAt) : undefined,
         startOdometerKm: this.startForm.startOdometerKm ?? undefined,
       })
       .subscribe({
@@ -486,11 +496,9 @@ export class DispatchComponent implements OnInit {
 
   openCompleteModal(task: JobTaskDetailDto): void {
     this.selectedTask.set(task);
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 
     this.completeForm = {
-      completedAt: now.toISOString().slice(0, 16),
+      completedAt: toDateTimeLocalValue(new Date()),
       actualDistanceKm: task.actualDistanceKm ?? task.plannedDistanceKm ?? null,
       endOdometerKm: task.endOdometerKm ?? null,
     };
@@ -513,7 +521,7 @@ export class DispatchComponent implements OnInit {
     this.dispatchService
       .completeTask(task.id, {
         completedAt: this.completeForm.completedAt
-          ? new Date(this.completeForm.completedAt).toISOString()
+          ? parseDateTimeLocalToIso(this.completeForm.completedAt)
           : undefined,
         actualDistanceKm: this.completeForm.actualDistanceKm ?? undefined,
         endOdometerKm: this.completeForm.endOdometerKm ?? undefined,

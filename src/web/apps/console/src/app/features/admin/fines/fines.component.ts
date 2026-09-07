@@ -24,6 +24,7 @@ import { LocaleCurrencyPipe } from '../../../core/i18n/locale-currency.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { VehicleDto } from '../../../core/api/models/api-models';
+import { toDateInputValue } from '../../../core/utils/date-utils';
 
 @Component({
   selector: 'nim-admin-fines',
@@ -199,7 +200,7 @@ export class FinesComponent implements OnInit {
   openSubmitModal(): void {
     this.newDriverId = '';
     this.newVehicleId = '';
-    this.newIssuedOn = new Date().toISOString().split('T')[0];
+    this.newIssuedOn = toDateInputValue(new Date());
     this.newAuthority = '';
     this.newReference = '';
     this.newAmount = null;
