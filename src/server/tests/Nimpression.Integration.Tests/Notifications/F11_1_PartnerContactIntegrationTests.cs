@@ -24,8 +24,10 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
     private HttpClient _client = null!;
 
     private readonly Guid _adminUserId = Guid.NewGuid();
+    private readonly Guid _dispatcherUserId = Guid.NewGuid();
     private readonly Guid _driverUserId = Guid.NewGuid();
     private string _adminToken = string.Empty;
+    private string _dispatcherToken = string.Empty;
     private string _driverToken = string.Empty;
 
     public F11_1_PartnerContactIntegrationTests(PostgreSqlContainerFixture fixture)
@@ -36,6 +38,7 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
     public async Task InitializeAsync()
     {
         var adminEmail = TestDataFactory.CreateEmailAddress("admin");
+        var dispatcherEmail = TestDataFactory.CreateEmailAddress("disp");
         var driverEmail = TestDataFactory.CreateEmailAddress("driver");
 
         await using (var db = _fixture.CreateDbContext())
@@ -43,9 +46,11 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
             await db.Database.MigrateAsync();
 
             var admin = new User(_adminUserId, adminEmail, "HashPass123!", UserRole.Admin, "Admin User");
+            var dispatcher = new User(_dispatcherUserId, dispatcherEmail, "HashPass123!", UserRole.Dispatcher, "Dispatcher User");
             var driver = new User(_driverUserId, driverEmail, "HashPass123!", UserRole.Driver, "Driver User");
 
             await db.Users.AddAsync(admin);
+            await db.Users.AddAsync(dispatcher);
             await db.Users.AddAsync(driver);
             await db.SaveChangesAsync();
         }
@@ -58,6 +63,7 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
 
         var jwtGenerator = _factory.Services.GetRequiredService<IJwtTokenGenerator>();
         (_adminToken, _) = jwtGenerator.GenerateAccessToken(_adminUserId, adminEmail.Value, UserRole.Admin.ToString(), "Admin User");
+        (_dispatcherToken, _) = jwtGenerator.GenerateAccessToken(_dispatcherUserId, dispatcherEmail.Value, UserRole.Dispatcher.ToString(), "Dispatcher User");
         (_driverToken, _) = jwtGenerator.GenerateAccessToken(_driverUserId, driverEmail.Value, UserRole.Driver.ToString(), "Driver User");
     }
 
@@ -132,6 +138,32 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
 
         var getDeletedResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Get, $"/api/notifications/partner-contacts/{createdId}");
         getDeletedResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PartnerContacts_WhenDispatcherAttemptsReadOrWrite_ReturnsForbidden()
+    {
+        // 1. Dispatcher attempting GET list
+        var listResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, "/api/notifications/partner-contacts");
+        listResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 2. Dispatcher attempting GET by ID
+        var getResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/partner-contacts/{Guid.NewGuid()}");
+        getResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 3. Dispatcher attempting POST create
+        var createReq = new CreatePartnerContactRequest(PartnerKind.Insurer, "Disp Corp", TestDataFactory.CreateEmail("disp_attempt"), true);
+        var createResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Post, "/api/notifications/partner-contacts", createReq);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 4. Dispatcher attempting PUT update
+        var updateReq = new UpdatePartnerContactRequest(PartnerKind.Insurer, "Disp Corp Updated", TestDataFactory.CreateEmail("disp_upd"));
+        var updateResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Put, $"/api/notifications/partner-contacts/{Guid.NewGuid()}", updateReq);
+        updateResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 5. Dispatcher attempting DELETE
+        var delResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Delete, $"/api/notifications/partner-contacts/{Guid.NewGuid()}");
+        delResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
