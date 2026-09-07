@@ -74,7 +74,7 @@
                       </span>
                     </td>
                     <td class="cell-time">
-                      {{ task.scheduledFor ? task.scheduledFor.substring(11, 16) : '-' }}
+                      {{ (task.scheduledFor | localeDate: 'time') || '-' }}
                     </td>
                     <td class="cell-distance">
                       {{

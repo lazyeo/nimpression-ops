@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { JobTaskDto } from '../../../../core/api/models/api-models';
 import { I18nPipe } from '../../../../core/i18n/i18n.pipe';
+import { LocaleDatePipe } from '../../../../core/i18n/locale-date.pipe';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'nim-task-drilldown-dialog',
   standalone: true,
-  imports: [CommonModule, I18nPipe, IconComponent],
+  imports: [CommonModule, I18nPipe, LocaleDatePipe, IconComponent],
   templateUrl: './task-drilldown-dialog.component.html',
   styleUrl: './task-drilldown-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

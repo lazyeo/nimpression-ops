@@ -20,6 +20,10 @@ import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { VehicleDto } from '../../../core/api/models/api-models';
+import {
+  toDateTimeLocalValue,
+  parseDateTimeLocalToIso,
+} from '../../../core/utils/date-utils';
 
 @Component({
   selector: 'nim-admin-incidents',
@@ -184,7 +188,7 @@ export class IncidentsComponent implements OnInit {
   openReportModal(): void {
     this.newDriverId = '';
     this.newVehicleId = '';
-    this.newOccurredAt = this.formatForDateTimeLocal(new Date().toISOString());
+    this.newOccurredAt = toDateTimeLocalValue(new Date());
     this.newLocation = '';
     this.newSeverity = 'Minor';
     this.newDescription = '';
@@ -204,6 +208,12 @@ export class IncidentsComponent implements OnInit {
       return;
     }
 
+    const occurredAtIso = parseDateTimeLocalToIso(this.newOccurredAt);
+    if (!occurredAtIso) {
+      this.reportError.set('Please provide a valid incident date and time.');
+      return;
+    }
+
     this.isSubmittingReport.set(true);
     this.reportError.set('');
 
@@ -214,7 +224,7 @@ export class IncidentsComponent implements OnInit {
     const request: ReportIncidentRequest = {
       driverId: this.newDriverId || null,
       vehicleId: this.newVehicleId,
-      occurredAt: new Date(this.newOccurredAt).toISOString(),
+      occurredAt: occurredAtIso,
       location: this.newLocation.trim(),
       severity: this.newSeverity,
       description: this.newDescription.trim(),
@@ -234,16 +244,5 @@ export class IncidentsComponent implements OnInit {
       },
     });
   }
-
-  private formatForDateTimeLocal(isoString: string): string {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '';
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const y = d.getFullYear();
-    const m = pad(d.getMonth() + 1);
-    const day = pad(d.getDate());
-    const h = pad(d.getHours());
-    const min = pad(d.getMinutes());
-    return `${y}-${m}-${day}T${h}:${min}`;
-  }
 }
+
