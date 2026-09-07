@@ -83,6 +83,8 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
             ? new Money(request.MinimumHourlyWage.Value)
             : PayrollCalculatorV2.DefaultMinimumHourlyWage;
 
+        var driverIds = drivers.Select(d => d.Id).Distinct().ToList();
+        var driverNames = await payrollRepository.GetDriverDisplayNamesAsync(driverIds, cancellationToken);
         var resultDtos = new List<PayslipDto>();
 
         foreach (var driver in drivers)
@@ -138,12 +140,15 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
             var taskDtos = tasks.Select(PayslipTripDetailDto.FromEntity).ToList();
             var fineDtos = fines.Select(PayslipFineDto.FromEntity).ToList();
 
+            driverNames.TryGetValue(driver.Id, out var driverName);
+
             resultDtos.Add(PayslipDto.FromEntity(
                 payslip: payslip,
                 startsOn: payPeriod.StartsOn,
                 endsOn: payPeriod.EndsOn,
-                driverName: null,
+                driverName: driverName,
                 employeeNo: driver.EmployeeNo,
+                paidAt: payPeriod.PaidAt,
                 shiftDetails: shiftDtos,
                 tripDetails: taskDtos,
                 fines: fineDtos));

@@ -17,6 +17,7 @@ public sealed class FakePayrollRepository : IPayrollRepository
     public Dictionary<Guid, PayPeriod> PayPeriods { get; } = [];
     public Dictionary<Guid, Payslip> Payslips { get; } = [];
     public Dictionary<Guid, Driver> Drivers { get; } = [];
+    public Dictionary<Guid, string> DriverDisplayNames { get; } = [];
     public List<ShiftEntry> Shifts { get; } = [];
     public List<JobTask> Tasks { get; } = [];
     public List<Fine> Fines { get; } = [];
@@ -98,12 +99,14 @@ public sealed class FakePayrollRepository : IPayrollRepository
             .Select(p =>
             {
                 PayPeriods.TryGetValue(p.PayPeriodId, out var period);
+                DriverDisplayNames.TryGetValue(filter.DriverId, out var dName);
                 return PayslipDto.FromEntity(
                     payslip: p,
                     startsOn: period?.StartsOn ?? DateOnly.MinValue,
                     endsOn: period?.EndsOn ?? DateOnly.MaxValue,
-                    driverName: null,
-                    employeeNo: driver?.EmployeeNo);
+                    driverName: dName ?? $"Driver {driver?.EmployeeNo}",
+                    employeeNo: driver?.EmployeeNo,
+                    paidAt: period?.PaidAt);
             })
             .ToList();
 
@@ -139,6 +142,36 @@ public sealed class FakePayrollRepository : IPayrollRepository
     {
         var driver = Drivers.Values.FirstOrDefault(d => d.UserId == userId);
         return Task.FromResult(driver);
+    }
+
+    public Task<string?> GetDriverDisplayNameAsync(Guid driverId, CancellationToken cancellationToken = default)
+    {
+        if (DriverDisplayNames.TryGetValue(driverId, out var name))
+        {
+            return Task.FromResult<string?>(name);
+        }
+        if (Drivers.TryGetValue(driverId, out var driver))
+        {
+            return Task.FromResult<string?>($"Driver {driver.EmployeeNo}");
+        }
+        return Task.FromResult<string?>(null);
+    }
+
+    public Task<IReadOnlyDictionary<Guid, string>> GetDriverDisplayNamesAsync(IEnumerable<Guid> driverIds, CancellationToken cancellationToken = default)
+    {
+        var dict = new Dictionary<Guid, string>();
+        foreach (var id in driverIds)
+        {
+            if (DriverDisplayNames.TryGetValue(id, out var name))
+            {
+                dict[id] = name;
+            }
+            else if (Drivers.TryGetValue(id, out var driver))
+            {
+                dict[id] = $"Driver {driver.EmployeeNo}";
+            }
+        }
+        return Task.FromResult<IReadOnlyDictionary<Guid, string>>(dict);
     }
 
     public Task<IReadOnlyList<Driver>> GetActiveDriversAsync(CancellationToken cancellationToken = default)

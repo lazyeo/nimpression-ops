@@ -40,6 +40,10 @@ public interface IPayrollRepository
 
     Task<Driver?> GetDriverByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    Task<string?> GetDriverDisplayNameAsync(Guid driverId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyDictionary<Guid, string>> GetDriverDisplayNamesAsync(IEnumerable<Guid> driverIds, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Driver>> GetActiveDriversAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ShiftEntry>> GetCompletedShiftsForDriverAndPeriodAsync(

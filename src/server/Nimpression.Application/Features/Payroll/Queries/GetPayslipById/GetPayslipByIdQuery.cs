@@ -72,6 +72,7 @@ public sealed class GetPayslipByIdQueryHandler(
             endsOn,
             cancellationToken);
 
+        var driverName = await payrollRepository.GetDriverDisplayNameAsync(payslip.DriverId, cancellationToken);
         var shiftDtos = shifts.Select(PayslipShiftDetailDto.FromEntity).ToList();
         var taskDtos = tasks.Select(PayslipTripDetailDto.FromEntity).ToList();
         var fineDtos = fines.Select(PayslipFineDto.FromEntity).ToList();
@@ -80,8 +81,9 @@ public sealed class GetPayslipByIdQueryHandler(
             payslip: payslip,
             startsOn: startsOn,
             endsOn: endsOn,
-            driverName: null,
+            driverName: driverName,
             employeeNo: driver?.EmployeeNo,
+            paidAt: payPeriod?.PaidAt,
             shiftDetails: shiftDtos,
             tripDetails: taskDtos,
             fines: fineDtos);

@@ -27,6 +27,7 @@ public sealed record PayslipDto(
     bool MinimumWageTopUp,
     DateTimeOffset CalculatedAt,
     DateTimeOffset? FinalisedAt,
+    DateTimeOffset? PaidAt,
     IReadOnlyList<PayslipLineDto> Lines,
     IReadOnlyList<PayslipShiftDetailDto> ShiftDetails,
     IReadOnlyList<PayslipTripDetailDto> TripDetails,
@@ -42,6 +43,7 @@ public sealed record PayslipDto(
         DateOnly endsOn,
         string? driverName = null,
         string? employeeNo = null,
+        DateTimeOffset? paidAt = null,
         IReadOnlyList<PayslipShiftDetailDto>? shiftDetails = null,
         IReadOnlyList<PayslipTripDetailDto>? tripDetails = null,
         IReadOnlyList<PayslipFineDto>? fines = null)
@@ -70,6 +72,7 @@ public sealed record PayslipDto(
             MinimumWageTopUp: payslip.MinimumWageTopUp,
             CalculatedAt: payslip.CalculatedAt,
             FinalisedAt: payslip.FinalisedAt,
+            PaidAt: paidAt,
             Lines: payslip.Lines.Select(PayslipLineDto.FromEntity).ToList(),
             ShiftDetails: shiftDetails ?? [],
             TripDetails: tripDetails ?? [],
