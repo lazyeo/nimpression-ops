@@ -18,13 +18,35 @@ export const errorInterceptor: HttpInterceptorFn = (
   return next(req).pipe(
     catchError((err: unknown) => {
       if (err instanceof HttpErrorResponse) {
-        // Do not broadcast 401 (handled by authInterceptor) or 409 (handled by offline/idempotency)
         if (err.status !== 401 && err.status !== 409) {
           const problemDetails = err.error as
-            { title?: string; detail?: string; error?: string; message?: string } | undefined;
-          const title = problemDetails?.title || problemDetails?.error || `HTTP ${err.status}`;
-          const detail =
-            problemDetails?.detail || problemDetails?.message || err.message || 'Request failed';
+            | {
+                title?: string;
+                detail?: string;
+                error?: string;
+                message?: string;
+                errors?: Record<string, string[]>;
+              }
+            | undefined;
+
+          let title = problemDetails?.title || problemDetails?.error;
+          let detail = problemDetails?.detail || problemDetails?.message;
+
+          if (!title) {
+            title = err.status === 422 ? 'COMMON.INVALID_OPERATION' : `HTTP ${err.status}`;
+          }
+
+          if (!detail) {
+            if (problemDetails?.errors && Object.keys(problemDetails.errors).length > 0) {
+              detail = Object.values(problemDetails.errors).flat().join('; ');
+            } else if (err.status === 422) {
+              detail = 'COMMON.INVALID_STATE_TRANSITION';
+            } else if (typeof err.error === 'string') {
+              detail = err.error;
+            } else {
+              detail = err.statusText || 'Request failed';
+            }
+          }
 
           errorNotification.showError({
             title,

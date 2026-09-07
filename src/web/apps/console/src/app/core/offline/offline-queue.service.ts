@@ -229,8 +229,43 @@ export class OfflineQueueService {
       item.status = 'failed';
       item.retryCount += 1;
       item.isPermanentFailure = isClientError;
-      item.lastError =
-        httpErr?.error?.message || httpErr?.message || httpErr?.statusText || 'Replay Failed';
+
+      // Extract user-understandable error message from RFC 9457 ProblemDetails (W26 R2)
+      let readableError: string | null = null;
+      if (httpErr?.error) {
+        if (typeof httpErr.error === 'string') {
+          readableError = httpErr.error;
+        } else if (typeof httpErr.error === 'object') {
+          const errObj = httpErr.error as {
+            detail?: string;
+            message?: string;
+            title?: string;
+            error?: string;
+            errors?: Record<string, string[]>;
+          };
+          if (errObj.detail) {
+            readableError = errObj.detail;
+          } else if (errObj.message) {
+            readableError = errObj.message;
+          } else if (errObj.errors && Object.keys(errObj.errors).length > 0) {
+            readableError = Object.values(errObj.errors).flat().join('; ');
+          } else if (errObj.title) {
+            readableError = errObj.title;
+          } else if (errObj.error) {
+            readableError = errObj.error;
+          }
+        }
+      }
+
+      if (!readableError) {
+        if (httpErr?.status === 422) {
+          readableError = 'Invalid state transition for this operation.';
+        } else {
+          readableError = httpErr?.statusText || 'Replay Failed';
+        }
+      }
+
+      item.lastError = readableError;
 
       await this.indexedDb.put(STORES.OFFLINE_QUEUE, item);
       this.updateItemInState(item);
