@@ -44,7 +44,7 @@ public sealed class GetPayslipByIdQueryHandler(
                     "Drivers can only view finalised payslips.");
             }
         }
-        else if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.Dispatcher)
+        else if (currentUser.Role != UserRole.Admin)
         {
             return Error.Forbidden("forbidden", "Unauthorized to view payslips.");
         }
