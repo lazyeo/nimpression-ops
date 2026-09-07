@@ -395,10 +395,19 @@
           <div class="modal-title-wrap">
             <nim-icon name="payslips" [size]="22" />
             <div>
-              <h3 class="modal-title">{{ 'PAYROLL.PAYSLIP_DETAIL_TITLE' | i18n }}</h3>
+              <div class="modal-title-row">
+                <h3 class="modal-title">{{ 'PAYROLL.PAYSLIP_DETAIL_TITLE' | i18n }}</h3>
+                <nim-status-badge status="Snapshot" variant="info">
+                  {{ 'PAYROLL.SNAPSHOT_BADGE' | i18n }}
+                </nim-status-badge>
+              </div>
               <small class="text-muted"
                 >{{ activePayslip()?.driverName }} ({{ activePayslip()?.employeeNo }}) |
-                {{ activePayslip()?.periodStartsOn }} ~ {{ activePayslip()?.periodEndsOn }}</small
+                {{ activePayslip()?.periodStartsOn }} ~ {{ activePayslip()?.periodEndsOn }} |
+                {{
+                  'PAYROLL.SNAPSHOT_NOTICE'
+                    | i18n: { date: (activePayslip()?.calculatedAt | localeDate: 'short') || '' }
+                }}</small
               >
             </div>
           </div>
@@ -591,29 +600,11 @@
             <!-- Traceability & Audit Section -->
             <div class="traceability-section">
               <h4 class="trace-title">{{ 'PAYROLL.TRACEABILITY_TABS' | i18n }}</h4>
+              <div class="snapshot-banner">
+                <nim-icon name="check-circle" [size]="16" />
+                <span>{{ 'PAYROLL.SNAPSHOT_BANNER' | i18n }}</span>
+              </div>
               <div class="trace-tabs">
-                <button
-                  type="button"
-                  class="trace-tab-btn"
-                  [class.active]="activeTraceTab() === 'shifts'"
-                  (click)="activeTraceTab.set('shifts')"
-                >
-                  {{
-                    'PAYROLL.TAB_SHIFTS_TRACE'
-                      | i18n: { count: activePayslip()?.shiftDetails?.length || 0 }
-                  }}
-                </button>
-                <button
-                  type="button"
-                  class="trace-tab-btn"
-                  [class.active]="activeTraceTab() === 'trips'"
-                  (click)="activeTraceTab.set('trips')"
-                >
-                  {{
-                    'PAYROLL.TAB_TRIPS_TRACE'
-                      | i18n: { count: activePayslip()?.tripDetails?.length || 0 }
-                  }}
-                </button>
                 <button
                   type="button"
                   class="trace-tab-btn"
@@ -624,6 +615,32 @@
                     'PAYROLL.TAB_LINES_TRACE' | i18n: { count: activePayslip()?.lines?.length || 0 }
                   }}
                 </button>
+                @if (activePayslip()?.shiftDetails && activePayslip()!.shiftDetails.length > 0) {
+                  <button
+                    type="button"
+                    class="trace-tab-btn"
+                    [class.active]="activeTraceTab() === 'shifts'"
+                    (click)="activeTraceTab.set('shifts')"
+                  >
+                    {{
+                      'PAYROLL.TAB_SHIFTS_TRACE'
+                        | i18n: { count: activePayslip()?.shiftDetails?.length || 0 }
+                    }}
+                  </button>
+                }
+                @if (activePayslip()?.tripDetails && activePayslip()!.tripDetails.length > 0) {
+                  <button
+                    type="button"
+                    class="trace-tab-btn"
+                    [class.active]="activeTraceTab() === 'trips'"
+                    (click)="activeTraceTab.set('trips')"
+                  >
+                    {{
+                      'PAYROLL.TAB_TRIPS_TRACE'
+                        | i18n: { count: activePayslip()?.tripDetails?.length || 0 }
+                    }}
+                  </button>
+                }
               </div>
 
               <!-- Traceability Content -->
