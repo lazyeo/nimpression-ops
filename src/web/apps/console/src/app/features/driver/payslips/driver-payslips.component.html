@@ -32,9 +32,11 @@
               <span class="period-label">{{ 'DRIVER.PAY_PERIOD' | i18n }}</span>
               <strong class="period-val">{{ slip.payPeriod }}</strong>
             </div>
-            <span class="pay-date-badge">
-              {{ 'DRIVER.PAY_DATE' | i18n }}: {{ slip.payDate | localeDate: 'short' }}
-            </span>
+            @if (slip.payDate) {
+              <span class="pay-date-badge">
+                {{ 'DRIVER.PAY_DATE' | i18n }}: {{ slip.payDate | localeDate: 'short' }}
+              </span>
+            }
           </div>
 
           <div class="net-pay-section">

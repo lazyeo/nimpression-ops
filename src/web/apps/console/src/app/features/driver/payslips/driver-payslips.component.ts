@@ -15,7 +15,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 export interface DriverPayslipItem {
   id: string;
   payPeriod: string;
-  payDate: string;
+  payDate?: string | null;
   grossPay: number;
   netPay: number;
   deductions: number;

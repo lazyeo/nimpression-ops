@@ -109,16 +109,28 @@ export interface PayslipDto {
   id: string;
   payPeriodId: string;
   driverId: string;
-  driverName: string;
-  employeeNo: string;
+  driverName?: string | null;
+  employeeNo?: string | null;
   startsOn: string;
   endsOn: string;
-  regularHours: number;
+  ordinaryHours?: number;
+  regularHours?: number;
   overtimeHours: number;
-  holidayHours: number;
+  holidayHours?: number;
+  publicHolidayHours?: number;
+  totalHours?: number;
+  hourlyRateSnapshot?: number;
+  ordinaryPay?: number;
+  overtimePay?: number;
+  publicHolidayPay?: number;
+  performanceBonus?: number;
+  deductionsTotal?: number;
   grossPay: number;
   netPay: number;
-  status: string;
+  currency?: string;
+  status?: string;
+  calculatedAt?: string | null;
+  paidAt?: string | null;
 }
 
 export interface DriverDto {
