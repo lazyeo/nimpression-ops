@@ -28,7 +28,7 @@ function stripCSharpComments(code) {
 }
 
 // 2. Parse C# Enums
-function parseCSharpEnums(dir) {
+export function parseCSharpEnums(dir) {
   const enums = new Map();
   if (!fs.existsSync(dir)) {
     recordError(`C# Domain Enums directory not found: ${dir}`);
@@ -71,7 +71,7 @@ function parseCSharpEnums(dir) {
 }
 
 // 3. Parse Frontend TypeScript Types in api-models.ts
-function parseTsApiModels(filePath) {
+export function parseTsApiModels(filePath) {
   const types = new Map();
   if (!fs.existsSync(filePath)) {
     recordError(`Frontend api-models.ts not found: ${filePath}`);
@@ -105,7 +105,7 @@ function parseTsApiModels(filePath) {
 }
 
 // 4. Scan for Duplicate Enum Declarations across Frontend
-function scanForDuplicateDeclarations(appPath, csharpEnumNames) {
+export function scanForDuplicateDeclarations(appPath, csharpEnumNames) {
   const duplicateRegexList = Array.from(csharpEnumNames).map((enumName) => ({
     name: enumName,
     // Catch `export type EnumName =` or `export enum EnumName`
@@ -142,7 +142,7 @@ function scanForDuplicateDeclarations(appPath, csharpEnumNames) {
 }
 
 // 5. Compare Backend and Frontend Enums
-function verifyEnumContracts(csharpEnums, tsTypes) {
+export function verifyEnumContracts(csharpEnums, tsTypes) {
   for (const [enumName, csData] of csharpEnums.entries()) {
     if (!tsTypes.has(enumName)) {
       recordError(
@@ -171,22 +171,36 @@ function verifyEnumContracts(csharpEnums, tsTypes) {
   }
 }
 
-// Execute Checks
-console.log('--- [enum-contract-guard] Running C# <-> TypeScript Enum Contract Alignment Check ---');
-const csEnums = parseCSharpEnums(serverEnumsDir);
-const tsTypes = parseTsApiModels(apiModelsPath);
+export function runEnumContractGuard() {
+  hasErrors = false;
+  errors.length = 0;
 
-verifyEnumContracts(csEnums, tsTypes);
-scanForDuplicateDeclarations(appDir, csEnums.keys());
+  console.log('--- [enum-contract-guard] Running C# <-> TypeScript Enum Contract Alignment Check ---');
+  const csEnums = parseCSharpEnums(serverEnumsDir);
+  const tsTypes = parseTsApiModels(apiModelsPath);
 
-if (hasErrors) {
-  console.error('\n[enum-contract-guard] FAILED: Found ' + errors.length + ' enum contract violation(s):');
-  errors.forEach((err, i) => console.error(`  ${i + 1}. ${err}`));
-  console.error('\nBuild aborted due to enum contract violations.\n');
-  process.exit(1);
-} else {
-  console.log(
-    `[enum-contract-guard] PASSED: All ${csEnums.size} domain enums verified with exact member parity against TypeScript single source of truth.\n`,
-  );
-  process.exit(0);
+  verifyEnumContracts(csEnums, tsTypes);
+  scanForDuplicateDeclarations(appDir, csEnums.keys());
+
+  if (hasErrors) {
+    console.error('\n[enum-contract-guard] FAILED: Found ' + errors.length + ' enum contract violation(s):');
+    errors.forEach((err, i) => console.error(`  ${i + 1}. ${err}`));
+    console.error('\nBuild aborted due to enum contract violations.\n');
+    return { success: false, errors };
+  } else {
+    console.log(
+      `[enum-contract-guard] PASSED: All ${csEnums.size} domain enums verified with exact member parity against TypeScript single source of truth.\n`,
+    );
+    return { success: true, errors: [] };
+  }
+}
+
+// Direct CLI execution
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const result = runEnumContractGuard();
+  if (!result.success) {
+    process.exit(1);
+  } else {
+    process.exit(0);
+  }
 }

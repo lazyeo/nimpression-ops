@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseCSharpEnums } from './check-enum-contract.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,75 +10,56 @@ const projectRoot = path.resolve(__dirname, '..');
 const srcDir = path.join(projectRoot, 'src');
 const appDir = path.join(srcDir, 'app');
 const i18nDir = path.join(srcDir, 'assets', 'i18n');
+const defaultServerEnumsDir = path.resolve(projectRoot, '../../../../src/server/Nimpression.Domain/Enums');
 
 /**
- * Known dynamic key prefix expansions.
- * Dynamic prefixes in templates are formed like `'PREFIX_' + expr | i18n`.
- * Rather than skipping them (which would miss "new status without i18n key" defects),
- * we expand each prefix against all expected domain enum values.
+ * Uniform PascalCase / camelCase / delimited string to SCREAMING_SNAKE_CASE conversion.
  */
-export const DYNAMIC_PREFIX_MAPPINGS = {
-  'DISPATCH.STATUS_': [
-    'DISPATCH.STATUS_DRAFT',
-    'DISPATCH.STATUS_ASSIGNED',
-    'DISPATCH.STATUS_ACKNOWLEDGED',
-    'DISPATCH.STATUS_IN_PROGRESS',
-    'DISPATCH.STATUS_COMPLETED',
-    'DISPATCH.STATUS_CANCELLED',
-  ],
-  'DISPATCH.PRIORITY_': [
-    'DISPATCH.PRIORITY_LOW',
-    'DISPATCH.PRIORITY_MEDIUM',
-    'DISPATCH.PRIORITY_HIGH',
-    'DISPATCH.PRIORITY_URGENT',
-  ],
-  'FINES.STATUS_': [
-    'FINES.STATUS_SUBMITTED',
-    'FINES.STATUS_UNDER_REVIEW',
-    'FINES.STATUS_ACCEPTED',
-    'FINES.STATUS_DISPUTED',
-    'FINES.STATUS_WAIVED',
-  ],
-  'PAYROLL.STATUS_': [
-    'PAYROLL.STATUS_OPEN',
-    'PAYROLL.STATUS_CALCULATING',
-    'PAYROLL.STATUS_FINALISED',
-    'PAYROLL.STATUS_PAID',
-    'PAYROLL.STATUS_VOIDED',
-  ],
-  'TIMESHEETS.STATUS_': [
-    'TIMESHEETS.STATUS_ACTIVE',
-    'TIMESHEETS.STATUS_COMPLETED',
-    'TIMESHEETS.STATUS_AUTOCLOSED',
-  ],
-  'VEHICLES.STATUS_': [
-    'VEHICLES.STATUS_ACTIVE',
-    'VEHICLES.STATUS_MAINTENANCE',
-    'VEHICLES.STATUS_INACTIVE',
-    'VEHICLES.STATUS_DECOMMISSIONED',
-  ],
-  'DRIVERS.STATUS_': [
-    'DRIVERS.STATUS_ACTIVE',
-    'DRIVERS.STATUS_INACTIVE',
-    'DRIVERS.STATUS_SUSPENDED',
-    'DRIVERS.STATUS_ON_LEAVE',
-    'DRIVERS.STATUS_TERMINATED',
-  ],
-  'DRIVER.SHIFT_STATUS_': [
-    'DRIVER.SHIFT_STATUS_NOT_STARTED',
-    'DRIVER.SHIFT_STATUS_ACTIVE',
-    'DRIVER.SHIFT_STATUS_ON_BREAK',
-    'DRIVER.SHIFT_STATUS_COMPLETED',
-  ],
-  'DRIVER.TRIP_STATUS_': [
-    'DRIVER.TRIP_STATUS_PENDING',
-    'DRIVER.TRIP_STATUS_ASSIGNED',
-    'DRIVER.TRIP_STATUS_ACKNOWLEDGED',
-    'DRIVER.TRIP_STATUS_IN_PROGRESS',
-    'DRIVER.TRIP_STATUS_COMPLETED',
-    'DRIVER.TRIP_STATUS_CANCELLED',
-  ],
+export function toScreamingSnake(input) {
+  if (!input) return '';
+  return input
+    .trim()
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+    .replace(/[-\s]+/g, '_')
+    .toUpperCase();
+}
+
+/**
+ * Explicit registry mapping template dynamic prefixes to C# domain enums or union member lists.
+ * Any dynamic prefix encountered in templates/code that is NOT in this registry will fail Guard 9,
+ * guaranteeing zero silent skips when new dynamic prefixes are added.
+ */
+export const DYNAMIC_PREFIX_ENUM_MAP = {
+  'FINES.STATUS_': 'FineStatus',
+  'TIMESHEETS.STATUS_': 'ShiftStatus',
+  'PAYROLL.STATUS_': 'PayPeriodStatus',
+  'DISPATCH.STATUS_': 'JobTaskStatus',
+  'DISPATCH.PRIORITY_': 'TaskPriority',
+  'DRIVERS.STATUS_': 'DriverStatus',
+  'VEHICLES.STATUS_': 'VehicleStatus',
+  'DRIVER.SHIFT_STATUS_': ['NOT_STARTED', 'ACTIVE', 'ON_BREAK', 'COMPLETED'],
+  'DRIVER.TRIP_STATUS_': ['PENDING', 'ASSIGNED', 'ACKNOWLEDGED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'],
+  'ROLES.': 'UserRole',
+  'CHARTS.TASK_FUNNEL.STAGES.': 'JobTaskStatus',
 };
+
+/**
+ * Computes prefix mappings for a given enum dictionary.
+ */
+export function getDynamicPrefixMappings(csEnums, prefixEnumMap = DYNAMIC_PREFIX_ENUM_MAP) {
+  const mappings = {};
+  for (const [prefix, target] of Object.entries(prefixEnumMap)) {
+    if (Array.isArray(target)) {
+      mappings[prefix] = target.map((m) => `${prefix}${toScreamingSnake(m)}`);
+    } else if (typeof target === 'string' && csEnums && csEnums.has(target)) {
+      mappings[prefix] = csEnums.get(target).members.map((m) => `${prefix}${toScreamingSnake(m)}`);
+    }
+  }
+  return mappings;
+}
+
+export const DYNAMIC_PREFIX_MAPPINGS = getDynamicPrefixMappings(parseCSharpEnums(defaultServerEnumsDir));
 
 /**
  * Keys that intentionally represent unmapped/test keys in test files.
@@ -120,15 +102,56 @@ export function getAllFiles(dir, exts, results = []) {
 }
 
 /**
+ * Evaluates template conversion expression against an enum member value.
+ */
+export function evaluateTemplateExpression(expr, member) {
+  if (!expr || !expr.trim()) return toScreamingSnake(member);
+  let cleanExpr = expr.trim();
+  cleanExpr = cleanExpr.replace(
+    /\(\s*([^|]+)\s*\|\s*(?:screamingSnake|toScreamingSnake)\s*\)/g,
+    'toScreamingSnake($1)',
+  );
+  cleanExpr = cleanExpr.replace(/([^|]+)\s*\|\s*(?:screamingSnake|toScreamingSnake)/g, 'toScreamingSnake($1)');
+  cleanExpr = cleanExpr.replace(/\|\s*i18n.*$/, '').trim();
+
+  try {
+    const fn = new Function(
+      'val',
+      'toScreamingSnake',
+      `
+      const fine = { status: val };
+      const shift = { status: val };
+      const period = { status: val };
+      const task = { status: val, priority: val };
+      const driver = { status: val };
+      const veh = { status: val };
+      const user = { role: val };
+      const currentShift = () => ({ status: val });
+      const authService = { currentUser: () => ({ role: val }) };
+      const getStatusKey = (s) => toScreamingSnake(s);
+      return (${cleanExpr});
+    `,
+    );
+    const result = fn(member, toScreamingSnake);
+    return typeof result === 'string' ? result : toScreamingSnake(member);
+  } catch {
+    return toScreamingSnake(member);
+  }
+}
+
+/**
  * Collects all i18n keys referenced in templates and source files.
  */
 export function collectReferencedKeys(targetAppDir, options = {}) {
-  const dynamicMappings = options.dynamicMappings || DYNAMIC_PREFIX_MAPPINGS;
+  const serverEnumsDir = options.serverEnumsDir || defaultServerEnumsDir;
+  const csEnums = options.csEnums || parseCSharpEnums(serverEnumsDir);
+  const prefixEnumMap = options.prefixEnumMap || DYNAMIC_PREFIX_ENUM_MAP;
   const ignoreKeys = options.ignoreKeys || TEST_IGNORE_KEYS;
   const htmlFiles = getAllFiles(targetAppDir, ['.html']);
   const tsFiles = getAllFiles(targetAppDir, ['.ts']);
 
   const collectedKeys = new Map(); // key -> Set of location descriptions
+  const unregisteredPrefixes = [];
 
   function addKey(key, loc) {
     if (ignoreKeys.has(key)) return;
@@ -155,16 +178,48 @@ export function collectReferencedKeys(targetAppDir, options = {}) {
         addKey(m[1], loc);
       }
 
-      // Dynamic prefix with | i18n pipe: 'FOO.PREFIX_' + ... | i18n
-      const dynPipeRegex = /['"]([A-Z][A-Z0-9_]*(?:\.[A-Z0-9_]*_))['"]\s*\+/g;
+      // Dynamic prefix in templates: 'FOO.STATUS_' + expr | i18n or 'ROLES.' + expr
+      const dynPipeRegex =
+        /['"]([A-Z][A-Z0-9_]*[_.](?:[A-Z0-9_]*[_.])*)['"]\s*\+\s*(.+?)(?=\s*\|\s*i18n\b|\s*\}\})/g;
       while ((m = dynPipeRegex.exec(line)) !== null) {
         const prefix = m[1];
-        if (dynamicMappings[prefix]) {
-          for (const expKey of dynamicMappings[prefix]) {
-            addKey(expKey, `${loc} (via dynamic prefix '${prefix}')`);
+        const expr = m[2];
+
+        if (prefixEnumMap[prefix]) {
+          const enumTarget = prefixEnumMap[prefix];
+          let members = [];
+          if (Array.isArray(enumTarget)) {
+            members = enumTarget;
+          } else if (typeof enumTarget === 'string') {
+            const enumDef = csEnums.get(enumTarget);
+            if (enumDef) {
+              members = enumDef.members;
+            } else {
+              unregisteredPrefixes.push({
+                prefix,
+                location: loc,
+                message: `Domain enum '${enumTarget}' mapped from prefix '${prefix}' not found in C# enums at ${serverEnumsDir}`,
+              });
+            }
+          }
+
+          for (const member of members) {
+            // Canonical key derived from C# domain enum
+            const canonicalKey = `${prefix}${toScreamingSnake(member)}`;
+            addKey(canonicalKey, `${loc} (canonical key for enum member '${member}')`);
+
+            // Evaluated key from actual template expression
+            const evaluatedKey = `${prefix}${evaluateTemplateExpression(expr, member)}`;
+            if (evaluatedKey !== canonicalKey) {
+              addKey(evaluatedKey, `${loc} (evaluated via expression on '${member}')`);
+            }
           }
         } else {
-          // Unknown dynamic prefix without expansion mapping -> report prefix directly
+          unregisteredPrefixes.push({
+            prefix,
+            location: loc,
+            message: `[Unregistered Dynamic Prefix] Dynamic prefix '${prefix}' referenced at ${loc} is not registered in DYNAMIC_PREFIX_ENUM_MAP.`,
+          });
           addKey(prefix, loc);
         }
       }
@@ -219,12 +274,17 @@ export function collectReferencedKeys(targetAppDir, options = {}) {
             'DRIVER',
             'NAV',
             'ROLES',
+            'CHARTS',
           ].includes(namespace)
         ) {
           addKey(k, loc);
         }
       }
     });
+  }
+
+  if (options.unregisteredPrefixes) {
+    options.unregisteredPrefixes.push(...unregisteredPrefixes);
   }
 
   return collectedKeys;
@@ -256,12 +316,26 @@ export function runI18nKeysGuard(options = {}) {
   const enKeys = new Set(getAllKeys(enJson));
   const zhKeys = new Set(getAllKeys(zhJson));
 
-  const referencedKeys = collectReferencedKeys(customAppDir, options);
+  const unregisteredPrefixes = [];
+  const referencedKeys = collectReferencedKeys(customAppDir, {
+    ...options,
+    unregisteredPrefixes,
+  });
+
   console.log(
     `[i18n-keys-guard] Collected ${referencedKeys.size} distinct i18n key references across templates and code`,
   );
 
   const missingErrors = [];
+
+  for (const unreg of unregisteredPrefixes) {
+    missingErrors.push({
+      key: unreg.prefix,
+      lang: 'contract',
+      location: unreg.location,
+      message: unreg.message,
+    });
+  }
 
   for (const [key, locs] of referencedKeys.entries()) {
     const locArr = Array.from(locs);
