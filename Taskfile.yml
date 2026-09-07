@@ -138,6 +138,7 @@ tasks:
       - "{{.PNPM}} -F {{.WEB_APP}} run test:contrast"
       - "{{.PNPM}} -F {{.WEB_APP}} run test:i18n-keys"
       - "{{.PNPM}} -F {{.WEB_APP}} run test:colors"
+      - "{{.PNPM}} -F {{.WEB_APP}} run test:dispatch-events"
 
   test:e2e:
     desc: 跑 Playwright 端到端测试

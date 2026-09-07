@@ -8,7 +8,9 @@ public static class RealtimeEventKinds
 {
     public const string TaskAssigned = "task.assigned";
     public const string TaskAcknowledged = "task.acknowledged";
+    public const string TaskStarted = "task.started";
     public const string TaskCompleted = "task.completed";
+    public const string TaskCancelled = "task.cancelled";
     public const string DriverDeactivated = "driver.deactivated";
     public const string IncidentReported = "incident.reported";
     public const string FineAccepted = "fine.accepted";

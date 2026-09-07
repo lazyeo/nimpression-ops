@@ -127,6 +127,8 @@
     "STATUS_OFFLINE": "Offline",
     "STATUS_SYNCING": "Syncing...",
     "STATUS_SYNCED": "Synced",
+    "STATUS_DISCONNECTED": "Disconnected",
+    "STATUS_RECONNECTING": "Reconnecting...",
     "OFFLINE_BANNER": "You are currently offline. Changes are saved locally and will sync when reconnected.",
     "PENDING_OPERATIONS": "{count} pending change(s) in local queue",
     "SYNC_FAILED_TITLE": "Sync Failed",

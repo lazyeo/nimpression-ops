@@ -81,6 +81,24 @@ public sealed class OutboxToRealtimeMapper : IOutboxToRealtimeMapper
                     return new OutboxRealtimeMapping(msg, groups, driverId);
                 }
 
+            case "JobTaskStarted":
+                {
+                    var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
+                {
+                    RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
+                    RealtimeGroupNames.Role(UserRole.Admin.ToString())
+                };
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
+
+                    var msg = new RealtimeMessage(RealtimeEventKinds.TaskStarted, taskId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
+
             case "JobTaskCompleted":
                 {
                     var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
@@ -96,6 +114,24 @@ public sealed class OutboxToRealtimeMapper : IOutboxToRealtimeMapper
                     }
 
                     var msg = new RealtimeMessage(RealtimeEventKinds.TaskCompleted, taskId ?? Guid.Empty, occurredAt);
+                    return new OutboxRealtimeMapping(msg, groups, driverId);
+                }
+
+            case "JobTaskCancelled":
+                {
+                    var taskId = TryGetGuid(root, "JobTaskId", "jobTaskId", "Id", "id");
+                    var driverId = TryGetGuid(root, "DriverId", "driverId");
+                    var groups = new List<string>
+                {
+                    RealtimeGroupNames.Role(UserRole.Dispatcher.ToString()),
+                    RealtimeGroupNames.Role(UserRole.Admin.ToString())
+                };
+                    if (driverId.HasValue && driverId.Value != Guid.Empty)
+                    {
+                        groups.Add(RealtimeGroupNames.Driver(driverId.Value));
+                    }
+
+                    var msg = new RealtimeMessage(RealtimeEventKinds.TaskCancelled, taskId ?? Guid.Empty, occurredAt);
                     return new OutboxRealtimeMapping(msg, groups, driverId);
                 }
 
