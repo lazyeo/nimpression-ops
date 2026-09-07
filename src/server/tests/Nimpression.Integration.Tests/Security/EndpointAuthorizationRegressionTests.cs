@@ -508,6 +508,253 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot calculate payroll");
     }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_AttemptingGetPartnerContacts_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_pc"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/notifications/partner-contacts");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query partner contacts");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_AttemptingCreatePartnerContact_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_create_pc"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        var createRequest = new CreatePartnerContactRequest(PartnerKind.Insurer, "Disp Insurer", TestDataFactory.CreateEmail("disp_ins"), true);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/notifications/partner-contacts")
+        {
+            Content = JsonContent.Create(createRequest)
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot create partner contacts");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_AttemptingGetTemplates_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_tmpl"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/notifications/templates");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query email templates");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_AttemptingGetLogs_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_logs"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/notifications/logs");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query email logs");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_AttemptingResendEmailLog_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_resend"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/notifications/logs/{Guid.NewGuid()}/resend");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot trigger email log resend");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_AttemptingTriggerComplianceScan_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_scan"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/notifications/compliance/scan");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot trigger compliance scan");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_AdminToken_CanAccessPartnerContacts_Returns200OK()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var adminUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("admin_notif_pc"),
+            "hash",
+            UserRole.Admin,
+            "Admin User",
+            "en-NZ");
+        await context.Users.AddAsync(adminUser);
+        await context.SaveChangesAsync();
+
+        var (adminToken, _) = _tokenGenerator.GenerateAccessToken(adminUser.Id, adminUser.Email.Value, UserRole.Admin.ToString(), "Admin User");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/notifications/partner-contacts");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Admins are authorized to query partner contacts");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_AdminToken_CanAccessTemplates_Returns200OK()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var adminUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("admin_notif_tmpl"),
+            "hash",
+            UserRole.Admin,
+            "Admin User",
+            "en-NZ");
+        await context.Users.AddAsync(adminUser);
+        await context.SaveChangesAsync();
+
+        var (adminToken, _) = _tokenGenerator.GenerateAccessToken(adminUser.Id, adminUser.Email.Value, UserRole.Admin.ToString(), "Admin User");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/notifications/templates");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Admins are authorized to query email templates");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_AdminToken_CanAccessLogs_Returns200OK()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var adminUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("admin_notif_logs"),
+            "hash",
+            UserRole.Admin,
+            "Admin User",
+            "en-NZ");
+        await context.Users.AddAsync(adminUser);
+        await context.SaveChangesAsync();
+
+        var (adminToken, _) = _tokenGenerator.GenerateAccessToken(adminUser.Id, adminUser.Email.Value, UserRole.Admin.ToString(), "Admin User");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/notifications/logs");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Admins are authorized to query email logs");
+    }
 }
 
 public sealed class EndpointAuthTestAppFactory : WebApplicationFactory<Program>
