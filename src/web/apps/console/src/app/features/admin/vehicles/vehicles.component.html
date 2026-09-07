@@ -6,7 +6,12 @@
       <p class="page-subtitle">{{ 'VEHICLES.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-secondary" (click)="loadVehicles()" [title]="'COMMON.REFRESH' | i18n">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="loadVehicles()"
+        [title]="'COMMON.REFRESH' | i18n"
+      >
         <nim-icon name="refresh" [size]="16" />
         <span>{{ 'COMMON.REFRESH' | i18n }}</span>
       </button>
@@ -181,15 +186,18 @@
                     </nim-status-badge>
                   }
                   <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem">
-                    {{ veh.distanceSinceLastServiceKm }} {{ 'COMMON.UNITS.SLASH_KM' | i18n }} {{ veh.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}
+                    {{ veh.distanceSinceLastServiceKm }} {{ 'COMMON.UNITS.SLASH_KM' | i18n }}
+                    {{ veh.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}
                   </div>
                 </td>
                 <td>
                   <div style="font-size: 0.8125rem">
-                    {{ 'VEHICLES.WOF_LABEL' | i18n }} {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
+                    {{ 'VEHICLES.WOF_LABEL' | i18n }}
+                    {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
                   </div>
                   <div style="font-size: 0.8125rem; color: #64748b">
-                    {{ 'VEHICLES.COF_LABEL' | i18n }} {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
+                    {{ 'VEHICLES.COF_LABEL' | i18n }}
+                    {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
                   </div>
                 </td>
                 <td>
@@ -207,38 +215,62 @@
                 </td>
                 <td>
                   <nim-status-badge [status]="veh.status">
-                    {{ 'VEHICLES.STATUS_' + getStatusKey(veh.status) | i18n }}
+                    {{ 'VEHICLES.STATUS_' + toScreamingSnake(veh.status) | i18n }}
                   </nim-status-badge>
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button type="button" class="action-btn btn-view" (click)="openDetailsModal(veh)">
+                    <button
+                      type="button"
+                      class="action-btn btn-view"
+                      (click)="openDetailsModal(veh)"
+                    >
                       {{ 'VEHICLES.ACTION_VIEW' | i18n }}
                     </button>
 
                     @if (isAdmin()) {
-                      <button type="button" class="action-btn btn-edit" (click)="openEditModal(veh)">
+                      <button
+                        type="button"
+                        class="action-btn btn-edit"
+                        (click)="openEditModal(veh)"
+                      >
                         {{ 'VEHICLES.ACTION_EDIT' | i18n }}
                       </button>
                     }
 
                     @if (!veh.currentDriverId) {
-                      <button type="button" class="action-btn btn-assign" (click)="openAssignModal(veh)">
+                      <button
+                        type="button"
+                        class="action-btn btn-assign"
+                        (click)="openAssignModal(veh)"
+                      >
                         {{ 'VEHICLES.ACTION_ASSIGN' | i18n }}
                       </button>
                     } @else {
-                      <button type="button" class="action-btn btn-release" (click)="releaseVehicle(veh)">
+                      <button
+                        type="button"
+                        class="action-btn btn-release"
+                        (click)="releaseVehicle(veh)"
+                      >
                         {{ 'VEHICLES.ACTION_RELEASE' | i18n }}
                       </button>
                     }
 
                     @if (isAdmin()) {
-                      <button type="button" class="action-btn btn-service" (click)="openServiceModal(veh)">
+                      <button
+                        type="button"
+                        class="action-btn btn-service"
+                        (click)="openServiceModal(veh)"
+                      >
                         {{ 'VEHICLES.ACTION_RECORD_SERVICE' | i18n }}
                       </button>
                     }
 
-                    <button type="button" class="action-btn btn-odo" (click)="openOdometerModal(veh)">
+                    <button
+                      type="button"
+                      class="action-btn btn-odo"
+                      (click)="openOdometerModal(veh)"
+                    >
                       {{ 'VEHICLES.ACTION_RECORD_ODOMETER' | i18n }}
                     </button>
                   </div>
@@ -251,7 +283,10 @@
 
       <!-- Pagination -->
       <div class="table-pagination">
-        <span>{{ 'COMMON.PAGE_INFO_VEHICLES' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}</span>
+        <span>{{
+          'COMMON.PAGE_INFO_VEHICLES'
+            | i18n: { page: currentPage(), total: totalPages(), count: totalCount() }
+        }}</span>
         <div class="pagination-btns">
           <button
             type="button"
@@ -290,57 +325,121 @@
           <div class="form-grid">
             <div class="form-field">
               <label for="create-rego">{{ 'VEHICLES.FIELD_REGO' | i18n }} *</label>
-              <input id="create-rego" type="text" class="input-control" [(ngModel)]="createForm.rego" [placeholder]="'VEHICLES.PLACEHOLDER_REGO' | i18n" />
+              <input
+                id="create-rego"
+                type="text"
+                class="input-control"
+                [(ngModel)]="createForm.rego"
+                [placeholder]="'VEHICLES.PLACEHOLDER_REGO' | i18n"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-vin">{{ 'VEHICLES.FIELD_VIN' | i18n }} *</label>
-              <input id="create-vin" type="text" class="input-control" [(ngModel)]="createForm.vinEnc" [placeholder]="'VEHICLES.PLACEHOLDER_VIN' | i18n" />
+              <input
+                id="create-vin"
+                type="text"
+                class="input-control"
+                [(ngModel)]="createForm.vinEnc"
+                [placeholder]="'VEHICLES.PLACEHOLDER_VIN' | i18n"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-make">{{ 'VEHICLES.FIELD_MAKE' | i18n }} *</label>
-              <input id="create-make" type="text" class="input-control" [(ngModel)]="createForm.make" [placeholder]="'VEHICLES.PLACEHOLDER_MAKE' | i18n" />
+              <input
+                id="create-make"
+                type="text"
+                class="input-control"
+                [(ngModel)]="createForm.make"
+                [placeholder]="'VEHICLES.PLACEHOLDER_MAKE' | i18n"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-model">{{ 'VEHICLES.FIELD_MODEL' | i18n }} *</label>
-              <input id="create-model" type="text" class="input-control" [(ngModel)]="createForm.model" [placeholder]="'VEHICLES.PLACEHOLDER_MODEL' | i18n" />
+              <input
+                id="create-model"
+                type="text"
+                class="input-control"
+                [(ngModel)]="createForm.model"
+                [placeholder]="'VEHICLES.PLACEHOLDER_MODEL' | i18n"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-year">{{ 'VEHICLES.FIELD_YEAR' | i18n }} *</label>
-              <input id="create-year" type="number" class="input-control" [(ngModel)]="createForm.year" />
+              <input
+                id="create-year"
+                type="number"
+                class="input-control"
+                [(ngModel)]="createForm.year"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-odo">{{ 'VEHICLES.FIELD_INITIAL_ODOMETER' | i18n }} *</label>
-              <input id="create-odo" type="number" step="1" class="input-control" [(ngModel)]="createForm.odometerKm" />
+              <input
+                id="create-odo"
+                type="number"
+                step="1"
+                class="input-control"
+                [(ngModel)]="createForm.odometerKm"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-interval">{{ 'VEHICLES.FIELD_SERVICE_INTERVAL' | i18n }} *</label>
-              <input id="create-interval" type="number" step="500" class="input-control" [(ngModel)]="createForm.serviceIntervalKm" />
+              <input
+                id="create-interval"
+                type="number"
+                step="500"
+                class="input-control"
+                [(ngModel)]="createForm.serviceIntervalKm"
+              />
             </div>
 
             <div class="form-field">
-              <label for="create-last-service">{{ 'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n }}</label>
-              <input id="create-last-service" type="number" step="1" class="input-control" [(ngModel)]="createForm.lastServiceOdometerKm" />
+              <label for="create-last-service">{{
+                'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n
+              }}</label>
+              <input
+                id="create-last-service"
+                type="number"
+                step="1"
+                class="input-control"
+                [(ngModel)]="createForm.lastServiceOdometerKm"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-wof">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</label>
-              <input id="create-wof" type="date" class="input-control" [(ngModel)]="createForm.wofExpiry" />
+              <input
+                id="create-wof"
+                type="date"
+                class="input-control"
+                [(ngModel)]="createForm.wofExpiry"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-cof">{{ 'VEHICLES.FIELD_COF_EXPIRY' | i18n }}</label>
-              <input id="create-cof" type="date" class="input-control" [(ngModel)]="createForm.cofExpiry" />
+              <input
+                id="create-cof"
+                type="date"
+                class="input-control"
+                [(ngModel)]="createForm.cofExpiry"
+              />
             </div>
 
             <div class="form-field">
               <label for="create-insurance">{{ 'VEHICLES.FIELD_INSURANCE_EXPIRY' | i18n }}</label>
-              <input id="create-insurance" type="date" class="input-control" [(ngModel)]="createForm.insuranceExpiry" />
+              <input
+                id="create-insurance"
+                type="date"
+                class="input-control"
+                [(ngModel)]="createForm.insuranceExpiry"
+              />
             </div>
 
             <div class="form-field">
@@ -349,7 +448,9 @@
                 <option value="Active">{{ 'VEHICLES.STATUS_ACTIVE' | i18n }}</option>
                 <option value="Maintenance">{{ 'VEHICLES.STATUS_MAINTENANCE' | i18n }}</option>
                 <option value="Inactive">{{ 'VEHICLES.STATUS_INACTIVE' | i18n }}</option>
-                <option value="Decommissioned">{{ 'VEHICLES.STATUS_DECOMMISSIONED' | i18n }}</option>
+                <option value="Decommissioned">
+                  {{ 'VEHICLES.STATUS_DECOMMISSIONED' | i18n }}
+                </option>
               </select>
             </div>
           </div>
@@ -361,7 +462,13 @@
           <button
             type="button"
             class="btn-primary"
-            [disabled]="isSubmitting() || !createForm.rego || !createForm.make || !createForm.model || !createForm.vinEnc"
+            [disabled]="
+              isSubmitting() ||
+              !createForm.rego ||
+              !createForm.make ||
+              !createForm.model ||
+              !createForm.vinEnc
+            "
             (click)="submitCreateVehicle()"
           >
             {{ 'COMMON.SAVE' | i18n }}
@@ -396,24 +503,44 @@
 
           <div class="form-field">
             <label for="edit-wof">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</label>
-            <input id="edit-wof" type="date" class="input-control" [(ngModel)]="editForm.wofExpiry" />
+            <input
+              id="edit-wof"
+              type="date"
+              class="input-control"
+              [(ngModel)]="editForm.wofExpiry"
+            />
           </div>
 
           <div class="form-field">
             <label for="edit-cof">{{ 'VEHICLES.FIELD_COF_EXPIRY' | i18n }}</label>
-            <input id="edit-cof" type="date" class="input-control" [(ngModel)]="editForm.cofExpiry" />
+            <input
+              id="edit-cof"
+              type="date"
+              class="input-control"
+              [(ngModel)]="editForm.cofExpiry"
+            />
           </div>
 
           <div class="form-field">
             <label for="edit-insurance">{{ 'VEHICLES.FIELD_INSURANCE_EXPIRY' | i18n }}</label>
-            <input id="edit-insurance" type="date" class="input-control" [(ngModel)]="editForm.insuranceExpiry" />
+            <input
+              id="edit-insurance"
+              type="date"
+              class="input-control"
+              [(ngModel)]="editForm.insuranceExpiry"
+            />
           </div>
         </div>
         <div class="dialog-footer">
           <button type="button" class="btn-secondary" (click)="closeEditModal()">
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
-          <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="submitEditVehicle()">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting()"
+            (click)="submitEditVehicle()"
+          >
             {{ 'COMMON.SAVE' | i18n }}
           </button>
         </div>
@@ -439,14 +566,21 @@
             <select id="assign-driver" class="input-control" [(ngModel)]="assignForm.driverId">
               <option value="">{{ 'VEHICLES.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
-                <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+                <option [value]="driver.id">
+                  {{ driver.displayName }} ({{ driver.employeeNo }})
+                </option>
               }
             </select>
           </div>
 
           <div class="form-field">
             <label for="assign-time">{{ 'VEHICLES.FIELD_ASSIGNED_AT' | i18n }}</label>
-            <input id="assign-time" type="datetime-local" class="input-control" [(ngModel)]="assignForm.assignedAt" />
+            <input
+              id="assign-time"
+              type="datetime-local"
+              class="input-control"
+              [(ngModel)]="assignForm.assignedAt"
+            />
           </div>
         </div>
         <div class="dialog-footer">
@@ -524,7 +658,9 @@
             <select id="odo-driver" class="input-control" [(ngModel)]="odometerForm.driverId">
               <option value="">{{ 'VEHICLES.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
-                <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+                <option [value]="driver.id">
+                  {{ driver.displayName }} ({{ driver.employeeNo }})
+                </option>
               }
             </select>
           </div>
@@ -576,7 +712,9 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.TABLE_MAKE_MODEL' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.make }} {{ selectedVehicleDetail()!.model }}</span>
+                <span class="detail-val"
+                  >{{ selectedVehicleDetail()!.make }} {{ selectedVehicleDetail()!.model }}</span
+                >
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_YEAR' | i18n }}</span>
@@ -592,23 +730,37 @@
               <h4>{{ 'VEHICLES.SECTION_MAINTENANCE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.TABLE_ODOMETER' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.odometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span>
+                <span class="detail-val"
+                  >{{ selectedVehicleDetail()!.odometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span
+                >
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_SERVICE_INTERVAL' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span>
+                <span class="detail-val"
+                  >{{ selectedVehicleDetail()!.serviceIntervalKm }}
+                  {{ 'COMMON.UNITS.KM' | i18n }}</span
+                >
               </div>
               <div class="detail-row">
-                <span class="detail-label">{{ 'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.lastServiceOdometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</span>
+                <span class="detail-label">{{
+                  'VEHICLES.FIELD_LAST_SERVICE_ODOMETER' | i18n
+                }}</span>
+                <span class="detail-val"
+                  >{{ selectedVehicleDetail()!.lastServiceOdometerKm }}
+                  {{ 'COMMON.UNITS.KM' | i18n }}</span
+                >
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.SERVICE_STATUS' | i18n }}</span>
                 <span class="detail-val">
                   @if (selectedVehicleDetail()!.isServiceDue) {
-                    <span style="color: #dc2626; font-weight: 700">{{ 'VEHICLES.SERVICE_DUE' | i18n }}</span>
+                    <span style="color: #dc2626; font-weight: 700">{{
+                      'VEHICLES.SERVICE_DUE' | i18n
+                    }}</span>
                   } @else {
-                    <span style="color: #16a34a; font-weight: 600">{{ 'VEHICLES.SERVICE_OK' | i18n }}</span>
+                    <span style="color: #16a34a; font-weight: 600">{{
+                      'VEHICLES.SERVICE_OK' | i18n
+                    }}</span>
                   }
                 </span>
               </div>
@@ -618,15 +770,21 @@
               <h4>{{ 'VEHICLES.SECTION_COMPLIANCE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_WOF_EXPIRY' | i18n }}</span>
-                <span class="detail-val">{{ (selectedVehicleDetail()!.wofExpiry | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedVehicleDetail()!.wofExpiry | localeDate: 'medium') || '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_COF_EXPIRY' | i18n }}</span>
-                <span class="detail-val">{{ (selectedVehicleDetail()!.cofExpiry | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedVehicleDetail()!.cofExpiry | localeDate: 'medium') || '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_INSURANCE_EXPIRY' | i18n }}</span>
-                <span class="detail-val">{{ (selectedVehicleDetail()!.insuranceExpiry | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedVehicleDetail()!.insuranceExpiry | localeDate: 'medium') || '-'
+                }}</span>
               </div>
             </div>
 
@@ -634,11 +792,16 @@
               <h4>{{ 'VEHICLES.SECTION_ASSIGNMENT' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_DRIVER' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.activeAssignment?.driverName || '-' }}</span>
+                <span class="detail-val">{{
+                  selectedVehicleDetail()!.activeAssignment?.driverName || '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.ASSIGNED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedVehicleDetail()!.activeAssignment?.assignedAt | localeDate: 'medium') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedVehicleDetail()!.activeAssignment?.assignedAt | localeDate: 'medium') ||
+                    '-'
+                }}</span>
               </div>
             </div>
 
@@ -662,7 +825,9 @@
                     @for (reading of odometerReadings(); track reading.id) {
                       <tr>
                         <td>{{ reading.recordedAt | localeDate: 'short' }}</td>
-                        <td><strong>{{ reading.readingKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong></td>
+                        <td>
+                          <strong>{{ reading.readingKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong>
+                        </td>
                         <td>{{ reading.driverName || '-' }}</td>
                         <td>{{ reading.source }}</td>
                       </tr>

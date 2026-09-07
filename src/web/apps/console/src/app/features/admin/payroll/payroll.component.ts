@@ -23,6 +23,7 @@ import { LocaleCurrencyPipe } from '../../../core/i18n/locale-currency.pipe';
 import { LocaleNumberPipe } from '../../../core/i18n/locale-number.pipe';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 
 @Component({
   selector: 'nim-admin-payroll',
@@ -43,6 +44,7 @@ import { StatusBadgeComponent } from '../../../shared/components/status-badge/st
 })
 export class PayrollComponent implements OnInit {
   private readonly payrollService = inject(PayrollService);
+  readonly toScreamingSnake = toScreamingSnake;
 
   readonly isLoading = signal<boolean>(false);
   readonly isPayslipsLoading = signal<boolean>(false);

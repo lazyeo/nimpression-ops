@@ -207,7 +207,7 @@
                 </td>
                 <td>
                   <nim-status-badge [status]="driver.status">
-                    {{ 'DRIVERS.STATUS_' + getStatusKey(driver.status) | i18n }}
+                    {{ 'DRIVERS.STATUS_' + toScreamingSnake(driver.status) | i18n }}
                   </nim-status-badge>
                 </td>
                 <td class="rate-cell">

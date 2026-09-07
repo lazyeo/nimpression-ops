@@ -19,6 +19,7 @@ import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { toDateInputValue } from '../../../core/utils/date-utils';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 import { AreaLookupOption, DriversService } from './services/drivers.service';
 import {
   DriverDetailDto,
@@ -251,22 +252,7 @@ export class DriversComponent implements OnInit {
     this.loadDrivers();
   }
 
-  getStatusKey(status: string): string {
-    switch (status) {
-      case 'Active':
-        return 'ACTIVE';
-      case 'Inactive':
-        return 'INACTIVE';
-      case 'Suspended':
-        return 'SUSPENDED';
-      case 'OnLeave':
-        return 'ON_LEAVE';
-      case 'Terminated':
-        return 'TERMINATED';
-      default:
-        return status.toUpperCase();
-    }
-  }
+  readonly toScreamingSnake = toScreamingSnake;
 
   // --- Modals ---
 

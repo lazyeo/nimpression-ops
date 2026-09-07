@@ -6,7 +6,12 @@
       <p class="page-subtitle">{{ 'DISPATCH.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-secondary" (click)="loadTasks()" [title]="'COMMON.REFRESH' | i18n">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="loadTasks()"
+        [title]="'COMMON.REFRESH' | i18n"
+      >
         <nim-icon name="refresh" [size]="16" />
         <span>{{ 'COMMON.REFRESH' | i18n }}</span>
       </button>
@@ -193,7 +198,7 @@
             @for (task of tasks(); track task.id) {
               <tr [class.row-highlight]="isTaskOverdueUnacknowledged(task)">
                 <td>
-                  <span class="ref-code">{{ task.ref || (task.id | slice: 0:8) }}</span>
+                  <span class="ref-code">{{ task.ref || (task.id | slice: 0 : 8) }}</span>
                 </td>
                 <td>
                   <div class="title-cell">
@@ -229,12 +234,12 @@
                 </td>
                 <td>
                   <nim-status-badge [status]="task.priority">
-                    {{ 'DISPATCH.PRIORITY_' + task.priority.toUpperCase() | i18n }}
+                    {{ 'DISPATCH.PRIORITY_' + toScreamingSnake(task.priority) | i18n }}
                   </nim-status-badge>
                 </td>
                 <td>
                   <nim-status-badge [status]="task.status">
-                    {{ 'DISPATCH.STATUS_' + getStatusKey(task.status) | i18n }}
+                    {{ 'DISPATCH.STATUS_' + toScreamingSnake(task.status) | i18n }}
                   </nim-status-badge>
                   @if (isTaskOverdueUnacknowledged(task)) {
                     <nim-status-badge status="Overdue" variant="warning" icon="clock">
@@ -247,42 +252,68 @@
                     {{
                       task.effectiveDistanceKm !== null && task.effectiveDistanceKm !== undefined
                         ? task.effectiveDistanceKm + ' km'
-                        : (task.plannedDistanceKm ? task.plannedDistanceKm + ' km (est)' : '-')
+                        : task.plannedDistanceKm
+                          ? task.plannedDistanceKm + ' km (est)'
+                          : '-'
                     }}
                   </span>
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button type="button" class="action-btn btn-view" (click)="openDetailsModal(task)">
+                    <button
+                      type="button"
+                      class="action-btn btn-view"
+                      (click)="openDetailsModal(task)"
+                    >
                       {{ 'DISPATCH.ACTION_VIEW' | i18n }}
                     </button>
 
                     @if (task.status === 'Draft' || task.status === 'Assigned') {
-                      <button type="button" class="action-btn btn-assign" (click)="openAssignModal(task)">
+                      <button
+                        type="button"
+                        class="action-btn btn-assign"
+                        (click)="openAssignModal(task)"
+                      >
                         {{ 'DISPATCH.ACTION_ASSIGN' | i18n }}
                       </button>
                     }
 
                     @if (task.status === 'Assigned') {
-                      <button type="button" class="action-btn btn-ack" (click)="acknowledgeTask(task)">
+                      <button
+                        type="button"
+                        class="action-btn btn-ack"
+                        (click)="acknowledgeTask(task)"
+                      >
                         {{ 'DISPATCH.ACTION_ACKNOWLEDGE' | i18n }}
                       </button>
                     }
 
                     @if (task.status === 'Acknowledged') {
-                      <button type="button" class="action-btn btn-start" (click)="openStartModal(task)">
+                      <button
+                        type="button"
+                        class="action-btn btn-start"
+                        (click)="openStartModal(task)"
+                      >
                         {{ 'DISPATCH.ACTION_START' | i18n }}
                       </button>
                     }
 
                     @if (task.status === 'InProgress') {
-                      <button type="button" class="action-btn btn-comp" (click)="openCompleteModal(task)">
+                      <button
+                        type="button"
+                        class="action-btn btn-comp"
+                        (click)="openCompleteModal(task)"
+                      >
                         {{ 'DISPATCH.ACTION_COMPLETE' | i18n }}
                       </button>
                     }
 
                     @if (task.status !== 'Completed' && task.status !== 'Cancelled') {
-                      <button type="button" class="action-btn btn-cancel" (click)="openCancelModal(task)">
+                      <button
+                        type="button"
+                        class="action-btn btn-cancel"
+                        (click)="openCancelModal(task)"
+                      >
                         {{ 'DISPATCH.ACTION_CANCEL' | i18n }}
                       </button>
                     }
@@ -297,7 +328,10 @@
       <!-- Pagination -->
       <div class="table-pagination">
         <span>
-          {{ 'COMMON.PAGE_INFO_TASKS' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}
+          {{
+            'COMMON.PAGE_INFO_TASKS'
+              | i18n: { page: currentPage(), total: totalPages(), count: totalCount() }
+          }}
         </span>
         <div class="pagination-btns">
           <button
@@ -401,12 +435,22 @@
                 step="0.1"
                 min="0.01"
                 class="input-control"
-                [class.is-invalid]="createForm.plannedDistanceKm !== null && createForm.plannedDistanceKm !== undefined && +createForm.plannedDistanceKm <= 0"
+                [class.is-invalid]="
+                  createForm.plannedDistanceKm !== null &&
+                  createForm.plannedDistanceKm !== undefined &&
+                  +createForm.plannedDistanceKm <= 0
+                "
                 [(ngModel)]="createForm.plannedDistanceKm"
                 [placeholder]="'DISPATCH.PLACEHOLDER_DISTANCE' | i18n"
               />
-              @if (createForm.plannedDistanceKm !== null && createForm.plannedDistanceKm !== undefined && +createForm.plannedDistanceKm <= 0) {
-                <span class="field-error-text">{{ 'DISPATCH.ERROR_DISTANCE_POSITIVE' | i18n }}</span>
+              @if (
+                createForm.plannedDistanceKm !== null &&
+                createForm.plannedDistanceKm !== undefined &&
+                +createForm.plannedDistanceKm <= 0
+              ) {
+                <span class="field-error-text">{{
+                  'DISPATCH.ERROR_DISTANCE_POSITIVE' | i18n
+                }}</span>
               }
             </div>
 
@@ -469,7 +513,15 @@
           <button
             type="button"
             class="btn-primary"
-            [disabled]="isSubmitting() || !createForm.title || !createForm.areaId || !createForm.scheduledFor || (createForm.plannedDistanceKm !== null && createForm.plannedDistanceKm !== undefined && +createForm.plannedDistanceKm <= 0)"
+            [disabled]="
+              isSubmitting() ||
+              !createForm.title ||
+              !createForm.areaId ||
+              !createForm.scheduledFor ||
+              (createForm.plannedDistanceKm !== null &&
+                createForm.plannedDistanceKm !== undefined &&
+                +createForm.plannedDistanceKm <= 0)
+            "
             (click)="submitCreateTask()"
           >
             {{ 'COMMON.SAVE' | i18n }}
@@ -574,7 +626,12 @@
           }
           <div class="form-field">
             <label for="start-time">{{ 'COMMON.TIME' | i18n }}</label>
-            <input id="start-time" type="datetime-local" class="input-control" [(ngModel)]="startForm.startedAt" />
+            <input
+              id="start-time"
+              type="datetime-local"
+              class="input-control"
+              [(ngModel)]="startForm.startedAt"
+            />
           </div>
           <div class="form-field">
             <label for="start-odo">{{ 'DISPATCH.FIELD_START_ODOMETER' | i18n }}</label>
@@ -592,7 +649,12 @@
           <button type="button" class="btn-secondary" (click)="closeStartModal()">
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
-          <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="submitStartTask()">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting()"
+            (click)="submitStartTask()"
+          >
             {{ 'DISPATCH.ACTION_START' | i18n }}
           </button>
         </div>
@@ -614,7 +676,12 @@
           }
           <div class="form-field">
             <label for="complete-time">{{ 'COMMON.TIME' | i18n }}</label>
-            <input id="complete-time" type="datetime-local" class="input-control" [(ngModel)]="completeForm.completedAt" />
+            <input
+              id="complete-time"
+              type="datetime-local"
+              class="input-control"
+              [(ngModel)]="completeForm.completedAt"
+            />
           </div>
           <div class="form-field">
             <label for="complete-dist">{{ 'DISPATCH.FIELD_ACTUAL_DISTANCE' | i18n }}</label>
@@ -643,7 +710,12 @@
           <button type="button" class="btn-secondary" (click)="closeCompleteModal()">
             {{ 'COMMON.CANCEL' | i18n }}
           </button>
-          <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="submitCompleteTask()">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isSubmitting()"
+            (click)="submitCompleteTask()"
+          >
             {{ 'DISPATCH.ACTION_COMPLETE' | i18n }}
           </button>
         </div>
@@ -697,7 +769,11 @@
     <div class="dialog-backdrop" (click)="closeDetailsModal()">
       <div class="dialog-card dialog-lg" (click)="$event.stopPropagation()">
         <div class="dialog-header">
-          <h3>{{ 'DISPATCH.MODAL_DETAILS_TITLE' | i18n }} ({{ selectedTask()!.ref || selectedTask()!.id }})</h3>
+          <h3>
+            {{ 'DISPATCH.MODAL_DETAILS_TITLE' | i18n }} ({{
+              selectedTask()!.ref || selectedTask()!.id
+            }})
+          </h3>
           <button type="button" class="btn-close" (click)="closeDetailsModal()">✕</button>
         </div>
         <div class="dialog-body">
@@ -710,7 +786,9 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_AREA' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.areaName }} ({{ selectedTask()!.areaCode }})</span>
+                <span class="detail-val"
+                  >{{ selectedTask()!.areaName }} ({{ selectedTask()!.areaCode }})</span
+                >
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.TABLE_PRIORITY' | i18n }}</span>
@@ -734,7 +812,9 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_SCHEDULED_FOR' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.scheduledFor | localeDate: 'mediumDateTime' }}</span>
+                <span class="detail-val">{{
+                  selectedTask()!.scheduledFor | localeDate: 'mediumDateTime'
+                }}</span>
               </div>
             </div>
 
@@ -742,20 +822,32 @@
               <h4>{{ 'DISPATCH.TIMELINE_TITLE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_ACKNOWLEDGED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedTask()!.acknowledgedAt | localeDate: 'mediumDateTime') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedTask()!.acknowledgedAt | localeDate: 'mediumDateTime') || '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_STARTED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedTask()!.startedAt | localeDate: 'mediumDateTime') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedTask()!.startedAt | localeDate: 'mediumDateTime') || '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_COMPLETED_AT' | i18n }}</span>
-                <span class="detail-val">{{ (selectedTask()!.completedAt | localeDate: 'mediumDateTime') || '-' }}</span>
+                <span class="detail-val">{{
+                  (selectedTask()!.completedAt | localeDate: 'mediumDateTime') || '-'
+                }}</span>
               </div>
-              @if (selectedTask()!.cancelledAt || selectedTask()!.cancellationReason || selectedTask()!.status === 'Cancelled') {
+              @if (
+                selectedTask()!.cancelledAt ||
+                selectedTask()!.cancellationReason ||
+                selectedTask()!.status === 'Cancelled'
+              ) {
                 <div class="detail-row">
                   <span class="detail-label">{{ 'DISPATCH.FIELD_CANCELLED_AT' | i18n }}</span>
-                  <span class="detail-val">{{ (selectedTask()!.cancelledAt | localeDate: 'mediumDateTime') || '-' }}</span>
+                  <span class="detail-val">{{
+                    (selectedTask()!.cancelledAt | localeDate: 'mediumDateTime') || '-'
+                  }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'DISPATCH.FIELD_CANCEL_REASON' | i18n }}</span>
@@ -768,26 +860,38 @@
               <h4>{{ 'DISPATCH.SECTION_MILEAGE' | i18n }}</h4>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_PLANNED_DISTANCE' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.plannedDistanceKm ? selectedTask()!.plannedDistanceKm + ' km' : '-' }}</span>
+                <span class="detail-val">{{
+                  selectedTask()!.plannedDistanceKm
+                    ? selectedTask()!.plannedDistanceKm + ' km'
+                    : '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_ACTUAL_DISTANCE' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.actualDistanceKm ? selectedTask()!.actualDistanceKm + ' km' : '-' }}</span>
+                <span class="detail-val">{{
+                  selectedTask()!.actualDistanceKm ? selectedTask()!.actualDistanceKm + ' km' : '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_START_ODOMETER' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.startOdometerKm ? selectedTask()!.startOdometerKm + ' km' : '-' }}</span>
+                <span class="detail-val">{{
+                  selectedTask()!.startOdometerKm ? selectedTask()!.startOdometerKm + ' km' : '-'
+                }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.FIELD_END_ODOMETER' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.endOdometerKm ? selectedTask()!.endOdometerKm + ' km' : '-' }}</span>
+                <span class="detail-val">{{
+                  selectedTask()!.endOdometerKm ? selectedTask()!.endOdometerKm + ' km' : '-'
+                }}</span>
               </div>
             </div>
 
             @if (selectedTask()!.description) {
               <div class="detail-group full-width">
                 <h4>{{ 'DISPATCH.FIELD_DESCRIPTION' | i18n }}</h4>
-                <p style="margin: 0; font-size: 0.8125rem; color: #334155">{{ selectedTask()!.description }}</p>
+                <p style="margin: 0; font-size: 0.8125rem; color: #334155">
+                  {{ selectedTask()!.description }}
+                </p>
               </div>
             }
           </div>

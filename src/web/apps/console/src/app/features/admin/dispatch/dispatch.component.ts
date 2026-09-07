@@ -27,6 +27,7 @@ import {
   toDateInputValue,
   parseDateTimeLocalToIso,
 } from '../../../core/utils/date-utils';
+import { toScreamingSnake } from '../../../core/utils/case.utils';
 import {
   JobTaskAlertDto,
   JobTaskDetailDto,
@@ -40,7 +41,15 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
 @Component({
   selector: 'nim-dispatch',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, SlicePipe, IconComponent, StatusBadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    I18nPipe,
+    LocaleDatePipe,
+    SlicePipe,
+    IconComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './dispatch.component.html',
   styleUrl: './dispatch.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -130,13 +139,11 @@ export class DispatchComponent implements OnInit {
     this.loadAlerts();
 
     // SignalR Realtime Invalidation Subscription
-    this.realtime.invalidation$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        // Upon receiving invalidation signal, trigger HTTP query reload
-        this.loadTasks(false);
-        this.loadAlerts();
-      });
+    this.realtime.invalidation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      // Upon receiving invalidation signal, trigger HTTP query reload
+      this.loadTasks(false);
+      this.loadAlerts();
+    });
   }
 
   loadTasks(setLoadingState = true): void {
@@ -262,24 +269,7 @@ export class DispatchComponent implements OnInit {
     return this.alerts().some((a) => a.taskId === task.id);
   }
 
-  getStatusKey(status: string): string {
-    switch (status) {
-      case 'Draft':
-        return 'DRAFT';
-      case 'Assigned':
-        return 'ASSIGNED';
-      case 'Acknowledged':
-        return 'ACKNOWLEDGED';
-      case 'InProgress':
-        return 'IN_PROGRESS';
-      case 'Completed':
-        return 'COMPLETED';
-      case 'Cancelled':
-        return 'CANCELLED';
-      default:
-        return status.toUpperCase();
-    }
-  }
+  readonly toScreamingSnake = toScreamingSnake;
 
   // --- Modals & Actions ---
 
@@ -419,7 +409,9 @@ export class DispatchComponent implements OnInit {
     const scheduledDate = (
       this.assignForm.scheduledFor
         ? toDateInputValue(this.assignForm.scheduledFor)
-        : (task.scheduledFor ? toDateInputValue(task.scheduledFor) : '')
+        : task.scheduledFor
+          ? toDateInputValue(task.scheduledFor)
+          : ''
     ).slice(0, 10);
     this.dispatchService
       .checkAreaEligibility(this.assignForm.driverId, task.areaId, scheduledDate)
@@ -459,18 +451,22 @@ export class DispatchComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || err.message || 'Failed to assign task');
+          this.formError.set(
+            err.error?.message || err.error?.detail || err.message || 'Failed to assign task',
+          );
         },
       });
   }
 
   acknowledgeTask(task: JobTaskDetailDto): void {
-    this.dispatchService.acknowledgeTask(task.id, { acknowledgedAt: new Date().toISOString() }).subscribe({
-      next: () => this.loadTasks(),
-      error: (err: HttpErrorResponse) => {
-        alert(err.error?.message || err.error?.detail || 'Failed to acknowledge task');
-      },
-    });
+    this.dispatchService
+      .acknowledgeTask(task.id, { acknowledgedAt: new Date().toISOString() })
+      .subscribe({
+        next: () => this.loadTasks(),
+        error: (err: HttpErrorResponse) => {
+          alert(err.error?.message || err.error?.detail || 'Failed to acknowledge task');
+        },
+      });
   }
 
   openStartModal(task: JobTaskDetailDto): void {
@@ -498,7 +494,9 @@ export class DispatchComponent implements OnInit {
 
     this.dispatchService
       .startTask(task.id, {
-        startedAt: this.startForm.startedAt ? parseDateTimeLocalToIso(this.startForm.startedAt) : undefined,
+        startedAt: this.startForm.startedAt
+          ? parseDateTimeLocalToIso(this.startForm.startedAt)
+          : undefined,
         startOdometerKm: this.startForm.startOdometerKm ?? undefined,
       })
       .subscribe({
