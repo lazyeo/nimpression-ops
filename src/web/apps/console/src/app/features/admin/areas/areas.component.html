@@ -6,7 +6,12 @@
       <p class="page-subtitle">{{ 'AREAS.SUBTITLE' | i18n }}</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-secondary" (click)="loadAreas()" [title]="'COMMON.REFRESH' | i18n">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="loadAreas()"
+        [title]="'COMMON.REFRESH' | i18n"
+      >
         <nim-icon name="refresh" [size]="16" />
         <span>{{ 'COMMON.REFRESH' | i18n }}</span>
       </button>
@@ -141,16 +146,28 @@
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button type="button" class="action-btn btn-view" (click)="openDriversModal(area)">
+                    <button
+                      type="button"
+                      class="action-btn btn-view"
+                      (click)="openDriversModal(area)"
+                    >
                       {{ 'AREAS.ACTION_VIEW_DRIVERS' | i18n }}
                     </button>
-                    <button type="button" class="action-btn btn-assign" (click)="openAssignModal(area)">
+                    <button
+                      type="button"
+                      class="action-btn btn-assign"
+                      (click)="openAssignModal(area)"
+                    >
                       {{ 'AREAS.ACTION_ASSIGN_DRIVER' | i18n }}
                     </button>
                     <button type="button" class="action-btn btn-edit" (click)="openEditModal(area)">
                       {{ 'AREAS.ACTION_EDIT' | i18n }}
                     </button>
-                    <button type="button" class="action-btn btn-delete" (click)="openDeleteModal(area)">
+                    <button
+                      type="button"
+                      class="action-btn btn-delete"
+                      (click)="openDeleteModal(area)"
+                    >
                       {{ 'AREAS.ACTION_DELETE' | i18n }}
                     </button>
                   </div>
@@ -163,7 +180,10 @@
 
       <!-- Pagination -->
       <div class="table-pagination">
-        <span>{{ 'COMMON.PAGINATION_TOTAL_AREAS' | i18n: { page: currentPage(), total: totalPages(), count: totalCount() } }}</span>
+        <span>{{
+          'COMMON.PAGINATION_TOTAL_AREAS'
+            | i18n: { page: currentPage(), total: totalPages(), count: totalCount() }
+        }}</span>
         <div class="pagination-btns">
           <button
             type="button"
@@ -201,17 +221,34 @@
 
           <div class="form-field">
             <label for="create-code">{{ 'AREAS.FIELD_CODE' | i18n }} *</label>
-            <input id="create-code" type="text" class="input-control" [(ngModel)]="createForm.code" [placeholder]="'AREAS.PLACEHOLDER_CODE' | i18n" />
+            <input
+              id="create-code"
+              type="text"
+              class="input-control"
+              [(ngModel)]="createForm.code"
+              [placeholder]="'AREAS.PLACEHOLDER_CODE' | i18n"
+            />
           </div>
 
           <div class="form-field">
             <label for="create-name">{{ 'AREAS.FIELD_NAME' | i18n }} *</label>
-            <input id="create-name" type="text" class="input-control" [(ngModel)]="createForm.name" [placeholder]="'AREAS.PLACEHOLDER_NAME' | i18n" />
+            <input
+              id="create-name"
+              type="text"
+              class="input-control"
+              [(ngModel)]="createForm.name"
+              [placeholder]="'AREAS.PLACEHOLDER_NAME' | i18n"
+            />
           </div>
 
           <div class="form-field">
             <label for="create-desc">{{ 'AREAS.FIELD_DESCRIPTION' | i18n }}</label>
-            <textarea id="create-desc" class="input-control" [(ngModel)]="createForm.description" [placeholder]="'AREAS.PLACEHOLDER_DESC' | i18n"></textarea>
+            <textarea
+              id="create-desc"
+              class="input-control"
+              [(ngModel)]="createForm.description"
+              [placeholder]="'AREAS.PLACEHOLDER_DESC' | i18n"
+            ></textarea>
           </div>
 
           <div class="form-field">
@@ -263,7 +300,11 @@
 
           <div class="form-field">
             <label for="edit-desc">{{ 'AREAS.FIELD_DESCRIPTION' | i18n }}</label>
-            <textarea id="edit-desc" class="input-control" [(ngModel)]="editForm.description"></textarea>
+            <textarea
+              id="edit-desc"
+              class="input-control"
+              [(ngModel)]="editForm.description"
+            ></textarea>
           </div>
 
           <div class="form-field">
@@ -308,19 +349,31 @@
             <select id="assign-driver" class="input-control" [(ngModel)]="assignForm.driverId">
               <option value="">{{ 'AREAS.SELECT_DRIVER' | i18n }}</option>
               @for (driver of drivers(); track driver.id) {
-                <option [value]="driver.id">{{ driver.displayName }} ({{ driver.employeeNo }})</option>
+                <option [value]="driver.id">
+                  {{ driver.displayName }} ({{ driver.employeeNo }})
+                </option>
               }
             </select>
           </div>
 
           <div class="form-field">
             <label for="assign-from">{{ 'AREAS.FIELD_EFFECTIVE_FROM' | i18n }} *</label>
-            <input id="assign-from" type="date" class="input-control" [(ngModel)]="assignForm.effectiveFrom" />
+            <input
+              id="assign-from"
+              type="date"
+              class="input-control"
+              [(ngModel)]="assignForm.effectiveFrom"
+            />
           </div>
 
           <div class="form-field">
             <label for="assign-to">{{ 'AREAS.FIELD_EFFECTIVE_TO' | i18n }}</label>
-            <input id="assign-to" type="date" class="input-control" [(ngModel)]="assignForm.effectiveTo" />
+            <input
+              id="assign-to"
+              type="date"
+              class="input-control"
+              [(ngModel)]="assignForm.effectiveTo"
+            />
           </div>
         </div>
         <div class="dialog-footer">
@@ -350,7 +403,7 @@
         </div>
         <div class="dialog-body">
           @if (areaAssignments().length === 0) {
-            <p style="color: #94a3b8; margin: 1rem 0; text-align: center">
+            <p class="empty-assignments-msg">
               {{ 'AREAS.NO_ASSIGNMENTS' | i18n }}
             </p>
           } @else {
@@ -370,23 +423,29 @@
                     <td>
                       <strong>{{ asg.driverName || asg.driverId }}</strong>
                       @if (asg.driverEmployeeNo) {
-                        <span style="color: #64748b; font-size: 0.75rem"> ({{ asg.driverEmployeeNo }})</span>
+                        <span class="driver-emp-badge"> ({{ asg.driverEmployeeNo }})</span>
                       }
                     </td>
                     <td>{{ asg.effectiveFrom | localeDate: 'short' }}</td>
                     <td>{{ (asg.effectiveTo | localeDate: 'short') || '-' }}</td>
                     <td>
                       <nim-status-badge [status]="asg.isActive ? 'Active' : 'Inactive'">
-                        {{ (asg.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n }}
+                        {{
+                          (asg.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n
+                        }}
                       </nim-status-badge>
                     </td>
                     <td>
                       @if (asg.isActive && !asg.effectiveTo) {
-                        <button type="button" class="action-btn btn-delete" (click)="endAssignment(asg)">
+                        <button
+                          type="button"
+                          class="action-btn btn-delete"
+                          (click)="endAssignment(asg)"
+                        >
                           {{ 'AREAS.ACTION_END_ASSIGNMENT' | i18n }}
                         </button>
                       } @else {
-                        <span style="color: #94a3b8">-</span>
+                        <span class="action-dash">-</span>
                       }
                     </td>
                   </tr>
@@ -416,7 +475,12 @@
           @if (formError()) {
             <div class="error-banner">{{ formError() }}</div>
           }
-          <p>{{ 'AREAS.DELETE_CONFIRM' | i18n: { name: selectedArea()!.name, code: selectedArea()!.code } }}</p>
+          <p>
+            {{
+              'AREAS.DELETE_CONFIRM'
+                | i18n: { name: selectedArea()!.name, code: selectedArea()!.code }
+            }}
+          </p>
         </div>
         <div class="dialog-footer">
           <button type="button" class="btn-secondary" (click)="closeDeleteModal()">
@@ -424,8 +488,7 @@
           </button>
           <button
             type="button"
-            class="btn-primary"
-            style="background: #dc2626"
+            class="btn-primary btn-delete-dialog"
             [disabled]="isSubmitting()"
             (click)="submitDeleteArea()"
           >
