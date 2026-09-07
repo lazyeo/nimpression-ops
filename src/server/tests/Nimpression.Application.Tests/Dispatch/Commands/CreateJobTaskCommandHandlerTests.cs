@@ -44,6 +44,8 @@ public sealed class CreateJobTaskCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeEmpty();
+        command.CreatedId.Should().Be(result.Value);
+        command.AuditEntityId.Should().Be(result.Value);
 
         _repo.Tasks.Should().ContainKey(result.Value);
         var task = _repo.Tasks[result.Value];
