@@ -544,4 +544,51 @@ public sealed class PayrollQueriesHandlerTests
         Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
         Assert.Equal("forbidden", result.Error.Code);
     }
+
+    [Fact]
+    public async Task Dispatcher_QueryingPayslipById_Returns403Forbidden()
+    {
+        var driver = CreateDriver(Guid.NewGuid(), "DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var payslip = PayrollCalculatorV2.Calculate(driver, period, [], []);
+        payslip.Finalise(DateTimeOffset.UtcNow);
+        _repository.Payslips[payslip.Id] = payslip;
+
+        var dispatcherUser = new FakeCurrentUser(role: UserRole.Dispatcher);
+        var handler = new GetPayslipByIdQueryHandler(_repository, dispatcherUser);
+
+        var result = await handler.Handle(new GetPayslipByIdQuery(payslip.Id), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Admin_QueryingPayslipById_Success()
+    {
+        var driver = CreateDriver(Guid.NewGuid(), "DRV-001");
+        _repository.Drivers[driver.Id] = driver;
+        _repository.DriverDisplayNames[driver.Id] = "Liam Smith";
+
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        _repository.PayPeriods[period.Id] = period;
+
+        var payslip = PayrollCalculatorV2.Calculate(driver, period, [], []);
+        payslip.Finalise(DateTimeOffset.UtcNow);
+        _repository.Payslips[payslip.Id] = payslip;
+
+        var adminUser = new FakeCurrentUser(role: UserRole.Admin);
+        var handler = new GetPayslipByIdQueryHandler(_repository, adminUser);
+
+        var result = await handler.Handle(new GetPayslipByIdQuery(payslip.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(payslip.Id, result.Value.Id);
+        Assert.Equal("DRV-001", result.Value.EmployeeNo);
+    }
 }
