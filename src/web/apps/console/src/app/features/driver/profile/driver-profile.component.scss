@@ -18,8 +18,8 @@
 }
 
 .alert-success {
-  background-color: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background-color: var(--color-success-subtle);
+  border: 1px solid var(--badge-success-border);
   color: var(--color-success-300);
   border-radius: var(--radius-lg);
   padding: var(--space-12) var(--space-16);
