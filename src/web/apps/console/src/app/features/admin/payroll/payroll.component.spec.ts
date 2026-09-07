@@ -211,7 +211,7 @@ describe('PayrollComponent', () => {
     });
   });
 
-  it('renders dual-basis breakdown, BasisUsed settlement banner, minimum wage topup, and separate fines partition in payslip detail modal (Dual-basis and compliance test)', () => {
+  it('renders dual-basis breakdown, BasisUsed settlement banner, minimum wage topup, separate fines partition, and settlement snapshot indicators in payslip detail modal (Dual-basis and compliance test)', () => {
     component.viewPayslipDetail(mockPayslip);
     fixture.detectChanges();
 
@@ -230,6 +230,10 @@ describe('PayrollComponent', () => {
 
     // Minimum Wage Protection notice
     expect(compiled.querySelector('.min-wage-banner')).toBeTruthy();
+
+    // Settlement Snapshot badge and disclaimer banner (R2)
+    expect(compiled.querySelector('.snapshot-banner')).toBeTruthy();
+    expect(component.activeTraceTab()).toBe('lines');
 
     // Separate fines partition with NZ Wages Protection Act notice
     expect(compiled.querySelector('.fines-partition')).toBeTruthy();
