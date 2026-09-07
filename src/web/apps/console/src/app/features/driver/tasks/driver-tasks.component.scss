@@ -243,9 +243,10 @@
 
 .touch-action-btn {
   flex: 1;
-  height: 44px;
+  min-height: 44px;
+  padding: var(--space-12) var(--space-16);
   border-radius: var(--radius-lg);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   border: none;
@@ -253,6 +254,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   box-shadow: var(--shadow-sm);
   transition: background-color var(--transition-fast), transform var(--transition-fast);
 
