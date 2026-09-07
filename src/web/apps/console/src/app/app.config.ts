@@ -13,6 +13,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { I18nService } from './core/i18n/i18n.service';
+import { SwUpdateService } from './core/sw/sw-update.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAppInitializer(() => {
       const i18n = inject(I18nService);
+      inject(SwUpdateService);
       return firstValueFrom(i18n.init());
     }),
     provideServiceWorker('ngsw-worker.js', {

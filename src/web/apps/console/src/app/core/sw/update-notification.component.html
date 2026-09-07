@@ -1,0 +1,50 @@
+@if (swUpdate.updateAvailable()) {
+  <aside
+    class="sw-banner-container update-banner"
+    role="status"
+    [attr.aria-label]="'SW.UPDATE_AVAILABLE_TITLE' | i18n"
+  >
+    <div class="banner-icon-col">
+      <nim-icon name="refresh" [size]="20" class="banner-icon update-icon" />
+    </div>
+    <div class="banner-content">
+      <strong class="banner-title">{{ 'SW.UPDATE_AVAILABLE_TITLE' | i18n }}</strong>
+      <p class="banner-desc">{{ 'SW.UPDATE_AVAILABLE_DESC' | i18n }}</p>
+    </div>
+    <div class="banner-actions">
+      <button type="button" class="touch-btn btn-update" (click)="swUpdate.activateAndReload()">
+        <span>{{ 'SW.UPDATE_ACTION' | i18n }}</span>
+      </button>
+      <button
+        type="button"
+        class="touch-btn btn-dismiss"
+        (click)="swUpdate.dismissUpdateNotification()"
+        [title]="'SW.DISMISS' | i18n"
+        [attr.aria-label]="'SW.DISMISS' | i18n"
+      >
+        <nim-icon name="x" [size]="16" />
+      </button>
+    </div>
+  </aside>
+}
+
+@if (swUpdate.isUnrecoverable()) {
+  <aside
+    class="sw-banner-container unrecoverable-banner"
+    role="alert"
+    [attr.aria-label]="'SW.UNRECOVERABLE_TITLE' | i18n"
+  >
+    <div class="banner-icon-col">
+      <nim-icon name="alert-triangle" [size]="20" class="banner-icon alert-icon" />
+    </div>
+    <div class="banner-content">
+      <strong class="banner-title">{{ 'SW.UNRECOVERABLE_TITLE' | i18n }}</strong>
+      <p class="banner-desc">{{ 'SW.UNRECOVERABLE_DESC' | i18n }}</p>
+    </div>
+    <div class="banner-actions">
+      <button type="button" class="touch-btn btn-reload" (click)="swUpdate.reloadApp()">
+        <span>{{ 'SW.RELOAD' | i18n }}</span>
+      </button>
+    </div>
+  </aside>
+}
