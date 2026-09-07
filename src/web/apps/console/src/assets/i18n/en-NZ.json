@@ -941,6 +941,7 @@
     "PLACEHOLDER_TICKET_KEY": "fines/sample-ticket-key.jpg",
     "PLACEHOLDER_NOTES": "Enter justification / review notes...",
     "SELECT_DRIVER_OPTIONAL": "Select driver (optional)",
+    "SELECT_DRIVER_REQUIRED": "Select driver *",
     "SELECT_VEHICLE_REQUIRED": "Select vehicle *",
     "PHOTO_KEY_OPTIONAL": "Key (Optional)"
   },

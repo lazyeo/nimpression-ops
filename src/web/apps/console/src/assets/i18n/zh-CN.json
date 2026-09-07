@@ -941,6 +941,7 @@
     "PLACEHOLDER_TICKET_KEY": "fines/sample-ticket-key.jpg",
     "PLACEHOLDER_NOTES": "输入申诉理由或复核说明...",
     "SELECT_DRIVER_OPTIONAL": "选择司机（可选）",
+    "SELECT_DRIVER_REQUIRED": "请选择司机 *",
     "SELECT_VEHICLE_REQUIRED": "选择关联车辆 *",
     "PHOTO_KEY_OPTIONAL": "照片对象键（可选）"
   },

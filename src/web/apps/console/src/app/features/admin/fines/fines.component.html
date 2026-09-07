@@ -426,9 +426,9 @@
           }
 
           <div class="form-group">
-            <label class="form-label">{{ 'FINES.DRIVER_SELECT' | i18n }}</label>
-            <select class="form-control" [(ngModel)]="newDriverId">
-              <option value="">{{ 'FINES.SELECT_DRIVER_OPTIONAL' | i18n }}</option>
+            <label class="form-label">{{ 'FINES.DRIVER_SELECT' | i18n }} *</label>
+            <select class="form-control" [(ngModel)]="newDriverId" required>
+              <option value="">{{ 'FINES.SELECT_DRIVER_REQUIRED' | i18n }}</option>
               @for (d of drivers(); track d.id) {
                 <option [value]="d.id">{{ d.displayName }} ({{ d.employeeNo }})</option>
               }

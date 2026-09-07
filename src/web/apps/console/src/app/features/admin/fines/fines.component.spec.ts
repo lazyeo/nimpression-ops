@@ -159,7 +159,7 @@ describe('FinesComponent', () => {
     expect(component.submitError()).toBe('Please fill in all mandatory fields.');
     expect(finesService.submitFine).not.toHaveBeenCalled();
 
-    // Fill valid data
+    // Fill data without driver - still fails
     component.newVehicleId = 'veh-1';
     component.newIssuedOn = '2026-09-03';
     component.newAuthority = 'NZTA';
@@ -168,7 +168,41 @@ describe('FinesComponent', () => {
     component.newReason = 'Speeding';
 
     component.submitFine();
+    expect(component.submitError()).toBe('Please fill in all mandatory fields.');
+    expect(finesService.submitFine).not.toHaveBeenCalled();
+
+    // Fill valid data including driver
+    component.newDriverId = 'driver-1';
+    component.submitFine();
     expect(finesService.submitFine).toHaveBeenCalled();
+  });
+
+  it('renders structured ProblemDetails error message when backend returns 400 validation error', () => {
+    component.openSubmitModal();
+    component.newDriverId = 'driver-1';
+    component.newVehicleId = 'veh-1';
+    component.newIssuedOn = '2026-09-03';
+    component.newAuthority = 'NZTA';
+    component.newReference = 'TKT-1234';
+    component.newAmount = 150;
+    component.newReason = 'Speeding';
+
+    finesService.submitFine.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        error: {
+          type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
+          title: 'driver_id_required',
+          status: 400,
+          detail: 'DriverId is mandatory for management fine submission.',
+        },
+      })),
+    );
+
+    component.submitFine();
+    expect(component.submitError()).toBe(
+      'DriverId is mandatory for management fine submission.',
+    );
   });
 
   it('displays presigned photo URL in detail modal without URL concatenation (Signed URL photo test)', () => {
