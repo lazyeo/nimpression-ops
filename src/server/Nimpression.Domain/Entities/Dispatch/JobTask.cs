@@ -137,6 +137,8 @@ public sealed class JobTask : AggregateRoot
         {
             StartOdometerKm = startOdometerKm.Value;
         }
+
+        AddDomainEvent(new JobTaskStarted(Id, DriverId!.Value, startedAt));
     }
 
     public void Complete(
@@ -199,6 +201,8 @@ public sealed class JobTask : AggregateRoot
         Status = JobTaskStatus.Cancelled;
         CancelledAt = cancelledAt;
         CancellationReason = reason.Trim();
+
+        AddDomainEvent(new JobTaskCancelled(Id, DriverId, CancellationReason, cancelledAt));
     }
 
     public Kilometres? EffectiveDistanceKm

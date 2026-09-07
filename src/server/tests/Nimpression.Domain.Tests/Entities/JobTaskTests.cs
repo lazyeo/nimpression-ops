@@ -101,6 +101,11 @@ public sealed class JobTaskTests
         Assert.Equal(JobTaskStatus.InProgress, task.Status);
         Assert.Equal(startTime, task.StartedAt);
         Assert.Equal(new Kilometres(50000m), task.StartOdometerKm);
+        var startEvent = Assert.IsType<JobTaskStarted>(Assert.Single(task.DomainEvents));
+        Assert.Equal(task.Id, startEvent.JobTaskId);
+        Assert.Equal(driverId, startEvent.DriverId);
+        Assert.Equal(startTime, startEvent.OccurredAt);
+        task.ClearDomainEvents();
 
         // Complete
         var compTime = startTime.AddHours(1);
@@ -121,12 +126,18 @@ public sealed class JobTaskTests
     public void JobTask_can_be_cancelled_from_non_terminal_states(JobTaskStatus initialState)
     {
         var task = CreateTaskInState(initialState);
+        task.ClearDomainEvents();
         var cancelTime = DateTimeOffset.UtcNow;
 
         task.Cancel("Reason", cancelTime);
         Assert.Equal(JobTaskStatus.Cancelled, task.Status);
         Assert.Equal(cancelTime, task.CancelledAt);
         Assert.Equal("Reason", task.CancellationReason);
+        var cancelEvent = Assert.IsType<JobTaskCancelled>(Assert.Single(task.DomainEvents));
+        Assert.Equal(task.Id, cancelEvent.JobTaskId);
+        Assert.Equal(task.DriverId, cancelEvent.DriverId);
+        Assert.Equal("Reason", cancelEvent.Reason);
+        Assert.Equal(cancelTime, cancelEvent.OccurredAt);
     }
 
     [Theory]
