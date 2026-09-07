@@ -42,6 +42,19 @@ public sealed class NotificationTestWebApplicationFactory : WebApplicationFactor
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
+        if (!string.IsNullOrEmpty(_smtpHost))
+        {
+            builder.UseSetting("Email:Host", _smtpHost);
+            builder.UseSetting("Email__Host", _smtpHost);
+        }
+        if (_smtpPort.HasValue)
+        {
+            var portStr = _smtpPort.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            builder.UseSetting("Email:Port", portStr);
+            builder.UseSetting("Email__Port", portStr);
+        }
+
         builder.ConfigureServices(services =>
         {
             var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));

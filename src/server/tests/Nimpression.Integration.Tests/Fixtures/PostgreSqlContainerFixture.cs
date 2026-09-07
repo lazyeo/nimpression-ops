@@ -53,6 +53,8 @@ public class PostgreSqlContainerFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", ConnectionString);
         Environment.SetEnvironmentVariable("Email__Host", MailpitSmtpHost);
         Environment.SetEnvironmentVariable("Email__Port", MailpitSmtpPort.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Environment.SetEnvironmentVariable("Email:Host", MailpitSmtpHost);
+        Environment.SetEnvironmentVariable("Email:Port", MailpitSmtpPort.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
 
     public async Task DisposeAsync()
@@ -61,6 +63,8 @@ public class PostgreSqlContainerFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
         Environment.SetEnvironmentVariable("Email__Host", null);
         Environment.SetEnvironmentVariable("Email__Port", null);
+        Environment.SetEnvironmentVariable("Email:Host", null);
+        Environment.SetEnvironmentVariable("Email:Port", null);
     }
 
     public AppDbContext CreateDbContext()

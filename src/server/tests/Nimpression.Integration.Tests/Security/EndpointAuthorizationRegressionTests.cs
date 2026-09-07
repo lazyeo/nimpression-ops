@@ -46,7 +46,7 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
 
     public async Task InitializeAsync()
     {
-        _factory = new EndpointAuthTestAppFactory(_fixture.ConnectionString);
+        _factory = new EndpointAuthTestAppFactory(_fixture);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")
@@ -760,22 +760,58 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
 public sealed class EndpointAuthTestAppFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString;
+    private readonly string? _smtpHost;
+    private readonly int? _smtpPort;
 
-    public EndpointAuthTestAppFactory(string connectionString)
+    public EndpointAuthTestAppFactory(string connectionString, string? smtpHost = null, int? smtpPort = null)
     {
         _connectionString = connectionString;
+        _smtpHost = smtpHost;
+        _smtpPort = smtpPort;
+    }
+
+    public EndpointAuthTestAppFactory(PostgreSqlContainerFixture fixture)
+        : this(fixture.ConnectionString, fixture.MailpitSmtpHost, fixture.MailpitSmtpPort)
+    {
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:DefaultConnection", _connectionString);
+        if (!string.IsNullOrEmpty(_smtpHost))
+        {
+            builder.UseSetting("Email:Host", _smtpHost);
+            builder.UseSetting("Email__Host", _smtpHost);
+        }
+        if (_smtpPort.HasValue)
+        {
+            var portStr = _smtpPort.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            builder.UseSetting("Email:Port", portStr);
+            builder.UseSetting("Email__Port", portStr);
+        }
+
         builder.ConfigureServices(services =>
         {
             var hostedServices = services.Where(d => d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)).ToList();
             foreach (var hs in hostedServices)
             {
                 services.Remove(hs);
+            }
+
+            if (!string.IsNullOrEmpty(_smtpHost) || _smtpPort.HasValue)
+            {
+                services.PostConfigure<Nimpression.Infrastructure.Notifications.Smtp.EmailSettings>(options =>
+                {
+                    if (!string.IsNullOrEmpty(_smtpHost))
+                    {
+                        options.Host = _smtpHost;
+                    }
+                    if (_smtpPort.HasValue)
+                    {
+                        options.Port = _smtpPort.Value;
+                    }
+                });
             }
         });
     }
