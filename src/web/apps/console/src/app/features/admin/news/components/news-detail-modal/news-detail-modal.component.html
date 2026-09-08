@@ -181,10 +181,10 @@
                   <tbody>
                     @for (user of filteredUnreadUsers(); track user.userId) {
                       <tr>
-                        <td class="cell-name">{{ user.displayName }}</td>
-                        <td class="cell-emp">{{ user.employeeNo || '-' }}</td>
-                        <td class="cell-email">{{ user.email }}</td>
-                        <td>
+                        <td class="cell-name" [attr.data-label]="'NEWS.COL_USER_NAME' | i18n">{{ user.displayName }}</td>
+                        <td class="cell-emp" [attr.data-label]="'NEWS.COL_EMPLOYEE_NO' | i18n">{{ user.employeeNo || '-' }}</td>
+                        <td class="cell-email" [attr.data-label]="'NEWS.COL_EMAIL' | i18n">{{ user.email }}</td>
+                        <td [attr.data-label]="'NEWS.COL_ROLE' | i18n">
                           <span class="badge badge-role">
                             {{ 'ROLES.' + toScreamingSnake(user.role) | i18n }}
                           </span>

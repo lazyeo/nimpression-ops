@@ -155,7 +155,7 @@
           <tbody>
             @for (log of logs(); track log.id) {
               <tr (click)="openLogDetail(log)">
-                <td>
+                <td [attr.data-label]="'COMMON.STATUS' | i18n">
                   <span
                     class="badge-status"
                     [class.status-sent]="log.status.toLowerCase() === 'sent'"
@@ -172,16 +172,16 @@
                     <span>{{ log.status }}</span>
                   </span>
                 </td>
-                <td class="cell-recipient">
+                <td class="cell-recipient" [attr.data-label]="'NOTIFICATIONS.COL_RECIPIENT' | i18n">
                   <span class="text-truncate">{{ log.toAddress }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n">
                   <span class="badge-template">{{ log.templateKey }}</span>
                 </td>
-                <td class="cell-subject">
+                <td class="cell-subject" [attr.data-label]="'NOTIFICATIONS.COL_SUBJECT' | i18n">
                   <span class="text-truncate">{{ log.subject }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'NOTIFICATIONS.COL_ATTEMPTS' | i18n">
                   <span
                     class="badge-attempts"
                     [class.attempts-warn]="log.attempts > 1"
@@ -190,13 +190,13 @@
                     {{ log.attempts }} {{ 'NOTIFICATIONS.ATTEMPTS_UNIT' | i18n }}
                   </span>
                 </td>
-                <td class="cell-time">
+                <td class="cell-time" [attr.data-label]="'NOTIFICATIONS.COL_SENT_AT' | i18n">
                   {{ log.sentAt ? (log.sentAt | localeDate: 'medium') : '-' }}
                 </td>
-                <td class="cell-trigger">
+                <td class="cell-trigger" [attr.data-label]="'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n">
                   <span class="text-muted-xs">{{ log.triggeredBy }}</span>
                 </td>
-                <td class="cell-actions" (click)="$event.stopPropagation()">
+                <td class="cell-actions" [attr.data-label]="'COMMON.ACTIONS' | i18n" (click)="$event.stopPropagation()">
                   <div class="action-buttons">
                     <button
                       type="button"

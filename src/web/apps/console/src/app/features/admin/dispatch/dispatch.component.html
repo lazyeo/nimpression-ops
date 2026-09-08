@@ -197,10 +197,10 @@
           <tbody>
             @for (task of tasks(); track task.id) {
               <tr [class.row-highlight]="isTaskOverdueUnacknowledged(task)">
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_REF' | i18n">
                   <span class="ref-code">{{ task.ref || (task.id | slice: 0 : 8) }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_TITLE' | i18n">
                   <div class="title-cell">
                     <span class="task-title">{{ task.title }}</span>
                     <span class="task-area">
@@ -209,7 +209,7 @@
                     </span>
                   </div>
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_DRIVER' | i18n">
                   @if (task.driverName) {
                     <span class="user-tag">
                       <nim-icon name="user" [size]="14" />
@@ -219,7 +219,7 @@
                     <span class="unassigned-label">-</span>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_VEHICLE' | i18n">
                   @if (task.vehicleRego) {
                     <span class="vehicle-tag">
                       <nim-icon name="car" [size]="14" />
@@ -229,15 +229,15 @@
                     <span class="unassigned-label">-</span>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_SCHEDULED' | i18n">
                   <span>{{ task.scheduledFor | localeDate: 'shortDateTime' }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_PRIORITY' | i18n">
                   <nim-status-badge [status]="task.priority">
                     {{ 'DISPATCH.PRIORITY_' + toScreamingSnake(task.priority) | i18n }}
                   </nim-status-badge>
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_STATUS' | i18n">
                   <nim-status-badge [status]="task.status">
                     {{ 'DISPATCH.STATUS_' + toScreamingSnake(task.status) | i18n }}
                   </nim-status-badge>
@@ -247,7 +247,7 @@
                     </nim-status-badge>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'DISPATCH.TABLE_DISTANCE' | i18n">
                   <span>
                     {{
                       task.effectiveDistanceKm !== null && task.effectiveDistanceKm !== undefined
@@ -258,7 +258,7 @@
                     }}
                   </span>
                 </td>
-                <td>
+                <td class="actions-cell" [attr.data-label]="'DISPATCH.TABLE_ACTIONS' | i18n">
                   <div class="row-actions">
                     <button
                       type="button"

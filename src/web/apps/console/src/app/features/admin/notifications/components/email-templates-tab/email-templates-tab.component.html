@@ -73,12 +73,12 @@
           <tbody>
             @for (template of templates(); track template.id) {
               <tr (click)="openEditDialog(template)">
-                <td>
+                <td [attr.data-label]="'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n">
                   <span class="badge-template">{{ template.key }}</span>
                 </td>
-                <td class="cell-subject">{{ template.subjectEn }}</td>
-                <td class="cell-subject">{{ template.subjectZh }}</td>
-                <td>
+                <td class="cell-subject" [attr.data-label]="'NOTIFICATIONS.COL_SUBJECT_EN' | i18n">{{ template.subjectEn }}</td>
+                <td class="cell-subject" [attr.data-label]="'NOTIFICATIONS.COL_SUBJECT_ZH' | i18n">{{ template.subjectZh }}</td>
+                <td [attr.data-label]="'COMMON.STATUS' | i18n">
                   @if (template.active) {
                     <span class="status-indicator status-active">
                       <span class="dot"></span>
@@ -91,7 +91,7 @@
                     </span>
                   }
                 </td>
-                <td class="cell-actions" (click)="$event.stopPropagation()">
+                <td class="cell-actions" [attr.data-label]="'COMMON.ACTIONS' | i18n" (click)="$event.stopPropagation()">
                   <div class="action-buttons">
                     <button
                       type="button"

@@ -102,10 +102,10 @@
           <tbody>
             @for (partner of partners(); track partner.id) {
               <tr (click)="openEditDialog(partner)">
-                <td class="cell-name">
+                <td class="cell-name" [attr.data-label]="'NOTIFICATIONS.COL_COMPANY_NAME' | i18n">
                   <span class="company-title">{{ partner.companyName }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'NOTIFICATIONS.COL_PARTNER_KIND' | i18n">
                   <span
                     class="badge badge-kind"
                     [class.kind-insurer]="partner.kind === 'Insurer'"
@@ -121,8 +121,8 @@
                     }
                   </span>
                 </td>
-                <td class="cell-email">{{ partner.email }}</td>
-                <td>
+                <td class="cell-email" [attr.data-label]="'NOTIFICATIONS.COL_EMAIL' | i18n">{{ partner.email }}</td>
+                <td [attr.data-label]="'COMMON.STATUS' | i18n">
                   @if (partner.active) {
                     <span class="status-indicator status-active">
                       <span class="dot"></span>
@@ -135,7 +135,7 @@
                     </span>
                   }
                 </td>
-                <td class="cell-actions" (click)="$event.stopPropagation()">
+                <td class="cell-actions" [attr.data-label]="'COMMON.ACTIONS' | i18n" (click)="$event.stopPropagation()">
                   <div class="action-buttons">
                     <button
                       type="button"

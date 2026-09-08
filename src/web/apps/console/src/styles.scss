@@ -343,6 +343,199 @@ optgroup {
   }
 }
 
+/* Mobile Stacked Card View (<=767px) - Shared across all tables */
+@media (max-width: 767px) {
+  .table-container,
+  .table-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+
+    .responsive-table-wrapper,
+    .table-responsive {
+      overflow-x: visible;
+    }
+  }
+
+  .data-table,
+  .nested-table,
+  .queue-table,
+  .tasks-table,
+  .assignments-table,
+  .unread-table,
+  .diff-table,
+  .odometer-history-table {
+    display: block;
+    width: 100%;
+    border: none;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-12);
+      width: 100%;
+
+      tr {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-lg);
+        padding: var(--space-12) var(--space-16);
+        box-shadow: var(--shadow-sm);
+        transition:
+          box-shadow var(--transition-fast),
+          border-color var(--transition-fast);
+        box-sizing: border-box;
+        width: 100%;
+
+        &:hover {
+          background-color: var(--bg-surface);
+          border-color: var(--border-strong);
+        }
+
+        &:last-child {
+          border-bottom: 1px solid var(--border-default);
+        }
+
+        td {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: var(--space-8) 0;
+          border-bottom: 1px solid var(--border-subtle);
+          font-size: var(--font-size-sm);
+          color: var(--text-primary);
+          text-align: right;
+          width: 100%;
+          min-height: 40px;
+          box-sizing: border-box;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &::before {
+            content: attr(data-label);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-right: var(--space-12);
+            text-align: left;
+            flex-shrink: 0;
+            max-width: 48%;
+          }
+
+          &:not([data-label])::before,
+          &[data-label=""]::before {
+            display: none;
+          }
+
+          /* Special cell formatting inside cards */
+          .driver-info-cell,
+          .title-cell,
+          .rate-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+          }
+
+          &.cell-arrow {
+            display: none;
+          }
+
+          /* Action cell exception: takes full card width on separate line */
+          &.actions-cell,
+          &.actions-col,
+          &.cell-actions,
+          &.th-actions,
+          &:last-child:has(.row-actions, .action-btn, .table-btn, .action-buttons, .icon-action-btn, .btn-row-action, .btn-remove, .btn-retry) {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            width: 100%;
+            padding-top: var(--space-12);
+            padding-bottom: var(--space-4);
+            margin-top: var(--space-4);
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: none;
+            flex-wrap: wrap;
+            gap: var(--space-8);
+            text-align: right;
+
+            &::before {
+              display: none;
+            }
+
+            .row-actions,
+            .action-buttons {
+              display: flex;
+              flex-wrap: wrap;
+              gap: var(--space-8);
+              justify-content: flex-end;
+              width: 100%;
+            }
+
+            .action-btn,
+            .table-btn,
+            .btn-row-action,
+            .icon-action-btn,
+            .btn-remove,
+            .btn-retry {
+              min-height: 44px;
+              min-width: 44px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              padding: var(--space-8) var(--space-14);
+              font-size: var(--font-size-sm);
+              box-sizing: border-box;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .pagination-bar,
+  .table-pagination {
+    flex-direction: column;
+    gap: var(--space-12);
+    align-items: center;
+    padding: var(--space-12) var(--space-16);
+
+    .page-info {
+      text-align: center;
+    }
+
+    .pagination-controls,
+    .pagination-btns {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+
+      .page-btn,
+      .btn-page {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-8) var(--space-16);
+        font-size: var(--font-size-sm);
+      }
+    }
+  }
+}
+
 /* Common Table Action Buttons */
 .table-btn {
   padding: var(--space-4) var(--space-8);

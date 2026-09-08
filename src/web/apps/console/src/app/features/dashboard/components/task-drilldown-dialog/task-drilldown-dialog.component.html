@@ -44,11 +44,11 @@
               <tbody>
                 @for (task of tasks(); track task.id) {
                   <tr>
-                    <td class="cell-ref">
+                    <td class="cell-ref" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_REF' | i18n">
                       <code>{{ task.ref || task.id.substring(0, 8) }}</code>
                     </td>
-                    <td class="cell-title">{{ task.title }}</td>
-                    <td class="cell-driver">
+                    <td class="cell-title" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_TITLE' | i18n">{{ task.title }}</td>
+                    <td class="cell-driver" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_DRIVER' | i18n">
                       @if (task.driverName) {
                         <span class="driver-tag">
                           <nim-icon name="user" [size]="14" /> {{ task.driverName }}
@@ -59,7 +59,7 @@
                         }}</span>
                       }
                     </td>
-                    <td class="cell-vehicle">
+                    <td class="cell-vehicle" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_VEHICLE' | i18n">
                       @if (task.vehicleRego) {
                         <span class="vehicle-tag">
                           <nim-icon name="car" [size]="14" /> {{ task.vehicleRego }}
@@ -68,15 +68,15 @@
                         <span class="unassigned-text">-</span>
                       }
                     </td>
-                    <td class="cell-status">
+                    <td class="cell-status" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_STATUS' | i18n">
                       <span class="status-badge" [ngClass]="getStatusClass(task.status)">
                         {{ 'CHARTS.TASK_FUNNEL.STAGES.' + toScreamingSnake(task.status) | i18n }}
                       </span>
                     </td>
-                    <td class="cell-time">
+                    <td class="cell-time" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_TIME' | i18n">
                       {{ (task.scheduledFor | localeDate: 'time') || '-' }}
                     </td>
-                    <td class="cell-distance">
+                    <td class="cell-distance" [attr.data-label]="'CHARTS.DRILLDOWN_MODAL.COL_DISTANCE' | i18n">
                       {{
                         task.actualDistanceKm || task.plannedDistanceKm
                           ? (task.actualDistanceKm || task.plannedDistanceKm) + ' km'

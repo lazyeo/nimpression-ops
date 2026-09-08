@@ -105,7 +105,7 @@
                 <tbody>
                   @for (item of offlineQueue.queueItems(); track item.id) {
                     <tr [class.row-failed]="item.status === 'failed'">
-                      <td>
+                      <td [attr.data-label]="'OFFLINE.OPERATION' | i18n">
                         <span class="method-tag tag-{{ item.method.toLowerCase() }}">{{
                           item.method
                         }}</span>
@@ -113,8 +113,8 @@
                           <span class="item-desc">{{ item.description }}</span>
                         }
                       </td>
-                      <td class="col-url">{{ item.url }}</td>
-                      <td>
+                      <td class="col-url" [attr.data-label]="'OFFLINE.TARGET' | i18n">{{ item.url }}</td>
+                      <td [attr.data-label]="'COMMON.STATUS' | i18n">
                         <span
                           class="status-pill pill-{{ item.status }}"
                           [class.pill-permanent-failed]="item.isPermanentFailure"
@@ -130,8 +130,8 @@
                           </small>
                         }
                       </td>
-                      <td>{{ item.retryCount }}</td>
-                      <td>
+                      <td [attr.data-label]="'OFFLINE.RETRY_COUNT' | i18n">{{ item.retryCount }}</td>
+                      <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                         @if (item.status === 'failed') {
                           @if (item.isPermanentFailure) {
                             <button type="button" class="btn-remove" (click)="removeItem(item.id)">

@@ -146,10 +146,10 @@
                       [class.row-removed]="item.changeType === 'removed'"
                       [class.row-unchanged]="item.changeType === 'unchanged'"
                     >
-                      <td class="cell-field">
+                      <td class="cell-field" [attr.data-label]="'AUDIT.COL_FIELD' | i18n">
                         <code>{{ item.key }}</code>
                       </td>
-                      <td>
+                      <td [attr.data-label]="'AUDIT.COL_CHANGE_TYPE' | i18n">
                         @switch (item.changeType) {
                           @case ('added') {
                             <span class="badge badge-diff-added">+ {{ 'AUDIT.DIFF_ADDED' | i18n }}</span>
@@ -165,7 +165,7 @@
                           }
                         }
                       </td>
-                      <td class="cell-val cell-before">
+                      <td class="cell-val cell-before" [attr.data-label]="'AUDIT.COL_BEFORE_VALUE' | i18n">
                         @if (item.changeType === 'added') {
                           <span class="val-empty">-</span>
                         } @else {
@@ -177,7 +177,7 @@
                           <span class="arrow-indicator">&rarr;</span>
                         }
                       </td>
-                      <td class="cell-val cell-after">
+                      <td class="cell-val cell-after" [attr.data-label]="'AUDIT.COL_AFTER_VALUE' | i18n">
                         @if (item.changeType === 'removed') {
                           <span class="val-empty">-</span>
                         } @else {

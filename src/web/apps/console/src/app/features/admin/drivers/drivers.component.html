@@ -169,7 +169,7 @@
               <tr
                 [class.licence-alert-row]="driver.isLicenceExpired || driver.isLicenceExpiringSoon"
               >
-                <td class="avatar-cell">
+                <td class="avatar-cell" [attr.data-label]="'DRIVERS.TABLE_AVATAR' | i18n">
                   @if (driver.avatarUrl) {
                     <img
                       [src]="driver.avatarUrl"
@@ -180,17 +180,17 @@
                     <div class="avatar-fallback">{{ driver.displayName | slice: 0 : 1 }}</div>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'DRIVERS.TABLE_EMPLOYEE_NO' | i18n">
                   <code>{{ driver.employeeNo }}</code>
                 </td>
-                <td class="driver-info-cell">
+                <td class="driver-info-cell" [attr.data-label]="'DRIVERS.TABLE_NAME' | i18n">
                   <span class="driver-name">{{ driver.displayName }}</span>
                   <span class="driver-email">{{ driver.email }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'DRIVERS.TABLE_LICENCE' | i18n">
                   <span>{{ driver.licenceClass }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'DRIVERS.TABLE_EXPIRY' | i18n">
                   <div>{{ driver.licenceExpiry | localeDate: 'medium' }}</div>
                   @if (driver.isLicenceExpired) {
                     <nim-status-badge status="Expired" variant="danger" icon="alert-triangle">
@@ -205,12 +205,12 @@
                     </nim-status-badge>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'DRIVERS.TABLE_STATUS' | i18n">
                   <nim-status-badge [status]="driver.status">
                     {{ 'DRIVERS.STATUS_' + toScreamingSnake(driver.status) | i18n }}
                   </nim-status-badge>
                 </td>
-                <td class="rate-cell">
+                <td class="rate-cell" [attr.data-label]="'DRIVERS.TABLE_RATES' | i18n">
                   <div class="rate-line">
                     ${{ driver.hourlyRate }}{{ 'COMMON.UNITS.PER_HR' | i18n }}
                   </div>
@@ -220,7 +220,7 @@
                     }}{{ 'COMMON.UNITS.PER_KM' | i18n }}
                   </div>
                 </td>
-                <td>
+                <td [attr.data-label]="'DRIVERS.TABLE_AREAS' | i18n">
                   <div class="area-tags">
                     @for (areaName of driver.assignedAreaNames; track areaName) {
                       <span class="area-chip">{{ areaName }}</span>
@@ -230,7 +230,7 @@
                     }
                   </div>
                 </td>
-                <td>
+                <td class="actions-cell" [attr.data-label]="'DRIVERS.TABLE_ACTIONS' | i18n">
                   <div class="row-actions">
                     <button
                       type="button"

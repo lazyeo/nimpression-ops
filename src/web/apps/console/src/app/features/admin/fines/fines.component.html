@@ -180,27 +180,27 @@
             <tbody>
               @for (fine of fines(); track fine.id) {
                 <tr>
-                  <td class="ref-cell">
+                  <td class="ref-cell" [attr.data-label]="'FINES.COL_REF' | i18n">
                     <strong>{{ fine.reference }}</strong>
                   </td>
-                  <td>{{ fine.authority }}</td>
-                  <td>{{ fine.issuedOn }}</td>
-                  <td class="driver-cell">
+                  <td [attr.data-label]="'FINES.COL_AUTHORITY' | i18n">{{ fine.authority }}</td>
+                  <td [attr.data-label]="'FINES.COL_ISSUED_ON' | i18n">{{ fine.issuedOn }}</td>
+                  <td class="driver-cell" [attr.data-label]="'FINES.COL_DRIVER' | i18n">
                     {{ fine.driverName || 'Driver ' + fine.driverId.substring(0, 8) }}
                     @if (fine.employeeNo) {
                       <small class="text-muted">({{ fine.employeeNo }})</small>
                     }
                   </td>
-                  <td>
+                  <td [attr.data-label]="'FINES.COL_VEHICLE' | i18n">
                     <span class="rego-badge">{{ fine.vehicleRego }}</span>
                   </td>
-                  <td class="amount-cell">{{ fine.amount | localeCurrency: fine.currency }}</td>
-                  <td>
+                  <td class="amount-cell" [attr.data-label]="'FINES.COL_AMOUNT' | i18n">{{ fine.amount | localeCurrency: fine.currency }}</td>
+                  <td [attr.data-label]="'FINES.COL_STATUS' | i18n">
                     <nim-status-badge [status]="fine.status">
                       {{ 'FINES.STATUS_' + toScreamingSnake(fine.status) | i18n }}
                     </nim-status-badge>
                   </td>
-                  <td class="actions-cell">
+                  <td class="actions-cell" [attr.data-label]="'FINES.COL_ACTIONS' | i18n">
                     <!-- View Details Action -->
                     <button
                       type="button"

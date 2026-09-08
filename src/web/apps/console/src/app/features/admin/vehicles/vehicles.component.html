@@ -165,17 +165,17 @@
           <tbody>
             @for (veh of vehicles(); track veh.id) {
               <tr [class.service-due-row]="veh.isServiceDue">
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_REGO' | i18n">
                   <span class="rego-plate">{{ veh.rego }}</span>
                 </td>
-                <td class="make-model-cell">
+                <td class="make-model-cell" [attr.data-label]="'VEHICLES.TABLE_MAKE_MODEL' | i18n">
                   <span class="vehicle-name">{{ veh.make }} {{ veh.model }}</span>
                 </td>
-                <td>{{ veh.year }}</td>
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_YEAR' | i18n">{{ veh.year }}</td>
+                <td [attr.data-label]="'VEHICLES.TABLE_ODOMETER' | i18n">
                   <strong>{{ veh.odometerKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong>
                 </td>
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_SERVICE_STATUS' | i18n">
                   @if (veh.isServiceDue) {
                     <nim-status-badge status="ServiceDue" variant="danger" icon="alert-triangle">
                       {{ 'VEHICLES.SERVICE_DUE' | i18n }}
@@ -190,7 +190,7 @@
                     {{ veh.serviceIntervalKm }} {{ 'COMMON.UNITS.KM' | i18n }}
                   </div>
                 </td>
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_WOF_COF' | i18n">
                   <div style="font-size: var(--font-size-sm)">
                     {{ 'VEHICLES.WOF_LABEL' | i18n }}
                     {{ (veh.wofExpiry | localeDate: 'short') || '-' }}
@@ -200,10 +200,10 @@
                     {{ (veh.cofExpiry | localeDate: 'short') || '-' }}
                   </div>
                 </td>
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_INSURANCE' | i18n">
                   <span>{{ (veh.insuranceExpiry | localeDate: 'short') || '-' }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_CURRENT_DRIVER' | i18n">
                   @if (veh.currentDriverName) {
                     <span class="user-tag">
                       <nim-icon name="user" [size]="14" />
@@ -213,12 +213,12 @@
                     <span class="unassigned-label">-</span>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'VEHICLES.TABLE_STATUS' | i18n">
                   <nim-status-badge [status]="veh.status">
                     {{ 'VEHICLES.STATUS_' + toScreamingSnake(veh.status) | i18n }}
                   </nim-status-badge>
                 </td>
-                <td>
+                <td class="actions-cell" [attr.data-label]="'VEHICLES.TABLE_ACTIONS' | i18n">
                   <div class="row-actions">
                     <button
                       type="button"
@@ -824,12 +824,12 @@
                   <tbody>
                     @for (reading of odometerReadings(); track reading.id) {
                       <tr>
-                        <td>{{ reading.recordedAt | localeDate: 'short' }}</td>
-                        <td>
+                        <td [attr.data-label]="'COMMON.DATE' | i18n">{{ reading.recordedAt | localeDate: 'short' }}</td>
+                        <td [attr.data-label]="'VEHICLES.FIELD_ODOMETER_READING' | i18n">
                           <strong>{{ reading.readingKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong>
                         </td>
-                        <td>{{ reading.driverName || '-' }}</td>
-                        <td>{{ reading.source }}</td>
+                        <td [attr.data-label]="'VEHICLES.FIELD_DRIVER' | i18n">{{ reading.driverName || '-' }}</td>
+                        <td [attr.data-label]="'VEHICLES.FIELD_SOURCE' | i18n">{{ reading.source }}</td>
                       </tr>
                     }
                   </tbody>
