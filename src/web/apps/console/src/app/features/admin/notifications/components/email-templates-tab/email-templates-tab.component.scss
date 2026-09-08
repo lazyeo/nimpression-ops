@@ -263,6 +263,16 @@
     line-height: var(--line-height-none);
     color: var(--text-muted);
     cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+
+    &:hover {
+      color: var(--text-primary);
+    }
   }
 
   .icon-hidden {
@@ -498,3 +508,28 @@
     background-position: -200% 0;
   }
 }
+
+@media (max-width: 600px) {
+  .filter-input {
+    min-height: 44px;
+  }
+
+  .modal-footer .btn {
+    min-height: 44px;
+  }
+
+  .search-group {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .filter-actions {
+    width: 100%;
+    margin-left: 0;
+
+    .btn {
+      min-height: 44px;
+    }
+  }
+}
+

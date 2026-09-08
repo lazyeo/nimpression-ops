@@ -164,8 +164,10 @@
 }
 
 .btn-close {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   font-size: var(--font-size-xl);
@@ -384,3 +386,19 @@
     transform: translateY(1px);
   }
 }
+
+@media (max-width: 600px) {
+  .status-badge,
+  .warning-badge {
+    min-height: 44px;
+    padding: var(--space-8) var(--space-12);
+  }
+
+  .btn-retry,
+  .btn-retry-all,
+  .btn-remove,
+  .btn-cancel {
+    min-height: 44px;
+  }
+}
+

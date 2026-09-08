@@ -280,8 +280,10 @@
 }
 
 .btn-page {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid var(--border-strong);
   background: var(--bg-surface);
   border-radius: var(--radius-md);
@@ -429,3 +431,25 @@
     background-position: -200% 0;
   }
 }
+
+@media (max-width: 600px) {
+  .filter-select,
+  .filter-input {
+    min-height: 44px;
+  }
+
+  .filter-actions .btn {
+    min-height: 44px;
+  }
+
+  .search-id-group {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
