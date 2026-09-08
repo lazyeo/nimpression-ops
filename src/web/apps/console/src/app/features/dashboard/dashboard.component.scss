@@ -222,3 +222,18 @@
     }
   }
 }
+
+@media (max-width: 600px) {
+  .dashboard-header .header-controls .btn-ctrl {
+    min-height: 44px;
+    padding: var(--space-8) var(--space-14);
+  }
+
+  .btn-banner-retry {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
