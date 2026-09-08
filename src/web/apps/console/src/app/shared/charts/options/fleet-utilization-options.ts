@@ -63,8 +63,13 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
   }
 
   const dates = data.map((d) => {
-    return isMobile ? d.date.substring(5) : d.date;
+    return d.date.length >= 10 ? d.date.substring(5) : d.date;
   });
+
+  const isDesktopDense = !isMobile && data.length > 8;
+  const desktopInterval =
+    data.length <= 15 ? 0 : Math.max(1, Math.floor(data.length / 10));
+  const desktopRotate = isDesktopDense ? 45 : 0;
 
   const inTransitData = data.map((d) => d.inTransit);
   const idleData = data.map((d) => d.idle);
@@ -128,7 +133,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
       top: isMobile ? 50 : 56,
       left: isMobile ? 32 : 48,
       right: isMobile ? 12 : 24,
-      bottom: isMobile ? 60 : 44,
+      bottom: isMobile ? 60 : isDesktopDense ? 52 : 44,
       containLabel: true,
     },
     xAxis: {
@@ -144,8 +149,8 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
         fontSize: isMobile ? 10 : 12,
         interval: isMobile
           ? Math.max(1, Math.floor(data.length / 8))
-          : Math.max(0, Math.floor(data.length / 15)),
-        rotate: isMobile ? 45 : 0,
+          : desktopInterval,
+        rotate: isMobile ? 45 : desktopRotate,
       },
       axisTick: {
         alignWithLabel: true,
