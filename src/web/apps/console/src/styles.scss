@@ -478,7 +478,7 @@ optgroup {
             .row-actions,
             .action-buttons {
               display: flex;
-              flex-wrap: wrap !important;
+              flex-wrap: wrap;
               gap: var(--space-8);
               justify-content: flex-end;
               width: 100%;
