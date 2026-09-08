@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -68,6 +68,65 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     expect(item.clientRequestId).toBeTruthy();
     expect(mockIndexedDb.data[item.id]).toBeTruthy();
     expect(mockIndexedDb.data[item.id].clientRequestId).toBe(item.clientRequestId);
+  });
+
+  it('sets syncStatus to syncing (not reconnecting) when replaying queue in online state (W47 AC 1)', async () => {
+    service.isOnline.set(true);
+    service.syncStatus.set('synced');
+
+    const itemPromise = service.enqueue({
+      url: '/api/drivers/tasks/1/accept',
+      method: 'POST',
+      body: { status: 'ACKNOWLEDGED' },
+      description: 'Accept Task',
+    });
+    await itemPromise;
+
+    // Enqueue when online triggers replayQueue() -> syncStatus must be 'syncing', NOT 'reconnecting'
+    expect(service.syncStatus()).toBe('syncing');
+    expect(service.syncStatus()).not.toBe('reconnecting');
+    expect(service.isReplaying()).toBe(true);
+
+    const req = httpMock.expectOne('/api/drivers/tasks/1/accept');
+    req.flush({ success: true });
+
+    await vi.waitFor(() => expect(service.syncStatus()).toBe('synced'));
+    expect(service.isReplaying()).toBe(false);
+  });
+
+  it('sets syncStatus to reconnecting (not syncing) when recovering from offline with pending queue (W47 AC 1)', async () => {
+    // 1. Initially offline with an item in queue
+    service.isOnline.set(false);
+    service.syncStatus.set('offline');
+
+    const item: OfflineQueueItem = {
+      id: 'item-offline-1',
+      clientRequestId: 'req-offline-1',
+      url: '/api/drivers/tasks/1/start',
+      method: 'POST',
+      body: { status: 'IN_PROGRESS' },
+      createdAt: new Date().toISOString(),
+      retryCount: 0,
+      status: 'pending',
+      description: 'Start Trip',
+    };
+    mockIndexedDb.data[item.id] = item;
+    service.queueItems.set([item]);
+
+    // 2. Trigger browser 'online' event to simulate network reconnection
+    window.dispatchEvent(new Event('online'));
+
+    // syncStatus must be 'reconnecting' (representing abnormal state recovery), NOT 'syncing'
+    expect(service.isOnline()).toBe(true);
+    expect(service.syncStatus()).toBe('reconnecting');
+    expect(service.syncStatus()).not.toBe('syncing');
+    expect(service.isReplaying()).toBe(true);
+
+    const req = httpMock.expectOne('/api/drivers/tasks/1/start');
+    req.flush({ success: true });
+
+    await vi.waitFor(() => expect(service.syncStatus()).toBe('synced'));
+    expect(service.isReplaying()).toBe(false);
   });
 
   it('survives page refresh: recovers persisted queue from IndexedDB on startup (AC: 刷新页面不丢)', async () => {

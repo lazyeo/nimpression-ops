@@ -1,4 +1,4 @@
-export type SyncStatus = 'online' | 'offline' | 'reconnecting' | 'synced';
+export type SyncStatus = 'online' | 'offline' | 'syncing' | 'reconnecting' | 'synced';
 
 export type QueueItemStatus = 'pending' | 'syncing' | 'failed' | 'completed';
 

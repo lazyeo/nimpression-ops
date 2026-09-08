@@ -27,6 +27,7 @@ describe('OfflineStatusComponent', () => {
     pendingCount: mockPendingCount,
     failedCount: mockFailedCount,
     hasFailures: mockHasFailures,
+    isReplaying: signal<boolean>(false),
     queueItems: signal([]),
     retryItem: async () => {},
     removeItem: async () => {},
@@ -88,6 +89,35 @@ describe('OfflineStatusComponent', () => {
     expect(badge.textContent).toContain('Synced');
   });
 
+  it('renders blue Syncing badge when online and offline queue is syncing (normal write operation)', () => {
+    mockIsOnline.set(true);
+    mockSyncStatus.set('syncing');
+    mockConnectionState.set('connected');
+    fixture.detectChanges();
+
+    expect(component.effectiveStatus()).toBe('syncing');
+    const badge = fixture.nativeElement.querySelector('.status-badge');
+    expect(badge).not.toBeNull();
+    expect(badge.classList.contains('badge-syncing')).toBe(true);
+    expect(badge.classList.contains('badge-synced')).toBe(false);
+    expect(badge.textContent).toContain('Syncing...');
+  });
+
+  it('renders warning Reconnecting badge when offline queue is reconnecting after network recovery', () => {
+    mockIsOnline.set(true);
+    mockSyncStatus.set('reconnecting');
+    mockConnectionState.set('connected');
+    fixture.detectChanges();
+
+    expect(component.effectiveStatus()).toBe('reconnecting');
+    const badge = fixture.nativeElement.querySelector('.status-badge');
+    expect(badge).not.toBeNull();
+    expect(badge.classList.contains('badge-reconnecting')).toBe(true);
+    expect(badge.classList.contains('badge-syncing')).toBe(false);
+    expect(badge.classList.contains('badge-synced')).toBe(false);
+    expect(badge.textContent).toContain('Reconnecting...');
+  });
+
   it('honestly renders Offline/Disconnected badge when realtime is disconnected even if syncStatus is synced (R3 requirement)', () => {
     // Critical verification for R3: Synced indicator must NEVER mask a disconnected realtime state
     mockIsOnline.set(true);
@@ -103,7 +133,7 @@ describe('OfflineStatusComponent', () => {
     expect(badge.textContent).toContain('Disconnected');
   });
 
-  it('honestly renders Syncing/Reconnecting badge when realtime is reconnecting', () => {
+  it('honestly renders Reconnecting badge when realtime is reconnecting', () => {
     mockIsOnline.set(true);
     mockSyncStatus.set('synced');
     mockConnectionState.set('reconnecting');
@@ -112,7 +142,7 @@ describe('OfflineStatusComponent', () => {
     expect(component.effectiveStatus()).toBe('reconnecting');
     const badge = fixture.nativeElement.querySelector('.status-badge');
     expect(badge).not.toBeNull();
-    expect(badge.classList.contains('badge-syncing')).toBe(true);
+    expect(badge.classList.contains('badge-reconnecting')).toBe(true);
     expect(badge.classList.contains('badge-synced')).toBe(false);
     expect(badge.textContent).toContain('Reconnecting...');
   });

@@ -119,7 +119,11 @@ export class OfflineQueueService {
     if (!this.http) return;
 
     this.isReplaying.set(true);
-    this.syncStatus.set('reconnecting');
+    if (!this.isOnline()) {
+      this.syncStatus.set('offline');
+    } else if (this.syncStatus() !== 'reconnecting') {
+      this.syncStatus.set('syncing');
+    }
 
     const items = [...this.queueItems()];
     const itemsToProcess = items.filter(
@@ -148,7 +152,15 @@ export class OfflineQueueService {
     await this.indexedDb.put(STORES.OFFLINE_QUEUE, item);
     this.queueItems.update((list) => list.map((i) => (i.id === id ? { ...item } : i)));
 
+    if (this.isOnline()) {
+      this.syncStatus.set('syncing');
+    }
     await this.processItem(item);
+    if (this.failedCount() > 0) {
+      this.syncStatus.set('offline');
+    } else if (this.isOnline()) {
+      this.syncStatus.set('synced');
+    }
     return (item.status as QueueItemStatus) === 'completed';
   }
 
