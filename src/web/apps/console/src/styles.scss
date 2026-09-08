@@ -326,7 +326,9 @@ optgroup {
           &:last-child:has(.table-btn) {
             text-align: right;
             white-space: nowrap;
-            width: 1%;
+            @media (min-width: 768px) {
+              width: 1%;
+            }
           }
         }
       }

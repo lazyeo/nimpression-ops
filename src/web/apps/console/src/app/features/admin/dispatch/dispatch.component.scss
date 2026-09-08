@@ -243,7 +243,9 @@
     overflow-wrap: break-word;
 
     &:last-child {
-      width: 1%;
+      @media (min-width: 768px) {
+        width: 1%;
+      }
       white-space: nowrap;
       text-align: right;
     }
