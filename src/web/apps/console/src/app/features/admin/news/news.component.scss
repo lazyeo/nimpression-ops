@@ -149,9 +149,12 @@
 
 .data-table {
   width: 100%;
-  min-width: max-content;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
+
+  @media (max-width: 1024px) {
+    min-width: max-content;
+  }
 
   th {
     padding: var(--space-10) var(--space-12);
