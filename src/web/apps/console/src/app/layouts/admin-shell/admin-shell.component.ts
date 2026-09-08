@@ -66,7 +66,7 @@ export class AdminShellComponent implements OnInit {
     { path: '/admin/incidents', labelKey: 'NAV.INCIDENTS', icon: 'incidents' },
     { path: '/admin/fines', labelKey: 'NAV.FINES', icon: 'fines' },
     { path: '/admin/news', labelKey: 'NAV.NEWS', icon: 'news' },
-    { path: '/admin/notifications', labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications', roles: ['Admin'] },
+    { path: '/admin/notifications', labelKey: 'NAV.NOTIFICATIONS', icon: 'notifications' },
     { path: '/admin/audit', labelKey: 'NAV.AUDIT', icon: 'audit' },
   ];
 
