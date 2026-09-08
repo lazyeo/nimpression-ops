@@ -45,7 +45,9 @@
   background: var(--bg-surface);
   color: var(--text-primary);
   width: 100%;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
   &:focus {
     outline: none;
@@ -81,10 +83,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
-
-  @media (max-width: 1024px) {
-    min-width: max-content;
-  }
 
   th {
     padding: var(--space-10) var(--space-12);
@@ -135,9 +133,21 @@
   line-height: var(--line-height-tight);
 
   &.badge-kind {
-    &.kind-insurer { background: var(--badge-purple-bg); color: var(--badge-purple-text); border: 1px solid var(--badge-purple-border); }
-    &.kind-maintenance { background: var(--color-warning-subtle); color: var(--color-warning-text); border: 1px solid var(--badge-warning-border); }
-    &.kind-inspection { background: var(--badge-purple-bg); color: var(--badge-purple-text); border: 1px solid var(--badge-purple-border); }
+    &.kind-insurer {
+      background: var(--badge-purple-bg);
+      color: var(--badge-purple-text);
+      border: 1px solid var(--badge-purple-border);
+    }
+    &.kind-maintenance {
+      background: var(--color-warning-subtle);
+      color: var(--color-warning-text);
+      border: 1px solid var(--badge-warning-border);
+    }
+    &.kind-inspection {
+      background: var(--badge-purple-bg);
+      color: var(--badge-purple-text);
+      border: 1px solid var(--badge-purple-border);
+    }
   }
 }
 
@@ -157,12 +167,16 @@
 
   &.status-active {
     color: var(--color-success-text);
-    .dot { background: var(--color-success); }
+    .dot {
+      background: var(--color-success);
+    }
   }
 
   &.status-inactive {
     color: var(--text-muted);
-    .dot { background: var(--border-strong); }
+    .dot {
+      background: var(--border-strong);
+    }
   }
 }
 
@@ -188,7 +202,10 @@
   align-items: center;
   gap: var(--space-4);
   white-space: nowrap;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -258,8 +275,12 @@
     display: flex;
     align-items: center;
     gap: var(--space-10);
-    .title-icon { color: var(--color-primary); }
-    .error-icon { color: var(--color-danger); }
+    .title-icon {
+      color: var(--color-primary);
+    }
+    .error-icon {
+      color: var(--color-danger);
+    }
   }
 
   .modal-title {
@@ -329,7 +350,9 @@
   line-height: var(--line-height-tight);
   color: var(--text-primary);
   background: var(--bg-surface);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
   &:focus {
     outline: none;
@@ -374,7 +397,10 @@
   justify-content: center;
   gap: var(--space-6);
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -427,8 +453,12 @@
   text-align: center;
   gap: var(--space-12);
 
-  .empty-icon { color: var(--text-muted); }
-  .error-icon { color: var(--color-danger); }
+  .empty-icon {
+    color: var(--text-muted);
+  }
+  .error-icon {
+    color: var(--color-danger);
+  }
 
   .state-title {
     margin: 0;
@@ -455,7 +485,12 @@
 
 .skeleton-row {
   height: 36px;
-  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-muted) 50%, var(--bg-subtle) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--bg-muted) 50%,
+    var(--bg-subtle) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-md);
@@ -467,6 +502,10 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

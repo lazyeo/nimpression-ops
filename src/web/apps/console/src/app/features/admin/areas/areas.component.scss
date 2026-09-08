@@ -176,10 +176,6 @@
   font-size: var(--font-size-sm);
   text-align: left;
 
-  @media (max-width: 1024px) {
-    min-width: max-content;
-  }
-
   th {
     background: var(--bg-subtle);
     border-bottom: 1px solid var(--border-default);

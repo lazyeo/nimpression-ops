@@ -6,7 +6,9 @@
 @use './styles/tokens' as *;
 @use './styles/theme' as *;
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -16,7 +18,9 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-app);
   line-height: var(--line-height-normal);
-  transition: background-color var(--transition-base), color var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
 }
 
 /* Control typography and line-height reset */
@@ -83,7 +87,11 @@ optgroup {
   line-height: var(--line-height-tight);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
   user-select: none;
   white-space: nowrap;
 
@@ -173,7 +181,9 @@ optgroup {
     color: var(--text-primary);
     background-color: var(--bg-surface);
     outline: none;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
 
     &:focus {
       border-color: var(--border-focus);
@@ -198,7 +208,10 @@ optgroup {
       justify-content: center;
       gap: var(--space-6);
       border: 1px solid transparent;
-      transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+      transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        transform var(--transition-fast);
 
       &:active:not(:disabled) {
         transform: translateY(1px);
@@ -207,14 +220,18 @@ optgroup {
       &.btn-primary {
         background-color: var(--color-primary);
         color: var(--color-primary-contrast);
-        &:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+        &:hover:not(:disabled) {
+          background-color: var(--color-primary-hover);
+        }
       }
 
       &.btn-secondary {
         background-color: var(--bg-subtle);
         border-color: var(--border-strong);
         color: var(--text-secondary);
-        &:hover:not(:disabled) { background-color: var(--bg-muted); }
+        &:hover:not(:disabled) {
+          background-color: var(--bg-muted);
+        }
       }
 
       &:disabled {
@@ -256,10 +273,6 @@ optgroup {
     font-size: var(--font-size-sm);
     text-align: left;
 
-    @media (max-width: 1024px) {
-      min-width: max-content;
-    }
-
     thead {
       background-color: var(--bg-subtle);
       border-bottom: 1px solid var(--border-default);
@@ -274,8 +287,12 @@ optgroup {
         line-height: var(--line-height-tight);
         white-space: nowrap;
 
-        &.actions-col {
+        &.actions-col,
+        &.actions-cell,
+        &:last-child:has(.row-actions, .action-btn, .table-btn) {
           text-align: right;
+          width: 1%;
+          white-space: nowrap;
         }
       }
     }
@@ -296,16 +313,33 @@ optgroup {
         td {
           padding: var(--space-10) var(--space-12);
           color: var(--text-secondary);
-          line-height: var(--line-height-tight);
+          line-height: var(--line-height-snug);
           vertical-align: middle;
+          white-space: normal;
+          word-break: normal;
+          overflow-wrap: break-word;
 
-          &.actions-cell {
+          &.actions-cell,
+          &.actions-col,
+          &:last-child:has(.row-actions),
+          &:last-child:has(.action-btn),
+          &:last-child:has(.table-btn) {
             text-align: right;
             white-space: nowrap;
+            width: 1%;
           }
         }
       }
     }
+  }
+
+  .row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-4);
+    flex-wrap: nowrap;
+    white-space: nowrap;
   }
 }
 
@@ -323,7 +357,10 @@ optgroup {
   border: 1px solid transparent;
   margin-left: var(--space-4);
   white-space: nowrap;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -334,20 +371,26 @@ optgroup {
     background-color: var(--color-primary-subtle);
     border-color: var(--badge-info-border);
     color: var(--color-primary-text);
-    &:hover:not(:disabled) { background-color: var(--badge-info-bg); }
+    &:hover:not(:disabled) {
+      background-color: var(--badge-info-bg);
+    }
   }
 
   &.btn-correct {
     background-color: var(--color-warning-subtle);
     border-color: var(--badge-warning-border);
     color: var(--color-warning-text);
-    &:hover:not(:disabled) { background-color: var(--badge-warning-bg); }
+    &:hover:not(:disabled) {
+      background-color: var(--badge-warning-bg);
+    }
   }
 
   &.btn-primary {
     background-color: var(--color-primary);
     color: var(--color-primary-contrast);
-    &:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+    }
   }
 
   &:disabled {
@@ -386,11 +429,21 @@ optgroup {
       line-height: var(--line-height-tight);
       color: var(--text-secondary);
       cursor: pointer;
-      transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+      transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        transform var(--transition-fast);
 
-      &:hover:not(:disabled) { background: var(--bg-subtle); }
-      &:active:not(:disabled) { transform: translateY(1px); }
-      &:disabled { opacity: 0.5; cursor: not-allowed; }
+      &:hover:not(:disabled) {
+        background: var(--bg-subtle);
+      }
+      &:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
 
     .current-page-num {
@@ -418,9 +471,15 @@ optgroup {
   box-shadow: var(--shadow-sm);
 
   .state-icon {
-    &.danger { color: var(--color-danger); }
-    &.warning { color: var(--color-warning); }
-    &.muted { color: var(--text-muted); }
+    &.danger {
+      color: var(--color-danger);
+    }
+    &.warning {
+      color: var(--color-warning);
+    }
+    &.muted {
+      color: var(--text-muted);
+    }
   }
 
   .state-title {
@@ -439,7 +498,9 @@ optgroup {
     line-height: var(--line-height-normal);
   }
 
-  .retry-btn { margin-top: var(--space-8); }
+  .retry-btn {
+    margin-top: var(--space-8);
+  }
 }
 
 /* Common Skeleton Pulse */
@@ -492,8 +553,12 @@ optgroup {
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-default);
 
-  &.modal-lg { max-width: 720px; }
-  &.modal-xl { max-width: 900px; }
+  &.modal-lg {
+    max-width: 720px;
+  }
+  &.modal-xl {
+    max-width: 900px;
+  }
 
   .modal-header {
     padding: var(--space-16) var(--space-20);
@@ -523,7 +588,9 @@ optgroup {
       color: var(--text-muted);
       cursor: pointer;
       line-height: var(--line-height-none);
-      &:hover { color: var(--text-primary); }
+      &:hover {
+        color: var(--text-primary);
+      }
     }
   }
 
@@ -577,7 +644,9 @@ optgroup {
     color: var(--text-primary);
     background-color: var(--bg-surface);
     outline: none;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
 
     &.textarea {
       resize: vertical;
@@ -621,7 +690,10 @@ optgroup {
   line-height: var(--line-height-tight);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -630,26 +702,34 @@ optgroup {
   &.btn-primary {
     background-color: var(--color-primary);
     color: var(--color-primary-contrast);
-    &:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+    }
   }
 
   &.btn-success {
     background-color: var(--color-success);
     color: var(--color-success-contrast);
-    &:hover:not(:disabled) { background-color: var(--color-success-hover); }
+    &:hover:not(:disabled) {
+      background-color: var(--color-success-hover);
+    }
   }
 
   &.btn-danger {
     background-color: var(--color-danger);
     color: var(--color-danger-contrast);
-    &:hover:not(:disabled) { background-color: var(--color-danger-hover); }
+    &:hover:not(:disabled) {
+      background-color: var(--color-danger-hover);
+    }
   }
 
   &.btn-secondary {
     background-color: var(--bg-surface);
     border-color: var(--border-strong);
     color: var(--text-secondary);
-    &:hover:not(:disabled) { background-color: var(--bg-subtle); }
+    &:hover:not(:disabled) {
+      background-color: var(--bg-subtle);
+    }
   }
 
   &:disabled {
@@ -659,8 +739,13 @@ optgroup {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* 原 :focus-visible 保留；末尾规则补两层环，不覆盖业务 outline 以外的属性。 */

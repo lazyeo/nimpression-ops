@@ -87,9 +87,45 @@ describe('DispatchComponent', () => {
     dispatchServiceMock = {
       getTasks: vi.fn().mockReturnValue(of(mockPaginatedResult)),
       getUnacknowledgedAlerts: vi.fn().mockReturnValue(of([])),
-      getDrivers: vi.fn().mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 100, totalPages: 1, hasPreviousPage: false, hasNextPage: false })),
-      getVehicles: vi.fn().mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 100, totalPages: 1, hasPreviousPage: false, hasNextPage: false })),
-      getAreas: vi.fn().mockReturnValue(of({ items: [{ id: 'area-1', name: 'Auckland Central', code: 'AKL-CBD', isActive: true }], totalCount: 1, page: 1, pageSize: 100, totalPages: 1, hasPreviousPage: false, hasNextPage: false })),
+      getDrivers: vi
+        .fn()
+        .mockReturnValue(
+          of({
+            items: [],
+            totalCount: 0,
+            page: 1,
+            pageSize: 100,
+            totalPages: 1,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          }),
+        ),
+      getVehicles: vi
+        .fn()
+        .mockReturnValue(
+          of({
+            items: [],
+            totalCount: 0,
+            page: 1,
+            pageSize: 100,
+            totalPages: 1,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          }),
+        ),
+      getAreas: vi
+        .fn()
+        .mockReturnValue(
+          of({
+            items: [{ id: 'area-1', name: 'Auckland Central', code: 'AKL-CBD', isActive: true }],
+            totalCount: 1,
+            page: 1,
+            pageSize: 100,
+            totalPages: 1,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          }),
+        ),
       createTask: vi.fn().mockReturnValue(of(mockTasks[0])),
       assignTask: vi.fn().mockReturnValue(of(mockTasks[0])),
       acknowledgeTask: vi.fn().mockReturnValue(of(mockTasks[0])),
@@ -97,7 +133,9 @@ describe('DispatchComponent', () => {
       completeTask: vi.fn().mockReturnValue(of(mockTasks[0])),
       cancelTask: vi.fn().mockReturnValue(of(mockTasks[0])),
       getTaskById: vi.fn().mockReturnValue(of(mockTasks[0])),
-      checkAreaEligibility: vi.fn().mockReturnValue(of({ isAssignedToArea: true, requiresWarning: false })),
+      checkAreaEligibility: vi
+        .fn()
+        .mockReturnValue(of({ isAssignedToArea: true, requiresWarning: false })),
     };
 
     authServiceMock = {
@@ -391,5 +429,45 @@ describe('DispatchComponent', () => {
       );
     });
   });
-});
 
+  describe('Table Structure & Responsive Actions (W49)', () => {
+    it('renders data table within responsive container and preserves action button group', () => {
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const tableCard = compiled.querySelector('.table-card');
+      expect(tableCard).toBeTruthy();
+
+      const tableResponsive = tableCard?.querySelector('.table-responsive');
+      expect(tableResponsive).toBeTruthy();
+
+      const dataTable = tableResponsive?.querySelector('table.data-table');
+      expect(dataTable).toBeTruthy();
+
+      const headers = Array.from(dataTable?.querySelectorAll('thead th') || []).map((th) =>
+        th.textContent?.trim(),
+      );
+      expect(headers.length).toBe(9);
+
+      const rows = Array.from(dataTable?.querySelectorAll('tbody tr') || []);
+      expect(rows.length).toBe(2);
+
+      // Verify title cell allows multi-line wrapping with title and area sub-element
+      const firstRow = rows[0];
+      const titleCell = firstRow.querySelector('.title-cell');
+      expect(titleCell).toBeTruthy();
+      expect(titleCell?.querySelector('.task-title')).toBeTruthy();
+      expect(titleCell?.querySelector('.task-area')).toBeTruthy();
+
+      // Verify actions cell holds .row-actions button cluster without fragmentation
+      const actionsCell = firstRow.querySelector('td:last-child');
+      expect(actionsCell).toBeTruthy();
+      const rowActions = actionsCell?.querySelector('.row-actions');
+      expect(rowActions).toBeTruthy();
+
+      const actionButtons = Array.from(rowActions?.querySelectorAll('button.action-btn') || []);
+      expect(actionButtons.length).toBeGreaterThan(0);
+      expect(actionButtons.map((b) => b.textContent?.trim())).toContain('DISPATCH.ACTION_VIEW');
+    });
+  });
+});
