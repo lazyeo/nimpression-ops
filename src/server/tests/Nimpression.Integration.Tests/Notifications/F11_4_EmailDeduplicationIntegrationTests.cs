@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nimpression.Application.Features.Notifications.Abstractions;
@@ -12,6 +13,10 @@ using Nimpression.Domain.Entities.Standalone;
 using Nimpression.Domain.Entities.Vehicle;
 using Nimpression.Domain.Enums;
 using Nimpression.Domain.ValueObjects;
+using Nimpression.Infrastructure.Notifications.Outbox;
+using Nimpression.Infrastructure.Notifications.Smtp;
+using Nimpression.Infrastructure.Persistence;
+using Nimpression.Infrastructure.Realtime.BackgroundServices;
 using Nimpression.Integration.Tests.Fixtures;
 using Nimpression.Integration.Tests.Notifications.Fixtures;
 
@@ -22,6 +27,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
 {
     private readonly PostgreSqlContainerFixture _fixture;
     private MailpitTestClient _mailpit = null!;
+    private readonly List<Guid> _backlogMessageIds = [];
     private readonly TestDateTimeProvider _dateTimeProvider = TestDateTimeProvider.FromNzDate(2026, 8, 30);
 
     public F11_4_EmailDeduplicationIntegrationTests(PostgreSqlContainerFixture fixture)
@@ -56,16 +62,48 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
         await _mailpit.ClearAllMessagesAsync();
     }
 
-    public Task DisposeAsync()
+    public async Task DisposeAsync()
     {
-        Dispose();
-        return Task.CompletedTask;
+        try
+        {
+            if (_backlogMessageIds.Count > 0)
+            {
+                await using var db = _fixture.CreateDbContext();
+                await db.OutboxMessages
+                    .Where(m => _backlogMessageIds.Contains(m.Id))
+                    .ExecuteDeleteAsync();
+            }
+        }
+        finally
+        {
+            Dispose();
+        }
     }
 
     public void Dispose()
     {
         _mailpit?.Dispose();
     }
+
+    private WebApplicationFactory<Program> CreateFactory(DeliveryGate? gate = null) =>
+        new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider)
+            .WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            {
+                // These tests drive notification processing explicitly; background workers would race
+                // to update the same OutboxMessage.ProcessedAt before the assertions run.
+                var consumers = services.Where(descriptor =>
+                    descriptor.ImplementationType == typeof(NotificationOutboxProcessorBackgroundService) ||
+                    descriptor.ImplementationType == typeof(OutboxProcessorBackgroundService)).ToList();
+                foreach (var consumer in consumers)
+                {
+                    services.Remove(consumer);
+                }
+                if (gate is not null)
+                {
+                    services.AddScoped<IEmailSender>(provider => new GatedEmailSender(
+                        ActivatorUtilities.CreateInstance<SmtpEmailSender>(provider), gate));
+                }
+            }));
 
     [Fact]
     public async Task DuplicateTriggers_WithSameCorrelationId_ProducesExactlyOneSentRecord()
@@ -74,6 +112,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
         var driverId = Guid.NewGuid();
         var vehicleId = Guid.NewGuid();
         var fineId = Guid.NewGuid();
+        var outboxMessageId = Guid.NewGuid();
         var reviewerUserId = Guid.NewGuid();
         var driverUserId = Guid.NewGuid();
         var fineRef = $"INF-{Guid.NewGuid():N}"[..12].ToUpperInvariant();
@@ -122,7 +161,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
                 OccurredAt = _dateTimeProvider.UtcNow
             };
 
-            var outboxMsg = new OutboxMessage(Guid.NewGuid(), "FineAccepted", JsonSerializer.Serialize(payload), _dateTimeProvider.UtcNow);
+            var outboxMsg = new OutboxMessage(outboxMessageId, "FineAccepted", JsonSerializer.Serialize(payload), _dateTimeProvider.UtcNow);
 
             await db.Users.AddAsync(reviewer);
             await db.Users.AddAsync(user);
@@ -134,21 +173,21 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
             await db.SaveChangesAsync();
         }
 
-        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
+        using var factory = CreateFactory();
 
         // ── Step 2: 第一次处理 Outbox 消息 ──
         using (var scope1 = factory.Services.CreateScope())
         {
             var outboxService = scope1.ServiceProvider.GetRequiredService<INotificationOutboxService>();
-            await outboxService.ProcessPendingOutboxMessagesAsync();
+            await outboxService.ProcessOutboxMessageAsync(outboxMessageId);
         }
 
         // ── Step 3: 人为重复触发第二次、第三次 ──
         using (var scope2 = factory.Services.CreateScope())
         {
             var outboxService = scope2.ServiceProvider.GetRequiredService<INotificationOutboxService>();
-            await outboxService.ProcessPendingOutboxMessagesAsync();
-            await outboxService.ProcessPendingOutboxMessagesAsync();
+            await outboxService.ProcessOutboxMessageAsync(outboxMessageId);
+            await outboxService.ProcessOutboxMessageAsync(outboxMessageId);
         }
 
         // ── Step 4: 断言 EmailLog 恰好只有 1 条 Sent 记录（F11.4 严格去重） ──
@@ -173,13 +212,17 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
         targetMessages.Should().HaveCount(1, "Mailpit 实际接收邮件必须恰好为 1 封");
     }
 
-    [Fact]
-    public async Task ConcurrentTriggers_WithSameCorrelationId_ViaTaskWhenAll_ProducesExactlyOneSentRecordAndOneEmail()
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(50, false)]
+    [InlineData(0, true)]
+    public async Task ConcurrentTriggers_WithSameCorrelationId_ViaTaskWhenAll_ProducesExactlyOneSentRecordAndOneEmail(int unrelatedPendingCount, bool recoverPending)
     {
         // ── Step 1: 准备测试数据 ──
         var driverId = Guid.NewGuid();
         var vehicleId = Guid.NewGuid();
         var fineId = Guid.NewGuid();
+        var outboxMessageId = Guid.NewGuid();
         var reviewerUserId = Guid.NewGuid();
         var driverUserId = Guid.NewGuid();
         var fineRef = $"INF-{Guid.NewGuid():N}"[..12].ToUpperInvariant();
@@ -228,7 +271,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
                 OccurredAt = _dateTimeProvider.UtcNow
             };
 
-            var outboxMsg = new OutboxMessage(Guid.NewGuid(), "FineAccepted", JsonSerializer.Serialize(payload), _dateTimeProvider.UtcNow);
+            var outboxMsg = new OutboxMessage(outboxMessageId, "FineAccepted", JsonSerializer.Serialize(payload), _dateTimeProvider.UtcNow);
 
             await db.Users.AddAsync(reviewer);
             await db.Users.AddAsync(user);
@@ -236,11 +279,27 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
             await db.Vehicles.AddAsync(vehicle);
             await db.Fines.AddAsync(fine);
             await db.PartnerContacts.AddAsync(partner);
+            // Earlier unhandled events from the shared fixture must not starve this test's event.
+            for (var i = 0; i < unrelatedPendingCount; i++)
+            {
+                var backlogId = Guid.NewGuid();
+                _backlogMessageIds.Add(backlogId);
+                await db.OutboxMessages.AddAsync(new OutboxMessage(
+                    backlogId, "FineAccepted", "{}", _dateTimeProvider.UtcNow.AddDays(-1)));
+            }
+
             await db.OutboxMessages.AddAsync(outboxMsg);
+            if (recoverPending)
+            {
+                await db.EmailLogs.AddAsync(new EmailLog(
+                    Guid.NewGuid(), NotificationTemplateKeys.FineAcceptedNotice, insurerEmail,
+                    fineRef, "Test", $"CORR-FINE-{fineRef}"));
+            }
             await db.SaveChangesAsync();
         }
 
-        using var factory = new NotificationTestWebApplicationFactory(_fixture, _dateTimeProvider);
+        var gate = new DeliveryGate(insurerEmail.Value);
+        using var factory = CreateFactory(gate);
 
         // ── Step 2: 两个独立 Scope / DbContext 并发执行 Task.WhenAll ──
         using var scope1 = factory.Services.CreateScope();
@@ -249,10 +308,29 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
         var outboxService1 = scope1.ServiceProvider.GetRequiredService<INotificationOutboxService>();
         var outboxService2 = scope2.ServiceProvider.GetRequiredService<INotificationOutboxService>();
 
-        var task1 = Task.Run(() => outboxService1.ProcessPendingOutboxMessagesAsync());
-        var task2 = Task.Run(() => outboxService2.ProcessPendingOutboxMessagesAsync());
+        if (recoverPending)
+        {
+            // Reused scopes may retain Pending entities while another worker completes delivery.
+            foreach (var scope in new[] { scope1, scope2 })
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.OutboxMessages.SingleAsync(m => m.Id == outboxMessageId);
+                await db.EmailLogs.SingleAsync(log => log.CorrelationId == $"CORR-FINE-{fineRef}" && log.ToAddress == insurerEmail);
+            }
+        }
 
-        await Task.WhenAll(task1, task2);
+        var task1 = outboxService1.ProcessOutboxMessageAsync(outboxMessageId);
+        Task<bool>? task2 = null;
+        try
+        {
+            await gate.FirstDeliveryEntered.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            task2 = outboxService2.ProcessOutboxMessageAsync(outboxMessageId);
+        }
+        finally
+        {
+            gate.Release.TrySetResult();
+        }
+        await Task.WhenAll(task1, task2!);
 
         // ── Step 3: 断言数据库中该 CorrelationId + ToAddress 恰好只有 1 条 Sent 记录 ──
         var correlationId = $"CORR-FINE-{fineRef}";
@@ -262,7 +340,7 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
                 .Where(el => el.CorrelationId == correlationId && el.ToAddress == insurerEmail)
                 .ToListAsync();
 
-            logs.Should().HaveCount(1, "并发执行下通过数据库唯一索引 + 23505 捕获确保恰好只有 1 条日志");
+            logs.Should().HaveCount(1, "并发执行下数据库投递锁与唯一索引确保恰好只有 1 条日志");
             logs[0].Status.Should().Be("Sent");
             logs[0].Attempts.Should().Be(1);
         }
@@ -275,4 +353,109 @@ public sealed class F11_4_EmailDeduplicationIntegrationTests : IAsyncLifetime, I
 
         targetMessages.Should().HaveCount(1, "真并发下 Mailpit 实际收到的邮件必须恰好为 1 封，绝无重复投递");
     }
+
+    [Fact]
+    public async Task PartialDelivery_PreservesFailureBackoff_AndConcurrentRetriesSendOnce()
+    {
+        var fineId = Guid.NewGuid();
+        var fineRef = fineId.ToString("N")[..8].ToUpperInvariant();
+        var correlationId = $"CORR-FINE-{fineRef}";
+        var firstRecipient = TestDataFactory.CreateEmailAddress("partial_success");
+        var retryRecipient = TestDataFactory.CreateEmailAddress("partial_retry");
+        var outboxId = Guid.NewGuid();
+        _backlogMessageIds.Add(outboxId);
+        await using (var db = _fixture.CreateDbContext())
+        {
+            db.PartnerContacts.AddRange(
+                new PartnerContact(Guid.NewGuid(), PartnerKind.Insurer, "First recipient", firstRecipient, true),
+                new PartnerContact(Guid.NewGuid(), PartnerKind.Insurer, "Retry recipient", retryRecipient, true));
+            db.OutboxMessages.Add(new OutboxMessage(
+                outboxId, "FineAccepted", JsonSerializer.Serialize(new { FineId = fineId }), _dateTimeProvider.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        var gate = new DeliveryGate(retryRecipient.Value) { FailuresRemaining = 1 };
+        using var factory = CreateFactory(gate);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<INotificationOutboxService>();
+            (await service.ProcessOutboxMessageAsync(outboxId)).Should().BeTrue("both delivery outcomes were persisted and the retry queue owns the failure");
+            (await service.ProcessOutboxMessageAsync(outboxId)).Should().BeFalse("outbox scans must not bypass retry backoff");
+            (await service.ProcessRetryQueueAsync()).Should().Be(0, "the first backoff interval has not elapsed");
+        }
+        await using (var db = _fixture.CreateDbContext())
+        {
+            var failed = await db.EmailLogs.SingleAsync(log => log.CorrelationId == correlationId && log.ToAddress == retryRecipient);
+            failed.Status.Should().Be("Failed");
+            failed.Attempts.Should().Be(1);
+            failed.LastError.Should().Be("Synthetic SMTP failure");
+        }
+
+        _dateTimeProvider.AdvanceTime(TimeSpan.FromSeconds(65));
+        using var scope1 = factory.Services.CreateScope();
+        using var scope2 = factory.Services.CreateScope();
+        foreach (var scope in new[] { scope1, scope2 })
+        {
+            // Each worker can have observed Failed before the other worker commits Sent.
+            await scope.ServiceProvider.GetRequiredService<AppDbContext>().EmailLogs
+                .SingleAsync(log => log.CorrelationId == correlationId && log.ToAddress == retryRecipient);
+        }
+        var service1 = scope1.ServiceProvider.GetRequiredService<INotificationOutboxService>();
+        var service2 = scope2.ServiceProvider.GetRequiredService<INotificationOutboxService>();
+        var retry1 = service1.ProcessRetryQueueAsync();
+        Task<int>? retry2 = null;
+        try
+        {
+            await gate.FirstDeliveryEntered.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            retry2 = service2.ProcessRetryQueueAsync();
+        }
+        finally
+        {
+            gate.Release.TrySetResult();
+        }
+        (await Task.WhenAll(retry1, retry2!)).Sum().Should().Be(1);
+        (await service1.ProcessOutboxMessageAsync(outboxId)).Should().BeFalse("the event was already handed off to durable delivery logs");
+
+        await using (var db = _fixture.CreateDbContext())
+        {
+            var logs = await db.EmailLogs.Where(log => log.CorrelationId == correlationId &&
+                (log.ToAddress == firstRecipient || log.ToAddress == retryRecipient)).ToListAsync();
+            logs.Should().HaveCount(2);
+            logs.Should().OnlyContain(log => log.Status == "Sent");
+            logs.Single(log => log.ToAddress == firstRecipient).Attempts.Should().Be(1);
+            logs.Single(log => log.ToAddress == retryRecipient).Attempts.Should().Be(2);
+        }
+        var messages = await _mailpit.GetAllMessagesAsync();
+        foreach (var recipient in new[] { firstRecipient, retryRecipient })
+        {
+            messages.Count(message => message.Subject.Contains(fineRef, StringComparison.OrdinalIgnoreCase) &&
+                message.To.Any(to => to.Address == recipient.Value)).Should().Be(1);
+        }
+    }
+
+    private sealed class DeliveryGate(string recipient)
+    {
+        public string Recipient { get; } = recipient;
+        public int FailuresRemaining;
+        public TaskCompletionSource FirstDeliveryEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    private sealed class GatedEmailSender(IEmailSender inner, DeliveryGate gate) : IEmailSender
+    {
+        public async Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
+        {
+            if (to == gate.Recipient)
+            {
+                if (Interlocked.Decrement(ref gate.FailuresRemaining) >= 0)
+                {
+                    throw new InvalidOperationException("Synthetic SMTP failure");
+                }
+                gate.FirstDeliveryEntered.TrySetResult();
+                await gate.Release.Task.WaitAsync(TimeSpan.FromSeconds(15), cancellationToken);
+            }
+            await inner.SendEmailAsync(to, subject, body, cancellationToken);
+        }
+    }
+
 }

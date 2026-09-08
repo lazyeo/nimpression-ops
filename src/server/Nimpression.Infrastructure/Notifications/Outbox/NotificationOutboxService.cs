@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Nimpression.Application.Common.Abstractions;
 using Nimpression.Application.Features.Notifications.Abstractions;
 using Nimpression.Application.Features.Notifications.Common;
-using Nimpression.Application.Features.Vehicles.Common;
 using Nimpression.Domain.Entities.Communications;
 using Nimpression.Domain.Entities.Standalone;
 using Nimpression.Domain.Enums;
@@ -21,7 +20,7 @@ namespace Nimpression.Infrastructure.Notifications.Outbox;
 /// 核心职责：<br/>
 /// 1. <b>领域事件消费</b>：消费 ServiceThresholdReached、FineAccepted、IncidentReported 领域事件，并转化为邮件通知。<br/>
 /// 2. <b>精准收件人与状态过滤</b>：按伙伴类型匹配，停用（Active=false）的伙伴绝不发信。<br/>
-/// 3. <b>原子幂等去重（F11.4）</b>：先写占位后读（Write-First），捕获数据库唯一约束冲突（SqlState 23505），杜绝 TOCTOU 竞态，同一 CorrelationId + ToAddress 重复触发恰好只记录 1 条 Sent 日志与发信。<br/>
+/// 3. <b>原子幂等去重（F11.4）</b>：同一 CorrelationId + ToAddress 通过数据库事务锁串行投递，唯一索引兜底。SMTP 与数据库无法原子提交，进程在 SMTP 成功后崩溃仍可能重复投递。<br/>
 /// 4. <b>阶梯退避重试（F11.3）</b>：失败邮件按 1/5/25 分钟阶梯退避重试至多 3 次。<br/>
 /// 5. <b>绝不静默降级</b>：发送异常必须落库追踪，禁止空 catch。
 /// </para>
@@ -44,7 +43,7 @@ public sealed partial class NotificationOutboxService(
     public async Task<int> ProcessPendingOutboxMessagesAsync(CancellationToken cancellationToken = default)
     {
         var outboxMessages = await dbContext.OutboxMessages
-            .Where(m => RelevantEventTypes.Contains(m.Type) && m.ProcessedAt == null)
+            .Where(m => RelevantEventTypes.Contains(m.Type) && m.NotificationProcessedAt == null)
             .OrderBy(m => m.OccurredAt)
             .Take(50)
             .ToListAsync(cancellationToken);
@@ -57,7 +56,7 @@ public sealed partial class NotificationOutboxService(
             var handled = await ProcessSingleOutboxMessageCoreAsync(msg, cancellationToken);
             if (handled)
             {
-                msg.MarkProcessed(now);
+                msg.MarkNotificationProcessed(now);
                 processedCount++;
             }
         }
@@ -75,7 +74,7 @@ public sealed partial class NotificationOutboxService(
         var message = await dbContext.OutboxMessages
             .FirstOrDefaultAsync(m => m.Id == outboxMessageId, cancellationToken);
 
-        if (message is null || !RelevantEventTypes.Contains(message.Type) || message.ProcessedAt != null)
+        if (message is null || !RelevantEventTypes.Contains(message.Type) || message.NotificationProcessedAt != null)
         {
             return false;
         }
@@ -83,7 +82,7 @@ public sealed partial class NotificationOutboxService(
         var handled = await ProcessSingleOutboxMessageCoreAsync(message, cancellationToken);
         if (handled)
         {
-            message.MarkProcessed(dateTimeProvider.UtcNow);
+            message.MarkNotificationProcessed(dateTimeProvider.UtcNow);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -93,7 +92,7 @@ public sealed partial class NotificationOutboxService(
     public async Task<int> ProcessRetryQueueAsync(CancellationToken cancellationToken = default)
     {
         var now = dateTimeProvider.UtcNow;
-        var failedLogs = await dbContext.EmailLogs
+        var failedLogs = await dbContext.EmailLogs.AsNoTracking()
             .Where(el => el.Status == "Failed" && el.Attempts < 3)
             .OrderBy(el => el.SentAt)
             .Take(50)
@@ -101,8 +100,16 @@ public sealed partial class NotificationOutboxService(
 
         var retryCount = 0;
 
-        foreach (var log in failedLogs)
+        foreach (var candidate in failedLogs)
         {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await AcquireDeliveryLockAsync(candidate.CorrelationId, candidate.ToAddress, cancellationToken);
+            var log = await FindDeliveryLogAsync(candidate.CorrelationId, candidate.ToAddress, cancellationToken);
+            if (log is null || log.Status != "Failed" || log.Attempts >= 3)
+            {
+                continue;
+            }
+
             var backoff = log.Attempts switch
             {
                 1 => TimeSpan.FromMinutes(1),
@@ -133,16 +140,18 @@ public sealed partial class NotificationOutboxService(
                 log.RecordSuccess(now);
                 retryCount++;
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 LogRetryFailed(logger, ex, log.Attempts + 1, log.Id);
                 log.RecordFailure(ex.Message);
             }
-        }
 
-        if (failedLogs.Count > 0)
-        {
             await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
 
         return retryCount;
@@ -340,64 +349,33 @@ public sealed partial class NotificationOutboxService(
         string correlationId,
         CancellationToken cancellationToken)
     {
-        var anySent = false;
         var now = dateTimeProvider.UtcNow;
 
         foreach (var partner in partners)
         {
-            var existingLog = await dbContext.EmailLogs
-                .FirstOrDefaultAsync(el =>
-                    el.CorrelationId == correlationId &&
-                    el.ToAddress == partner.Email,
-                    cancellationToken);
+            // The database lock also covers Pending records and is shared with retry workers.
+            // Keep it until the SMTP outcome is committed; a waiting worker must read fresh state.
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await AcquireDeliveryLockAsync(correlationId, partner.Email, cancellationToken);
+            var emailLog = await FindDeliveryLogAsync(correlationId, partner.Email, cancellationToken);
 
-            if (existingLog is not null && string.Equals(existingLog.Status, "Sent", StringComparison.OrdinalIgnoreCase))
+            if (emailLog?.Status == "Sent")
             {
                 LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
                 continue;
             }
 
-            EmailLog emailLog;
-            if (existingLog is null)
+            if (emailLog?.Status == "Failed")
             {
-                // 先写占位（Pending 记录），借助 (CorrelationId, ToAddress) 数据库唯一索引保证原子性排他
-                var newLog = new EmailLog(
-                    Guid.NewGuid(),
-                    templateKey,
-                    partner.Email,
-                    subject,
-                    triggeredBy,
-                    correlationId);
-
-                try
-                {
-                    await dbContext.EmailLogs.AddAsync(newLog, cancellationToken);
-                    await dbContext.SaveChangesAsync(cancellationToken);
-                    emailLog = newLog;
-                }
-                catch (Exception ex) when (DbExceptionHelper.IsUniqueConstraintViolation(ex))
-                {
-                    // 撞了唯一索引（SqlState 23505）：说明并发竞争者已率先插入
-                    dbContext.Entry(newLog).State = EntityState.Detached;
-
-                    var winnerLog = await dbContext.EmailLogs
-                        .FirstOrDefaultAsync(el =>
-                            el.CorrelationId == correlationId &&
-                            el.ToAddress == partner.Email,
-                            cancellationToken);
-
-                    if (winnerLog is not null && (string.Equals(winnerLog.Status, "Sent", StringComparison.OrdinalIgnoreCase) || winnerLog.Attempts > 0))
-                    {
-                        LogEmailAlreadySent(logger, correlationId, partner.Email.Value);
-                        continue;
-                    }
-
-                    emailLog = winnerLog ?? newLog;
-                }
+                // The durable retry log owns this delivery, including exhausted retries.
+                continue;
             }
-            else
+
+            if (emailLog is null)
             {
-                emailLog = existingLog;
+                emailLog = new EmailLog(
+                    Guid.NewGuid(), templateKey, partner.Email, subject, triggeredBy, correlationId);
+                await dbContext.EmailLogs.AddAsync(emailLog, cancellationToken);
             }
 
             LastAttemptTimestamps[emailLog.Id] = now;
@@ -406,18 +384,41 @@ public sealed partial class NotificationOutboxService(
             {
                 await emailSender.SendEmailAsync(partner.Email.Value, subject, body, cancellationToken);
                 emailLog.RecordSuccess(now);
-                await dbContext.SaveChangesAsync(cancellationToken);
-                anySent = true;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 LogDeliveryFailed(logger, ex, correlationId, partner.Email.Value);
                 emailLog.RecordFailure(ex.Message);
-                await dbContext.SaveChangesAsync(cancellationToken);
             }
+
+            // Persistence failures must propagate, not be mistaken for SMTP failures.
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
 
-        return anySent;
+        // Every recipient now has a durable outcome; retries are owned by EmailLogs.
+        return true;
+    }
+
+    private Task<int> AcquireDeliveryLockAsync(string correlationId, EmailAddress recipient, CancellationToken cancellationToken) =>
+        dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT pg_advisory_xact_lock(hashtext({correlationId}), hashtext({recipient.Value}))",
+            cancellationToken);
+
+    private async Task<EmailLog?> FindDeliveryLogAsync(string correlationId, EmailAddress recipient, CancellationToken cancellationToken)
+    {
+        var log = await dbContext.EmailLogs.FirstOrDefaultAsync(
+            el => el.CorrelationId == correlationId && el.ToAddress == recipient, cancellationToken);
+        if (log is not null)
+        {
+            // A reused scope can already track an older Failed/Pending version of this row.
+            await dbContext.Entry(log).ReloadAsync(cancellationToken);
+        }
+        return log;
     }
 
     private static Guid? TryGetGuid(JsonElement root, params string[] propertyNames)

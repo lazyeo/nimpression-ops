@@ -12,6 +12,7 @@ public sealed class OutboxMessage : Entity
     public string PayloadJson { get; private set; } = string.Empty;
     public DateTimeOffset OccurredAt { get; private set; }
     public DateTimeOffset? ProcessedAt { get; private set; }
+    public DateTimeOffset? NotificationProcessedAt { get; private set; }
     public int Attempts { get; private set; }
     public string? Error { get; private set; }
 
@@ -45,6 +46,11 @@ public sealed class OutboxMessage : Entity
     {
         ProcessedAt = processedAt;
         Error = null;
+    }
+
+    public void MarkNotificationProcessed(DateTimeOffset processedAt)
+    {
+        NotificationProcessedAt = processedAt;
     }
 
     public void RecordAttempt(string? error = null)

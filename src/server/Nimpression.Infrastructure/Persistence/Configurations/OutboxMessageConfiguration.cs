@@ -27,6 +27,9 @@ public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage
         builder.Property(om => om.ProcessedAt)
             .HasColumnType("timestamptz");
 
+        builder.Property(om => om.NotificationProcessedAt)
+            .HasColumnType("timestamptz");
+
         builder.Property(om => om.Attempts)
             .IsRequired();
 
@@ -34,5 +37,6 @@ public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage
             .HasColumnType("text");
 
         builder.HasIndex(om => new { om.ProcessedAt, om.OccurredAt });
+        builder.HasIndex(om => new { om.NotificationProcessedAt, om.OccurredAt });
     }
 }
