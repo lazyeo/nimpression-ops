@@ -867,8 +867,8 @@
               </tr>
               <tr>
                 <td><strong>Notifications &amp; Integrations</strong></td>
-                <td><span class="badge badge-danger">Admin Only</span></td>
-                <td>Email outbox health inspection, automated compliance expiry scanners, email template management, and external dispatch partner contacts.</td>
+                <td><span class="badge badge-info">Admin</span> <span class="badge badge-neutral">Dispatcher</span></td>
+                <td>Operational notification tools (outbox log inspection, failed email resend, compliance expiry scan trigger, partner contacts maintenance); Email template authoring and modification is <span class="badge badge-danger" style="font-size: 0.75rem;">Admin Only</span>.</td>
               </tr>
               <tr>
                 <td><strong>Audit &amp; Privacy (DSR)</strong></td>
@@ -1233,7 +1233,7 @@
                     <li>Finalise &amp; permanently lock payroll periods (irreversible financial action)</li>
                     <li>Execute Privacy Act DSR data deletions and pseudonymisation</li>
                     <li>Inspect PostgreSQL append-only audit trail and entity JSON diffs</li>
-                    <li>Configure email templates, partner contacts, and compliance scan rules</li>
+                    <li>Author &amp; configure email templates, partner contacts, and compliance scan rules</li>
                   </ul>
                 </td>
                 <td>
@@ -1258,10 +1258,11 @@
                     <li>Timesheet approvals: review clock-in/out timestamps and approve shifts</li>
                     <li>Log on-road safety incidents and record traffic infringements</li>
                     <li>Post company broadcast news and announcements</li>
+                    <li>Notifications &amp; Integrations operational tools: maintain partner contacts, inspect email logs, resend failed emails, view templates, and trigger compliance scans</li>
                   </ul>
                 </td>
                 <td>
-                  <span class="badge badge-danger">Prohibited</span> CANNOT finalise or lock payroll periods; CANNOT execute DSR deletions; CANNOT view system audit log or email outbox credentials.
+                  <span class="badge badge-danger">Prohibited</span> CANNOT create or edit email templates; CANNOT finalise or lock payroll periods; CANNOT execute DSR deletions; CANNOT view system audit log.
                 </td>
               </tr>
               <tr>
