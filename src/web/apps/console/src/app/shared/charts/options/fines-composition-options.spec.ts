@@ -80,6 +80,64 @@ describe('FinesCompositionOptions Pure Function (F14.4)', () => {
       expect(speeding?.itemStyle.borderWidth).toBe(3);
       expect(parking?.itemStyle.borderWidth).toBe(1.5);
     });
+
+    it('should separate donut center and legend horizontally on desktop to prevent overlap', () => {
+      const longCategoryData: FineCategoryStat[] = [
+        {
+          category: 'Synthetic QA record only; no real infringement or payment obligation.',
+          count: 5,
+          totalAmount: 1500,
+          percentage: 100,
+        },
+      ];
+
+      const opt = buildFineDoughnutOptions({ data: longCategoryData, isMobile: false });
+      const series = (opt.series as Array<{ center: [string, string]; radius: [string, string] }>)[0];
+      const legend = opt.legend as {
+        type: string;
+        left: string;
+        orient: string;
+        tooltip: { show: boolean };
+        formatter: (name: string) => string;
+      };
+
+      expect(series.center).toEqual(['30%', '50%']);
+      expect(legend.left).toBe('58%');
+      expect(legend.type).toBe('scroll');
+      expect(legend.orient).toBe('vertical');
+      expect(legend.tooltip?.show).toBe(true);
+
+      const formattedLabel = legend.formatter(longCategoryData[0].category);
+      // Max 18 characters on desktop with ellipsis
+      expect(formattedLabel).toBe('Synthetic QA rec... ($1,500)');
+    });
+
+    it('should arrange donut and legend vertically on mobile', () => {
+      const longCategoryData: FineCategoryStat[] = [
+        {
+          category: 'Synthetic QA record only; no real infringement or payment obligation.',
+          count: 5,
+          totalAmount: 1500,
+          percentage: 100,
+        },
+      ];
+
+      const opt = buildFineDoughnutOptions({ data: longCategoryData, isMobile: true });
+      const series = (opt.series as Array<{ center: [string, string]; radius: [string, string] }>)[0];
+      const legend = opt.legend as {
+        type: string;
+        orient: string;
+        formatter: (name: string) => string;
+      };
+
+      expect(series.center).toEqual(['50%', '38%']);
+      expect(legend.orient).toBe('horizontal');
+      expect(legend.type).toBe('scroll');
+
+      const formattedLabel = legend.formatter(longCategoryData[0].category);
+      // Max 14 characters on mobile with ellipsis
+      expect(formattedLabel).toBe('Synthetic QA... ($1,500)');
+    });
   });
 
   describe('Linked Ranking Bar Chart Options', () => {

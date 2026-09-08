@@ -110,6 +110,8 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
     };
   });
 
+  const maxLegendNameLength = isMobile ? 14 : 18;
+
   const option: EChartsOption = {
     backgroundColor: 'transparent',
     tooltip: {
@@ -139,23 +141,34 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
       },
     },
     legend: {
+      type: 'scroll',
       orient: isMobile ? 'horizontal' : 'vertical',
+      left: isMobile ? 'center' : '58%',
       right: isMobile ? 'center' : 8,
       top: isMobile ? 'bottom' : 'middle',
+      bottom: isMobile ? 0 : 'auto',
+      tooltip: {
+        show: true,
+      },
       textStyle: {
         color: theme.textColor,
         fontSize: isMobile ? 11 : 12,
+        overflow: 'truncate',
       },
       formatter: (name: string) => {
         const item = data.find((d) => d.category === name);
-        return item ? `${name} ($${item.totalAmount})` : name;
+        const truncated =
+          name.length > maxLegendNameLength
+            ? `${name.substring(0, maxLegendNameLength - 2)}...`
+            : name;
+        return item ? `${truncated} ($${item.totalAmount.toLocaleString()})` : truncated;
       },
     },
     title: {
       text: `$${grandTotalAmount.toLocaleString()}`,
       subtext: totalCountSubtitleText.replace('{count}', String(grandTotalCount)),
-      left: isMobile ? 'center' : '38%',
-      top: isMobile ? '38%' : '44%',
+      left: isMobile ? '50%' : '30%',
+      top: isMobile ? '34%' : '44%',
       textAlign: 'center',
       textStyle: {
         color: theme.textColor,
@@ -171,8 +184,8 @@ export function buildFineDoughnutOptions(params: FinesDoughnutOptionsParams): EC
       {
         name: doughnutSeriesNameText,
         type: 'pie',
-        radius: isMobile ? ['38%', '62%'] : ['44%', '70%'],
-        center: isMobile ? ['50%', '42%'] : ['40%', '50%'],
+        radius: isMobile ? ['36%', '58%'] : ['42%', '66%'],
+        center: isMobile ? ['50%', '38%'] : ['30%', '50%'],
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 4,
