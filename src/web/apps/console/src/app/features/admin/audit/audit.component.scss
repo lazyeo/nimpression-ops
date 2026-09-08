@@ -133,7 +133,9 @@
   background: var(--bg-surface);
   color: var(--text-primary);
   width: 100%;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
   &:focus {
     outline: none;
@@ -173,10 +175,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
-
-  @media (max-width: 1024px) {
-    min-width: max-content;
-  }
 
   th {
     padding: var(--space-10) var(--space-12);
@@ -249,7 +247,10 @@
   align-items: center;
   gap: var(--space-4);
   white-space: nowrap;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -291,7 +292,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 
   &:hover:not(:disabled) {
     background: var(--bg-subtle);
@@ -321,7 +324,10 @@
   justify-content: center;
   gap: var(--space-6);
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -364,9 +370,15 @@
   text-align: center;
   gap: var(--space-12);
 
-  .empty-icon { color: var(--text-muted); }
-  .error-icon { color: var(--color-danger); }
-  .warning-icon { color: var(--color-warning); }
+  .empty-icon {
+    color: var(--text-muted);
+  }
+  .error-icon {
+    color: var(--color-danger);
+  }
+  .warning-icon {
+    color: var(--color-warning);
+  }
 
   .state-title {
     margin: 0;
@@ -393,7 +405,12 @@
 
 .skeleton-row {
   height: 36px;
-  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-muted) 50%, var(--bg-subtle) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--bg-muted) 50%,
+    var(--bg-subtle) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-md);
@@ -405,6 +422,10 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
