@@ -219,8 +219,10 @@
   },
   "LANG": {
     "LABEL": "语言设置",
-    "EN_NZ": "English (NZ)",
-    "ZH_CN": "中文 (简体)"
+    "EN_NZ": "EN",
+    "ZH_CN": "中文",
+    "EN_NZ_FULL": "English (NZ)",
+    "ZH_CN_FULL": "中文 (简体)"
   },
   "DASHBOARD": {
     "TITLE": "运营管理仪表盘",

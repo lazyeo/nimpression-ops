@@ -9,6 +9,7 @@
     class="lang-btn"
     [class.active]="currentLang() === 'en-NZ'"
     [attr.aria-pressed]="currentLang() === 'en-NZ'"
+    [attr.aria-label]="'LANG.EN_NZ_FULL' | i18n"
     (click)="selectLanguage('en-NZ')"
   >
     {{ 'LANG.EN_NZ' | i18n }}
@@ -18,6 +19,7 @@
     class="lang-btn"
     [class.active]="currentLang() === 'zh-CN'"
     [attr.aria-pressed]="currentLang() === 'zh-CN'"
+    [attr.aria-label]="'LANG.ZH_CN_FULL' | i18n"
     (click)="selectLanguage('zh-CN')"
   >
     {{ 'LANG.ZH_CN' | i18n }}

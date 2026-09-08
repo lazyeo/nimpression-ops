@@ -32,15 +32,19 @@ describe('LanguageSwitchComponent', () => {
     i18nService.setDictionary('en-NZ', {
       LANG: {
         LABEL: 'Language',
-        EN_NZ: 'English (NZ)',
-        ZH_CN: '\u4e2d\u6587 (\u7b80\u4f53)',
+        EN_NZ: 'EN',
+        ZH_CN: '中文',
+        EN_NZ_FULL: 'English (NZ)',
+        ZH_CN_FULL: '中文 (简体)',
       },
     });
     i18nService.setDictionary('zh-CN', {
       LANG: {
-        LABEL: '\u8bed\u8a00\u8bbe\u7f6e',
-        EN_NZ: 'English (NZ)',
-        ZH_CN: '\u4e2d\u6587 (\u7b80\u4f53)',
+        LABEL: '语言设置',
+        EN_NZ: 'EN',
+        ZH_CN: '中文',
+        EN_NZ_FULL: 'English (NZ)',
+        ZH_CN_FULL: '中文 (简体)',
       },
     });
 
@@ -60,8 +64,10 @@ describe('LanguageSwitchComponent', () => {
 
     const buttons = el.querySelectorAll('button.lang-btn');
     expect(buttons.length).toBe(2);
-    expect(buttons[0].textContent?.trim()).toContain('English (NZ)');
-    expect(buttons[1].textContent?.trim()).toContain('\u4e2d\u6587 (\u7b80\u4f53)');
+    expect(buttons[0].textContent?.trim()).toBe('EN');
+    expect(buttons[0].getAttribute('aria-label')).toBe('English (NZ)');
+    expect(buttons[1].textContent?.trim()).toBe('中文');
+    expect(buttons[1].getAttribute('aria-label')).toBe('中文 (简体)');
   });
 
   it('sets active state and aria-pressed on currently selected language', () => {

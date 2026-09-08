@@ -208,10 +208,13 @@
 
 .data-table {
   width: 100%;
-  min-width: max-content;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
   text-align: left;
+
+  @media (max-width: 1024px) {
+    min-width: max-content;
+  }
 
   th {
     background: var(--bg-subtle);
