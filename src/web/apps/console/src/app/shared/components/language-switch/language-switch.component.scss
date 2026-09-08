@@ -68,3 +68,18 @@
     border-radius: var(--radius-sm);
   }
 }
+
+@media (max-width: 600px) {
+  .lang-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--space-8) var(--space-12);
+  }
+
+  .lang-switch-group.size-sm .lang-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--space-8) var(--space-10);
+  }
+}
+
