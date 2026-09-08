@@ -510,7 +510,7 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
     }
 
     [Fact]
-    public async Task NotificationsApi_DispatcherToken_AttemptingGetPartnerContacts_Returns403Forbidden()
+    public async Task NotificationsApi_DispatcherToken_CanAccessPartnerContacts_Returns200OK()
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
@@ -533,11 +533,11 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query partner contacts");
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Dispatchers are authorized to query partner contacts");
     }
 
     [Fact]
-    public async Task NotificationsApi_DispatcherToken_AttemptingCreatePartnerContact_Returns403Forbidden()
+    public async Task NotificationsApi_DispatcherToken_CanCreatePartnerContact_Returns201Created()
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
@@ -564,11 +564,11 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot create partner contacts");
+        response.StatusCode.Should().Be(HttpStatusCode.Created, "Dispatchers are authorized to create partner contacts");
     }
 
     [Fact]
-    public async Task NotificationsApi_DispatcherToken_AttemptingGetTemplates_Returns403Forbidden()
+    public async Task NotificationsApi_DispatcherToken_CanAccessTemplates_Returns200OK()
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
@@ -591,11 +591,49 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query email templates");
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Dispatchers are authorized to query email templates");
     }
 
     [Fact]
-    public async Task NotificationsApi_DispatcherToken_AttemptingGetLogs_Returns403Forbidden()
+    public async Task NotificationsApi_DispatcherToken_AttemptingCreateTemplate_Returns403Forbidden()
+    {
+        // Arrange
+        await using var context = _fixture.CreateDbContext();
+        var dispatcherUser = new User(
+            Guid.NewGuid(),
+            TestDataFactory.CreateEmailAddress("disp_notif_cr_tmpl"),
+            "hash",
+            UserRole.Dispatcher,
+            "Fleet Dispatcher",
+            "en-NZ");
+        await context.Users.AddAsync(dispatcherUser);
+        await context.SaveChangesAsync();
+
+        var (dispatcherToken, _) = _tokenGenerator.GenerateAccessToken(dispatcherUser.Id, dispatcherUser.Email.Value, UserRole.Dispatcher.ToString(), "Fleet Dispatcher");
+
+        var createRequest = new CreateEmailTemplateRequest(
+            $"TEST_KEY_{Guid.NewGuid():N}",
+            "Subject EN",
+            "Subject ZH",
+            "Body EN",
+            "Body ZH",
+            true);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/notifications/templates")
+        {
+            Content = JsonContent.Create(createRequest)
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dispatcherToken);
+
+        // Act
+        var response = await _client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot create or modify email templates");
+    }
+
+    [Fact]
+    public async Task NotificationsApi_DispatcherToken_CanAccessLogs_Returns200OK()
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
@@ -618,11 +656,11 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot query email logs");
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Dispatchers are authorized to query email logs");
     }
 
     [Fact]
-    public async Task NotificationsApi_DispatcherToken_AttemptingResendEmailLog_Returns403Forbidden()
+    public async Task NotificationsApi_DispatcherToken_CanResendEmailLog_ReturnsAuthorizedResult()
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
@@ -645,11 +683,12 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot trigger email log resend");
+        response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden, "Dispatchers are authorized to trigger email resend");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound, "Log with random id does not exist");
     }
 
     [Fact]
-    public async Task NotificationsApi_DispatcherToken_AttemptingTriggerComplianceScan_Returns403Forbidden()
+    public async Task NotificationsApi_DispatcherToken_CanTriggerComplianceScan_Returns200OK()
     {
         // Arrange
         await using var context = _fixture.CreateDbContext();
@@ -672,7 +711,7 @@ public sealed class EndpointAuthorizationRegressionTests : IAsyncLifetime, IDisp
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "Dispatchers cannot trigger compliance scan");
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "Dispatchers are authorized to trigger compliance scan");
     }
 
     [Fact]

@@ -204,7 +204,7 @@ describe('AdminShellComponent', () => {
     expect(component.navItems.some((item) => item.path === '/admin/notifications')).toBe(true);
   });
 
-  it('hides notifications nav item for Dispatcher role', () => {
+  it('displays notifications nav item for Dispatcher role', () => {
     authService.setSession({
       accessToken: 'dev-only-insecure-disp-token',
       expiresIn: 3600,
@@ -219,6 +219,6 @@ describe('AdminShellComponent', () => {
     });
     fixture.detectChanges();
 
-    expect(component.navItems.some((item) => item.path === '/admin/notifications')).toBe(false);
+    expect(component.navItems.some((item) => item.path === '/admin/notifications')).toBe(true);
   });
 });
