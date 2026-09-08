@@ -390,8 +390,17 @@
 @media (max-width: 600px) {
   .status-badge,
   .warning-badge {
-    min-height: 44px;
-    padding: var(--space-8) var(--space-12);
+    position: relative;
+    min-height: 32px;
+    min-width: 44px;
+    padding: var(--space-4) var(--space-8);
+
+    // Extend the hit area without stretching the header badge.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -7px -1px;
+    }
   }
 
   .btn-retry,

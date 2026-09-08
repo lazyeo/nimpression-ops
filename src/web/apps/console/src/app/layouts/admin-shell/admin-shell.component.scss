@@ -387,15 +387,29 @@
   }
 }
 
+@media (max-width: 600px) {
+  .header-btn.btn-logout {
+    position: relative;
+    height: 32px;
+    min-height: 32px;
+    min-width: 44px;
+    padding-block: var(--space-4);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -7px -1px;
+    }
+  }
+}
+
 @media (max-width: 480px) {
   .logout-text {
     display: none;
   }
 
   .header-btn.btn-logout {
-    padding: var(--space-8);
-    min-width: 44px;
-    min-height: 44px;
+    padding-inline: var(--space-8);
   }
 
   .view-title {

@@ -156,60 +156,62 @@
                     </td>
                     <td [attr.data-label]="'PAYROLL.COL_PAID_AT' | i18n">{{ period.paidAt ? (period.paidAt | localeDate: 'short') : '-' }}</td>
                     <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
-                      <!-- Action: View payslips -->
-                      <button
-                        type="button"
-                        class="table-btn btn-view-payslips"
-                        (click)="viewPeriodPayslips(period)"
-                        [title]="'PAYROLL.ACTION_VIEW_PAYSLIPS' | i18n"
-                      >
-                        <nim-icon name="payslips" [size]="14" />
-                        <span>{{ 'PAYROLL.ACTION_VIEW_PAYSLIPS' | i18n }}</span>
-                      </button>
-
-                      <!-- Action: Calculate/Recalculate (if not finalised) -->
-                      @if (period.status === 'Open' || period.status === 'Calculating') {
+                      <div class="row-actions">
+                        <!-- Action: View payslips -->
                         <button
                           type="button"
-                          class="table-btn btn-calc"
-                          (click)="openCalculateModal(period)"
-                          [title]="'PAYROLL.ACTION_CALCULATE' | i18n"
+                          class="table-btn btn-view-payslips"
+                          (click)="viewPeriodPayslips(period)"
+                          [title]="'PAYROLL.ACTION_VIEW_PAYSLIPS' | i18n"
                         >
-                          <nim-icon name="target" [size]="14" />
-                          <span>{{
-                            (period.status === 'Calculating'
-                              ? 'PAYROLL.ACTION_RECALCULATE'
-                              : 'PAYROLL.ACTION_CALCULATE'
-                            ) | i18n
-                          }}</span>
+                          <nim-icon name="payslips" [size]="14" />
+                          <span>{{ 'PAYROLL.ACTION_VIEW_PAYSLIPS' | i18n }}</span>
                         </button>
-                      }
 
-                      <!-- Action: Finalise (if calculated) -->
-                      @if (period.status === 'Calculating') {
-                        <button
-                          type="button"
-                          class="table-btn btn-finalise"
-                          (click)="openFinaliseModal(period)"
-                          [title]="'PAYROLL.ACTION_FINALISE' | i18n"
-                        >
-                          <nim-icon name="check-circle" [size]="14" />
-                          <span>{{ 'PAYROLL.ACTION_FINALISE' | i18n }}</span>
-                        </button>
-                      }
+                        <!-- Action: Calculate/Recalculate (if not finalised) -->
+                        @if (period.status === 'Open' || period.status === 'Calculating') {
+                          <button
+                            type="button"
+                            class="table-btn btn-calc"
+                            (click)="openCalculateModal(period)"
+                            [title]="'PAYROLL.ACTION_CALCULATE' | i18n"
+                          >
+                            <nim-icon name="target" [size]="14" />
+                            <span>{{
+                              (period.status === 'Calculating'
+                                ? 'PAYROLL.ACTION_RECALCULATE'
+                                : 'PAYROLL.ACTION_CALCULATE'
+                              ) | i18n
+                            }}</span>
+                          </button>
+                        }
 
-                      <!-- Action: Void (if calculated or finalised) -->
-                      @if (period.status === 'Calculating' || period.status === 'Finalised') {
-                        <button
-                          type="button"
-                          class="table-btn btn-void"
-                          (click)="openVoidModal(period)"
-                          [title]="'PAYROLL.ACTION_VOID' | i18n"
-                        >
-                          <nim-icon name="alert-triangle" [size]="14" />
-                          <span>{{ 'PAYROLL.ACTION_VOID' | i18n }}</span>
-                        </button>
-                      }
+                        <!-- Action: Finalise (if calculated) -->
+                        @if (period.status === 'Calculating') {
+                          <button
+                            type="button"
+                            class="table-btn btn-finalise"
+                            (click)="openFinaliseModal(period)"
+                            [title]="'PAYROLL.ACTION_FINALISE' | i18n"
+                          >
+                            <nim-icon name="check-circle" [size]="14" />
+                            <span>{{ 'PAYROLL.ACTION_FINALISE' | i18n }}</span>
+                          </button>
+                        }
+
+                        <!-- Action: Void (if calculated or finalised) -->
+                        @if (period.status === 'Calculating' || period.status === 'Finalised') {
+                          <button
+                            type="button"
+                            class="table-btn btn-void"
+                            (click)="openVoidModal(period)"
+                            [title]="'PAYROLL.ACTION_VOID' | i18n"
+                          >
+                            <nim-icon name="alert-triangle" [size]="14" />
+                            <span>{{ 'PAYROLL.ACTION_VOID' | i18n }}</span>
+                          </button>
+                        }
+                      </div>
                     </td>
                   </tr>
                 }

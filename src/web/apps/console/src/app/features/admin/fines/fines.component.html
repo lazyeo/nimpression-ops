@@ -201,71 +201,73 @@
                     </nim-status-badge>
                   </td>
                   <td class="actions-cell" [attr.data-label]="'FINES.COL_ACTIONS' | i18n">
-                    <!-- View Details Action -->
-                    <button
-                      type="button"
-                      class="table-btn btn-view"
-                      (click)="viewDetails(fine)"
-                      [title]="'FINES.ACTION_VIEW' | i18n"
-                    >
-                      <nim-icon name="tasks" [size]="14" />
-                      <span>{{ 'FINES.ACTION_VIEW' | i18n }}</span>
-                    </button>
+                    <div class="row-actions">
+                      <!-- View Details Action -->
+                      <button
+                        type="button"
+                        class="table-btn btn-view"
+                        (click)="viewDetails(fine)"
+                        [title]="'FINES.ACTION_VIEW' | i18n"
+                      >
+                        <nim-icon name="tasks" [size]="14" />
+                        <span>{{ 'FINES.ACTION_VIEW' | i18n }}</span>
+                      </button>
 
-                    <!-- Start Review Action (when Submitted) -->
-                    @if (fine.status === 'Submitted') {
-                      <button
-                        type="button"
-                        class="table-btn btn-review-start"
-                        (click)="startReview(fine)"
-                        [title]="'FINES.ACTION_START_REVIEW' | i18n"
-                      >
-                        <nim-icon name="play" [size]="14" />
-                        <span>{{ 'FINES.ACTION_START_REVIEW' | i18n }}</span>
-                      </button>
-                    }
+                      <!-- Start Review Action (when Submitted) -->
+                      @if (fine.status === 'Submitted') {
+                        <button
+                          type="button"
+                          class="table-btn btn-review-start"
+                          (click)="startReview(fine)"
+                          [title]="'FINES.ACTION_START_REVIEW' | i18n"
+                        >
+                          <nim-icon name="play" [size]="14" />
+                          <span>{{ 'FINES.ACTION_START_REVIEW' | i18n }}</span>
+                        </button>
+                      }
 
-                    <!-- Decisions (when UnderReview) -->
-                    @if (fine.status === 'UnderReview') {
-                      <button
-                        type="button"
-                        class="table-btn btn-accept"
-                        (click)="openReviewModal(fine, 'accept')"
-                        [title]="'FINES.ACTION_ACCEPT' | i18n"
-                      >
-                        <nim-icon name="check-circle" [size]="14" />
-                        <span>{{ 'FINES.ACTION_ACCEPT' | i18n }}</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="table-btn btn-dispute"
-                        (click)="openReviewModal(fine, 'dispute')"
-                        [title]="'FINES.ACTION_DISPUTE' | i18n"
-                      >
-                        <nim-icon name="alert-triangle" [size]="14" />
-                        <span>{{ 'FINES.ACTION_DISPUTE' | i18n }}</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="table-btn btn-waive"
-                        (click)="openReviewModal(fine, 'waive')"
-                        [title]="'FINES.ACTION_WAIVE' | i18n"
-                      >
-                        <nim-icon name="coffee" [size]="14" />
-                        <span>{{ 'FINES.ACTION_WAIVE' | i18n }}</span>
-                      </button>
-                    }
+                      <!-- Decisions (when UnderReview) -->
+                      @if (fine.status === 'UnderReview') {
+                        <button
+                          type="button"
+                          class="table-btn btn-accept"
+                          (click)="openReviewModal(fine, 'accept')"
+                          [title]="'FINES.ACTION_ACCEPT' | i18n"
+                        >
+                          <nim-icon name="check-circle" [size]="14" />
+                          <span>{{ 'FINES.ACTION_ACCEPT' | i18n }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="table-btn btn-dispute"
+                          (click)="openReviewModal(fine, 'dispute')"
+                          [title]="'FINES.ACTION_DISPUTE' | i18n"
+                        >
+                          <nim-icon name="alert-triangle" [size]="14" />
+                          <span>{{ 'FINES.ACTION_DISPUTE' | i18n }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="table-btn btn-waive"
+                          (click)="openReviewModal(fine, 'waive')"
+                          [title]="'FINES.ACTION_WAIVE' | i18n"
+                        >
+                          <nim-icon name="coffee" [size]="14" />
+                          <span>{{ 'FINES.ACTION_WAIVE' | i18n }}</span>
+                        </button>
+                      }
 
-                    <!-- Terminal State Tag (Accepted/Disputed/Waived) -->
-                    @if (
-                      fine.status === 'Accepted' ||
-                      fine.status === 'Disputed' ||
-                      fine.status === 'Waived'
-                    ) {
-                      <span class="terminal-badge" [title]="'FINES.TERMINAL_STATE_BADGE' | i18n">
-                        <nim-icon name="target" [size]="12" />
-                      </span>
-                    }
+                      <!-- Terminal State Tag (Accepted/Disputed/Waived) -->
+                      @if (
+                        fine.status === 'Accepted' ||
+                        fine.status === 'Disputed' ||
+                        fine.status === 'Waived'
+                      ) {
+                        <span class="terminal-badge" [title]="'FINES.TERMINAL_STATE_BADGE' | i18n">
+                          <nim-icon name="target" [size]="12" />
+                        </span>
+                      }
+                    </div>
                   </td>
                 </tr>
               }
