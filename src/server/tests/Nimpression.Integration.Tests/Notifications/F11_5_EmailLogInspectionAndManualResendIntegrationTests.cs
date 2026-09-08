@@ -125,19 +125,38 @@ public sealed class F11_5_EmailLogInspectionAndManualResendIntegrationTests : IA
     }
 
     [Fact]
-    public async Task EmailLogs_WhenDispatcherAttemptsQueryOrResend_ReturnsForbidden()
+    public async Task EmailLogs_WhenDispatcherPerformsQueryAndResend_Succeeds()
     {
-        // 1. Dispatcher attempting GET list
+        var logId = Guid.NewGuid();
+        var toEmail = TestDataFactory.CreateEmailAddress("disp_resend_tgt");
+        var correlationId = $"CORR-DISP-RESEND-{Guid.NewGuid():N}";
+
+        using (var db = _fixture.CreateDbContext())
+        {
+            var failedLog = new EmailLog(
+                logId,
+                "INCIDENT_NOTIFICATION",
+                toEmail,
+                "Incident Notification - Moderate - DISP_TEST",
+                "IncidentService",
+                correlationId);
+
+            failedLog.RecordFailure("SMTP Service Unavailable");
+            await db.EmailLogs.AddAsync(failedLog);
+            await db.SaveChangesAsync();
+        }
+
+        // 1. Dispatcher GET list
         var listResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, "/api/notifications/logs");
-        listResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        listResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // 2. Dispatcher attempting GET by ID
-        var getResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/logs/{Guid.NewGuid()}");
-        getResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        // 2. Dispatcher GET by ID
+        var getResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/logs/{logId}");
+        getResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // 3. Dispatcher attempting POST resend
-        var resendResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Post, $"/api/notifications/logs/{Guid.NewGuid()}/resend");
-        resendResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        // 3. Dispatcher POST resend
+        var resendResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Post, $"/api/notifications/logs/{logId}/resend");
+        resendResp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(string token, HttpMethod method, string url, object? body = null)

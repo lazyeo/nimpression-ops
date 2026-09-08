@@ -141,29 +141,33 @@ public sealed class F11_1_PartnerContactIntegrationTests : IAsyncLifetime, IDisp
     }
 
     [Fact]
-    public async Task PartnerContacts_WhenDispatcherAttemptsReadOrWrite_ReturnsForbidden()
+    public async Task PartnerContacts_WhenDispatcherPerformsOperations_Succeeds()
     {
-        // 1. Dispatcher attempting GET list
+        // 1. Dispatcher GET list
         var listResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, "/api/notifications/partner-contacts");
-        listResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        listResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // 2. Dispatcher attempting GET by ID
-        var getResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/partner-contacts/{Guid.NewGuid()}");
-        getResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-
-        // 3. Dispatcher attempting POST create
-        var createReq = new CreatePartnerContactRequest(PartnerKind.Insurer, "Disp Corp", TestDataFactory.CreateEmail("disp_attempt"), true);
+        // 2. Dispatcher POST create
+        var companyName = $"DispPartner_{Guid.NewGuid():N}";
+        var createReq = new CreatePartnerContactRequest(PartnerKind.Insurer, companyName, TestDataFactory.CreateEmail("disp_partner"), true);
         var createResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Post, "/api/notifications/partner-contacts", createReq);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        // 4. Dispatcher attempting PUT update
-        var updateReq = new UpdatePartnerContactRequest(PartnerKind.Insurer, "Disp Corp Updated", TestDataFactory.CreateEmail("disp_upd"));
-        var updateResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Put, $"/api/notifications/partner-contacts/{Guid.NewGuid()}", updateReq);
-        updateResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var createdId = await createResp.Content.ReadFromJsonAsync<Guid>();
+        createdId.Should().NotBeEmpty();
 
-        // 5. Dispatcher attempting DELETE
-        var delResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Delete, $"/api/notifications/partner-contacts/{Guid.NewGuid()}");
-        delResp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        // 3. Dispatcher GET by ID
+        var getResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Get, $"/api/notifications/partner-contacts/{createdId}");
+        getResp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 4. Dispatcher PUT update
+        var updateReq = new UpdatePartnerContactRequest(PartnerKind.Maintenance, $"Updated_{companyName}", TestDataFactory.CreateEmail("disp_upd_partner"));
+        var updateResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Put, $"/api/notifications/partner-contacts/{createdId}", updateReq);
+        updateResp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // 5. Dispatcher DELETE
+        var delResp = await SendAuthorizedAsync(_dispatcherToken, HttpMethod.Delete, $"/api/notifications/partner-contacts/{createdId}");
+        delResp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
