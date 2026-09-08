@@ -53,6 +53,16 @@
     line-height: var(--line-height-none);
     color: var(--text-muted);
     cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+
+    &:hover {
+      color: var(--text-primary);
+    }
   }
 
   .icon-hidden {
@@ -354,3 +364,26 @@
     color: var(--text-secondary);
   }
 }
+
+@media (max-width: 600px) {
+  .raw-json-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-btn {
+    min-height: 44px;
+  }
+
+  .btn-toggle-unchanged {
+    min-height: 44px;
+  }
+
+  .modal-footer .btn {
+    min-height: 44px;
+  }
+}
+
