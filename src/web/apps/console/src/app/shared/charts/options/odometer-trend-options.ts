@@ -5,6 +5,7 @@ import {
   SEMANTIC_COLORS,
   ACCESSIBILITY_MARKERS,
   LIGHT_THEME,
+  getContrastingTextColor,
 } from '../theme/chart-theme';
 
 export interface VehicleOdometerPoint {
@@ -106,10 +107,10 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
             coord: [date, km],
             value: overduePointNameText,
             itemStyle: {
-              color: SEMANTIC_COLORS.danger, // #D55E00
+              color: SEMANTIC_COLORS.danger,
             },
             label: {
-              color: '#FFFFFF',
+              color: getContrastingTextColor(SEMANTIC_COLORS.danger),
               fontSize: 10,
               fontWeight: 'bold',
             },
@@ -134,33 +135,46 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
                 formatter: isMobile
                   ? '{b}'
                   : `${vehicle.rego} (${vehicle.maintenanceThresholdKm} km)`,
-                position: 'insideEndTop' as const,
+                position: 'insideStartTop' as const,
                 color: SEMANTIC_COLORS.danger,
                 fontSize: 10,
+                fontWeight: 'bold' as const,
+                padding: [2, 4],
               },
             },
           ]
         : [];
+
+    const isDue = vehicle.isDueForService;
 
     seriesList.push({
       name: vehicle.rego,
       type: 'line',
       data: linePoints,
       symbol: markerSymbol,
-      symbolSize: isMobile ? 6 : 8,
+      symbolSize: isDue ? (isMobile ? 6 : 7) : (isMobile ? 4 : 5),
       showSymbol: true,
       smooth: false,
+      z: isDue ? 10 : 2,
       itemStyle: {
         color,
       },
       lineStyle: {
         color,
-        width: 2,
+        width: isDue ? 2.5 : 1.5,
         type: lineStyleType as 'solid' | 'dashed' | 'dotted',
+        opacity: isDue ? 1.0 : 0.75,
+      },
+      emphasis: {
+        focus: 'series',
+        lineStyle: {
+          width: 3,
+          opacity: 1.0,
+        },
       },
       markPoint: {
         symbol: 'pin',
-        symbolSize: isMobile ? 32 : 40,
+        symbolSize: isMobile ? 30 : 36,
         data: markPointData,
       },
       markLine:
@@ -202,7 +216,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
           html += `
             <div style="display:flex;justify-content:space-between;align-items:center;margin:3px 0;gap:16px;">
               <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${it.color};margin-right:6px;"></span>${rego}</span>
-              <span style="font-weight:600;">${km.toLocaleString()} km ${isOver ? `<span style="color:#D55E00;font-size:11px;">(${dueForServiceText})</span>` : ''}</span>
+              <span style="font-weight:600;">${km.toLocaleString()} km ${isOver ? `<span style="color:${SEMANTIC_COLORS.danger};font-size:11px;">(${dueForServiceText})</span>` : ''}</span>
             </div>
           `;
         });

@@ -77,16 +77,41 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
     expect(v2Series.markPoint.data).toHaveLength(0);
   });
 
-  it('should include maintenance threshold markLine for vehicle due for service', () => {
+  it('should include maintenance threshold markLine for vehicle due for service with insideStartTop label', () => {
     const opt = buildOdometerTrendOptions({ data: mockData });
     const series = opt.series as Array<{
       name: string;
-      markLine?: { data: Array<{ name: string; yAxis: number }> };
+      markLine?: {
+        data: Array<{
+          name: string;
+          yAxis: number;
+          label?: { position: string; color: string; fontWeight: string };
+        }>;
+      };
+      emphasis?: { focus: string; lineStyle?: { width: number } };
+      lineStyle?: { width: number; opacity: number };
     }>;
 
     const v1Series = series[0];
     expect(v1Series.markLine).toBeDefined();
     expect(v1Series.markLine?.data[0].yAxis).toBe(50000);
+    // Label is placed at the start/left (insideStartTop) to prevent overlapping with the right-end overdue markPoint
+    expect(v1Series.markLine?.data[0].label?.position).toBe('insideStartTop');
+    expect(v1Series.markLine?.data[0].label?.color).toBe(SEMANTIC_COLORS.danger);
+    expect(v1Series.markLine?.data[0].label?.fontWeight).toBe('bold');
+
+    // Due-for-service series has emphasized line width (2.5) and opacity (1.0)
+    expect(v1Series.lineStyle?.width).toBe(2.5);
+    expect(v1Series.lineStyle?.opacity).toBe(1.0);
+
+    // Non-due series has standard line width (1.5) and muted opacity (0.75)
+    const v2Series = series[1];
+    expect(v2Series.lineStyle?.width).toBe(1.5);
+    expect(v2Series.lineStyle?.opacity).toBe(0.75);
+
+    // All series have emphasis focus on series for interactive highlighting
+    expect(v1Series.emphasis?.focus).toBe('series');
+    expect(v2Series.emphasis?.focus).toBe('series');
   });
 
   it('should format tooltip with mileage and maintenance alert tag', () => {
