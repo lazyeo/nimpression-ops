@@ -130,7 +130,8 @@
 }
 
 .form-control {
-  height: 40px;
+  height: 44px;
+  min-height: 44px;
   padding: 0 var(--space-14);
   border: 1px solid var(--color-gray-700);
   border-radius: var(--radius-lg);
@@ -182,3 +183,10 @@
 }
 
 .page-title-row .page-title { color: var(--color-gray-100); }
+
+@media (max-width: 480px) {
+  .compliance-box {
+    grid-template-columns: 1fr;
+  }
+}
+

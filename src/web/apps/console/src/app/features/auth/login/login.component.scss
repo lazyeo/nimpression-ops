@@ -232,4 +232,24 @@
   .form-title {
     font-size: var(--font-size-xl);
   }
+
+  .form-control {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .btn-submit {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .checkbox-label {
+    min-height: 44px;
+  }
+
+  .manual-entry-row .manual-link {
+    min-height: 44px;
+    padding: var(--space-8) var(--space-12);
+  }
 }
+
