@@ -30,8 +30,9 @@ public static class NotificationInfrastructureExtensions
         services.AddScoped<INotificationOutboxService, NotificationOutboxService>();
         services.AddScoped<IComplianceExpiryScanner, ComplianceExpiryScanner>();
 
-        // 后台消费 Worker
+        // 后台消费 Worker 与定时调度服务
         services.AddHostedService<NotificationOutboxProcessorBackgroundService>();
+        services.AddHostedService<ComplianceExpiryScanSchedulerBackgroundService>();
 
         return services;
     }
