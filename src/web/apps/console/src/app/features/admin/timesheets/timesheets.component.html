@@ -201,14 +201,14 @@
             <tbody>
               @for (shift of timesheets(); track shift.id) {
                 <tr>
-                  <td class="driver-cell">
+                  <td class="driver-cell" [attr.data-label]="'TIMESHEETS.COL_DRIVER' | i18n">
                     <span class="driver-name">{{
                       shift.driverName || 'Driver ' + shift.driverId.substring(0, 8)
                     }}</span>
                   </td>
-                  <td>{{ shift.attributedDate || (shift.clockInAt | localeDate: 'short') }}</td>
-                  <td>{{ shift.clockInAt | localeDate: 'short' }}</td>
-                  <td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_DATE' | i18n">{{ shift.attributedDate || (shift.clockInAt | localeDate: 'short') }}</td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_CLOCK_IN' | i18n">{{ shift.clockInAt | localeDate: 'short' }}</td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_CLOCK_OUT' | i18n">
                     @if (shift.clockOutAt) {
                       {{ shift.clockOutAt | localeDate: 'short' }}
                     } @else {
@@ -217,8 +217,8 @@
                       }}</nim-status-badge>
                     }
                   </td>
-                  <td>{{ shift.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
-                  <td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_BREAK' | i18n">{{ shift.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_DURATION' | i18n">
                     @if (shift.rawDurationHours !== null && shift.rawDurationHours !== undefined) {
                       {{ shift.rawDurationHours | localeNumber: 1 : 2
                       }}{{ 'COMMON.UNITS.H' | i18n }}
@@ -226,7 +226,7 @@
                       -
                     }
                   </td>
-                  <td class="payable-cell">
+                  <td class="payable-cell" [attr.data-label]="'TIMESHEETS.COL_PAYABLE' | i18n">
                     @if (shift.payableHours !== null && shift.payableHours !== undefined) {
                       <strong
                         >{{ shift.payableHours | localeNumber: 1 : 2
@@ -236,7 +236,7 @@
                       -
                     }
                   </td>
-                  <td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_STATUS' | i18n">
                     <nim-status-badge
                       [status]="shift.status"
                       [variant]="shift.adminCorrectionReason ? 'warning' : undefined"
@@ -248,7 +248,7 @@
                       }
                     </nim-status-badge>
                   </td>
-                  <td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_LOCATION' | i18n">
                     @if (shift.locationUnavailable) {
                       <nim-status-badge
                         status="NoGps"
@@ -269,7 +269,7 @@
                       </nim-status-badge>
                     }
                   </td>
-                  <td class="actions-cell">
+                  <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                     <button
                       type="button"
                       class="icon-action-btn view-btn"

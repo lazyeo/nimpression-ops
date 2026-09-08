@@ -142,20 +142,20 @@
               <tbody>
                 @for (period of payPeriods(); track period.id) {
                   <tr>
-                    <td class="period-cell">
+                    <td class="period-cell" [attr.data-label]="'PAYROLL.COL_PERIOD_RANGE' | i18n">
                       <strong>{{ period.startsOn }} ~ {{ period.endsOn }}</strong>
                     </td>
-                    <td>
+                    <td [attr.data-label]="'PAYROLL.COL_STATUS' | i18n">
                       <nim-status-badge [status]="period.status">
                         {{ 'PAYROLL.STATUS_' + toScreamingSnake(period.status) | i18n }}
                       </nim-status-badge>
                     </td>
-                    <td>{{ period.payslipCount }}</td>
-                    <td>
+                    <td [attr.data-label]="'PAYROLL.COL_PAYSLIP_COUNT' | i18n">{{ period.payslipCount }}</td>
+                    <td [attr.data-label]="'PAYROLL.COL_FINALISED_AT' | i18n">
                       {{ period.finalisedAt ? (period.finalisedAt | localeDate: 'short') : '-' }}
                     </td>
-                    <td>{{ period.paidAt ? (period.paidAt | localeDate: 'short') : '-' }}</td>
-                    <td class="actions-cell">
+                    <td [attr.data-label]="'PAYROLL.COL_PAID_AT' | i18n">{{ period.paidAt ? (period.paidAt | localeDate: 'short') : '-' }}</td>
+                    <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                       <!-- Action: View payslips -->
                       <button
                         type="button"
@@ -328,16 +328,16 @@
               <tbody>
                 @for (slip of periodPayslips(); track slip.id) {
                   <tr>
-                    <td class="driver-cell">
+                    <td class="driver-cell" [attr.data-label]="'PAYROLL.COL_DRIVER_NAME' | i18n">
                       <span class="driver-name">{{
                         slip.driverName || 'Driver ' + slip.driverId.substring(0, 8)
                       }}</span>
                     </td>
-                    <td>{{ slip.employeeNo || '-' }}</td>
-                    <td class="gross-cell">
+                    <td [attr.data-label]="'PAYROLL.COL_EMPLOYEE_NO' | i18n">{{ slip.employeeNo || '-' }}</td>
+                    <td class="gross-cell" [attr.data-label]="'PAYROLL.COL_GROSS_PAY' | i18n">
                       <strong>{{ slip.grossPay | localeCurrency: slip.currency }}</strong>
                     </td>
-                    <td>
+                    <td [attr.data-label]="'PAYROLL.COL_BASIS_USED' | i18n">
                       <nim-status-badge
                         [status]="slip.basisUsed"
                         [variant]="slip.basisUsed === 'Hourly' ? 'info' : 'purple'"
@@ -350,7 +350,7 @@
                         }}
                       </nim-status-badge>
                     </td>
-                    <td>
+                    <td [attr.data-label]="'PAYROLL.COL_MIN_WAGE_TOPUP' | i18n">
                       @if (slip.minimumWageTopUp) {
                         <nim-status-badge
                           status="TopUpApplied"
@@ -366,7 +366,7 @@
                         </nim-status-badge>
                       }
                     </td>
-                    <td class="actions-cell">
+                    <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                       <button
                         type="button"
                         class="table-btn btn-primary"
@@ -664,17 +664,17 @@
                       <tbody>
                         @for (s of activePayslip()?.shiftDetails; track s.shiftId) {
                           <tr>
-                            <td>{{ s.attributedDate }}</td>
-                            <td>{{ s.clockInAt | localeDate: 'short' }}</td>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.COL_DATE' | i18n">{{ s.attributedDate }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_CLOCK_IN' | i18n">{{ s.clockInAt | localeDate: 'short' }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_CLOCK_OUT' | i18n">
                               {{
                                 s.clockOutAt
                                   ? (s.clockOutAt | localeDate: 'short')
                                   : ('TIMESHEETS.STATUS_ACTIVE' | i18n)
                               }}
                             </td>
-                            <td>{{ s.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_BREAK' | i18n">{{ s.breakMinutes }}{{ 'COMMON.UNITS.M' | i18n }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_PAYABLE_HOURS' | i18n">
                               <strong
                                 >{{ s.payableHours | localeNumber: 1 : 2
                                 }}{{ 'COMMON.UNITS.H' | i18n }}</strong
@@ -705,12 +705,12 @@
                       <tbody>
                         @for (t of activePayslip()?.tripDetails; track t.jobTaskId) {
                           <tr>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_TASK_REF' | i18n">
                               <strong>{{ t.ref }}</strong>
                             </td>
-                            <td>{{ t.title }}</td>
-                            <td>{{ t.completedAt | localeDate: 'short' }}</td>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_TITLE' | i18n">{{ t.title }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_COMPLETED_AT' | i18n">{{ t.completedAt | localeDate: 'short' }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_DISTANCE' | i18n">
                               {{
                                 t.effectiveDistanceKm
                                   ? (t.effectiveDistanceKm | localeNumber: 1 : 1) +
@@ -744,13 +744,13 @@
                       <tbody>
                         @for (l of activePayslip()?.lines; track l.id) {
                           <tr>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_BASIS' | i18n">
                               <span class="basis-mini-badge">{{ l.basis }}</span>
                             </td>
-                            <td>{{ l.kind }}</td>
-                            <td>{{ l.description }}</td>
-                            <td>{{ l.rate | localeCurrency: l.currency }}</td>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_KIND' | i18n">{{ l.kind }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_DESCRIPTION' | i18n">{{ l.description }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_RATE' | i18n">{{ l.rate | localeCurrency: l.currency }}</td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_QTY' | i18n">
                               {{
                                 l.hours
                                   ? (l.hours | localeNumber: 1 : 2) + ('COMMON.UNITS.H' | i18n)
@@ -760,7 +760,7 @@
                                     : l.qty || '-'
                               }}
                             </td>
-                            <td>
+                            <td [attr.data-label]="'PAYROLL.TABLE_AMOUNT' | i18n">
                               <strong>{{ l.amount | localeCurrency: l.currency }}</strong>
                             </td>
                           </tr>
@@ -811,16 +811,16 @@
                   <tbody>
                     @for (f of activePayslip()?.fines; track f.fineId) {
                       <tr>
-                        <td>
+                        <td [attr.data-label]="'PAYROLL.TABLE_NOTICE_REF' | i18n">
                           <strong>{{ f.reference }}</strong>
                         </td>
-                        <td>{{ f.authority }}</td>
-                        <td>{{ f.issuedOn }}</td>
-                        <td class="fine-amount-cell">
+                        <td [attr.data-label]="'PAYROLL.TABLE_AUTHORITY' | i18n">{{ f.authority }}</td>
+                        <td [attr.data-label]="'PAYROLL.TABLE_ISSUED_ON' | i18n">{{ f.issuedOn }}</td>
+                        <td class="fine-amount-cell" [attr.data-label]="'PAYROLL.TABLE_AMOUNT' | i18n">
                           {{ f.amount | localeCurrency: f.currency }}
                         </td>
-                        <td><nim-status-badge [status]="f.status" /></td>
-                        <td>{{ f.reason }}</td>
+                        <td [attr.data-label]="'PAYROLL.TABLE_STATUS' | i18n"><nim-status-badge [status]="f.status" /></td>
+                        <td [attr.data-label]="'PAYROLL.TABLE_REASON' | i18n">{{ f.reason }}</td>
                       </tr>
                     }
                   </tbody>
