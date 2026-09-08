@@ -229,8 +229,10 @@
   background: var(--color-warning-subtle);
 }
 
-.avatar-cell {
-  width: 44px;
+@media (min-width: 768px) {
+  .avatar-cell {
+    width: 44px;
+  }
 }
 .driver-avatar {
   width: 32px;

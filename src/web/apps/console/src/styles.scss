@@ -460,16 +460,15 @@ optgroup {
           &.cell-actions,
           &.th-actions,
           &:last-child:has(.row-actions, .action-btn, .table-btn, .action-buttons, .icon-action-btn, .btn-row-action, .btn-remove, .btn-retry) {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: stretch;
             width: 100%;
             padding-top: var(--space-12);
             padding-bottom: var(--space-4);
             margin-top: var(--space-4);
             border-top: 1px solid var(--border-subtle);
             border-bottom: none;
-            flex-wrap: wrap;
             gap: var(--space-8);
             text-align: right;
 
@@ -477,13 +476,22 @@ optgroup {
               display: none;
             }
 
-            .row-actions,
-            .action-buttons {
-              display: flex;
-              flex-wrap: wrap;
+            > .row-actions,
+            > .action-buttons {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              grid-column: 1 / -1;
+              align-items: stretch;
               gap: var(--space-8);
-              justify-content: flex-end;
               width: 100%;
+              min-width: 0;
+            }
+
+            // Keep a single action or an unpaired final action aligned to both edges.
+            > :last-child:nth-child(odd),
+            > .row-actions > :last-child:nth-child(odd),
+            > .action-buttons > :last-child:nth-child(odd) {
+              grid-column: 1 / -1;
             }
 
             .action-btn,
@@ -494,12 +502,26 @@ optgroup {
             .btn-retry {
               min-height: 44px;
               min-width: 44px;
+              width: 100%;
+              height: auto;
+              margin: 0;
               display: inline-flex;
               align-items: center;
               justify-content: center;
               padding: var(--space-8) var(--space-14);
               font-size: var(--font-size-sm);
               box-sizing: border-box;
+              white-space: normal;
+              overflow-wrap: anywhere;
+              text-align: center;
+
+              > span {
+                min-width: 0;
+              }
+
+              > nim-icon {
+                flex-shrink: 0;
+              }
             }
           }
         }
