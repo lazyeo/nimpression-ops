@@ -1,5 +1,5 @@
 <div class="offline-status-container">
-  <!-- 3-State Indicator Badge -->
+  <!-- Connectivity & Sync State Indicator Badge -->
   @switch (effectiveStatus()) {
     @case ('offline') {
       <button
@@ -16,6 +16,20 @@
       </button>
     }
     @case ('reconnecting') {
+      <button
+        type="button"
+        class="status-badge badge-reconnecting"
+        (click)="openQueueModal()"
+        [title]="statusLabelKey() | i18n"
+      >
+        <span class="spinner-icon"></span>
+        <span class="status-label">{{ statusLabelKey() | i18n }}</span>
+        @if (offlineQueue.pendingCount() > 0) {
+          <span class="badge-count">{{ offlineQueue.pendingCount() }}</span>
+        }
+      </button>
+    }
+    @case ('syncing') {
       <button
         type="button"
         class="status-badge badge-syncing"

@@ -23,7 +23,7 @@ export class OfflineStatusComponent {
    * Effective synchronization & connectivity state.
    * Honest visible presentation ensuring disconnected realtime push state is never masked as synced.
    */
-  readonly effectiveStatus = computed<'synced' | 'reconnecting' | 'offline'>(() => {
+  readonly effectiveStatus = computed<'synced' | 'syncing' | 'reconnecting' | 'offline'>(() => {
     // 1. If physical browser network offline or offlineQueue explicitly marked offline
     if (!this.offlineQueue.isOnline() || this.offlineQueue.syncStatus() === 'offline') {
       return 'offline';
@@ -34,7 +34,7 @@ export class OfflineStatusComponent {
       return 'offline';
     }
 
-    // 3. If either offline queue is replaying or realtime is connecting/reconnecting
+    // 3. If either offline queue is reconnecting or realtime is connecting/reconnecting
     if (
       this.offlineQueue.syncStatus() === 'reconnecting' ||
       this.realtime.connectionState() === 'reconnecting' ||
@@ -43,7 +43,12 @@ export class OfflineStatusComponent {
       return 'reconnecting';
     }
 
-    // 4. Fully synced & connected
+    // 4. If offline queue is syncing (normal online replay)
+    if (this.offlineQueue.syncStatus() === 'syncing') {
+      return 'syncing';
+    }
+
+    // 5. Fully synced & connected
     return 'synced';
   });
 
@@ -56,10 +61,10 @@ export class OfflineStatusComponent {
       return 'OFFLINE.STATUS_DISCONNECTED';
     }
     if (status === 'reconnecting') {
-      if (this.offlineQueue.syncStatus() === 'reconnecting') {
-        return 'OFFLINE.STATUS_SYNCING';
-      }
       return 'OFFLINE.STATUS_RECONNECTING';
+    }
+    if (status === 'syncing') {
+      return 'OFFLINE.STATUS_SYNCING';
     }
     return 'OFFLINE.STATUS_SYNCED';
   });
