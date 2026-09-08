@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  effect,
   HostListener,
   inject,
   OnInit,
@@ -78,6 +79,18 @@ export class AdminShellComponent implements OnInit {
   }
 
   constructor() {
+    effect(() => {
+      if (this.sidebarOpen()) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+
+    this.destroyRef.onDestroy(() => {
+      document.body.style.overflow = '';
+    });
+
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),

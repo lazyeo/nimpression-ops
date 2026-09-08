@@ -222,3 +222,22 @@
     cursor: not-allowed;
   }
 }
+
+@media (max-width: 600px) {
+  .overview-card,
+  .action-card {
+    padding: var(--space-16);
+  }
+
+  .action-controls {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+}
+

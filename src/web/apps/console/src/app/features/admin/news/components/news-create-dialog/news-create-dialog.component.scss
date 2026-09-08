@@ -57,7 +57,9 @@
   line-height: var(--line-height-none);
   color: var(--text-muted);
   cursor: pointer;
-  padding: var(--space-4) var(--space-8);
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -250,3 +252,19 @@
     }
   }
 }
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+
+  .checkbox-group {
+    padding-top: 0;
+  }
+
+  .modal-footer .btn {
+    min-height: 44px;
+  }
+}
+

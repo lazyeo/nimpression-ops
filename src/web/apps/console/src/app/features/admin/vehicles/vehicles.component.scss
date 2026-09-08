@@ -527,6 +527,12 @@
   cursor: pointer;
   color: var(--text-muted);
   line-height: var(--line-height-none);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
 
   &:hover {
     color: var(--text-primary);
@@ -661,3 +667,28 @@
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
 }
+
+@media (max-width: 600px) {
+  .form-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: span 1;
+  }
+
+  .page-btn {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dialog-footer .btn-primary,
+  .dialog-footer .btn-secondary {
+    min-height: 44px;
+  }
+}
+

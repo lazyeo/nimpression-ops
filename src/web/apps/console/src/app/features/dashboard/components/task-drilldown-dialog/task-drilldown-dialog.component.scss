@@ -73,7 +73,12 @@
     font-size: var(--font-size-xl);
     color: var(--text-muted);
     cursor: pointer;
-    padding: var(--space-6);
+    padding: 0;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--radius-md);
     line-height: 1;
     transition: all var(--transition-fast);
@@ -231,3 +236,26 @@
     }
   }
 }
+
+@media (max-width: 600px) {
+  .dialog-card {
+    max-height: 90vh;
+  }
+
+  .dialog-header {
+    padding: var(--space-12) var(--space-16);
+  }
+
+  .dialog-body {
+    padding: var(--space-12) var(--space-16);
+  }
+
+  .dialog-footer {
+    padding: var(--space-12) var(--space-16);
+
+    .btn-primary {
+      min-height: 44px;
+    }
+  }
+}
+

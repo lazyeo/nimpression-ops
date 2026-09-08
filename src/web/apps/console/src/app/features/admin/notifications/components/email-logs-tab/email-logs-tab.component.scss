@@ -319,8 +319,10 @@
 }
 
 .btn-page {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid var(--border-strong);
   background: var(--bg-surface);
   border-radius: var(--radius-md);
@@ -400,6 +402,16 @@
     line-height: var(--line-height-none);
     color: var(--text-muted);
     cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+
+    &:hover {
+      color: var(--text-primary);
+    }
   }
 
   .icon-hidden {
@@ -637,3 +649,33 @@
     background-position: -200% 0;
   }
 }
+
+@media (max-width: 600px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-select,
+  .filter-input {
+    min-height: 44px;
+  }
+
+  .filter-actions .btn {
+    min-height: 44px;
+  }
+
+  .modal-footer .btn {
+    min-height: 44px;
+  }
+
+  .filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filter-search-group {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+

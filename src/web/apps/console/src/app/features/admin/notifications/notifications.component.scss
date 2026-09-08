@@ -102,3 +102,11 @@
   display: flex;
   flex-direction: column;
 }
+
+@media (max-width: 600px) {
+  .nav-tab-btn {
+    min-height: 44px;
+    padding: var(--space-8) var(--space-12);
+  }
+}
+

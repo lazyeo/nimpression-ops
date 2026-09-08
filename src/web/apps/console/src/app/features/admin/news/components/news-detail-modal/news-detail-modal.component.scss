@@ -53,6 +53,16 @@
     line-height: var(--line-height-none);
     color: var(--text-muted);
     cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+
+    &:hover {
+      color: var(--text-primary);
+    }
   }
 
   .icon-hidden {
@@ -350,3 +360,31 @@
     }
   }
 }
+
+@media (max-width: 600px) {
+  .stats-metrics-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+
+  .unread-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+
+  .unread-search-input {
+    width: 100%;
+  }
+
+  .lang-switcher-bar .lang-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .modal-footer .btn {
+    min-height: 44px;
+  }
+}
+
