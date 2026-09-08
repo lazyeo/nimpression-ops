@@ -212,14 +212,20 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
     legend: {
       data: data.map((v) => v.rego),
       top: 8,
-      type: data.length > 6 ? 'scroll' : 'plain',
+      left: 'center',
+      type: 'plain',
+      itemGap: isMobile ? 8 : 12,
+      itemWidth: isMobile ? 12 : 16,
+      itemHeight: 10,
       textStyle: {
         color: theme.textColor,
-        fontSize: isMobile ? 11 : 12,
+        fontSize: isMobile ? 10 : 11,
       },
     },
     grid: {
-      top: isMobile ? 56 : 64,
+      top: isMobile
+        ? Math.max(48, 20 + Math.ceil(data.length / 4) * 22)
+        : Math.max(56, 24 + Math.ceil(data.length / 6) * 26),
       left: isMobile ? 36 : 56,
       right: isMobile ? 16 : 40,
       bottom: isMobile ? 60 : 48,

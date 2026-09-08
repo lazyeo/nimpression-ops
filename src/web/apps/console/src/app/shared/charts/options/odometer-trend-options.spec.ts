@@ -108,4 +108,47 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
     expect(formatted).toContain('50,200 km');
     expect(formatted).toContain('(Due for Service)');
   });
+
+  it('R1: should use plain multi-line legend for 11 vehicles and dynamically allocate top headroom', () => {
+    const fleet11: VehicleOdometerSeriesData[] = Array.from({ length: 11 }, (_, i) => ({
+      vehicleId: `v-${i + 1}`,
+      rego: `NZ-10${i}`,
+      serviceIntervalKm: 10000,
+      lastServiceOdometerKm: 40000,
+      maintenanceThresholdKm: 50000,
+      isDueForService: i === 0,
+      readings: [
+        { date: '2026-08-01', odometerKm: 45000 + i * 500 },
+        { date: '2026-08-30', odometerKm: 48000 + i * 500 },
+      ],
+    }));
+
+    const desktopOpt = buildOdometerTrendOptions({ data: fleet11, isMobile: false });
+    const mobileOpt = buildOdometerTrendOptions({ data: fleet11, isMobile: true });
+
+    const desktopLegend = desktopOpt.legend as {
+      type: string;
+      data: string[];
+      top: number;
+    };
+    const desktopGrid = desktopOpt.grid as { top: number };
+    const mobileGrid = mobileOpt.grid as { top: number };
+
+    // Legend must be plain (not scroll) to allow wrapping and full visibility of all 11 vehicles
+    expect(desktopLegend.type).toBe('plain');
+    expect(desktopLegend.data).toHaveLength(11);
+    expect(desktopLegend.top).toBe(8);
+
+    // Dynamic grid.top accommodates 2 rows on desktop (>=76px) and 3 rows on mobile (>=86px)
+    expect(desktopGrid.top).toBeGreaterThanOrEqual(76);
+    expect(mobileGrid.top).toBeGreaterThanOrEqual(86);
+
+    // Verify first vehicle still contains the maintenance threshold markLine
+    const series = desktopOpt.series as Array<{
+      name: string;
+      markLine?: { data: Array<{ name: string; yAxis: number }> };
+    }>;
+    expect(series[0].markLine).toBeDefined();
+    expect(series[0].markLine?.data[0].yAxis).toBe(50000);
+  });
 });
