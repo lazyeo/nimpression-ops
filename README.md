@@ -1,122 +1,226 @@
-# Nimpression Ops — 智能运输与合规管理平台
+# Nimpression Ops — Logistics Fleet & Compliance Operations Platform
 
-> 新西兰本地货运物流、排班考勤、薪资试算、合规追踪与实时派单平台。  
-> 采用 **.NET 10 (Minimal API + Clean Architecture)** 后端与 **Angular 19** 前端构建，深度对齐新西兰《Privacy Act 2020》隐私与数据主权合规标准。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
----
-
-## 🚀 五分钟跑起来（Quickstart）
-
-### 1. 前置环境要求
-在本地运行前，请确保已安装以下开发工具：
-- **Docker 运行环境**：[Colima](https://github.com/abiosoft/colima) 或 Docker Desktop（macOS 推荐 `colima start --cpu 4 --memory 8`）
-- **Task 任务运行器**：[Task](https://taskfile.dev)（`brew install go-task/tap/go-task`）
-- **.NET SDK**：.NET 10.0+（`dotnet --version`）
-- **Node.js & 包管理器**：Node.js 20+ 及 pnpm 9+（`npm install -g pnpm`）
+> Intelligent freight logistics dispatching, attendance timesheets, bi-weekly payroll calculation, compliance tracking, and realtime operational telemetry platform tailored for New Zealand transport operators.  
+> Built with **.NET 10 (Minimal API + Domain-Driven Design / Clean Architecture)** backend and **Angular 22 (Signals + Zoneless + PrimeNG)** frontend, strictly aligned with the **NZ Privacy Act 2020** data sovereignty and privacy principles.
 
 ---
 
-### 2. 极速启动命令（可直接复制粘贴）
+## Overview & Core Capabilities
 
-依次执行以下命令完成环境初始化与服务启动：
+Nimpression Ops delivers full-lifecycle digital operations for small-to-medium transport fleets:
+
+- **State Machine Task Dispatching**: Enforces strict domain lifecycle states (Draft -> Assigned -> Acknowledged -> InProgress -> Completed), offline idempotent replay, cross-territory assignment compliance warnings, and unacknowledged task escalation alerts.
+- **NZ Statutory Dual-Basis Payroll**: Compliant with the *Holidays Act 2003* and *Minimum Wage Act*. Executes automated dual-basis comparison (Hourly vs. Piece-Rate / Per-Trip), awards the higher earnings while preserving complete line-item breakdown of both schemes, and enforces statutory minimum wage top-up protection.
+- **Field-Level Encryption & Data Sovereignty**: Strictly adheres to the 13 Information Privacy Principles (IPPs) of the *NZ Privacy Act 2020*. PII fields are protected by AES-256-GCM authenticated encryption (with `enc:v1:` prefix). Supports irreversible departed driver anonymization (preserving aggregate financial and incident figures), retention cleanup (with default Dry-Run safety evaluation), and full IPP 6 personal data ZIP archive export.
+- **Realtime Telemetry & Cache Invalidation Architecture**: SignalR-powered operational collaboration. Pushed messages act purely as lightweight cache invalidation signals, triggering clients to refetch authoritative state via HTTP and preventing business corruption during transport disconnects.
+- **Bilingual Support & Accessibility**: Full bilingual dictionary coverage (`en-NZ` / `zh-CN`), seamless dark / light theme switching, and strict adherence to WCAG 2.1 AA color contrast standards (body text >= 4.5:1).
+
+---
+
+## System Architecture
+
+```
+                        +-----------------------------------------+
+                        |      Client Applications (Web / PWA)    |
+                        |   Angular 22 · Signals · Zoneless · CSS |
+                        +--------------------+--------------------+
+                                             |
+                   HTTP/JSON REST Calls      |  SignalR Push (Invalidation)
+                                             v
+                        +-----------------------------------------+
+                        |       Nimpression.Api (.NET 10)         |
+                        | Minimal API · JWT · Rate Limiter · Auth |
+                        +--------------------+--------------------+
+                                             |
+                                             v
+                        +-----------------------------------------+
+                        |     Nimpression.Application (MediatR)   |
+                        | Commands · Queries · Pipeline Behaviors |
+                        +--------------------+--------------------+
+                                             |
+                                             v
+                        +-----------------------------------------+
+                        |       Nimpression.Domain (Core)         |
+                        | Entities · Aggregates · Value Objects   |
+                        +--------------------+--------------------+
+                                             |
+                                             v
+                        +-----------------------------------------+
+                        |     Nimpression.Infrastructure (EF)     |
+                        | PostgreSQL 16 · MinIO S3 · Mailpit SMTP |
+                        +--------------------+--------------------+
+```
+
+| Layer | Technologies | Key Architectural Patterns & Responsibilities |
+|---|---|---|
+| **Frontend Presentation** | Angular 22 (`^22.1.0`), PrimeNG, ECharts | Zoneless architecture powered by Angular Signals reactive state management. Dual shell layout (Desktop Admin/Dispatcher Shell and Mobile-first Driver PWA Shell). Tested with Vitest. |
+| **API & Gateway** | ASP.NET Core 10 Minimal API | Automatic assembly discovery and mounting via `IEndpointModule`; zero controller overhead; fixed-window IP rate limiting; HttpOnly cookie-based token rotation. |
+| **Application Layer** | MediatR, FluentValidation | CQRS pattern. Pipeline behaviors enforce transactional boundaries (`ICommandMarker`), tamper-evident audit logging (`IAuditableCommand`), and model validation. Result pattern for domain outcomes (no exception-driven flow). |
+| **Domain Core** | Pure C# Domain POCOs | Zero external dependencies. Aggregate roots enforce lifecycle state machines and invariants. Strongly typed value objects (Money, Kilometres, Rego, etc.) encapsulate domain rules. |
+| **Infrastructure** | EF Core 10, PostgreSQL 16 | AES-256-GCM transparent field-level converter. Transactional Outbox pattern guarantees atomicity between database writes and domain event dispatching. Append-only database triggers for audit tables. |
+
+---
+
+## Eleven Build-Time Architectural Guards
+
+The build pipeline (`pnpm build`) enforces **eleven automated architectural guards**. Each guard was forged from a real incident during development and iteration (see `_design/09-gap-analysis.md`), ensuring that policies and architectural boundaries are mechanically validated on every build:
+
+| Guard Script | Verification Scope | Incident Context & Rationale |
+|---|---|---|
+| `check-hardcoded-secrets.mjs` | Scans all `.cs/.ts/.js/.json/.yml/.sh` files for hardcoded production passwords, private keys, JWT secrets, and connection string credentials. | Prevents credential leaks in git history. Mandates environment variables or explicit `dev-only-insecure...` / `// allow-hardcoded: <reason>` annotations. Caught high-severity CVE dependencies and dev credential leakage. |
+| `check-api-contract.mjs` | Statically extracts all frontend `/api/` calls and validates them against the registered backend Minimal API route definitions. | **W18 Incident**: Frontend mock unit tests passed with 100% green status, but frontend called 9 non-existent backend endpoints, resulting in an empty driver app. This guard caught all 9 missing endpoints before fix. |
+| `check-enum-contract.mjs` | Verifies exact naming and value symmetry between C# domain enum members and TypeScript union types / dictionary mappings. | **W11 Incident**: Backend serialized enums as integers while frontend defined string union types, breaking status badges across 11 pages in production. |
+| `check-i18n.mjs` | Verifies complete bidirectional key symmetry between `en-NZ.json` and `zh-CN.json` translation dictionaries. | Prevents missing translation keys from causing blank labels or fallback failures when switching languages. |
+| `check-i18n-keys.mjs` | Statically scans all HTML templates and TypeScript code for referenced i18n keys (including dynamic prefix expansions) against translation dictionaries. | **W31 Incident**: Symmetry checks (Guard 4) had a blind spot — when both dictionaries simultaneously missed 10 keys, the set difference was empty, rendering raw key identifiers to users. This guard closes the loop. |
+| `check-emoji.mjs` | Scans source code, templates, documentation, and configuration to prohibit emoji characters. | **Strict Project Standard**: Emojis render inconsistently across operating systems, pollute screen reader outputs, and conflict with enterprise design systems. Mandates inline SVGs (`currentColor` + `aria-hidden="true"`) or plain text. |
+| `check-design-tokens.mjs` | Validates that all `var(--token)` CSS variable references are declared in `tokens.scss` or `theme.scss`. | Prevents misspelled or dangling CSS custom properties from causing UI layout and style collapse. |
+| `check-hardcoded-colors.mjs` | Scans all `.scss` and `.html` style definitions to prohibit raw `#hex`, `rgb()`, `rgba()`, and `hsl()` color literals. | **W31 Incident**: Developers bypassed design system tokens by hardcoding hex colors across 14 files, undermining theme consistency. This guard mandates token usage, allowing exemptions only via explicit single-line comments. |
+| `check-contrast.mjs` | Parses light and dark mode color token hierarchies and calculates text-to-background contrast ratios using WCAG 2.1 algorithms. | **W21 Incident**: Even with variables, light theme primary button text on primary background achieved only 4.10:1 (failing the WCAG AA body text requirement of 4.5:1). |
+| `check-realtime-wiring.mjs` | Scans list and metric components to verify that all views reflecting realtime data subscribe to corresponding SignalR invalidation signals. | **W19 Incident**: Backend SignalR infrastructure was fully deployed, but 7 frontend views had 0 subscriptions, requiring manual browser refreshes to view new data. |
+| `check-dispatch-lifecycle-events.mjs` | Scans the domain `JobTask` aggregate root to ensure every lifecycle transition method explicitly calls `AddDomainEvent`. | **W24 Incident**: Modifying entity status without publishing domain events broke realtime notification pipelines and transactional outbox message publishing. |
+
+---
+
+## Role Permissions & Pre-configured Demo Accounts
+
+Access control is strictly governed by RBAC and data sovereignty boundaries:
+
+| Role | Demo Email | Initial Password | Core Responsibilities & Capabilities | Explicit Permission Restrictions |
+|---|---|---|---|---|
+| **Admin (System Administrator)** | `admin@nimpression.co.nz` | `Passw0rd!demo` | Global system control: executive dashboards and 6 operational KPI charts, bi-weekly pay period creation/calculation/finalisation/voiding, driver employment profiles and pay rate maintenance, vehicle catalog and compliance records, irreversible driver data anonymization, retention cleanup execution, append-only audit event queries and CSV export, system announcement publishing, email template management. | None. |
+| **Dispatcher** | `dispatch.north@nimpression.co.nz`<br>`dispatch.south@nimpression.co.nz` | `Passw0rd!demo` | Fleet dispatching & operational coordination: creating freight tasks, assigning drivers and trucks, handling cross-zone assignment warnings, cancelling tasks, monitoring unacknowledged task alerts, checking driver dispatch eligibility and licence expiry alerts, vehicle assignment and release, operational area management, traffic fine review (start review/accept/dispute/waive), incident reporting and insurance notification tracking, partner contact management, manual compliance scan triggers. | **Payroll is completely inaccessible (Strict HTTP 403 Forbidden)**: Cannot view pay periods, cannot calculate/finalise/void payroll, cannot view fleet or driver payslips and pay rates; cannot create/modify driver profiles or rates; cannot create/modify vehicle catalog and service logs; cannot edit email templates; cannot view global audit logs; cannot execute retention cleanup or anonymization. |
+| **Driver** | `liam.smith@nimpression.co.nz` (DRV-001) | `Passw0rd!demo` | Mobile-first Driver Workbench: shift clock-in/out with GPS (and location-unavailable fallback), viewing assigned tasks (`/my-tasks`), acknowledging tasks (`Acknowledged`), starting tasks with initial odometer (`InProgress`), completing tasks with actual distance (`Completed`), recording truck odometer readings with odometer photos, submitting traffic infringement tickets with photos, reporting safety incidents with accident photos, viewing own finalised payslips, downloading personal data ZIP archive under NZ Privacy Act IPP 6, signing privacy policy consent, self-updating contact details. | Strict tenant and user isolation: Attempting to access tasks, timesheets, fines, or payslips belonging to other drivers returns HTTP 403 Forbidden; strictly forbidden from altering employee numbers, pay rates, licence expiry dates, or employment status. |
+
+---
+
+## Quickstart (Five Minutes to Run)
+
+### 1. Prerequisites
+
+Ensure the following development tools are installed locally:
+- **Container Runtime**: [Colima](https://github.com/abiosoft/colima) (recommended: `colima start --cpu 4 --memory 8`) or Docker Desktop
+- **Task Runner**: [Taskfile](https://taskfile.dev) (`brew install go-task/tap/go-task`)
+- **.NET SDK**: .NET 10.0+ (`dotnet --version`)
+- **Node.js & Package Manager**: Node.js 22+ and pnpm 11+ (`corepack enable`)
+
+---
+
+### 2. Startup Commands
 
 ```bash
-# 1. 启动 Docker 依赖服务（PostgreSQL 16 / Mailpit / MinIO S3）并初始化存储桶
+# 1. Start Docker dependencies (PostgreSQL 16 / Mailpit / MinIO S3) and initialize storage bucket
 task up
 
-# 2. 将数据库迁移应用到本地 PostgreSQL 数据库
+# 2. Apply EF Core database migrations to local PostgreSQL database
 task migrate
 
-# 3. 灌入 90 天确定性演示业务数据（13 用户 / 10 司机 / 11 车辆 / 6 区域 / 600+ 工单与考勤）
+# 3. Seed 90 days of deterministic demo operational data (13 Users / 10 Drivers / 11 Vehicles / 6 Areas / 659 Tasks / 642 Shifts / 60 Payslips)
 task seed
 
-# 4. 一键启动全栈开发环境（同时启动 .NET 后端 API 与 Angular 前端）
+# 4. Launch full-stack development environment (starts .NET 10 API & Angular 22 Dev Server)
 task dev
 ```
 
-运行 `task dev` 后，终端会输出以下服务访问地址：
-- **前端控制台 (Angular)**: [http://localhost:4200](http://localhost:4200)
-- **后端 API (.NET 10)**: [http://localhost:5080](http://localhost:5080)（健康检查: `/health`，OpenAPI: `/openapi/v1.json`）
-- **本地邮件捕获 (Mailpit)**: [http://localhost:8025](http://localhost:8025)
-- **对象存储控制台 (MinIO)**: [http://localhost:9001](http://localhost:9001)（默认账号/密码: `nimpression` / `devonly_change_me`）
+Once `task dev` completes startup, services are accessible at the following endpoints:
 
-> **提示**：按 `Ctrl + C` 可一次性干净关闭前端与后端子进程。若需要彻底重置数据库并清空数据卷，可执行 `task nuke`。
+| Service | Access URL | Default Credentials / Description |
+|---|---|---|
+| **Frontend Console (Angular 22)** | [http://localhost:4200](http://localhost:4200) | Use demo accounts from role table above with password `Passw0rd!demo` |
+| **Backend API (.NET 10)** | [http://localhost:5080](http://localhost:5080) | Health probe: `/health`, OpenAPI specification: `/openapi/v1.json` |
+| **Local Email Capture (Mailpit)** | [http://localhost:8025](http://localhost:8025) | Captures system notifications, incident claims, and compliance alerts (SMTP Port: 1025) |
+| **Object Storage Console (MinIO)** | [http://localhost:9001](http://localhost:9001) | User: `nimpression` / Password: `devonly_change_me` (S3 API: 9000) |
+| **Online Manual (Offline Standalone)** | [http://localhost:4200/manual.html](http://localhost:4200/manual.html) | Pure native CSS dual-theme manual, directly linked on login page |
 
----
-
-### 3. 预置演示账号一览
-
-数据库预置了三个角色的典型账号（统一密码均为 `Passw0rd!demo`）：
-
-| 角色 | 演示邮箱 | 初始密码 | 角色说明与职责 |
-|---|---|---|---|
-| **Admin（系统管理员）** | `admin@nimpression.co.nz` | `Passw0rd!demo` | 拥有全局权限：运营看板、薪资定版、数据分级与离职司机不可逆匿名化 |
-| **Dispatcher（调度员）** | `dispatch.north@nimpression.co.nz` | `Passw0rd!demo` | 调度与运力管理：创建派单任务、指派司机车辆、监控实时状态 |
-| **Driver（物流司机）** | `liam.smith@nimpression.co.nz` | `Passw0rd!demo` | 司机移动工作台：班次打卡、工单确认与完工、事故报告与个人数据导出 |
+> **Note**: Press `Ctrl + C` to cleanly terminate development subprocesses. To completely reset the database and delete local volume storage, run `task nuke`.
 
 ---
 
-### 4. 建议的人工端到端验收路径（E2E Walkthrough）
+## End-to-End Operational Walkthrough
 
-打开浏览器访问 [http://localhost:4200](http://localhost:4200)，按照以下业务闭环体验核心功能：
+Navigate to [http://localhost:4200](http://localhost:4200) in your browser to experience the complete operational lifecycle:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor D as 调度员 (Dispatcher)
-    actor R as 司机 (Driver)
-    actor A as 管理员 (Admin)
+    actor D as Dispatcher
+    actor R as Driver
+    actor A as Admin
 
-    Note over D: 1. 登录 dispatch.north@nimpression.co.nz
-    D->>D: 访问任务调度页，创建货运任务并指派给 Liam Smith (DRV-001)
+    Note over D: 1. Login as dispatch.north@nimpression.co.nz
+    D->>D: Navigate to Dispatch Board, create freight task and assign to Liam Smith (DRV-001)
     
-    Note over R: 2. 登录 liam.smith@nimpression.co.nz
-    R->>R: 首次登录查看隐私声明并签署同意 (NZ Privacy Act 2020)
-    R->>R: 在工作台确认分配的运单任务，点击「上班打卡」记录 GPS 坐标
-    R->>R: 更新工单状态为「已送达完工」，点击「下班打卡」完成班次工时记录
+    Note over R: 2. Login as liam.smith@nimpression.co.nz
+    R->>R: Review and consent to NZ Privacy Act 2020 privacy policy on first login
+    R->>R: Acknowledge assigned freight task on mobile workbench (Acknowledged state transition)
+    R->>R: Clock in for shift with GPS coordinates and record initial odometer, start task (InProgress)
+    R->>R: Deliver freight and complete task with actual distance (Completed), clock out of shift
     
-    Note over A: 3. 登录 admin@nimpression.co.nz
-    A->>A: 查看管理端六张核心运营图表与 KPI 汇总
-    A->>A: 进入薪资模块，发起当前双周周期的薪资批量试算（工时/趟次双轨比对 + 最低时薪保底）
-    A->>A: 确认无误后点击「定版薪资 (Finalise PayPeriod)」
+    Note over A: 3. Login as admin@nimpression.co.nz
+    A->>A: Review executive dashboard with 6 operational charts and fleet KPI metrics
+    A->>A: Navigate to Payroll, execute bi-weekly batch payroll calculation (dual-basis comparison + minimum wage top-up)
+    A->>A: Review line-item calculations and click "Finalise PayPeriod"
     
-    Note over R: 4. 切回司机 liam.smith@nimpression.co.nz
-    R->>R: 进入个人中心查看定版工资单明细（工时、趟次、PAYE 与 KiwiSaver 扣除）
-    R->>R: 点击「个人数据导出」，一键下载符合 IPP 6 规范的全量 JSON + README ZIP 归档包
+    Note over R: 4. Switch back to driver liam.smith@nimpression.co.nz
+    R->>R: Access Profile to review finalised payslip breakdown (hours, trips, PAYE, KiwiSaver deductions)
+    R->>R: Click "Export Personal Data" to download compliant IPP 6 full JSON + README ZIP archive
 ```
 
 ---
 
-### 5. 核心功能与亮点体验
+## Production Deployment, CI/CD & Security Architecture
 
-1. **管理端多维运营仪表盘**：
-   - 登录 Admin 账号后可查看 **6 张核心业务图表**（运力负荷率、打卡准点率趋势、区域任务热度、薪资双轨对比、事故/罚单合规雷达、逾期提醒）。
-2. **多语言与深浅色主题切换**：
-   - 导航栏右上角支持一键切换 **English / 中文**（全站 i18n 字典覆盖，符合 F13.2 双语规范）。
-   - 支持 **深色模式 (Dark Theme) / 浅色模式 (Light Theme)** 无缝切换。
-3. **本地系统邮件捕获 (Mailpit)**：
-   - 打开 [http://localhost:8025](http://localhost:8025)，可实时查看系统触发的各类通知邮件（如合规到期提醒、重大事故理赔通报、密码重置通知等）。
-4. **NZ Privacy Act 2020 隐私合规与数据主权**：
-   - 手机号、住址、紧急联系人、车辆 VIN 均采用 **AES-256-GCM 字段级强加密**，数据库底层全为密文。
-   - 离职司机执行不可逆脱敏替换（如 `Driver #a1b2c3`），且历史工资单 `SUM(GrossPay)` 与事故记录数 100% 恒定守恒。
-   - 90 天前打卡 GPS 坐标定期清理，默认必须以 Dry-Run 模式安全评估。
+### 1. Production Deployment Topology
+
+The live demonstration environment employs a hardened, zero-inbound security topology:
+
+- **Cloudflare Tunnel (Zero Inbound Open Ports)**: The production server exposes zero inbound ports to the public internet (ports 80 and 443 are fully closed). All public traffic traverses encrypted Cloudflare edge tunnels to the local Nginx reverse proxy.
+- **Self-Hosted Runner Security Model**: Because this code repository is public and the GitHub Actions self-hosted runner executes directly on the production host (`node-jp`, Linux ARM64), **the deployment workflow (`deploy.yml`) strictly excludes `pull_request` triggers**. Deployment is strictly gated to `v*` release tags pushed by authenticated maintainers or explicit `workflow_dispatch` executions.
+- **Self-Contained Binary Releases**: The .NET 10 backend publishes as a self-contained `linux-arm64` binary output, requiring zero runtime SDK installations on the production server.
+
+### 2. CI/CD Pipeline & Automated Health Check Rollback
+
+- **Continuous Integration (CI - `ci.yml`)**: Triggered on every push to `main` and all Pull Requests. Executes format checks, full frontend/backend builds, eleven architectural guard checks, and .NET unit & integration test suites with code coverage reporting (Domain layer line coverage >= 90%).
+- **Continuous Deployment (CD - `deploy.yml`)**: Triggered upon pushing a `v*` tag (current release: `v1.6.4`).
+  1. Executes frontend build and full test suites;
+  2. Compiles self-contained binary and synchronizes web assets to `/opt/nimpression/web/`;
+  3. Executes database migrations (`Nimpression.Api migrate`);
+  4. Atomically replaces executable binary (backing up previous version to `/opt/nimpression/api-old`) and restarts `systemd` unit `nimpression-api`;
+  5. **Automated Health Check & Instant Rollback**: Probes `http://127.0.0.1:5080/health` up to 30 times (150s timeout). If the health probe fails or times out, **the pipeline automatically restores `/opt/nimpression/api-old` and restarts the service**, ensuring zero downtime;
+  6. Validates public reachability and user manual status codes.
+
+- **Live Production URL**: [https://nimpression.a-dobe.club/](https://nimpression.a-dobe.club/)
+- **Online User Manual**: [https://nimpression.a-dobe.club/manual.html](https://nimpression.a-dobe.club/manual.html)
 
 ---
 
-## 🛠️ 常用开发任务清单（Task 命令）
+## Development Task Reference (Taskfile Commands)
 
-| 命令 | 描述 |
+All project tasks are managed through `Taskfile.yml`:
+
+| Command | Description |
 |---|---|
-| `task up` | 启动全部依赖容器（Postgres 5432 / Mailpit 8025 / MinIO 9001） |
-| `task down` | 停止依赖容器（保留数据库数据卷） |
-| `task nuke` | 停止容器并**彻底删除**本地数据卷（不可逆数据重置） |
-| `task build:server` | 构建 .NET 10 后端解决方案（`TreatWarningsAsErrors=true`） |
-| `task build:web` | 构建 Angular 19 前端工程 |
-| `task test:server` | 运行全量 .NET 测试（Domain + Application + Integration） |
-| `task test:unit` | 仅运行 .NET 单元测试（极速反馈，无需依赖容器） |
-| `task test:integration` | 运行 .NET 集成测试（自动启动 Testcontainers 隔离数据库） |
-| `task test:web` | 运行 Angular 单元测试 |
-| `task test:e2e` | 运行 Playwright 端到端测试 |
-| `task seed` | 灌入 90 天确定性演示业务数据 |
-| `task dev` | **一键启动全栈开发环境**（依赖 + 后端 API 5080 + 前端 Dev Server 4200） |
-| `task fmt` | 代码自动格式化（.NET C# + 前端 TypeScript/HTML/SCSS） |
+| `task up` | Starts all dependency containers (PostgreSQL 5432 / Mailpit 8025 / MinIO 9001) and waits for health |
+| `task down` | Stops dependency containers (preserves database volumes) |
+| `task nuke` | Stops containers and **permanently deletes** local database volumes and `.data` (irreversible reset) |
+| `task build` | Aggregated build: builds both .NET backend and Angular frontend |
+| `task build:server` | Builds .NET 10 backend solution (`TreatWarningsAsErrors=true`) |
+| `task build:web` | Builds Angular 22 frontend application (executes all eleven build-time guards) |
+| `task test` | Aggregated test: executes all backend and frontend test suites |
+| `task test:server` | Runs all .NET test suites (excluding wall-clock timing tests) |
+| `task test:unit` | Runs .NET unit tests only (fast feedback, zero container dependency) |
+| `task test:integration` | Runs .NET integration tests (spawns isolated PostgreSQL container via Testcontainers) |
+| `task test:timing` | Runs timing side-channel integration tests (requires low-load baseline environment) |
+| `task test:web` | Runs Angular unit tests and guard regression test suites |
+| `task test:e2e` | Runs Playwright end-to-end tests |
+| `task coverage` | Generates merged code coverage reports in `./artifacts/coverage` |
+| `task migrate` | Applies EF Core migrations to local PostgreSQL database |
+| `task migrate:add -- <Name>` | Creates a new EF Core database migration (e.g. `task migrate:add -- AddNewField`) |
+| `task migrate:down -- <Name>` | Reverts database schema to a specified migration |
+| `task seed` | Seeds 90 days of deterministic demo operational data (13 Users / 10 Drivers / 11 Vehicles / 6 Areas / 659 Tasks / 642 Shifts / 60 Payslips) |
+| `task dev` | **Launches full-stack development environment** (Dependencies + API 5080 + Angular Dev Server 4200) |
+| `task verify` | Pre-commit verification: runs `task build` and `task test` |
+| `task fmt` | Formats all backend and frontend source code (C#, TypeScript, HTML, SCSS, JSON) |
+| `task fmt:check` | Checks code formatting compliance without modifying files (used in CI) |
+| `task doctor` | Diagnostics script checking local toolchains (.NET, Node, pnpm, Colima, Docker, port conflicts) |
