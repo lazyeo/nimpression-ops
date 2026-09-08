@@ -127,24 +127,24 @@
           <tbody>
             @for (area of areas(); track area.id) {
               <tr>
-                <td>
+                <td [attr.data-label]="'AREAS.TABLE_CODE' | i18n">
                   <span class="code-badge">{{ area.code }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'AREAS.TABLE_NAME' | i18n">
                   <span class="area-name">{{ area.name }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'AREAS.TABLE_DESCRIPTION' | i18n">
                   <span>{{ area.description || '-' }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'AREAS.TABLE_DRIVERS_COUNT' | i18n">
                   <strong>{{ getAreaDriverCount(area.id) }}</strong>
                 </td>
-                <td>
+                <td [attr.data-label]="'AREAS.TABLE_STATUS' | i18n">
                   <nim-status-badge [status]="area.isActive ? 'Active' : 'Inactive'">
                     {{ (area.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n }}
                   </nim-status-badge>
                 </td>
-                <td>
+                <td class="actions-cell" [attr.data-label]="'AREAS.TABLE_ACTIONS' | i18n">
                   <div class="row-actions">
                     <button
                       type="button"
@@ -420,22 +420,22 @@
               <tbody>
                 @for (asg of areaAssignments(); track asg.id) {
                   <tr>
-                    <td>
+                    <td [attr.data-label]="'AREAS.FIELD_DRIVER' | i18n">
                       <strong>{{ asg.driverName || asg.driverId }}</strong>
                       @if (asg.driverEmployeeNo) {
                         <span class="driver-emp-badge"> ({{ asg.driverEmployeeNo }})</span>
                       }
                     </td>
-                    <td>{{ asg.effectiveFrom | localeDate: 'short' }}</td>
-                    <td>{{ (asg.effectiveTo | localeDate: 'short') || '-' }}</td>
-                    <td>
+                    <td [attr.data-label]="'AREAS.FIELD_EFFECTIVE_FROM' | i18n">{{ asg.effectiveFrom | localeDate: 'short' }}</td>
+                    <td [attr.data-label]="'AREAS.FIELD_EFFECTIVE_TO' | i18n">{{ (asg.effectiveTo | localeDate: 'short') || '-' }}</td>
+                    <td [attr.data-label]="'COMMON.STATUS' | i18n">
                       <nim-status-badge [status]="asg.isActive ? 'Active' : 'Inactive'">
                         {{
                           (asg.isActive ? 'AREAS.STATUS_ACTIVE' : 'AREAS.STATUS_INACTIVE') | i18n
                         }}
                       </nim-status-badge>
                     </td>
-                    <td>
+                    <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                       @if (asg.isActive && !asg.effectiveTo) {
                         <button
                           type="button"

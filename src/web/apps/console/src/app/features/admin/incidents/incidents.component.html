@@ -182,21 +182,21 @@
             <tbody>
               @for (incident of incidents(); track incident.id) {
                 <tr>
-                  <td>{{ incident.occurredAt | localeDate: 'medium' }}</td>
-                  <td class="location-cell">
+                  <td [attr.data-label]="'INCIDENTS.COL_OCCURRED_AT' | i18n">{{ incident.occurredAt | localeDate: 'medium' }}</td>
+                  <td class="location-cell" [attr.data-label]="'INCIDENTS.COL_LOCATION' | i18n">
                     <strong>{{ incident.location }}</strong>
                   </td>
-                  <td>
+                  <td [attr.data-label]="'INCIDENTS.COL_SEVERITY' | i18n">
                     <nim-status-badge [status]="incident.severity" />
                   </td>
-                  <td class="driver-cell">
+                  <td class="driver-cell" [attr.data-label]="'INCIDENTS.COL_DRIVER' | i18n">
                     {{ incident.driverName || 'Driver ' + incident.driverId.substring(0, 8) }}
                     @if (incident.employeeNo) {
                       <small class="text-muted">({{ incident.employeeNo }})</small>
                     }
                   </td>
-                  <td><span class="rego-badge">{{ incident.vehicleRego }}</span></td>
-                  <td>
+                  <td [attr.data-label]="'INCIDENTS.COL_VEHICLE' | i18n"><span class="rego-badge">{{ incident.vehicleRego }}</span></td>
+                  <td [attr.data-label]="'INCIDENTS.COL_INSURER' | i18n">
                     @if (incident.notifiedInsurer) {
                       <nim-status-badge status="InsurerNotified" variant="success" icon="check-circle" [title]="incident.insurerNotifiedAt ? (incident.insurerNotifiedAt | localeDate: 'short') : ''">
                         {{ 'INCIDENTS.INSURER_NOTIFIED' | i18n }}
@@ -207,7 +207,7 @@
                       </nim-status-badge>
                     }
                   </td>
-                  <td class="actions-cell">
+                  <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                     <button
                       type="button"
                       class="table-btn btn-view"
