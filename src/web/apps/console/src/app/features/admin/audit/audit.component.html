@@ -179,10 +179,10 @@
           <tbody>
             @for (log of logs(); track log.id) {
               <tr (click)="openDiffModal(log)">
-                <td class="cell-time">
+                <td class="cell-time" [attr.data-label]="'AUDIT.COL_OCCURRED_AT' | i18n">
                   {{ log.occurredAt | localeDate: 'medium' }}
                 </td>
-                <td>
+                <td [attr.data-label]="'AUDIT.COL_ACTION' | i18n">
                   <nim-status-badge
                     [variant]="(log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')) ? 'success' : (log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')) ? 'danger' : (log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')) ? 'info' : 'neutral'"
                     size="sm"
@@ -190,21 +190,21 @@
                     {{ log.action }}
                   </nim-status-badge>
                 </td>
-                <td>
+                <td [attr.data-label]="'AUDIT.COL_ENTITY_TYPE' | i18n">
                   <span class="badge-entity">{{ log.entityType }}</span>
                 </td>
-                <td class="cell-id">
+                <td class="cell-id" [attr.data-label]="'AUDIT.COL_ENTITY_ID' | i18n">
                   <span class="code-id">{{ log.entityId }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'AUDIT.COL_ACTOR_ROLE' | i18n">
                   <nim-status-badge variant="neutral" size="sm">
                     {{ log.actorRole ? ('ROLES.' + (log.actorRole === 1 || log.actorRole === 'Admin' ? 'ADMIN' : log.actorRole === 2 || log.actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
                   </nim-status-badge>
                 </td>
-                <td>
+                <td [attr.data-label]="'AUDIT.COL_IP_ADDRESS' | i18n">
                   <span class="text-ip">{{ log.ipAddress || '-' }}</span>
                 </td>
-                <td>
+                <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                   <button
                     type="button"
                     class="btn-row-action"

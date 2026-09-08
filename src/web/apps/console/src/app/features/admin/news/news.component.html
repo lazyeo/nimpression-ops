@@ -146,7 +146,7 @@
           <tbody>
             @for (item of sortedNews(); track item.id) {
               <tr [class.pinned-row]="item.pinned" (click)="openDetailModal(item.id)">
-                <td class="cell-pin">
+                <td class="cell-pin" [attr.data-label]="'NEWS.COL_PIN' | i18n">
                   @if (item.pinned) {
                     <span class="pin-badge" [attr.title]="'NEWS.PINNED_TOOLTIP' | i18n">
                       <nim-icon name="target" [size]="14" />
@@ -156,10 +156,10 @@
                     <span class="unpinned-dash">-</span>
                   }
                 </td>
-                <td class="cell-title">
+                <td class="cell-title" [attr.data-label]="'NEWS.COL_TITLE' | i18n">
                   <span class="news-title-text">{{ item.title }}</span>
                 </td>
-                <td>
+                <td [attr.data-label]="'NEWS.COL_AUDIENCE' | i18n">
                   <nim-status-badge variant="info" size="sm">
                     @if (item.audience === 'All') {
                       {{ 'NEWS.AUDIENCE_ALL' | i18n }}
@@ -170,10 +170,10 @@
                     }
                   </nim-status-badge>
                 </td>
-                <td class="cell-date">
+                <td class="cell-date" [attr.data-label]="'NEWS.COL_PUBLISHED_AT' | i18n">
                   {{ item.publishedAt | localeDate: 'medium' }}
                 </td>
-                <td>
+                <td [attr.data-label]="'NEWS.COL_READ_STATUS' | i18n">
                   @if (item.isRead) {
                     <nim-status-badge variant="success" size="sm" icon="check">
                       <span>{{ 'NEWS.STATUS_READ' | i18n }}</span>
@@ -184,7 +184,7 @@
                     </nim-status-badge>
                   }
                 </td>
-                <td>
+                <td [attr.data-label]="'COMMON.STATUS' | i18n">
                   @if (item.isActive) {
                     <nim-status-badge variant="success" size="sm" [dot]="true">
                       <span>{{ 'NEWS.ACTIVE' | i18n }}</span>
@@ -195,7 +195,7 @@
                     </nim-status-badge>
                   }
                 </td>
-                <td class="cell-actions" (click)="$event.stopPropagation()">
+                <td class="cell-actions" [attr.data-label]="'COMMON.ACTIONS' | i18n" (click)="$event.stopPropagation()">
                   <div class="action-buttons">
                     <button
                       type="button"
@@ -206,7 +206,6 @@
                       <nim-icon name="check-circle" [size]="14" />
                       <span>{{ 'NEWS.RECEIPTS_BUTTON' | i18n }}</span>
                     </button>
-
                     @if (!item.isRead) {
                       <button
                         type="button"
