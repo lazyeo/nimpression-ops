@@ -174,3 +174,18 @@
   color: var(--text-muted);
   font-size: var(--font-size-sm);
 }
+
+@media (max-width: 600px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid .detail-item.full-width {
+    grid-column: auto;
+  }
+
+  .photo-gallery {
+    grid-template-columns: 1fr;
+  }
+}
+

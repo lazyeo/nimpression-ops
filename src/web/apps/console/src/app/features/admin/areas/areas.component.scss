@@ -452,6 +452,12 @@
   cursor: pointer;
   color: var(--text-muted);
   line-height: var(--line-height-none);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
 
   &:hover {
     color: var(--text-primary);
@@ -584,3 +590,20 @@ textarea.input-control {
 .action-dash {
   color: var(--text-muted);
 }
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: span 1;
+  }
+
+  .dialog-footer .btn-primary,
+  .dialog-footer .btn-secondary,
+  .dialog-footer .btn-delete-dialog {
+    min-height: 44px;
+  }
+}
+

@@ -205,3 +205,14 @@
   color: var(--text-muted);
   line-height: var(--line-height-normal);
 }
+
+@media (max-width: 600px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid .detail-item.full-width {
+    grid-column: auto;
+  }
+}
+
