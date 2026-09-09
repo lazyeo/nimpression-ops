@@ -1,26 +1,20 @@
 using Nimpression.Domain.Entities.Driver;
 using Nimpression.Domain.Entities.Payroll;
 using Nimpression.Domain.Enums;
-using Nimpression.Domain.Services;
 using Nimpression.Domain.ValueObjects;
+using Nimpression.Infrastructure.Persistence.Seed;
 
-namespace Nimpression.Infrastructure.Persistence.Seed;
+namespace Nimpression.Integration.Tests.Persistence;
 
-public static class PayrollSeeder
+// Historical production fixture from 38d7858, intentionally independent of the repair fingerprint.
+internal static class LegacyPayrollFixture
 {
+    public const decimal StatutoryMinimumWageRate = 23.15m; // NZ Statutory Minimum Wage
+
     public static (List<PayPeriod> PayPeriods, List<Payslip> Payslips) Generate(
         List<Driver> drivers,
-        int randomSeed = SeedConstants.DefaultSeed,
-        DateTimeOffset? asOf = null) => GenerateCore(drivers, randomSeed, asOf, null, includeSettlement: true);
-
-    // Historical comparison only; never used to create new operational seed records.
-    internal static (List<PayPeriod> PayPeriods, List<Payslip> Payslips) GenerateLegacyFingerprint(List<Driver> drivers)
-        => GenerateCore(drivers, SeedConstants.DefaultSeed, SeedConstants.ReferenceNow.AddDays(5), 23.15m, includeSettlement: false);
-
-    private static (List<PayPeriod> PayPeriods, List<Payslip> Payslips) GenerateCore(
-        List<Driver> drivers, int randomSeed, DateTimeOffset? asOf, decimal? legacyMinimum, bool includeSettlement)
+        int randomSeed = SeedConstants.DefaultSeed)
     {
-        var cutoff = asOf ?? SeedConstants.ReferenceNow;
         var rng = new Random(randomSeed);
         var payPeriods = new List<PayPeriod>();
         var payslips = new List<Payslip>();
@@ -36,26 +30,23 @@ public static class PayrollSeeder
             var startsOn = SeedConstants.ReferenceDate.AddDays(-p * 14);
             var endsOn = startsOn.AddDays(13);
 
-            var calculatedAt = new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 17, 0, 0, TimeSpan.FromHours(12));
-            if (calculatedAt > cutoff)
-            {
-                continue;
-            }
-
-            var statutoryMinimumWageRate = legacyMinimum ?? NzAdultMinimumWage.ForPeriod(startsOn, endsOn).Amount;
-
             var payPeriodId = new Guid($"13000000-0000-0000-0000-{periodIdCounter++:D12}");
-            var payPeriod = new PayPeriod(payPeriodId, startsOn, endsOn, PayPeriodStatus.Calculating);
-            var finalisedAt = calculatedAt.AddDays(1).AddHours(1);
-            if (finalisedAt <= cutoff)
+            var status = p switch
             {
-                payPeriod.Finalise(finalisedAt);
+                > 1 => PayPeriodStatus.Paid,
+                1 => PayPeriodStatus.Finalised,
+                _ => PayPeriodStatus.Open
+            };
+
+            var payPeriod = new PayPeriod(payPeriodId, startsOn, endsOn, PayPeriodStatus.Open);
+            if (status == PayPeriodStatus.Finalised || status == PayPeriodStatus.Paid)
+            {
+                payPeriod.Finalise(new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 18, 0, 0, TimeSpan.FromHours(12)).AddDays(1));
             }
 
-            var paidAt = calculatedAt.AddDays(3).AddHours(-7);
-            if (p > 1 && paidAt <= cutoff)
+            if (status == PayPeriodStatus.Paid)
             {
-                payPeriod.MarkPaid(paidAt);
+                payPeriod.MarkPaid(new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 10, 0, 0, TimeSpan.FromHours(12)).AddDays(3));
             }
 
             payPeriods.Add(payPeriod);
@@ -85,13 +76,14 @@ public static class PayrollSeeder
                 var tripBasedGross = new Money(tripAmount + distAmount);
 
                 // 三者取高与最低工资保底 (F7.5)
-                var minWageFloor = totalHours * statutoryMinimumWageRate;
+                var minWageFloor = totalHours * StatutoryMinimumWageRate;
                 var maxBasisGross = Math.Max(hoursBasedGross.Amount, tripBasedGross.Amount);
                 var minWageTopUp = maxBasisGross < minWageFloor;
                 var finalGrossAmount = Math.Max(maxBasisGross, minWageFloor);
                 var grossPay = new Money(finalGrossAmount);
 
                 var basisUsed = tripBasedGross.Amount > hoursBasedGross.Amount ? PayBasis.Trip : PayBasis.Hourly;
+                var calculatedAt = new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 17, 0, 0, TimeSpan.FromHours(12));
 
                 var payslip = new Payslip(
                     payslipId,
@@ -167,19 +159,14 @@ public static class PayrollSeeder
                         payslipId,
                         basisUsed,
                         "MinimumWageTopUp",
-                        $"NZ Statutory Minimum Wage Top-up floor (${statutoryMinimumWageRate:0.00}/hr guard for {totalHours} total hours)",
-                        new Money(statutoryMinimumWageRate),
+                        $"NZ Statutory Minimum Wage Top-up floor ($23.15/hr guard for {totalHours} total hours)",
+                        new Money(StatutoryMinimumWageRate),
                         new Money(topUpDiff)));
                 }
 
-                if (includeSettlement)
+                if (status == PayPeriodStatus.Finalised || status == PayPeriodStatus.Paid)
                 {
-                    payslip.SetSettlement(DemoPayrollSettlement.Create(payslip.GrossPay.Amount, payPeriod, calculatedAt));
-                }
-
-                if (payPeriod.FinalisedAt.HasValue)
-                {
-                    payslip.Finalise(payPeriod.FinalisedAt.Value);
+                    payslip.Finalise(calculatedAt.AddHours(1));
                 }
 
                 payslips.Add(payslip);

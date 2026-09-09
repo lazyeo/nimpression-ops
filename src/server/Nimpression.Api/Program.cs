@@ -7,7 +7,12 @@ using Nimpression.Infrastructure.Persistence;
 using Nimpression.Infrastructure.Persistence.Migrations;
 using Nimpression.Infrastructure.Persistence.Seed;
 
-var builder = WebApplication.CreateBuilder(args);
+var isDemoPayrollRepair = args.Contains("repair-demo-payroll", StringComparer.OrdinalIgnoreCase);
+var operationalFlags = new[] { "--apply", "--repair-legacy-minimum" };
+var builderArgs = isDemoPayrollRepair
+    ? args.Where(arg => !operationalFlags.Contains(arg, StringComparer.OrdinalIgnoreCase)).ToArray()
+    : args;
+var builder = WebApplication.CreateBuilder(builderArgs);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -61,6 +66,26 @@ if (args.Contains("repair-demo-contacts", StringComparer.OrdinalIgnoreCase))
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var correctedFields = await UserDriverSeeder.RepairLegacyContactsAsync(dbContext);
     Console.WriteLine($"Demo contact repair completed. Updated fields: {correctedFields}.");
+    return;
+}
+
+// Dry-run by default. Explicit flags are required to change verified demo-only payroll rows.
+if (isDemoPayrollRepair)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var apply = args.Contains("--apply", StringComparer.OrdinalIgnoreCase);
+        var repairMinimum = args.Contains("--repair-legacy-minimum", StringComparer.OrdinalIgnoreCase);
+        var result = await DemoPayrollRepair.RunAsync(dbContext, DateTimeOffset.UtcNow, apply, repairMinimum);
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(result));
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Demo payroll repair failed ({ex.GetType().Name}); no changes were committed.");
+        Environment.ExitCode = 1;
+    }
     return;
 }
 

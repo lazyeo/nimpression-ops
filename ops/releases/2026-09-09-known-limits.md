@@ -10,7 +10,7 @@
 - Contractor settlement does not calculate the contractor's final income tax or separate ACC invoice, or issue a complete tax invoice/credit note.
 - Employer cost excludes employer ACC work levies and other unmodelled employer expenses.
 - Minimum wage checks use adult rates only. Starting-out/training eligibility is not modelled. A pay period spanning a rate change must be split; automatic per-day rate splitting is not implemented.
-- Historical payslips without a settlement snapshot retain unknown net pay/deductions. There is no automatic reconstruction from current tax settings.
+- Historical non-demo payslips without a settlement snapshot retain unknown net pay/deductions. There is no automatic reconstruction from current personal tax settings. The separately invoked, strictly scoped demo repair can populate unchanged deterministic seed records with explicitly marked synthetic assumptions; see [demo payroll](2026-09-09-demo-payroll.md).
 - Year-to-date totals, comprehensive leave balances, employer/employee IRD identity presentation, PDF payslip export and statutory payroll reporting are not supplied by this change.
 - No IRD payday filing, bank payment execution, Xero synchronisation or accounting reconciliation is implemented by this release. A recorded payment status is not evidence of a bank transfer.
 - Finalised settlements cannot be edited in place, but the existing void/reopen workflow is not a complete immutable revision archive.

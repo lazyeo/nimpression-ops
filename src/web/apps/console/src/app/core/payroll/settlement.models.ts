@@ -56,6 +56,7 @@ export interface SettlementCalculation {
   employerCost: number;
 }
 export interface PayslipSettlement {
+  isDemo?: boolean;
   request: SettlementRequest;
   calculation: SettlementCalculation;
   rulesVersion: string;

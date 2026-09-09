@@ -1,5 +1,11 @@
 <section class="settlement-breakdown">
   <h3>{{ 'SETTLEMENT.BREAKDOWN' | i18n }}</h3>
+  @if (settlement().isDemo === true) {
+    <aside class="demo-notice" role="note">
+      <strong>{{ 'SETTLEMENT.DEMO_TITLE' | i18n }}</strong>
+      <p>{{ 'SETTLEMENT.DEMO_NOTICE' | i18n }}</p>
+    </aside>
+  }
   <p>
     {{
       (settlement().request.workerType === 'Employee'

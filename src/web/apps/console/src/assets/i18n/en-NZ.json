@@ -1527,6 +1527,8 @@
     "ORIGINAL_GROSS_NOTE": "Calculated on {{basis}}. This is the earnings basis before settlement adjustments and deductions.",
     "SCHEDULED_PAY_DATE": "Scheduled pay date",
     "ACCRUAL_NOTE": "Annual holidays accrue separately; leave balances and leave taken are not calculated here.",
-    "EARNINGS_CALCULATED_ON": "Earnings calculated on {basis}"
+    "EARNINGS_CALCULATED_ON": "Earnings calculated on {basis}",
+    "DEMO_TITLE": "Demonstration calculation",
+    "DEMO_NOTICE": "Uses assumed tax settings. This is not a payroll payment record."
   }
 }

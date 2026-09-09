@@ -7,4 +7,5 @@ public sealed record PayslipSettlementSnapshot(
     SettlementRequest Request,
     SettlementCalculation Calculation,
     string RulesVersion,
-    DateTimeOffset CalculatedAt);
+    DateTimeOffset CalculatedAt,
+    bool IsDemo = false);

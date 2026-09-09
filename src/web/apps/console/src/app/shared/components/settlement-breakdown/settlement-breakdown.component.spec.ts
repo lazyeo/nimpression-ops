@@ -57,6 +57,40 @@ const snapshot: PayslipSettlement = {
 };
 describe('SettlementBreakdownComponent', () => {
   it.each(['en-NZ', 'zh-CN'] as const)(
+    'clearly identifies marked demo amounts in %s without changing them',
+    (lang) => {
+      const i18n = TestBed.inject(I18nService);
+      i18n.setDictionary('en-NZ', en);
+      i18n.setDictionary('zh-CN', zh);
+      i18n.currentLang.set(lang);
+      const fixture = TestBed.createComponent(SettlementBreakdownComponent);
+      const demo = { ...snapshot, isDemo: true };
+      fixture.componentRef.setInput('settlement', demo);
+      fixture.detectChanges();
+      const notice = fixture.nativeElement.querySelector('[role="note"]');
+      expect(notice.textContent).toContain(
+        lang === 'en-NZ' ? 'Demonstration calculation' : '演示计算',
+      );
+      expect(notice.textContent).toContain(
+        lang === 'en-NZ' ? 'not a payroll payment record' : '不代表真实工资支付记录',
+      );
+      expect(fixture.nativeElement.textContent).toContain('828.00');
+      expect(fixture.componentInstance.settlement().calculation).toBe(snapshot.calculation);
+    },
+  );
+
+  it.each([false, undefined])(
+    'does not label ordinary or legacy snapshots as demo (isDemo=%s)',
+    (isDemo) => {
+      const fixture = TestBed.createComponent(SettlementBreakdownComponent);
+      fixture.componentRef.setInput('settlement', { ...snapshot, isDemo });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.demo-notice')).toBeNull();
+      expect(fixture.componentInstance.settlement().calculation.netPay).toBe(828);
+    },
+  );
+
+  it.each(['en-NZ', 'zh-CN'] as const)(
     'explains employee and employer deductions separately in %s',
     (lang) => {
       const i18n = TestBed.inject(I18nService);

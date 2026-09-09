@@ -1527,6 +1527,8 @@
     "ORIGINAL_GROSS_NOTE": "计算日期：{{basis}}。此金额是结算调整与扣款前的收入计算依据。",
     "SCHEDULED_PAY_DATE": "计划发薪日期",
     "ACCRUAL_NOTE": "年假另行累积；此处不计算年假余额或已休假期。",
-    "EARNINGS_CALCULATED_ON": "收入计算日期：{basis}"
+    "EARNINGS_CALCULATED_ON": "收入计算日期：{basis}",
+    "DEMO_TITLE": "演示计算",
+    "DEMO_NOTICE": "使用假设的税务设置，仅供演示，不代表真实工资支付记录。"
   }
 }
