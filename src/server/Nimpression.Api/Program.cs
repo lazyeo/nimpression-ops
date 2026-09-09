@@ -54,6 +54,16 @@ if (args.Contains("migrate", StringComparer.OrdinalIgnoreCase))
     }
 }
 
+// Explicit, non-destructive correction of known demo contact placeholders only.
+if (args.Contains("repair-demo-contacts", StringComparer.OrdinalIgnoreCase))
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var correctedFields = await UserDriverSeeder.RepairLegacyContactsAsync(dbContext);
+    Console.WriteLine($"Demo contact repair completed. Updated fields: {correctedFields}.");
+    return;
+}
+
 // 种子模式：不启动 Web 服务器，灌完数据即退出。
 // 放在 Build 之后、中间件之前，好复用完整的 DI 容器。
 if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))

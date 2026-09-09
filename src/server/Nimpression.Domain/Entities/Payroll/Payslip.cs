@@ -33,6 +33,7 @@ public sealed class Payslip : AggregateRoot
     // 结算
     public PayBasis BasisUsed { get; private set; }
     public Money GrossPay { get; private set; }
+    public PayslipSettlementSnapshot? Settlement { get; private set; }
     public bool MinimumWageTopUp { get; private set; }
     public DateTimeOffset CalculatedAt { get; private set; }
     public DateTimeOffset? FinalisedAt { get; private set; }
@@ -118,6 +119,27 @@ public sealed class Payslip : AggregateRoot
         {
             AddLine(line);
         }
+    }
+
+    public void SetSettlement(PayslipSettlementSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        if (FinalisedAt.HasValue)
+        {
+            throw new DomainValidationException("Cannot change settlement on a finalised payslip.");
+        }
+        var expectedGross = snapshot.Request.WorkerType == Services.Payroll.SettlementWorkerType.Contractor
+            ? Math.Max(HoursBasedGross.Amount, TripBasedGross.Amount)
+            : GrossPay.Amount;
+        if (snapshot.Request.GrossEarnings != expectedGross || snapshot.Calculation.BaseGross != expectedGross)
+        {
+            throw new DomainValidationException("Settlement must use the payslip's recorded gross earnings.");
+        }
+        if (string.IsNullOrWhiteSpace(snapshot.RulesVersion))
+        {
+            throw new DomainValidationException("Settlement calculation rules version is required.");
+        }
+        Settlement = snapshot;
     }
 
     public void Finalise(DateTimeOffset finalisedAt)

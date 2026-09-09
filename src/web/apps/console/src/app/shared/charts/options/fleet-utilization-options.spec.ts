@@ -73,14 +73,16 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
     const desktopOpt = buildFleetUtilizationOptions({ data: mockData, isMobile: false });
     const mobileOpt = buildFleetUtilizationOptions({ data: mockData, isMobile: true });
 
-    const desktopX = desktopOpt.xAxis as { data: string[]; axisLabel: { rotate: number; interval: number } };
-    const mobileX = mobileOpt.xAxis as { data: string[]; axisLabel: { rotate: number; interval: number } };
+    const desktopX = desktopOpt.xAxis as { data: string[]; axisLabel: { rotate: number; interval: number; formatter: (value: string) => string } };
+    const mobileX = mobileOpt.xAxis as { data: string[]; axisLabel: { rotate: number; interval: number; formatter: (value: string) => string } };
 
-    expect(desktopX.data).toEqual(['08-01', '08-02', '08-03']);
-    expect(mobileX.data).toEqual(['08-01', '08-02', '08-03']);
+    expect(desktopX.data).toEqual(['2026-08-01', '2026-08-02', '2026-08-03']);
+    expect(mobileX.data).toEqual(['2026-08-01', '2026-08-02', '2026-08-03']);
     expect(desktopX.axisLabel.rotate).toBe(0);
     expect(desktopX.axisLabel.interval).toBe(0);
     expect(mobileX.axisLabel.rotate).toBe(45);
+    expect(desktopX.axisLabel.formatter('2026-08-01')).toBe('01/08/2026');
+    expect(mobileX.axisLabel.formatter('2026-08-01')).toBe('01/08/2026');
   });
 
   it('R2: should rotate and format date axis for desktop with 14 items without colliding', () => {
@@ -96,14 +98,14 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
     const desktopOpt = buildFleetUtilizationOptions({ data: data14, isMobile: false });
     const xAxis = desktopOpt.xAxis as {
       data: string[];
-      axisLabel: { rotate: number; interval: number };
+      axisLabel: { rotate: number; interval: number; formatter: (value: string) => string };
       axisTick: { alignWithLabel: boolean };
     };
     const grid = desktopOpt.grid as { bottom: number };
 
-    // Formatted to MM-DD
-    expect(xAxis.data[0]).toBe('08-01');
-    expect(xAxis.data[13]).toBe('08-14');
+    // Retain ISO data keys; render dates through the NZ axis formatter.
+    expect(xAxis.data[0]).toBe('2026-08-01');
+    expect(xAxis.data[13]).toBe('2026-08-14');
 
     // 14 items on desktop: rotate 45 degrees, interval 0 (every day clearly angled to its column)
     expect(xAxis.axisLabel.rotate).toBe(45);
@@ -125,7 +127,7 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
     const desktopOpt = buildFleetUtilizationOptions({ data: data30, isMobile: false });
     const xAxis = desktopOpt.xAxis as {
       data: string[];
-      axisLabel: { rotate: number; interval: number };
+      axisLabel: { rotate: number; interval: number; formatter: (value: string) => string };
     };
 
     expect(xAxis.axisLabel.rotate).toBe(45);
@@ -155,7 +157,7 @@ describe('FleetUtilizationOptions Pure Function (F14.1)', () => {
         dataIndex: 0,
       },
     ]);
-    expect(formatted).toContain('2026-08-01 Fleet Status');
+    expect(formatted).toContain('01/08/2026 Fleet Status');
     expect(formatted).toContain('Tasks: <strong>14</strong>');
     expect(formatted).toContain('Click bar to drill down');
   });

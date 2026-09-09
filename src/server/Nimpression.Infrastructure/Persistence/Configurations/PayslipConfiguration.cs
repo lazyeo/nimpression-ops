@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Nimpression.Domain.Entities.Driver;
@@ -144,6 +145,13 @@ public class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
                 .IsRequired();
         });
 
+        builder.Property(p => p.Settlement)
+            .HasConversion(
+                value => JsonSerializer.Serialize(value, (JsonSerializerOptions?)null),
+                json => JsonSerializer.Deserialize<PayslipSettlementSnapshot>(json, (JsonSerializerOptions?)null))
+            .HasColumnType("jsonb")
+            .IsConcurrencyToken();
+
         builder.Property(p => p.MinimumWageTopUp)
             .IsRequired();
 
@@ -152,7 +160,8 @@ public class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
             .IsRequired();
 
         builder.Property(p => p.FinalisedAt)
-            .HasColumnType("timestamptz");
+            .HasColumnType("timestamptz")
+            .IsConcurrencyToken();
 
         builder.HasMany(p => p.Lines)
             .WithOne()

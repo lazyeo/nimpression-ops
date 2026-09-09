@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Subject } from 'rxjs';
+import { signal } from '@angular/core';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { DriverTasksComponent, DriverTaskItem } from './driver-tasks.component';
+import { DriverTasksComponent, DriverTaskItem, DriverTaskDetail } from './driver-tasks.component';
 import { OfflineCacheService } from '../../../core/offline/offline-cache.service';
 import { OfflineQueueService } from '../../../core/offline/offline-queue.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -106,7 +108,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
 
     // Navigate to page 2 of active tasks
     component.nextActivePage();
-    const page2Req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=2&pageSize=20');
+    const page2Req = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=true&page=2&pageSize=20',
+    );
     page2Req.flush({
       items: mockActivePage2,
       totalCount: 52,
@@ -123,7 +127,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
 
     // Navigate back to page 1
     component.prevActivePage();
-    const page1Req = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    const page1Req = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20',
+    );
     page1Req.flush({
       items: mockActivePage1,
       totalCount: 52,
@@ -177,7 +183,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     component.setTab('history');
     expect(component.activeTab()).toBe('history');
 
-    const histReq1 = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5');
+    const histReq1 = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5',
+    );
     histReq1.flush({
       items: mockPage1,
       totalCount: 7,
@@ -196,7 +204,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
 
     // Go to next page -> triggers server request for page 2
     component.nextHistoryPage();
-    const histReq2 = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=2&pageSize=5');
+    const histReq2 = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=false&page=2&pageSize=5',
+    );
     histReq2.flush({
       items: mockPage2,
       totalCount: 7,
@@ -213,7 +223,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
 
     // Go back to previous page -> triggers server request for page 1
     component.prevHistoryPage();
-    const histReq3 = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5');
+    const histReq3 = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5',
+    );
     histReq3.flush({
       items: mockPage1,
       totalCount: 7,
@@ -296,6 +308,39 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     expect(component.historyTasks()[0].tripNo).toBe('TRIP-101');
   });
 
+  it.each(['active', 'history'] as const)(
+    'refreshes both task lists after reconnect while viewing %s',
+    (tab) => {
+      const activeUrl = '/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20';
+      const historyUrl = '/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5';
+      const cancelled = { id: 'cancelled-task', tripNo: 'TRIP-CANCELLED', status: 'Cancelled' };
+      const page = (items: unknown[]) => ({
+        items,
+        totalCount: items.length,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
+      httpMock.expectOne(activeUrl).flush(page([{ ...cancelled, status: 'Assigned' }]));
+      if (tab === 'history') {
+        component.setTab('history');
+        httpMock.expectOne(historyUrl).flush(page([]));
+      }
+      const realtime = TestBed.inject(RealtimeService) as unknown as {
+        invalidationSubject: Subject<{ kind: string; occurredAt: string }>;
+      };
+      realtime.invalidationSubject.next({
+        kind: 'realtime.reconnected',
+        occurredAt: '2026-09-09T00:00:00Z',
+      });
+      httpMock.expectOne(activeUrl).flush(page([]));
+      httpMock.expectOne(historyUrl).flush(page([cancelled]));
+      expect(component.tasks()).toEqual([]);
+      expect(component.historyTasks()[0].status).toBe('Cancelled');
+      expect(component.activeTab()).toBe(tab);
+    },
+  );
+
   it('re-queries API when SignalR invalidation signal arrives for driver task', async () => {
     const initialTasks: DriverTaskItem[] = [
       {
@@ -309,7 +354,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
       },
     ];
 
-    const initialReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    const initialReq = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20',
+    );
     initialReq.flush({
       items: initialTasks,
       totalCount: 1,
@@ -332,7 +379,9 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     // Wait for async offlineCache read to complete
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const reloadReq = httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20');
+    const reloadReq = httpMock.expectOne(
+      '/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20',
+    );
     reloadReq.flush({
       items: [
         ...initialTasks,
@@ -494,5 +543,253 @@ describe('DriverTasksComponent (Offline Cached View & Touch Targets)', () => {
     const postReq = httpMock.expectOne('/api/dispatch/tasks/t-prog-1/status');
     expect(postReq.request.body).toEqual({ status: 'COMPLETED' });
     postReq.flush({});
+  });
+
+  const detailTask: DriverTaskItem = {
+    id: 'detail-task',
+    tripNo: 'TRIP-DETAIL',
+    status: 'COMPLETED',
+    pickupLocation: 'List pickup',
+    deliveryLocation: 'List summary',
+    scheduledTime: '2026-09-09T00:00:00Z',
+    vehiclePlate: 'OLD-PLATE',
+  };
+  const retrievedDetail: DriverTaskDetail = {
+    id: 'detail-task',
+    ref: 'TRIP-DETAIL',
+    title: 'Chilled groceries for store delivery',
+    description: '12 chilled cartons. Keep refrigerated.\nUnload at receiving bay 2.',
+    areaName: 'Auckland Central',
+    areaCode: 'AKL-CBD',
+    vehicleRego: 'NIM001',
+    scheduledFor: '2026-09-09T00:00:00Z',
+    priority: 'High',
+    status: 'Completed',
+    acknowledgedAt: '2026-09-08T23:30:00Z',
+    startedAt: '2026-09-09T00:00:00Z',
+    completedAt: '2026-09-09T02:00:00Z',
+    cancelledAt: null,
+    cancellationReason: null,
+    plannedDistanceKm: 24,
+    actualDistanceKm: 26,
+  };
+
+  function stubNativeDialog(): HTMLDialogElement {
+    const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog');
+    // JSDOM does not implement native dialog focus/modal behavior; browser validation covers it.
+    dialog.showModal = () => dialog.setAttribute('open', '');
+    dialog.close = () => dialog.removeAttribute('open');
+    return dialog;
+  }
+
+  it.each(['active', 'history'] as const)(
+    'opens %s task details on demand using returned delivery notes',
+    (tab) => {
+      httpMock.expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20').flush({
+        items: tab === 'active' ? [{ ...detailTask, status: 'ASSIGNED' }] : [],
+        totalCount: 1,
+        totalPages: 1,
+      });
+      if (tab === 'history') {
+        component.setTab('history');
+        httpMock
+          .expectOne('/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5')
+          .flush({ items: [detailTask], totalCount: 1, totalPages: 1 });
+      }
+      fixture.detectChanges();
+      httpMock.expectNone('/api/dispatch/tasks/detail-task');
+      const dialog = stubNativeDialog();
+      const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+        '.task-cards-list .btn-details',
+      );
+      expect(button.getAttribute('aria-label')).toContain('TRIP-DETAIL');
+      button.click();
+      expect(dialog.open).toBe(true);
+      expect(component.detailLoading()).toBe(true);
+      httpMock.expectOne('/api/dispatch/tasks/detail-task').flush(retrievedDetail);
+      fixture.detectChanges();
+      expect(dialog.textContent).toContain('Chilled groceries for store delivery');
+      expect(dialog.textContent).toContain('12 chilled cartons. Keep refrigerated.');
+      expect(dialog.textContent).toContain('Unload at receiving bay 2.');
+      expect(dialog.textContent).toContain('Auckland Central');
+      expect(dialog.textContent).toContain('NIM001');
+      expect(dialog.textContent).not.toContain('OLD-PLATE');
+      expect(component.taskDetail()?.completedAt).toBe('2026-09-09T02:00:00Z');
+      (dialog.querySelector('.detail-close') as HTMLButtonElement).click();
+      expect(dialog.open).toBe(false);
+      expect(component.taskDetail()).toBeNull();
+    },
+  );
+
+  it('shows a safe access failure without retaining prior task content', () => {
+    httpMock
+      .expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20')
+      .flush({ items: [detailTask], totalCount: 1, totalPages: 1 });
+    const dialog = stubNativeDialog();
+    component.openDetails(detailTask);
+    httpMock.expectOne('/api/dispatch/tasks/detail-task').flush(retrievedDetail);
+    component.closeDetails();
+    component.openDetails({ ...detailTask, id: 'other-task' });
+    httpMock
+      .expectOne('/api/dispatch/tasks/other-task')
+      .flush(
+        { title: 'forbidden', detail: 'Private backend endpoint /api/dispatch/tasks/other-task' },
+        { status: 403, statusText: 'Forbidden' },
+      );
+    fixture.detectChanges();
+    expect(dialog.textContent).toContain('OPS-403');
+    expect(dialog.textContent).not.toContain('Private backend');
+    expect(dialog.textContent).not.toContain('/api/dispatch');
+    expect(dialog.textContent).not.toContain('12 chilled cartons');
+    expect(component.taskDetail()).toBeNull();
+  });
+
+  it('cancels a pending detail request when the dialog closes', () => {
+    httpMock
+      .expectOne('/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20')
+      .flush({ items: [], totalCount: 0, totalPages: 1 });
+    stubNativeDialog();
+    component.openDetails(detailTask);
+    const pending = httpMock.expectOne('/api/dispatch/tasks/detail-task');
+    component.closeDetails();
+    expect(pending.cancelled).toBe(true);
+    expect(component.selectedTaskId()).toBeNull();
+    expect(component.detailLoading()).toBe(false);
+  });
+});
+
+describe('DriverTasksComponent request ordering', () => {
+  const activeUrl = '/api/dispatch/my-tasks?activeOnly=true&page=1&pageSize=20';
+  const historyUrl = '/api/dispatch/my-tasks?activeOnly=false&page=1&pageSize=5';
+  const staleTask: DriverTaskItem = {
+    id: 'cancelled-task',
+    tripNo: 'TRIP-CANCELLED',
+    status: 'ASSIGNED',
+    pickupLocation: 'Depot',
+    deliveryLocation: 'Store',
+    scheduledTime: '2026-09-09T00:00:00Z',
+    vehiclePlate: 'NIM001',
+  };
+  const page = (items: DriverTaskItem[]) => ({ items, totalCount: items.length, totalPages: 1 });
+  const deferredCache = () => {
+    let resolve!: (items: DriverTaskItem[] | null) => void;
+    const promise = new Promise<DriverTaskItem[] | null>((complete) => {
+      resolve = complete;
+    });
+    return { promise, resolve };
+  };
+  let fixture: ComponentFixture<DriverTasksComponent>;
+  let component: DriverTasksComponent;
+  let http: HttpTestingController;
+  let online: ReturnType<typeof signal<boolean>>;
+  let invalidations: Subject<{ kind: string }>;
+  let cacheReads: ReturnType<typeof deferredCache>[];
+
+  beforeEach(async () => {
+    online = signal(true);
+    invalidations = new Subject();
+    cacheReads = [];
+    await TestBed.configureTestingModule({
+      imports: [DriverTasksComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: OfflineQueueService,
+          useValue: { isOnline: online, enqueue: vi.fn().mockResolvedValue(undefined) },
+        },
+        { provide: RealtimeService, useValue: { invalidation$: invalidations.asObservable() } },
+        {
+          provide: OfflineCacheService,
+          useValue: {
+            getDriverTasks: () => {
+              const cache = deferredCache();
+              cacheReads.push(cache);
+              return cache.promise;
+            },
+            cacheDriverTasks: vi.fn().mockResolvedValue(undefined),
+          },
+        },
+      ],
+    }).compileComponents();
+    fixture = TestBed.createComponent(DriverTasksComponent);
+    component = fixture.componentInstance;
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    http.verify();
+  });
+
+  it('renders a delayed cache on an offline cold start', async () => {
+    online.set(false);
+    fixture.detectChanges();
+    http.expectNone(activeUrl);
+    cacheReads[0].resolve([staleTask]);
+    await cacheReads[0].promise;
+    fixture.detectChanges();
+    expect(component.tasks()).toEqual([staleTask]);
+    expect(component.activeTotalCount()).toBe(1);
+    expect(component.isUsingCache()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('TRIP-CANCELLED');
+  });
+
+  it('uses delayed fallback cache even when the HTTP request has already failed', async () => {
+    fixture.detectChanges();
+    http.expectOne(activeUrl).flush({}, { status: 503, statusText: 'Unavailable' });
+    cacheReads[0].resolve([staleTask]);
+    await cacheReads[0].promise;
+    expect(component.tasks()).toEqual([staleTask]);
+    expect(component.isLoading()).toBe(false);
+    expect(component.isUsingCache()).toBe(true);
+  });
+
+  it('cancels the older GET and rejects all old cache reads after a cancellation refresh succeeds', async () => {
+    fixture.detectChanges();
+    const older = http.expectOne(activeUrl);
+    invalidations.next({ kind: 'task.cancelled' });
+    expect(older.cancelled).toBe(true);
+    http.expectOne(activeUrl).flush(page([]));
+    for (const cache of cacheReads) {
+      cache.resolve([staleTask]);
+      await cache.promise;
+    }
+    expect(component.tasks()).toEqual([]);
+    expect(component.activeTotalCount()).toBe(0);
+    expect(component.isUsingCache()).toBe(false);
+    expect(() => older.flush(page([staleTask]))).toThrow();
+  });
+
+  it('keeps history loading separate from the active cache during reconnect', async () => {
+    fixture.detectChanges();
+    http.expectOne(activeUrl).flush(page([]));
+    component.setTab('history');
+    http.expectOne(historyUrl).flush(page([]));
+    invalidations.next({ kind: 'realtime.reconnected' });
+    http.expectOne(historyUrl).flush(page([{ ...staleTask, status: 'CANCELLED' }]));
+    http.expectOne(activeUrl).flush({}, { status: 503, statusText: 'Unavailable' });
+    cacheReads[1].resolve([staleTask]);
+    await cacheReads[1].promise;
+    expect(component.tasks()).toEqual([staleTask]);
+    expect(component.activeTab()).toBe('history');
+    expect(component.historyTasks()[0].status).toBe('CANCELLED');
+    expect(component.isLoading()).toBe(false);
+  });
+
+  it('cancels obsolete history GETs and all list requests when destroyed', async () => {
+    fixture.detectChanges();
+    const active = http.expectOne(activeUrl);
+    component.setTab('history');
+    const oldHistory = http.expectOne(historyUrl);
+    void component.loadHistory();
+    const currentHistory = http.expectOne(historyUrl);
+    expect(oldHistory.cancelled).toBe(true);
+    fixture.destroy();
+    expect(active.cancelled).toBe(true);
+    expect(currentHistory.cancelled).toBe(true);
+    cacheReads[0].resolve([staleTask]);
+    await cacheReads[0].promise;
+    expect(component.tasks()).toEqual([]);
   });
 });

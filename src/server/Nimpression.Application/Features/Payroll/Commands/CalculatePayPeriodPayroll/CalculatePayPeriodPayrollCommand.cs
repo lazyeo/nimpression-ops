@@ -7,6 +7,7 @@ using Nimpression.Application.Features.Payroll.DTOs;
 using Nimpression.Domain.Entities.Driver;
 using Nimpression.Domain.Entities.Payroll;
 using Nimpression.Domain.Enums;
+using Nimpression.Domain.Exceptions;
 using Nimpression.Domain.Services;
 using Nimpression.Domain.ValueObjects;
 
@@ -48,7 +49,7 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
             return Error.Forbidden("forbidden", "Only administrators can calculate payroll.");
         }
 
-        var payPeriod = await payrollRepository.GetPayPeriodByIdAsync(request.PayPeriodId, cancellationToken);
+        var payPeriod = await payrollRepository.GetPayPeriodForUpdateAsync(request.PayPeriodId, cancellationToken);
         if (payPeriod is null)
         {
             return Error.NotFound("pay_period_not_found", $"Pay period with ID '{request.PayPeriodId}' was not found.");
@@ -60,6 +61,16 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
             return Error.Unprocessable(
                 "period_finalised",
                 $"Cannot calculate/modify payroll for a period in '{payPeriod.Status}' status. It must be voided/reopened first.");
+        }
+
+        Money minWage;
+        try
+        {
+            minWage = NzAdultMinimumWage.ForPeriod(payPeriod.StartsOn, payPeriod.EndsOn, request.MinimumHourlyWage);
+        }
+        catch (DomainValidationException exception)
+        {
+            return Error.Unprocessable("minimum_wage_configuration_invalid", exception.Message);
         }
 
         List<Driver> drivers;
@@ -79,10 +90,6 @@ public sealed class CalculatePayPeriodPayrollCommandHandler(
         }
 
         var calcTime = dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
-        var minWage = request.MinimumHourlyWage.HasValue
-            ? new Money(request.MinimumHourlyWage.Value)
-            : PayrollCalculatorV2.DefaultMinimumHourlyWage;
-
         var driverIds = drivers.Select(d => d.Id).Distinct().ToList();
         var driverNames = await payrollRepository.GetDriverDisplayNamesAsync(driverIds, cancellationToken);
         var resultDtos = new List<PayslipDto>();

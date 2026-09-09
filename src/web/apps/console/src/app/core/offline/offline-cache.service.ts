@@ -1,4 +1,6 @@
 import { inject, Injectable } from '@angular/core';
+import { AuthService } from '../auth/auth.service';
+import { AuthUser } from '../models/auth.models';
 import { CachedRecord } from '../models/offline.models';
 import { IndexedDbService, STORES } from './indexed-db.service';
 
@@ -14,24 +16,58 @@ const CACHE_KEYS = {
 })
 export class OfflineCacheService {
   private readonly indexedDb = inject(IndexedDbService);
+  private readonly auth = inject(AuthService);
+
+  private currentOwner(): AuthUser | null {
+    const user = this.auth.currentUser();
+    return this.auth.isAuthenticated() && typeof user?.id === 'string' && user.id.trim()
+      ? user
+      : null;
+  }
+
+  private ownerPrefix(owner: AuthUser): string {
+    return `user:${encodeURIComponent(owner.id)}:`;
+  }
+
+  private scopedKey(owner: AuthUser, key: string): string {
+    return this.ownerPrefix(owner) + encodeURIComponent(key);
+  }
 
   async cacheData<T>(key: string, data: T): Promise<void> {
+    const owner = this.currentOwner();
+    if (!owner) return;
     const record: CachedRecord<T> = {
-      key,
+      key: this.scopedKey(owner, key),
       data,
       cachedAt: new Date().toISOString(),
     };
     await this.indexedDb.put(STORES.OFFLINE_CACHE, record);
   }
 
-  async getCachedData<T>(key: string): Promise<T | null> {
-    const record = await this.indexedDb.get<CachedRecord<T>>(STORES.OFFLINE_CACHE, key);
-    return record ? record.data : null;
+  getCachedData<T>(key: string): Promise<T | null> {
+    return this.readRecord<T, T>(key, (record) => record.data);
   }
 
-  async getCacheTimestamp(key: string): Promise<string | null> {
-    const record = await this.indexedDb.get<CachedRecord<unknown>>(STORES.OFFLINE_CACHE, key);
-    return record ? record.cachedAt : null;
+  getCacheTimestamp(key: string): Promise<string | null> {
+    return this.readRecord<unknown, string>(key, (record) => record.cachedAt);
+  }
+
+  private async readRecord<T, TResult>(
+    key: string,
+    select: (record: CachedRecord<T>) => TResult,
+  ): Promise<TResult | null> {
+    const owner = this.currentOwner();
+    if (!owner) return null;
+    const scopedKey = this.scopedKey(owner, key);
+    try {
+      const record = await this.indexedDb.get<CachedRecord<T>>(STORES.OFFLINE_CACHE, scopedKey);
+      // Session identity, not just an account id: a stale read must not survive a logout/login.
+      if (this.currentOwner() !== owner || record?.key !== scopedKey) return null;
+      return select(record);
+    } catch {
+      // An unavailable private cache must never fall back to legacy shared entries.
+      return null;
+    }
   }
 
   // Specialized cache methods for Driver shell
@@ -39,7 +75,7 @@ export class OfflineCacheService {
     await this.cacheData(CACHE_KEYS.DRIVER_TASKS, tasks);
   }
 
-  async getDriverTasks<T>(): Promise<T[] | null> {
+  getDriverTasks<T>(): Promise<T[] | null> {
     return this.getCachedData<T[]>(CACHE_KEYS.DRIVER_TASKS);
   }
 
@@ -47,7 +83,7 @@ export class OfflineCacheService {
     await this.cacheData(CACHE_KEYS.DRIVER_PAYSLIPS, payslips);
   }
 
-  async getDriverPayslips<T>(): Promise<T[] | null> {
+  getDriverPayslips<T>(): Promise<T[] | null> {
     return this.getCachedData<T[]>(CACHE_KEYS.DRIVER_PAYSLIPS);
   }
 
@@ -55,11 +91,20 @@ export class OfflineCacheService {
     await this.cacheData(CACHE_KEYS.DRIVER_SHIFTS, shifts);
   }
 
-  async getDriverShifts<T>(): Promise<T[] | null> {
+  getDriverShifts<T>(): Promise<T[] | null> {
     return this.getCachedData<T[]>(CACHE_KEYS.DRIVER_SHIFTS);
   }
 
   async clearAllCache(): Promise<void> {
-    await this.indexedDb.clear(STORES.OFFLINE_CACHE);
+    const owner = this.currentOwner();
+    if (!owner) return;
+    const records = await this.indexedDb.getAll<CachedRecord<unknown>>(STORES.OFFLINE_CACHE);
+    if (this.currentOwner() !== owner) return;
+    const prefix = this.ownerPrefix(owner);
+    await Promise.all(
+      records
+        .filter((record) => record.key.startsWith(prefix))
+        .map((record) => this.indexedDb.delete(STORES.OFFLINE_CACHE, record.key)),
+    );
   }
 }

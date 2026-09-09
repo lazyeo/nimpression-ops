@@ -1,0 +1,10 @@
+{
+  "en-NZ": {
+    "unavailable": "Not available",
+    "otherField": "Other field {index}"
+  },
+  "zh-CN": {
+    "unavailable": "暂无信息",
+    "otherField": "其他字段 {index}"
+  }
+}

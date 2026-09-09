@@ -58,8 +58,24 @@ describe('I18nService', () => {
     expect(service.translate('AUTH.LOGIN')).toBe('Sign in');
   });
 
-  it('returns key if missing completely', () => {
-    expect(service.translate('NON.EXISTENT.KEY')).toBe('NON.EXISTENT.KEY');
+  it('uses readable localized fallback for missing keys while preserving ordinary text', () => {
+    service.setLanguage('en-NZ');
+    expect(service.translate('NON.EXISTENT.KEY')).toBe('Information unavailable');
+    expect(service.translate('VEHICLES.SECTION_ASSIGNMENT')).toBe('Information unavailable');
+    service.setLanguage('zh-CN');
+    expect(service.translate('NON.EXISTENT.KEY')).toBe('信息暂不可用');
+    expect(service.translate('Log out')).toBe('Log out');
+    expect(service.translate('已取消')).toBe('已取消');
+    expect(service.translate('TASK-001')).toBe('TASK-001');
+  });
+
+  it('renders an available assignment label in both languages', () => {
+    service.setDictionary('en-NZ', { VEHICLES: { SECTION_ASSIGNMENT: 'Assignment' } });
+    service.setDictionary('zh-CN', { VEHICLES: { SECTION_ASSIGNMENT: '分配信息' } });
+    service.setLanguage('en-NZ');
+    expect(service.translate('VEHICLES.SECTION_ASSIGNMENT')).toBe('Assignment');
+    service.setLanguage('zh-CN');
+    expect(service.translate('VEHICLES.SECTION_ASSIGNMENT')).toBe('分配信息');
   });
 
   it('persists language preference and updates document element lang', () => {

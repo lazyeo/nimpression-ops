@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -32,6 +33,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AreasComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly areasService = inject(AreasService);
   readonly auth = inject(AuthService);
 
@@ -131,7 +133,7 @@ export class AreasComponent implements OnInit {
           this.state.set('forbidden');
         } else {
           this.state.set('error');
-          this.errorMessage.set(err.error?.message || err.message || 'Error loading areas');
+          this.errorMessage.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -221,9 +223,9 @@ export class AreasComponent implements OnInit {
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
           if (err.status === 409) {
-            this.formError.set('Area code already exists. Please choose a unique code.');
+            this.formError.set(this.userFacingErrors.format(err));
           } else {
-            this.formError.set(err.error?.message || err.error?.detail || err.message || 'Failed to create area');
+            this.formError.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -268,7 +270,7 @@ export class AreasComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to update area');
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -311,13 +313,9 @@ export class AreasComponent implements OnInit {
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
           if (err.status === 422) {
-            this.formError.set(
-              err.error?.message ||
-                err.error?.detail ||
-                'Driver area assignment dates overlap with existing assignment.',
-            );
+            this.formError.set(this.userFacingErrors.format(err));
           } else {
-            this.formError.set(err.error?.message || err.error?.detail || 'Failed to assign driver to area');
+            this.formError.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -349,7 +347,7 @@ export class AreasComponent implements OnInit {
         this.loadAssignments();
       },
       error: (err: HttpErrorResponse) => {
-        alert(err.error?.message || 'Failed to end assignment');
+        alert(this.userFacingErrors.format(err));
       },
     });
   }
@@ -381,9 +379,9 @@ export class AreasComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         if (err.status === 409) {
-          this.formError.set('Cannot delete area with active driver assignments. Please end assignments first.');
+          this.formError.set(this.userFacingErrors.format(err));
         } else {
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to delete area');
+          this.formError.set(this.userFacingErrors.format(err));
         }
       },
     });

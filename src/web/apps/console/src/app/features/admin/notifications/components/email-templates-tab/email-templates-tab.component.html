@@ -74,7 +74,7 @@
             @for (template of templates(); track template.id) {
               <tr (click)="openEditDialog(template)">
                 <td [attr.data-label]="'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n">
-                  <span class="badge-template">{{ template.key }}</span>
+                  <span class="badge-template">{{ template.key | businessLabel: 'template' }}</span>
                 </td>
                 <td class="cell-subject" [attr.data-label]="'NOTIFICATIONS.COL_SUBJECT_EN' | i18n">{{ template.subjectEn }}</td>
                 <td class="cell-subject" [attr.data-label]="'NOTIFICATIONS.COL_SUBJECT_ZH' | i18n">{{ template.subjectZh }}</td>

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ErrorNotificationService } from '../services/error-notification.service';
 import { errorInterceptor } from './error.interceptor';
 
-describe('errorInterceptor (W26 R2 422 ProblemDetails Fallback)', () => {
+describe('errorInterceptor safe presentation', () => {
   let httpClient: HttpClient;
   let httpMock: HttpTestingController;
   let errorService: ErrorNotificationService;
@@ -52,10 +52,9 @@ describe('errorInterceptor (W26 R2 422 ProblemDetails Fallback)', () => {
     const latest = errorService.latestError();
     expect(latest).not.toBeNull();
     expect(latest?.statusCode).toBe(422);
-    expect(latest?.title).toBe('invalid_task_transition');
-    expect(latest?.detail).toBe(
-      "Cannot transition task from 'Assigned' to 'InProgress'. Task must be 'Acknowledged' first.",
-    );
+    expect(latest?.title).toBe('ERRORS.TITLE');
+    expect(latest?.code).toBe('TASK-001');
+    expect(latest?.detail).toBe('ERRORS.TASK_STATE_CHANGED');
 
     // Verify it is NOT the raw Angular HttpErrorResponse string
     expect(latest?.detail).not.toContain('Http failure response');
@@ -80,8 +79,9 @@ describe('errorInterceptor (W26 R2 422 ProblemDetails Fallback)', () => {
     const latest = errorService.latestError();
     expect(latest).not.toBeNull();
     expect(latest?.statusCode).toBe(400);
-    expect(latest?.title).toBe('driver_id_required');
-    expect(latest?.detail).toBe('DriverId is mandatory for management fine submission.');
+    expect(latest?.title).toBe('ERRORS.TITLE');
+    expect(latest?.code).toBe('DRIVER-001');
+    expect(latest?.detail).toBe('ERRORS.DRIVER_REQUIRED');
     expect(latest?.detail).not.toContain('Http failure response');
   });
 
@@ -96,8 +96,8 @@ describe('errorInterceptor (W26 R2 422 ProblemDetails Fallback)', () => {
     const latest = errorService.latestError();
     expect(latest).not.toBeNull();
     expect(latest?.statusCode).toBe(422);
-    expect(latest?.title).toBe('COMMON.INVALID_OPERATION');
-    expect(latest?.detail).toBe('COMMON.INVALID_STATE_TRANSITION');
+    expect(latest?.title).toBe('ERRORS.TITLE');
+    expect(latest?.detail).toBe('ERRORS.VALIDATION');
   });
 
   it('does not broadcast 401 or 409 errors through global error notifier', () => {

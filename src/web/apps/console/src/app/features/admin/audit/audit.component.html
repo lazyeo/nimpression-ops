@@ -187,18 +187,18 @@
                     [variant]="(log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add')) ? 'success' : (log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('remove')) ? 'danger' : (log.action.toLowerCase().includes('update') || log.action.toLowerCase().includes('edit')) ? 'info' : 'neutral'"
                     size="sm"
                   >
-                    {{ log.action }}
+                    {{ log.action | businessLabel: 'auditAction' }}
                   </nim-status-badge>
                 </td>
                 <td [attr.data-label]="'AUDIT.COL_ENTITY_TYPE' | i18n">
-                  <span class="badge-entity">{{ log.entityType }}</span>
+                  <span class="badge-entity">{{ log.entityType | businessLabel: 'auditEntity' }}</span>
                 </td>
                 <td class="cell-id" [attr.data-label]="'AUDIT.COL_ENTITY_ID' | i18n">
                   <span class="code-id">{{ log.entityId }}</span>
                 </td>
                 <td [attr.data-label]="'AUDIT.COL_ACTOR_ROLE' | i18n">
                   <nim-status-badge variant="neutral" size="sm">
-                    {{ log.actorRole ? ('ROLES.' + (log.actorRole === 1 || log.actorRole === 'Admin' ? 'ADMIN' : log.actorRole === 2 || log.actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
+                    {{ log.actorRole ? (log.actorRole | businessLabel: 'actorRole') : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
                   </nim-status-badge>
                 </td>
                 <td [attr.data-label]="'AUDIT.COL_IP_ADDRESS' | i18n">

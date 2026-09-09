@@ -217,7 +217,9 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     expect(retainedInDb).toBeTruthy();
     expect(retainedInDb.status).toBe('failed');
     expect(retainedInDb.retryCount).toBe(1);
-    expect(retainedInDb.lastError).toBeTruthy();
+    expect(retainedInDb.errorCode).toBe('OPS-SERVICE');
+    expect(retainedInDb.errorMessageKey).toBe('ERRORS.SERVICE_UNAVAILABLE');
+    expect(retainedInDb.lastError).toBeUndefined();
   });
 
   it('handles 409 Conflict as idempotent success and removes from queue', async () => {
@@ -287,7 +289,7 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     const req = httpMock.expectOne('/api/dispatch/tasks/invalid-uuid/status');
     req.flush(
       {
-        error: 'invalid_transition',
+        title: 'invalid_task_transition',
         message: 'Cannot transition JobTask from Assigned to InProgress.',
       },
       { status: 422, statusText: 'Unprocessable Entity' },
@@ -304,12 +306,12 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     const queueItem = service.queueItems()[0];
     expect(queueItem.status).toBe('failed');
     expect(queueItem.isPermanentFailure).toBe(true);
-    expect(queueItem.lastError).toBe('Cannot transition JobTask from Assigned to InProgress.');
-    expect(queueItem.lastError).not.toContain('Http failure response');
+    expect(queueItem.errorCode).toBe('TASK-001');
+    expect(queueItem.errorMessageKey).toBe('ERRORS.TASK_STATE_CHANGED');
+    expect(queueItem.lastError).toBeUndefined();
     expect(mockIndexedDb.data[item.id].isPermanentFailure).toBe(true);
-    expect(mockIndexedDb.data[item.id].lastError).toBe(
-      'Cannot transition JobTask from Assigned to InProgress.',
-    );
+    expect(mockIndexedDb.data[item.id].errorCode).toBe(queueItem.errorCode);
+    expect(JSON.stringify(mockIndexedDb.data[item.id])).not.toContain('Cannot transition JobTask');
 
     // retryAll should NOT retry permanent failures (no HTTP request should be sent)
     await service.retryAll();
@@ -362,5 +364,40 @@ describe('OfflineQueueService (PWA & Offline Reliability)', () => {
     expect(service.queueItems().length).toBe(0);
     expect(service.failedCount()).toBe(0);
     expect(mockIndexedDb.data[item.id]).toBeUndefined();
+  });
+
+  it('replaces legacy raw failure text with safe metadata while retaining replay data', async () => {
+    const legacy: OfflineQueueItem = {
+      id: 'legacy-error',
+      clientRequestId: 'legacy-request',
+      url: '/api/dispatch/tasks/private-task/status',
+      method: 'POST',
+      body: { status: 'IN_PROGRESS' },
+      createdAt: '2026-09-09T00:00:00Z',
+      retryCount: 1,
+      status: 'failed',
+      lastError: 'Private server stack trace',
+    };
+    mockIndexedDb.data[legacy.id] = legacy;
+    service.isOnline.set(false);
+    await service.loadPersistedQueue();
+    const retry = service.retryItem(legacy.id);
+    await Promise.resolve();
+    await Promise.resolve();
+    const req = httpMock.expectOne(legacy.url);
+    expect(req.request.body).toEqual(legacy.body);
+    req.flush(
+      { detail: 'Another private stack trace' },
+      { status: 500, statusText: 'Private server error' },
+    );
+    expect(await retry).toBe(false);
+    const retained = mockIndexedDb.data[legacy.id];
+    expect(retained.errorCode).toBe('OPS-SERVICE');
+    expect(retained.errorMessageKey).toBe('ERRORS.SERVICE_UNAVAILABLE');
+    expect(retained.lastError).toBeUndefined();
+    expect(retained.url).toBe(legacy.url);
+    expect(retained.body).toEqual(legacy.body);
+    expect(retained.retryCount).toBe(2);
+    expect(retained.status).toBe('failed');
   });
 });

@@ -272,13 +272,13 @@ public class PayrollCalculatorV2Tests
     [Fact]
     public void F7_5_MinimumWageFloor_Case1_TripWinsOperationalGross_ButConvertedHourlyBelowMinimum()
     {
-        // 40 hours total. Minimum wage = $23.15/h -> Floor = 40 * $23.15 = $926.00
+        // 40 hours total. Minimum wage = $23.95/h -> Floor = 40 * $23.95 = $958.00
         // Driver hourly rate = $20.00/h -> HoursBasedGross = 40 * $20 = $800.00
         // Trip: 10 trips * $50 + 350km * $1.00 = $500 + $350 = $850.00
         // Operational gross = MAX(800, 850) = $850 (Trip wins)
-        // Converted hourly = $850 / 40h = $21.25/h < $23.15/h minimum wage
-        // Top-up needed = $926.00 - $850.00 = $76.00
-        // Final GrossPay = $926.00
+        // Converted hourly = $850 / 40h = $21.25/h < $23.95/h minimum wage
+        // Top-up needed = $958.00 - $850.00 = $108.00
+        // Final GrossPay = $958.00
         var driver = CreateTestDriver(hourlyRate: 20.00m, perTripRate: 50.00m, perKmRate: 1.00m);
         var nzOffset = TimeSpan.FromHours(12);
 
@@ -299,28 +299,28 @@ public class PayrollCalculatorV2Tests
             payPeriod: TestPayPeriod,
             shifts: shifts,
             tasks: tasks,
-            minimumHourlyWage: new Money(23.15m));
+            minimumHourlyWage: new Money(23.95m));
 
         Assert.Equal(800.00m, payslip.HoursBasedGross.Amount);
         Assert.Equal(850.00m, payslip.TripBasedGross.Amount);
         Assert.Equal(PayBasis.Trip, payslip.BasisUsed);
         Assert.True(payslip.MinimumWageTopUp);
-        Assert.Equal(926.00m, payslip.GrossPay.Amount);
+        Assert.Equal(958.00m, payslip.GrossPay.Amount);
 
         var topUpLine = payslip.Lines.FirstOrDefault(l => l.Kind == "MinimumWageTopUp");
         Assert.NotNull(topUpLine);
-        Assert.Equal(76.00m, topUpLine.Amount.Amount);
+        Assert.Equal(108.00m, topUpLine.Amount.Amount);
         Assert.Equal(PayBasis.Trip, topUpLine.Basis);
     }
 
     [Fact]
     public void F7_5_MinimumWageFloor_Case2_DriverHourlyRateItselfBelowMinimumWage()
     {
-        // Driver hourly rate $18.00 < $23.15. 40h worked -> HoursBasedGross = $720.00
+        // Driver hourly rate $18.00 < $23.95. 40h worked -> HoursBasedGross = $720.00
         // Trip gross = $0
-        // Floor = 40 * $23.15 = $926.00
-        // Top-up = $926.00 - $720.00 = $206.00
-        // Final GrossPay = $926.00
+        // Floor = 40 * $23.95 = $958.00
+        // Top-up = $958.00 - $720.00 = $238.00
+        // Final GrossPay = $958.00
         var driver = CreateTestDriver(hourlyRate: 18.00m, perTripRate: 0m, perKmRate: 0m);
         var nzOffset = TimeSpan.FromHours(12);
 
@@ -335,17 +335,17 @@ public class PayrollCalculatorV2Tests
             payPeriod: TestPayPeriod,
             shifts: shifts,
             tasks: [],
-            minimumHourlyWage: new Money(23.15m));
+            minimumHourlyWage: new Money(23.95m));
 
         Assert.Equal(720.00m, payslip.HoursBasedGross.Amount);
         Assert.Equal(0.00m, payslip.TripBasedGross.Amount);
         Assert.Equal(PayBasis.Hourly, payslip.BasisUsed);
         Assert.True(payslip.MinimumWageTopUp);
-        Assert.Equal(926.00m, payslip.GrossPay.Amount);
+        Assert.Equal(958.00m, payslip.GrossPay.Amount);
 
         var topUpLine = payslip.Lines.FirstOrDefault(l => l.Kind == "MinimumWageTopUp");
         Assert.NotNull(topUpLine);
-        Assert.Equal(206.00m, topUpLine.Amount.Amount);
+        Assert.Equal(238.00m, topUpLine.Amount.Amount);
     }
 
     [Fact]
@@ -358,7 +358,7 @@ public class PayrollCalculatorV2Tests
         // Day 1: 10h (8h ord @ $15 = $120, 2h ot @ $22.50 = $45) = $165
         // Day 2: 7.5h (7.5h ord @ $15 = $112.50)
         // Total hours = 17.5h. Total hours gross = $277.50
-        // Minimum wage floor = 17.5 * $23.15 = $405.125 -> Math.Round to $405.13 (Money VO)
+        // Minimum wage floor = 17.5 * $23.95 = $419.125 -> Math.Round to $419.13 (Money VO)
         var shift1 = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 17, 8, 0, 0, nzOffset), 10);
         var shift2 = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 18, 8, 0, 0, nzOffset), 7.5);
 
@@ -367,12 +367,12 @@ public class PayrollCalculatorV2Tests
             payPeriod: TestPayPeriod,
             shifts: [shift1, shift2],
             tasks: [],
-            minimumHourlyWage: new Money(23.15m));
+            minimumHourlyWage: new Money(23.95m));
 
         var totalHours = payslip.OrdinaryHours + payslip.OvertimeHours + payslip.HolidayHours;
         Assert.Equal(17.50m, totalHours.Value);
 
-        var expectedFloor = new Money(totalHours.Value * 23.15m);
+        var expectedFloor = new Money(totalHours.Value * 23.95m);
         Assert.Equal(expectedFloor, payslip.GrossPay);
         Assert.True(payslip.MinimumWageTopUp);
     }
@@ -511,8 +511,8 @@ public class PayrollCalculatorV2Tests
     public void F7_5_MinimumWageFloor_Boundary_OperationalGrossEqualsFloor_NoTopUp()
     {
         // 边界测试：实收金额恰好等于最低工资地板线时，MinimumWageTopUp 必须为 false 且不产出 MinimumWageTopUp 明细行
-        // 司机时薪 $23.15，趟次和公里费率设 0，工作 1 小时 -> 实际工时薪资 $23.15，最低工资地板 $23.15
-        var driver = CreateTestDriver(hourlyRate: 23.15m, perTripRate: 0m, perKmRate: 0m);
+        // 司机时薪 $23.95，趟次和公里费率设 0，工作 1 小时 -> 实际工时薪资 $23.95，最低工资地板 $23.95
+        var driver = CreateTestDriver(hourlyRate: 23.95m, perTripRate: 0m, perKmRate: 0m);
         var nzOffset = TimeSpan.FromHours(12);
         var shift = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 17, 8, 0, 0, nzOffset), durationHours: 1);
 
@@ -521,10 +521,10 @@ public class PayrollCalculatorV2Tests
             payPeriod: TestPayPeriod,
             shifts: [shift],
             tasks: [],
-            minimumHourlyWage: new Money(23.15m));
+            minimumHourlyWage: new Money(23.95m));
 
-        Assert.Equal(23.15m, payslip.HoursBasedGross.Amount);
-        Assert.Equal(23.15m, payslip.GrossPay.Amount);
+        Assert.Equal(23.95m, payslip.HoursBasedGross.Amount);
+        Assert.Equal(23.95m, payslip.GrossPay.Amount);
         Assert.False(payslip.MinimumWageTopUp);
         Assert.Equal(PayBasis.Hourly, payslip.BasisUsed);
         Assert.DoesNotContain(payslip.Lines, l => l.Kind == "MinimumWageTopUp");
@@ -534,10 +534,10 @@ public class PayrollCalculatorV2Tests
     public void F7_5_MinimumWageFloor_Boundary_TripGrossEqualsFloor_NoTopUp()
     {
         // 边界测试：趟次胜且金额恰好等于最低工资地板线时，不触发补差
-        // 司机时薪 $10/h，1 小时班次（工时口径 $10）；趟次费率 $23.15/trip，1 趟任务（趟次口径 $23.15）。
-        // 最低工资地板 = 1h * $23.15 = $23.15。
+        // 司机时薪 $10/h，1 小时班次（工时口径 $10）；趟次费率 $23.95/trip，1 趟任务（趟次口径 $23.95）。
+        // 最低工资地板 = 1h * $23.95 = $23.95。
         // 实收恰好等于地板线：BasisUsed 为 Trip，MinimumWageTopUp 为 false，Lines 不含 MinimumWageTopUp
-        var driver = CreateTestDriver(hourlyRate: 10.00m, perTripRate: 23.15m, perKmRate: 0m);
+        var driver = CreateTestDriver(hourlyRate: 10.00m, perTripRate: 23.95m, perKmRate: 0m);
         var nzOffset = TimeSpan.FromHours(12);
         var shift = CreateCompletedShift(driver.Id, new DateTimeOffset(2026, 8, 17, 8, 0, 0, nzOffset), durationHours: 1);
         var task = CreateCompletedTask(driver.Id, new DateTimeOffset(2026, 8, 17, 10, 0, 0, nzOffset));
@@ -547,11 +547,11 @@ public class PayrollCalculatorV2Tests
             payPeriod: TestPayPeriod,
             shifts: [shift],
             tasks: [task],
-            minimumHourlyWage: new Money(23.15m));
+            minimumHourlyWage: new Money(23.95m));
 
         Assert.Equal(10.00m, payslip.HoursBasedGross.Amount);
-        Assert.Equal(23.15m, payslip.TripBasedGross.Amount);
-        Assert.Equal(23.15m, payslip.GrossPay.Amount);
+        Assert.Equal(23.95m, payslip.TripBasedGross.Amount);
+        Assert.Equal(23.95m, payslip.GrossPay.Amount);
         Assert.False(payslip.MinimumWageTopUp);
         Assert.Equal(PayBasis.Trip, payslip.BasisUsed);
         Assert.DoesNotContain(payslip.Lines, l => l.Kind == "MinimumWageTopUp");

@@ -169,14 +169,14 @@
                     } @else {
                       <nim-icon name="clock" [size]="12" />
                     }
-                    <span>{{ log.status }}</span>
+                    <span>{{ log.status | businessLabel: 'emailStatus' }}</span>
                   </span>
                 </td>
                 <td class="cell-recipient" [attr.data-label]="'NOTIFICATIONS.COL_RECIPIENT' | i18n">
                   <span class="text-truncate">{{ log.toAddress }}</span>
                 </td>
                 <td [attr.data-label]="'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n">
-                  <span class="badge-template">{{ log.templateKey }}</span>
+                  <span class="badge-template">{{ log.templateKey | businessLabel: 'template' }}</span>
                 </td>
                 <td class="cell-subject" [attr.data-label]="'NOTIFICATIONS.COL_SUBJECT' | i18n">
                   <span class="text-truncate">{{ log.subject }}</span>
@@ -194,7 +194,7 @@
                   {{ log.sentAt ? (log.sentAt | localeDate: 'medium') : '-' }}
                 </td>
                 <td class="cell-trigger" [attr.data-label]="'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n">
-                  <span class="text-muted-xs">{{ log.triggeredBy }}</span>
+                  <span class="text-muted-xs">{{ log.triggeredBy | businessLabel: 'emailTrigger' }}</span>
                 </td>
                 <td class="cell-actions" [attr.data-label]="'COMMON.ACTIONS' | i18n" (click)="$event.stopPropagation()">
                   <div class="action-buttons">
@@ -304,7 +304,7 @@
                 [class.status-failed]="['failed', 'deadletter'].includes(log.status.toLowerCase())"
                 [class.status-pending]="['pending', 'sending'].includes(log.status.toLowerCase())"
               >
-                {{ log.status }}
+                {{ log.status | businessLabel: 'emailStatus' }}
               </span>
             </div>
 
@@ -315,7 +315,7 @@
 
             <div class="detail-item">
               <span class="detail-label">{{ 'NOTIFICATIONS.COL_TEMPLATE_KEY' | i18n }}</span>
-              <span class="badge-template">{{ log.templateKey }}</span>
+              <span class="badge-template">{{ log.templateKey | businessLabel: 'template' }}</span>
             </div>
 
             <div class="detail-item">
@@ -325,7 +325,7 @@
 
             <div class="detail-item">
               <span class="detail-label">{{ 'NOTIFICATIONS.COL_TRIGGERED_BY' | i18n }}</span>
-              <span class="detail-val">{{ log.triggeredBy }}</span>
+              <span class="detail-val">{{ log.triggeredBy | businessLabel: 'emailTrigger' }}</span>
             </div>
 
             <div class="detail-item">
@@ -339,14 +339,14 @@
             <div class="subject-box">{{ log.subject }}</div>
           </div>
 
-          <!-- Error Tracebox if failed -->
+          <!-- Safe summary for a failed delivery -->
           @if (log.lastError) {
             <div class="error-trace-card">
               <div class="error-trace-header">
                 <nim-icon name="alert-triangle" [size]="16" class="error-icon" />
-                <span class="error-trace-title">{{ 'NOTIFICATIONS.LAST_ERROR_DETAILS' | i18n }}</span>
+                <span class="error-trace-title">{{ 'COMMON.ERROR' | i18n }}</span>
               </div>
-              <pre class="error-trace-body">{{ log.lastError }}</pre>
+              <pre class="error-trace-body">{{ userFacingErrors.format(log.lastError) }}</pre>
             </div>
           }
         </div>

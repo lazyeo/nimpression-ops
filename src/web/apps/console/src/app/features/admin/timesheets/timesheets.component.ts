@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -44,6 +45,7 @@ import { toScreamingSnake } from '../../../core/utils/case.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimesheetsComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly timesheetsService = inject(TimesheetsService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -143,7 +145,7 @@ export class TimesheetsComponent implements OnInit {
             this.isForbidden.set(true);
           } else {
             this.hasError.set(true);
-            this.errorMessage.set(err.message || 'Failed to load timesheet records.');
+            this.errorMessage.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -254,9 +256,7 @@ export class TimesheetsComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmittingCorrection.set(false);
-        this.correctionError.set(
-          err.error?.message || err.message || 'Failed to apply admin correction.',
-        );
+        this.correctionError.set(this.userFacingErrors.format(err));
       },
     });
   }

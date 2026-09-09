@@ -1,3 +1,4 @@
+import { formatNzDate } from './nz-date';
 import { inject, Injectable } from '@angular/core';
 import { I18nService } from './i18n.service';
 import { SupportedLang } from '../models/i18n.models';
@@ -33,40 +34,40 @@ export class FormatService {
       return '';
     }
 
-    const date = typeof value === 'string' || typeof value === 'number' ? new Date(value) : value;
-    if (isNaN(date.getTime())) {
-      return String(value);
-    }
-
     const locale = customLocale || this.currentLocale;
 
     const optionsMap: Record<DatePreset, Intl.DateTimeFormatOptions> = {
-      short: { year: 'numeric', month: 'numeric', day: 'numeric' },
-      medium: { year: 'numeric', month: 'short', day: 'numeric' },
-      long: { year: 'numeric', month: 'long', day: 'numeric' },
-      full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+      short: { year: 'numeric', month: '2-digit', day: '2-digit' },
+      medium: { year: 'numeric', month: '2-digit', day: '2-digit' },
+      long: { year: 'numeric', month: '2-digit', day: '2-digit' },
+      full: { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' },
       time: { hour: '2-digit', minute: '2-digit', hour12: locale === 'en-NZ' },
-      timeWithSeconds: { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: locale === 'en-NZ' },
+      timeWithSeconds: {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: locale === 'en-NZ',
+      },
       shortDateTime: {
         year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         hour12: locale === 'en-NZ',
       },
       mediumDateTime: {
         year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         hour12: locale === 'en-NZ',
       },
       datetime: {
         year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         hour12: locale === 'en-NZ',
@@ -74,15 +75,15 @@ export class FormatService {
       fullDateTime: {
         weekday: 'long',
         year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         hour12: locale === 'en-NZ',
       },
     };
 
-    return new Intl.DateTimeFormat(locale, optionsMap[preset]).format(date);
+    return formatNzDate(value, optionsMap[preset]);
   }
 
   formatTime(
@@ -90,24 +91,7 @@ export class FormatService {
     includeSeconds = false,
     customLocale?: SupportedLang,
   ): string {
-    if (value === null || value === undefined || value === '') {
-      return '';
-    }
-
-    const date = typeof value === 'string' || typeof value === 'number' ? new Date(value) : value;
-    if (isNaN(date.getTime())) {
-      return String(value);
-    }
-
-    const locale = customLocale || this.currentLocale;
-    const options: Intl.DateTimeFormatOptions = {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: includeSeconds ? '2-digit' : undefined,
-      hour12: locale === 'en-NZ',
-    };
-
-    return new Intl.DateTimeFormat(locale, options).format(date);
+    return this.formatDate(value, includeSeconds ? 'timeWithSeconds' : 'time', customLocale);
   }
 
   formatDateTime(

@@ -1,3 +1,4 @@
+import { formatNzDate } from '../../../core/i18n/nz-date';
 import { EChartsOption } from 'echarts';
 import {
   ChartThemeConfig,
@@ -203,7 +204,7 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
           color: string;
         }>;
         if (!items || items.length === 0) return '';
-        const date = items[0].value[0];
+        const date = formatNzDate(items[0].value[0]);
         let html = `<div style="font-weight:600;margin-bottom:6px;border-bottom:1px solid ${theme.tooltipBorderColor};padding-bottom:3px;">${date} ${odometerRecordTitleText}</div>`;
 
         items.forEach((it) => {
@@ -247,13 +248,14 @@ export function buildOdometerTrendOptions(params: OdometerTrendOptionsParams): E
     },
     xAxis: {
       type: 'category',
-      data: allDates.map((d) => (isMobile ? d.substring(5) : d)),
+      data: allDates,
       axisLine: {
         lineStyle: {
           color: theme.borderColor,
         },
       },
       axisLabel: {
+        formatter: (value: string) => formatNzDate(value),
         color: theme.textSecondaryColor,
         fontSize: isMobile ? 10 : 12,
         interval: isMobile

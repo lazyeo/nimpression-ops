@@ -1,3 +1,7 @@
+import { SettlementEditorComponent } from './settlement-editor.component';
+import { SettlementBreakdownComponent } from '../../../shared/components/settlement-breakdown/settlement-breakdown.component';
+import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,6 +33,9 @@ import { toScreamingSnake } from '../../../core/utils/case.utils';
   selector: 'nim-admin-payroll',
   standalone: true,
   imports: [
+    SettlementEditorComponent,
+    SettlementBreakdownComponent,
+    BusinessLabelPipe,
     CommonModule,
     FormsModule,
     I18nPipe,
@@ -43,6 +50,7 @@ import { toScreamingSnake } from '../../../core/utils/case.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PayrollComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly payrollService = inject(PayrollService);
   readonly toScreamingSnake = toScreamingSnake;
 
@@ -59,6 +67,21 @@ export class PayrollComponent implements OnInit {
   readonly selectedPeriod = signal<PayPeriodDto | null>(null);
   readonly periodPayslips = signal<PayslipDto[]>([]);
   readonly activePayslip = signal<PayslipDto | null>(null);
+  settlementSaved(slip: PayslipDto): void {
+    // Settlement responses omit trace arrays; keep the detail data already loaded.
+    const update = (current: PayslipDto): PayslipDto =>
+      current.id !== slip.id
+        ? current
+        : {
+            ...current,
+            settlement: slip.settlement,
+            settlementStatus: slip.settlementStatus,
+            netPay: slip.netPay,
+            deductions: slip.deductions,
+          };
+    this.activePayslip.update((current) => (current ? update(current) : null));
+    this.periodPayslips.update((slips) => slips.map(update));
+  }
 
   // View state: 'periods' | 'payslips'
   readonly currentView = signal<'periods' | 'payslips'>('periods');
@@ -121,7 +144,7 @@ export class PayrollComponent implements OnInit {
             this.isForbidden.set(true);
           } else {
             this.hasError.set(true);
-            this.errorMessage.set(err.message || 'Failed to load pay periods.');
+            this.errorMessage.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -164,7 +187,7 @@ export class PayrollComponent implements OnInit {
           this.isForbidden.set(true);
         } else {
           this.hasError.set(true);
-          this.errorMessage.set(err.message || 'Failed to load payslips.');
+          this.errorMessage.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -231,7 +254,7 @@ export class PayrollComponent implements OnInit {
       },
       error: (err) => {
         this.isActionInProgress.set(false);
-        this.actionError.set(err.error?.message || err.message || 'Failed to create pay period.');
+        this.actionError.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -269,7 +292,7 @@ export class PayrollComponent implements OnInit {
       },
       error: (err) => {
         this.isActionInProgress.set(false);
-        this.actionError.set(err.error?.message || err.message || 'Failed to calculate payroll.');
+        this.actionError.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -299,7 +322,7 @@ export class PayrollComponent implements OnInit {
       },
       error: (err) => {
         this.isActionInProgress.set(false);
-        this.actionError.set(err.error?.message || err.message || 'Failed to finalise pay period.');
+        this.actionError.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -334,7 +357,7 @@ export class PayrollComponent implements OnInit {
       },
       error: (err) => {
         this.isActionInProgress.set(false);
-        this.actionError.set(err.error?.message || err.message || 'Failed to void pay period.');
+        this.actionError.set(this.userFacingErrors.format(err));
       },
     });
   }

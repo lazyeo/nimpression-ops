@@ -43,6 +43,28 @@
         }
       </button>
     }
+    @case ('attention') {
+      <button
+        type="button"
+        class="status-badge badge-attention"
+        (click)="openQueueModal()"
+        [title]="statusLabelKey() | i18n"
+      >
+        <nim-icon name="alert-triangle" [size]="14" />
+        <span class="status-label">{{ statusLabelKey() | i18n }}</span>
+      </button>
+    }
+    @case ('pending') {
+      <button
+        type="button"
+        class="status-badge badge-pending"
+        (click)="openQueueModal()"
+        [title]="statusLabelKey() | i18n"
+      >
+        <span class="status-label">{{ statusLabelKey() | i18n }}</span>
+        <span class="badge-count">{{ offlineQueue.pendingCount() }}</span>
+      </button>
+    }
     @case ('synced') {
       <button
         type="button"
@@ -75,7 +97,14 @@
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ 'OFFLINE.QUEUE_DRAWER_TITLE' | i18n }}</h3>
-          <button type="button" class="btn-close" (click)="closeQueueModal()">×</button>
+          <button
+            type="button"
+            class="btn-close"
+            [attr.aria-label]="'COMMON.CLOSE' | i18n"
+            (click)="closeQueueModal()"
+          >
+            ×
+          </button>
         </div>
 
         <div class="modal-body">
@@ -92,11 +121,10 @@
             </p>
 
             <div class="table-wrapper">
-              <table class="queue-table">
+              <table class="offline-queue-table">
                 <thead>
                   <tr>
                     <th>{{ 'OFFLINE.OPERATION' | i18n }}</th>
-                    <th>{{ 'OFFLINE.TARGET' | i18n }}</th>
                     <th>{{ 'COMMON.STATUS' | i18n }}</th>
                     <th>{{ 'OFFLINE.RETRY_COUNT' | i18n }}</th>
                     <th>{{ 'COMMON.ACTIONS' | i18n }}</th>
@@ -106,31 +134,31 @@
                   @for (item of offlineQueue.queueItems(); track item.id) {
                     <tr [class.row-failed]="item.status === 'failed'">
                       <td [attr.data-label]="'OFFLINE.OPERATION' | i18n">
-                        <span class="method-tag tag-{{ item.method.toLowerCase() }}">{{
-                          item.method
-                        }}</span>
-                        @if (item.description) {
-                          <span class="item-desc">{{ item.description }}</span>
-                        }
+                        <span class="operation-name">{{ operationLabelKey(item) | i18n }}</span>
                       </td>
-                      <td class="col-url" [attr.data-label]="'OFFLINE.TARGET' | i18n">{{ item.url }}</td>
                       <td [attr.data-label]="'COMMON.STATUS' | i18n">
-                        <span
-                          class="status-pill pill-{{ item.status }}"
-                          [class.pill-permanent-failed]="item.isPermanentFailure"
-                        >
-                          {{ item.status }}
-                        </span>
-                        @if (item.lastError) {
-                          <small class="error-detail">
-                            @if (item.isPermanentFailure) {
-                              [{{ 'OFFLINE.PERMANENT_FAILURE' | i18n }}]
-                            }
-                            {{ item.lastError }}
-                          </small>
-                        }
+                        <div class="item-outcome">
+                          <span
+                            class="status-pill"
+                            [class.pill-failed]="item.status === 'failed'"
+                            [class.pill-syncing]="item.status === 'syncing'"
+                            [class.pill-completed]="item.status === 'completed'"
+                            [class.pill-pending]="item.status === 'pending'"
+                          >
+                            {{ itemStatusLabelKey(item) | i18n }}
+                          </span>
+                          @if (item.status === 'failed') {
+                            @let error = queueError(item);
+                            <small class="error-detail">{{ error.messageKey | i18n }}</small>
+                            <small class="error-code">{{
+                              'OFFLINE.ERROR_CODE' | i18n: { code: error.code }
+                            }}</small>
+                          }
+                        </div>
                       </td>
-                      <td [attr.data-label]="'OFFLINE.RETRY_COUNT' | i18n">{{ item.retryCount }}</td>
+                      <td [attr.data-label]="'OFFLINE.RETRY_COUNT' | i18n">
+                        {{ item.retryCount }}
+                      </td>
                       <td class="actions-cell" [attr.data-label]="'COMMON.ACTIONS' | i18n">
                         @if (item.status === 'failed') {
                           @if (item.isPermanentFailure) {

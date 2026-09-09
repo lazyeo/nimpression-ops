@@ -19,19 +19,34 @@ describe('FormatService (F13.4)', () => {
   });
 
   it('formats dates according to en-NZ and zh-CN', () => {
-    const date = new Date(2026, 7, 24); // 24 Aug 2026
+    const date = new Date('2026-08-24T00:00:00+12:00'); // 24 Aug 2026
 
     const enFormatted = formatService.formatDate(date, 'short', 'en-NZ');
     const zhFormatted = formatService.formatDate(date, 'short', 'zh-CN');
 
-    expect(enFormatted).toContain('24');
-    expect(enFormatted).toContain('8');
-    expect(enFormatted).toContain('2026');
-
-    expect(zhFormatted).toContain('2026');
-    expect(zhFormatted).toContain('8');
-    expect(zhFormatted).toContain('24');
+    expect(enFormatted).toBe('24/08/2026');
+    expect(zhFormatted).toBe('24/08/2026');
   });
+
+  it.each(['en-NZ', 'zh-CN'] as const)(
+    'uses New Zealand date order for every date preset in %s',
+    (locale) => {
+      for (const preset of [
+        'short',
+        'medium',
+        'long',
+        'full',
+        'shortDateTime',
+        'mediumDateTime',
+        'datetime',
+        'fullDateTime',
+      ] as const) {
+        expect(formatService.formatDate('2026-09-08T21:00:00Z', preset, locale)).toContain(
+          '09/09/2026',
+        );
+      }
+    },
+  );
 
   it('formats currencies according to en-NZ and zh-CN', () => {
     const amount = 1234.5;
@@ -62,7 +77,7 @@ describe('FormatService (F13.4)', () => {
   });
 
   it('formats datetime presets with time components (R3)', () => {
-    const date = new Date(2026, 8, 7, 17, 59, 0); // 7 Sep 2026 17:59:00
+    const date = new Date('2026-09-07T17:59:00+12:00'); // 7 Sep 2026 17:59:00
 
     const enShortDt = formatService.formatDate(date, 'shortDateTime', 'en-NZ');
     const zhShortDt = formatService.formatDate(date, 'shortDateTime', 'zh-CN');
@@ -84,4 +99,3 @@ describe('FormatService (F13.4)', () => {
     expect(dtMethod).toContain('59');
   });
 });
-

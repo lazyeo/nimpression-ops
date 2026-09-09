@@ -147,8 +147,8 @@ describe('PayrollComponent', () => {
     expect(component.isLoading()).toBe(false);
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('2026-09-01 ~ 2026-09-14');
-    expect(compiled.textContent).toContain('2026-08-18 ~ 2026-08-31');
+    expect(compiled.textContent).toContain('01/09/2026 ~ 14/09/2026');
+    expect(compiled.textContent).toContain('18/08/2026 ~ 31/08/2026');
   });
 
   it('renders empty data state when no pay periods exist (Empty state test)', () => {
@@ -239,4 +239,28 @@ describe('PayrollComponent', () => {
     expect(compiled.querySelector('.fines-partition')).toBeTruthy();
     expect(compiled.querySelector('.zero-deduction-badge')).toBeTruthy();
   });
+  it('offers settlement for calculated draft periods and hides it after finalisation', () => {
+    component.selectedPeriod.set(mockPeriods[0]);
+    component.activePayslip.set({ ...mockPayslip, finalisedAt: null });
+    component.isDetailModalOpen.set(true); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('nim-settlement-editor')).not.toBeNull();
+    component.activePayslip.set({ ...mockPayslip, finalisedAt: '2026-09-16T00:00:00Z' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('nim-settlement-editor')).toBeNull();
+  });
+
+  it('keeps existing trace and fine details when saving settlement amounts', () => {
+    component.activePayslip.set(mockPayslip); component.periodPayslips.set([mockPayslip]);
+    component.settlementSaved({ ...mockPayslip, shiftDetails: [], tripDetails: [], fines: [], netPay: 1000, deductions: 200, settlementStatus: 'Calculated' });
+    expect(component.activePayslip()?.shiftDetails).toEqual(mockPayslip.shiftDetails);
+    expect(component.activePayslip()?.tripDetails).toEqual(mockPayslip.tripDetails);
+    expect(component.activePayslip()?.fines).toEqual(mockPayslip.fines);
+    expect(component.activePayslip()?.netPay).toBe(1000);
+    expect(component.periodPayslips()[0].deductions).toBe(200);
+    component.activePayslip.set({ ...mockPayslip, id: 'other-slip' });
+    component.settlementSaved({ ...mockPayslip, netPay: 999 });
+    expect(component.activePayslip()?.id).toBe('other-slip');
+    expect(component.activePayslip()?.netPay).not.toBe(999);
+  });
+
 });

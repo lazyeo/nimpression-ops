@@ -1,3 +1,6 @@
+import { I18nService } from '../../../core/i18n/i18n.service';
+import zhDictionary from '../../../../assets/i18n/zh-CN.json';
+import enDictionary from '../../../../assets/i18n/en-NZ.json';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -109,6 +112,10 @@ describe('AreasComponent', () => {
       ],
     }).compileComponents();
 
+    TestBed.inject(I18nService).setDictionary('en-NZ', enDictionary);
+    TestBed.inject(I18nService).setDictionary('zh-CN', zhDictionary);
+    TestBed.inject(I18nService).currentLang.set('en-NZ');
+
     fixture = TestBed.createComponent(AreasComponent);
     component = fixture.componentInstance;
   });
@@ -208,6 +215,7 @@ describe('AreasComponent', () => {
       status: 422,
       statusText: 'Unprocessable Entity',
       error: {
+        title: 'area_assignment_overlap',
         message:
           'Driver area assignment dates overlap with existing assignment (2026-01-01 to 2026-06-30).',
       },
@@ -216,7 +224,7 @@ describe('AreasComponent', () => {
 
     component.submitAssignDriver();
 
-    expect(component.formError()).toContain('overlap with existing assignment');
+    expect(component.formError()).toBe('The assignment dates overlap an existing assignment. Choose different dates. (AREA-005)');
     expect(component.isAssignModalOpen()).toBe(true);
   });
 

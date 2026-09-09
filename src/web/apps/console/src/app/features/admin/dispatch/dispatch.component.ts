@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -42,6 +44,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   selector: 'nim-dispatch',
   standalone: true,
   imports: [
+    BusinessLabelPipe,
     CommonModule,
     FormsModule,
     I18nPipe,
@@ -55,6 +58,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DispatchComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly dispatchService = inject(DispatchService);
   private readonly realtime = inject(RealtimeService);
   private readonly auth = inject(AuthService);
@@ -179,7 +183,7 @@ export class DispatchComponent implements OnInit {
           this.state.set('forbidden');
         } else {
           this.state.set('error');
-          this.errorMessage.set(err.error?.message || err.message || 'Error loading tasks');
+          this.errorMessage.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -366,13 +370,7 @@ export class DispatchComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
-        const detail =
-          err.error?.detail ||
-          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
-          err.error?.message ||
-          err.error?.title ||
-          err.message ||
-          'Failed to create task';
+        const detail = this.userFacingErrors.format(err);
         this.formError.set(detail);
       },
     });
@@ -451,9 +449,7 @@ export class DispatchComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(
-            err.error?.message || err.error?.detail || err.message || 'Failed to assign task',
-          );
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -464,7 +460,7 @@ export class DispatchComponent implements OnInit {
       .subscribe({
         next: () => this.loadTasks(),
         error: (err: HttpErrorResponse) => {
-          alert(err.error?.message || err.error?.detail || 'Failed to acknowledge task');
+          alert(this.userFacingErrors.format(err));
         },
       });
   }
@@ -507,7 +503,7 @@ export class DispatchComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to start task');
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -552,7 +548,7 @@ export class DispatchComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to complete task');
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -589,13 +585,7 @@ export class DispatchComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          const detail =
-            err.error?.detail ||
-            (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
-            err.error?.message ||
-            err.error?.title ||
-            err.message ||
-            'Failed to cancel task';
+          const detail = this.userFacingErrors.format(err);
           this.formError.set(detail);
         },
       });

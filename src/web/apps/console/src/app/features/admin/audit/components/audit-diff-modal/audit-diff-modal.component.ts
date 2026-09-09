@@ -1,3 +1,4 @@
+import { BusinessLabelPipe } from '../../../../../core/i18n/business-label.pipe';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -17,7 +18,7 @@ import { AuditEventDto, DiffFieldItem } from '../../models/audit.models';
 @Component({
   selector: 'nim-audit-diff-modal',
   standalone: true,
-  imports: [CommonModule, I18nPipe, LocaleDatePipe, IconComponent],
+  imports: [BusinessLabelPipe, CommonModule, I18nPipe, LocaleDatePipe, IconComponent],
   templateUrl: './audit-diff-modal.component.html',
   styleUrls: ['./audit-diff-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -28,7 +28,9 @@
         class="touch-btn logout-btn"
         (click)="logout()"
         [title]="'NAV.LOGOUT' | i18n"
+        [attr.aria-label]="'NAV.LOGOUT' | i18n"
       >
+        <nim-icon name="log-out" [size]="16" />
         <span>{{ 'NAV.LOGOUT' | i18n }}</span>
       </button>
     </div>

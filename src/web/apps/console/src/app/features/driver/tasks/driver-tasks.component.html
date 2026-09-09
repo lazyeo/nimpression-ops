@@ -96,6 +96,14 @@
 
             <!-- Driver Action Touch Buttons (>= 44x44px) -->
             <div class="card-actions">
+              <button
+                type="button"
+                class="touch-action-btn btn-details"
+                (click)="openDetails(task)"
+                [attr.aria-label]="('COMMON.DETAILS' | i18n) + ' ' + task.tripNo"
+              >
+                {{ 'COMMON.DETAILS' | i18n }}
+              </button>
               @if (task.status === 'ASSIGNED' || task.status === 'PENDING') {
                 <button
                   type="button"
@@ -202,6 +210,16 @@
                 {{ task.scheduledTime | localeDate: 'shortDateTime' }}</span
               >
             </div>
+            <div class="card-actions">
+              <button
+                type="button"
+                class="touch-action-btn btn-details"
+                (click)="openDetails(task)"
+                [attr.aria-label]="('COMMON.DETAILS' | i18n) + ' ' + task.tripNo"
+              >
+                {{ 'COMMON.DETAILS' | i18n }}
+              </button>
+            </div>
           </div>
         }
       </div>
@@ -237,3 +255,104 @@
     }
   }
 </div>
+
+<dialog
+  #taskDialog
+  class="task-detail-dialog"
+  aria-labelledby="driver-task-detail-title"
+  (close)="closeDetails()"
+>
+  <div class="detail-header">
+    <h2 id="driver-task-detail-title">{{ 'DISPATCH.MODAL_DETAILS_TITLE' | i18n }}</h2>
+    <button
+      type="button"
+      class="detail-close"
+      (click)="closeDetails()"
+      [attr.aria-label]="'COMMON.CLOSE' | i18n"
+      autofocus
+    >
+      <nim-icon name="x" [size]="20" />
+    </button>
+  </div>
+  <div class="detail-body">
+    @if (detailLoading()) {
+      <p role="status">{{ 'COMMON.LOADING' | i18n }}</p>
+    } @else if (detailError()) {
+      <p class="detail-error" role="alert">{{ detailError() }}</p>
+      <button type="button" class="touch-action-btn btn-details" (click)="loadDetails()">
+        {{ 'COMMON.RETRY' | i18n }}
+      </button>
+    } @else if (taskDetail(); as detail) {
+      <p class="detail-reference">{{ detail.ref }}</p>
+      <h3 class="detail-task-title">{{ detail.title }}</h3>
+      <section class="detail-notes" aria-labelledby="driver-task-notes-title">
+        <h4 id="driver-task-notes-title">{{ 'DISPATCH.FIELD_DESCRIPTION' | i18n }}</h4>
+        <p>{{ detail.description || ('COMMON.NO_DATA' | i18n) }}</p>
+      </section>
+      <dl class="detail-fields">
+        <div>
+          <dt>{{ 'COMMON.STATUS' | i18n }}</dt>
+          <dd>{{ 'DISPATCH.STATUS_' + toScreamingSnake(detail.status) | i18n }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'DISPATCH.FIELD_PRIORITY' | i18n }}</dt>
+          <dd>{{ 'DISPATCH.PRIORITY_' + toScreamingSnake(detail.priority) | i18n }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'DISPATCH.FIELD_AREA' | i18n }}</dt>
+          <dd>{{ detail.areaName }} ({{ detail.areaCode }})</dd>
+        </div>
+        <div>
+          <dt>{{ 'DISPATCH.FIELD_VEHICLE' | i18n }}</dt>
+          <dd>{{ detail.vehicleRego || '—' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'DISPATCH.FIELD_SCHEDULED_FOR' | i18n }}</dt>
+          <dd>{{ detail.scheduledFor | localeDate: 'shortDateTime' }}</dd>
+        </div>
+        @if (detail.acknowledgedAt) {
+          <div>
+            <dt>{{ 'DISPATCH.FIELD_ACKNOWLEDGED_AT' | i18n }}</dt>
+            <dd>{{ detail.acknowledgedAt | localeDate: 'shortDateTime' }}</dd>
+          </div>
+        }
+        @if (detail.startedAt) {
+          <div>
+            <dt>{{ 'DISPATCH.FIELD_STARTED_AT' | i18n }}</dt>
+            <dd>{{ detail.startedAt | localeDate: 'shortDateTime' }}</dd>
+          </div>
+        }
+        @if (detail.completedAt) {
+          <div>
+            <dt>{{ 'DISPATCH.FIELD_COMPLETED_AT' | i18n }}</dt>
+            <dd>{{ detail.completedAt | localeDate: 'shortDateTime' }}</dd>
+          </div>
+        }
+        @if (detail.cancelledAt) {
+          <div>
+            <dt>{{ 'DISPATCH.FIELD_CANCELLED_AT' | i18n }}</dt>
+            <dd>{{ detail.cancelledAt | localeDate: 'shortDateTime' }}</dd>
+          </div>
+        }
+        @if (detail.cancellationReason) {
+          <div class="detail-wide">
+            <dt>{{ 'DISPATCH.FIELD_CANCEL_REASON' | i18n }}</dt>
+            <dd>{{ detail.cancellationReason }}</dd>
+          </div>
+        }
+        @if (detail.plannedDistanceKm !== null) {
+          <div>
+            <dt>{{ 'DISPATCH.FIELD_PLANNED_DISTANCE' | i18n }}</dt>
+            <dd>{{ detail.plannedDistanceKm }}</dd>
+          </div>
+        }
+        @if (detail.actualDistanceKm !== null) {
+          <div>
+            <dt>{{ 'DISPATCH.FIELD_ACTUAL_DISTANCE' | i18n }}</dt>
+            <dd>{{ detail.actualDistanceKm }}</dd>
+          </div>
+        }
+      </dl>
+    }
+  </div>
+</dialog>

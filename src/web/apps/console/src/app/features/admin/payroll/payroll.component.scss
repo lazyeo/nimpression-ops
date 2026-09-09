@@ -96,11 +96,13 @@
 
       &.callout-hourly {
         background: var(--color-primary-subtle);
+        color: var(--color-primary-text);
         border: 1px solid var(--color-primary);
       }
 
       &.callout-trip {
         background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
         border: 1px solid var(--badge-purple-border);
       }
 
@@ -108,14 +110,14 @@
         font-size: var(--font-size-xs);
         font-weight: var(--font-weight-bold);
         text-transform: uppercase;
-        color: var(--text-inverse);
+        color: inherit;
         line-height: var(--line-height-tight);
       }
 
       .callout-desc {
         margin: var(--space-6) 0 0;
         font-size: var(--font-size-xs);
-        color: var(--color-gray-200);
+        color: inherit;
         line-height: var(--line-height-normal);
       }
     }
@@ -229,6 +231,38 @@
         }
       }
     }
+  }
+}
+
+.modal-xl .modal-header {
+  gap: var(--space-8);
+  align-items: flex-start;
+
+  .modal-title-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: flex-start;
+
+    > nim-icon {
+      flex: 0 0 auto;
+    }
+
+    > div {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .modal-title-row {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .modal-close-btn {
+    flex: 0 0 44px;
+    width: 44px;
+    min-height: 44px;
   }
 }
 

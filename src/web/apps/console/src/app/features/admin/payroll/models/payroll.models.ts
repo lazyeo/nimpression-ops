@@ -1,3 +1,4 @@
+import type { PayslipSettlement } from '../../../../core/payroll/settlement.models';
 export type {
   PayPeriodStatus,
   PayBasis,
@@ -61,6 +62,10 @@ export interface PayslipFineDto {
 }
 
 export interface PayslipDto {
+  settlement?: PayslipSettlement | null;
+  settlementStatus?: 'Calculated' | 'NotCalculated';
+  netPay?: number | null;
+  deductions?: number | null;
   id: string;
   payPeriodId: string;
   periodStartsOn: string;

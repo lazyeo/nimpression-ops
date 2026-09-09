@@ -758,7 +758,7 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DRIVERS.FIELD_STATUS' | i18n }}</span>
-                <span class="detail-val">{{ selectedDriverDetail()!.status }}</span>
+                <span class="detail-val">{{ selectedDriverDetail()!.status | businessLabel: 'driverStatus' }}</span>
               </div>
             </div>
 

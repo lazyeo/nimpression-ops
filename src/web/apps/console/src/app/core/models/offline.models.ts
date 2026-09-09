@@ -12,7 +12,10 @@ export interface OfflineQueueItem {
   createdAt: string;
   retryCount: number;
   status: QueueItemStatus;
+  /** Legacy stored error text; never display it. */
   lastError?: string;
+  errorCode?: string;
+  errorMessageKey?: string;
   description?: string;
   isPermanentFailure?: boolean;
 }

@@ -206,7 +206,7 @@
                       shift.driverName || 'Driver ' + shift.driverId.substring(0, 8)
                     }}</span>
                   </td>
-                  <td [attr.data-label]="'TIMESHEETS.COL_DATE' | i18n">{{ shift.attributedDate || (shift.clockInAt | localeDate: 'short') }}</td>
+                  <td [attr.data-label]="'TIMESHEETS.COL_DATE' | i18n">{{ (shift.attributedDate || shift.clockInAt) | localeDate: 'short' }}</td>
                   <td [attr.data-label]="'TIMESHEETS.COL_CLOCK_IN' | i18n">{{ shift.clockInAt | localeDate: 'short' }}</td>
                   <td [attr.data-label]="'TIMESHEETS.COL_CLOCK_OUT' | i18n">
                     @if (shift.clockOutAt) {
@@ -346,7 +346,7 @@
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_DATE' | i18n }}</label>
-              <span>{{ selectedShift()?.attributedDate }}</span>
+              <span>{{ selectedShift()?.attributedDate | localeDate: 'short' }}</span>
             </div>
             <div class="detail-item">
               <label>{{ 'TIMESHEETS.COL_CLOCK_IN' | i18n }}</label>

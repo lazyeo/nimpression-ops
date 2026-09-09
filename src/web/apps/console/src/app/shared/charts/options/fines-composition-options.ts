@@ -1,3 +1,4 @@
+import { formatNzDate } from '../../../core/i18n/nz-date';
 import { EChartsOption } from 'echarts';
 import {
   ChartThemeConfig,
@@ -289,7 +290,7 @@ export function buildFineRankingBarOptions(params: FinesRankingBarOptionsParams)
           <div style="font-size:12px;margin:2px 0;">${vehicleLabel}: <strong>${item.vehicleRego}</strong></div>
           <div style="font-size:12px;margin:2px 0;">${driverLabel}: <strong>${item.driverName || unassignedLabel}</strong></div>
           <div style="font-size:12px;margin:2px 0;">${reasonLabel}: <strong>${item.category}</strong></div>
-          <div style="font-size:12px;margin:2px 0;">${issuedDateLabel}: <strong>${item.issuedOn}</strong></div>
+          <div style="font-size:12px;margin:2px 0;">${issuedDateLabel}: <strong>${formatNzDate(item.issuedOn)}</strong></div>
           <div style="font-size:13px;margin-top:4px;color:${SEMANTIC_COLORS.danger};font-weight:bold;">
             $${item.amount.toLocaleString()}
           </div>

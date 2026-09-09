@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+.settlement-editor {
+  padding: 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  margin-block: 1rem;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block: 1rem;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+input,
+select {
+  min-height: 44px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  color: inherit;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 0.3rem;
+}
+.confirmation {
+  flex-direction: row;
+  align-items: center;
+  min-height: 44px;
+  margin-block: 0.4rem;
+}
+.confirmation input {
+  width: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+}
+button {
+  min-height: 44px;
+  white-space: normal;
+}
+.help {
+  font-size: 0.875rem;
+}
+.error {
+  color: var(--color-danger);
+}
+@media (max-width: 600px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

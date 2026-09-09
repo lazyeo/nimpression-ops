@@ -1,18 +1,19 @@
 using Nimpression.Domain.Entities.Driver;
 using Nimpression.Domain.Entities.Payroll;
 using Nimpression.Domain.Enums;
+using Nimpression.Domain.Services;
 using Nimpression.Domain.ValueObjects;
 
 namespace Nimpression.Infrastructure.Persistence.Seed;
 
 public static class PayrollSeeder
 {
-    public const decimal StatutoryMinimumWageRate = 23.15m; // NZ Statutory Minimum Wage
-
     public static (List<PayPeriod> PayPeriods, List<Payslip> Payslips) Generate(
         List<Driver> drivers,
-        int randomSeed = SeedConstants.DefaultSeed)
+        int randomSeed = SeedConstants.DefaultSeed,
+        DateTimeOffset? asOf = null)
     {
+        var cutoff = asOf ?? SeedConstants.ReferenceNow;
         var rng = new Random(randomSeed);
         var payPeriods = new List<PayPeriod>();
         var payslips = new List<Payslip>();
@@ -28,23 +29,26 @@ public static class PayrollSeeder
             var startsOn = SeedConstants.ReferenceDate.AddDays(-p * 14);
             var endsOn = startsOn.AddDays(13);
 
-            var payPeriodId = new Guid($"13000000-0000-0000-0000-{periodIdCounter++:D12}");
-            var status = p switch
+            var calculatedAt = new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 17, 0, 0, TimeSpan.FromHours(12));
+            if (calculatedAt > cutoff)
             {
-                > 1 => PayPeriodStatus.Paid,
-                1 => PayPeriodStatus.Finalised,
-                _ => PayPeriodStatus.Open
-            };
-
-            var payPeriod = new PayPeriod(payPeriodId, startsOn, endsOn, PayPeriodStatus.Open);
-            if (status == PayPeriodStatus.Finalised || status == PayPeriodStatus.Paid)
-            {
-                payPeriod.Finalise(new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 18, 0, 0, TimeSpan.FromHours(12)).AddDays(1));
+                continue;
             }
 
-            if (status == PayPeriodStatus.Paid)
+            var statutoryMinimumWageRate = NzAdultMinimumWage.ForPeriod(startsOn, endsOn).Amount;
+
+            var payPeriodId = new Guid($"13000000-0000-0000-0000-{periodIdCounter++:D12}");
+            var payPeriod = new PayPeriod(payPeriodId, startsOn, endsOn, PayPeriodStatus.Calculating);
+            var finalisedAt = calculatedAt.AddDays(1).AddHours(1);
+            if (finalisedAt <= cutoff)
             {
-                payPeriod.MarkPaid(new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 10, 0, 0, TimeSpan.FromHours(12)).AddDays(3));
+                payPeriod.Finalise(finalisedAt);
+            }
+
+            var paidAt = calculatedAt.AddDays(3).AddHours(-7);
+            if (p > 1 && paidAt <= cutoff)
+            {
+                payPeriod.MarkPaid(paidAt);
             }
 
             payPeriods.Add(payPeriod);
@@ -74,14 +78,13 @@ public static class PayrollSeeder
                 var tripBasedGross = new Money(tripAmount + distAmount);
 
                 // 三者取高与最低工资保底 (F7.5)
-                var minWageFloor = totalHours * StatutoryMinimumWageRate;
+                var minWageFloor = totalHours * statutoryMinimumWageRate;
                 var maxBasisGross = Math.Max(hoursBasedGross.Amount, tripBasedGross.Amount);
                 var minWageTopUp = maxBasisGross < minWageFloor;
                 var finalGrossAmount = Math.Max(maxBasisGross, minWageFloor);
                 var grossPay = new Money(finalGrossAmount);
 
                 var basisUsed = tripBasedGross.Amount > hoursBasedGross.Amount ? PayBasis.Trip : PayBasis.Hourly;
-                var calculatedAt = new DateTimeOffset(endsOn.Year, endsOn.Month, endsOn.Day, 17, 0, 0, TimeSpan.FromHours(12));
 
                 var payslip = new Payslip(
                     payslipId,
@@ -157,14 +160,14 @@ public static class PayrollSeeder
                         payslipId,
                         basisUsed,
                         "MinimumWageTopUp",
-                        $"NZ Statutory Minimum Wage Top-up floor ($23.15/hr guard for {totalHours} total hours)",
-                        new Money(StatutoryMinimumWageRate),
+                        $"NZ Statutory Minimum Wage Top-up floor (${statutoryMinimumWageRate:0.00}/hr guard for {totalHours} total hours)",
+                        new Money(statutoryMinimumWageRate),
                         new Money(topUpDiff)));
                 }
 
-                if (status == PayPeriodStatus.Finalised || status == PayPeriodStatus.Paid)
+                if (payPeriod.FinalisedAt.HasValue)
                 {
-                    payslip.Finalise(calculatedAt.AddHours(1));
+                    payslip.Finalise(payPeriod.FinalisedAt.Value);
                 }
 
                 payslips.Add(payslip);

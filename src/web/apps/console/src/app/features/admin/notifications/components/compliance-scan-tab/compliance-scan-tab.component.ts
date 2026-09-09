@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -18,6 +19,7 @@ import { NotificationService } from '../../services/notification.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComplianceScanTabComponent {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly notificationService = inject(NotificationService);
 
   readonly scanning = signal(false);
@@ -38,7 +40,7 @@ export class ComplianceScanTabComponent {
       },
       error: (err) => {
         this.scanning.set(false);
-        this.scanError.set(err.message || 'NOTIFICATIONS.SCAN_FAILED');
+        this.scanError.set(this.userFacingErrors.format(err));
       },
     });
   }

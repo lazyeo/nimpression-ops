@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, tap } from 'rxjs';
 import { SupportedLang } from '../models/i18n.models';
+import fallbackMessages from './fallback-messages.json';
 
 const STORAGE_KEY = 'nim_locale_pref';
 
@@ -114,6 +115,10 @@ export class I18nService {
     }
 
     if (!text) {
+      // Keep ordinary display text intact, but never expose unresolved UI keys.
+      if (/^[A-Z][A-Z0-9_]*(?:\.[A-Z][A-Z0-9_]*)+$/.test(key)) {
+        return fallbackMessages[lang];
+      }
       return key;
     }
 

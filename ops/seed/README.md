@@ -25,3 +25,17 @@ Deterministic demo seed dataset providing 90 days of operational logistics data 
 ## Execution
 Run `task seed` from repository root.
 Seed generation uses fixed RNG seed `42` ensuring 100% deterministic, reproducible data output.
+
+## Time boundary
+The reproducible dataset is anchored at **23 August 2026, 12:00 Pacific/Auckland**
+(`SeedConstants.ReferenceNow`), not the machine's current date. Task, shift and
+payroll generators accept an optional `asOf` cutoff for deterministic boundary
+checks; it does not move the dataset's fixed dates forward. Recorded lifecycle
+steps are emitted only when their event time is at or before that cutoff.
+Future dispatch schedules and document expiry dates remain valid future data.
+The latest payroll period stays calculating until its planned finalisation time;
+payslip and period finalisation timestamps agree.
+
+These generators do not repair existing demo or manually created QA records.
+Future-dated completed tasks created through later testing require a separate
+record audit; rerunning the seed is not a safe data repair procedure.

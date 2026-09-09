@@ -234,10 +234,20 @@
   }
   .touch-btn {
     min-width: 44px;
-    min-height: 44px;
-    padding: var(--space-12) var(--space-16);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-snug);
+    position: relative;
+    height: 32px;
+    min-height: 32px;
+    padding: var(--space-4) var(--space-12);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-tight);
+    gap: var(--space-6);
+
+    // Match the compact header controls while keeping a 44px touch target.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -7px -1px;
+    }
     flex: 0 0 auto;
     white-space: normal;
   }

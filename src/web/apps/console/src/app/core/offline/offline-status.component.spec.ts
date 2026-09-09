@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { OfflineStatusComponent } from './offline-status.component';
@@ -8,7 +8,7 @@ import { I18nService } from '../i18n/i18n.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { RealtimeConnectionState } from '../models/realtime.models';
-import { SyncStatus } from '../models/offline.models';
+import { OfflineQueueItem, SyncStatus } from '../models/offline.models';
 
 describe('OfflineStatusComponent', () => {
   let component: OfflineStatusComponent;
@@ -28,9 +28,10 @@ describe('OfflineStatusComponent', () => {
     failedCount: mockFailedCount,
     hasFailures: mockHasFailures,
     isReplaying: signal<boolean>(false),
-    queueItems: signal([]),
-    retryItem: async () => {},
-    removeItem: async () => {},
+    hasTransientFailures: signal<boolean>(false),
+    queueItems: signal<OfflineQueueItem[]>([]),
+    retryItem: vi.fn(async () => {}),
+    removeItem: vi.fn(async () => {}),
     retryAll: async () => {},
   };
 
@@ -47,6 +48,9 @@ describe('OfflineStatusComponent', () => {
     mockFailedCount.set(0);
     mockHasFailures.set(false);
     mockConnectionState.set('connected');
+    mockOfflineQueue.queueItems.set([]);
+    mockOfflineQueue.hasTransientFailures.set(false);
+    vi.clearAllMocks();
 
     await TestBed.configureTestingModule({
       imports: [OfflineStatusComponent],
@@ -61,6 +65,11 @@ describe('OfflineStatusComponent', () => {
 
     i18nService = TestBed.inject(I18nService);
     i18nService.setDictionary('en-NZ', {
+      DRIVER: { START_TRIP: 'Start Trip' },
+      ERRORS: {
+        GENERIC: 'This change could not be saved. Please try again.',
+        TASK_STATE_CHANGED: 'The task has changed. Refresh your task list.',
+      },
       OFFLINE: {
         STATUS_ONLINE: 'Online',
         STATUS_OFFLINE: 'Offline',
@@ -68,6 +77,14 @@ describe('OfflineStatusComponent', () => {
         STATUS_SYNCED: 'Synced',
         STATUS_DISCONNECTED: 'Disconnected',
         STATUS_RECONNECTING: 'Reconnecting...',
+        OPERATION_GENERIC: 'Saved change',
+        STATUS_FAILED: 'Needs attention',
+        STATUS_PENDING: 'Waiting to sync',
+        STATUS_ATTENTION: 'Action needed',
+        STATUS_COMPLETED: 'Saved',
+        ERROR_CODE: 'Code: {code}',
+        RETRY_ITEM: 'Retry',
+        REMOVE_ITEM: 'Remove',
       },
     });
 
@@ -158,5 +175,102 @@ describe('OfflineStatusComponent', () => {
     expect(badge).not.toBeNull();
     expect(badge.classList.contains('badge-offline')).toBe(true);
     expect(badge.textContent).toContain('Offline');
+  });
+
+  it('never renders legacy technical errors, endpoints, methods or descriptions', () => {
+    const item: OfflineQueueItem = {
+      id: 'legacy',
+      clientRequestId: 'request',
+      url: '/api/private/endpoint?secret=raw',
+      method: 'PATCH',
+      body: { secret: 'payload-private' },
+      createdAt: '2026-09-09T00:00:00Z',
+      status: 'failed',
+      retryCount: 1,
+      isPermanentFailure: true,
+      description: 'private-description',
+      lastError: 'HTTP 422 ServerStackTrace',
+      errorCode: 'private-code',
+      errorMessageKey: 'private-key',
+    };
+    mockOfflineQueue.queueItems.set([item]);
+    component.openQueueModal();
+    fixture.detectChanges();
+    const modal: HTMLElement = fixture.nativeElement.querySelector('.modal-card');
+    expect(modal.textContent).toContain('Saved change');
+    expect(modal.textContent).toContain('Needs attention');
+    expect(modal.textContent).toContain('Code: OPS-UNKNOWN');
+    expect(modal.textContent).toContain('This change could not be saved. Please try again.');
+    for (const raw of [
+      item.url,
+      item.method,
+      item.description!,
+      item.lastError!,
+      'payload-private',
+      'private-code',
+      'private-key',
+    ]) {
+      expect(modal.innerHTML).not.toContain(raw);
+    }
+    expect(modal.querySelector('.btn-remove')?.textContent).toContain('Remove');
+    (modal.querySelector('.btn-remove') as HTMLButtonElement).click();
+    expect(mockOfflineQueue.removeItem).toHaveBeenCalledWith('legacy');
+  });
+
+  it('names trusted task actions without exposing task identifiers and retains retry', () => {
+    const item: OfflineQueueItem = {
+      id: 'task-item',
+      clientRequestId: 'request',
+      url: '/api/dispatch/tasks/private-task-id/status',
+      method: 'POST',
+      body: { status: 'IN_PROGRESS' },
+      createdAt: '2026-09-09T00:00:00Z',
+      status: 'failed',
+      retryCount: 2,
+      description: 'private-description',
+      errorCode: 'TASK-001',
+      errorMessageKey: 'private-key',
+    };
+    mockOfflineQueue.queueItems.set([item]);
+    component.openQueueModal();
+    fixture.detectChanges();
+    const modal: HTMLElement = fixture.nativeElement.querySelector('.modal-card');
+    expect(modal.textContent).toContain('Start Trip');
+    expect(modal.textContent).toContain('The task has changed. Refresh your task list.');
+    expect(modal.textContent).toContain('Code: TASK-001');
+    expect(modal.innerHTML).not.toContain('private-key');
+    expect(modal.innerHTML).not.toContain('private-task-id');
+    expect(modal.innerHTML).not.toContain('private-description');
+    expect(modal.querySelectorAll('thead th')).toHaveLength(4);
+    (modal.querySelector('.btn-retry') as HTMLButtonElement).click();
+    expect(mockOfflineQueue.retryItem).toHaveBeenCalledWith('task-item');
+    expect(component.operationLabelKey({ ...item, body: { status: 'private-status' } })).toBe(
+      'OFFLINE.OPERATION_GENERIC',
+    );
+  });
+
+  it('shows action needed for persisted failures while connected instead of offline or synced', () => {
+    mockSyncStatus.set('offline');
+    mockFailedCount.set(1);
+    mockHasFailures.set(true);
+    fixture.detectChanges();
+    expect(component.effectiveStatus()).toBe('attention');
+    const badge: HTMLElement = fixture.nativeElement.querySelector('.status-badge');
+    expect(badge.textContent).toContain('Action needed');
+    expect(badge.classList.contains('badge-attention')).toBe(true);
+
+    mockConnectionState.set('disconnected');
+    fixture.detectChanges();
+    expect(component.effectiveStatus()).toBe('offline');
+    expect(badge.classList.contains('badge-synced')).toBe(false);
+  });
+
+  it('does not claim synced while queued changes are waiting', () => {
+    mockPendingCount.set(1);
+    fixture.detectChanges();
+    expect(component.effectiveStatus()).toBe('pending');
+    expect(fixture.nativeElement.querySelector('.status-badge').textContent).toContain(
+      'Waiting to sync',
+    );
   });
 });

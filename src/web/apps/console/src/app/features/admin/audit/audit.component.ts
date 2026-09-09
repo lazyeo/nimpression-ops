@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -20,6 +22,7 @@ import { AuditDiffModalComponent } from './components/audit-diff-modal/audit-dif
   selector: 'nim-audit',
   standalone: true,
   imports: [
+    BusinessLabelPipe,
     CommonModule,
     FormsModule,
     I18nPipe,
@@ -33,6 +36,7 @@ import { AuditDiffModalComponent } from './components/audit-diff-modal/audit-dif
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuditComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   readonly authService = inject(AuthService);
   private readonly auditService = inject(AuditService);
 
@@ -89,7 +93,7 @@ export class AuditComponent implements OnInit {
         if (err.status === 403) {
           this.isForbidden.set(true);
         } else {
-          this.error.set(err.message || 'AUDIT.LOAD_FAILED');
+          this.error.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -138,7 +142,7 @@ export class AuditComponent implements OnInit {
       },
       error: (err) => {
         this.exporting.set(false);
-        this.error.set(err.message || 'AUDIT.EXPORT_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }

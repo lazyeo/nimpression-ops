@@ -746,6 +746,7 @@ namespace Nimpression.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("FinalisedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamptz");
 
                     b.Property<decimal>("HolidayHours")
@@ -762,6 +763,10 @@ namespace Nimpression.Infrastructure.Migrations
 
                     b.Property<Guid>("PayPeriodId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Settlement")
+                        .IsConcurrencyToken()
+                        .HasColumnType("jsonb");
 
                     b.Property<decimal>("TotalDistanceKm")
                         .HasColumnType("numeric(18,2)");

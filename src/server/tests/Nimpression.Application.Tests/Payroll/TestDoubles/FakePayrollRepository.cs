@@ -22,6 +22,14 @@ public sealed class FakePayrollRepository : IPayrollRepository
     public List<JobTask> Tasks { get; } = [];
     public List<Fine> Fines { get; } = [];
 
+    public Task<PayPeriod?> GetPayPeriodForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
+        => GetPayPeriodByIdAsync(id, cancellationToken);
+
+    public Task<PayPeriod?> GetPayPeriodForPayslipForUpdateAsync(Guid payslipId, CancellationToken cancellationToken = default)
+        => Payslips.TryGetValue(payslipId, out var payslip)
+            ? GetPayPeriodByIdAsync(payslip.PayPeriodId, cancellationToken)
+            : Task.FromResult<PayPeriod?>(null);
+
     public Task<PayPeriod?> GetPayPeriodByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         PayPeriods.TryGetValue(id, out var period);

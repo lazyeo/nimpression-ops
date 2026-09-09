@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -26,6 +27,7 @@ import { toScreamingSnake } from '../../../../../core/utils/case.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewsDetailModalComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly newsService = inject(NewsService);
   readonly toScreamingSnake = toScreamingSnake;
 
@@ -68,7 +70,7 @@ export class NewsDetailModalComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.message || 'NEWS.LOAD_DETAIL_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }

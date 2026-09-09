@@ -1,3 +1,5 @@
+import zhDictionary from '../../../../assets/i18n/zh-CN.json';
+import enDictionary from '../../../../assets/i18n/en-NZ.json';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -166,6 +168,10 @@ describe('DriversComponent', () => {
       },
     });
 
+    TestBed.inject(I18nService).setDictionary('en-NZ', enDictionary);
+    TestBed.inject(I18nService).setDictionary('zh-CN', zhDictionary);
+    TestBed.inject(I18nService).currentLang.set('en-NZ');
+
     fixture = TestBed.createComponent(DriversComponent);
     component = fixture.componentInstance;
   });
@@ -281,7 +287,7 @@ describe('DriversComponent', () => {
 
     component.submitAvatarUpload();
 
-    expect(component.formError()).toContain('415');
+    expect(component.formError()).toBe('This file type is not supported. Choose a supported file and try again. (FILE-002)');
     expect(component.isAvatarModalOpen()).toBe(true);
   });
 

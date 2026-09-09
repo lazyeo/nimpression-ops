@@ -6,11 +6,14 @@ import {
   OnInit,
   signal,
   computed,
+  ElementRef,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import { I18nPipe } from '../../../core/i18n/i18n.pipe';
 import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import { OfflineCacheService } from '../../../core/offline/offline-cache.service';
@@ -27,6 +30,26 @@ export interface DriverTaskItem {
   deliveryLocation: string;
   scheduledTime: string;
   vehiclePlate: string;
+}
+
+export interface DriverTaskDetail {
+  id: string;
+  ref: string;
+  title: string;
+  description: string | null;
+  areaName: string;
+  areaCode: string;
+  vehicleRego: string | null;
+  scheduledFor: string;
+  status: string;
+  priority: string;
+  acknowledgedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  cancellationReason: string | null;
+  plannedDistanceKm: number | null;
+  actualDistanceKm: number | null;
 }
 
 export interface PaginatedResult<T> {
@@ -49,6 +72,13 @@ export interface PaginatedResult<T> {
 })
 export class DriverTasksComponent implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly userErrors = inject(UserFacingErrorService);
+  @ViewChild('taskDialog', { static: true }) private taskDialog!: ElementRef<HTMLDialogElement>;
+  private detailRequest?: Subscription;
+  readonly selectedTaskId = signal<string | null>(null);
+  readonly taskDetail = signal<DriverTaskDetail | null>(null);
+  readonly detailLoading = signal(false);
+  readonly detailError = signal<string | null>(null);
   private readonly offlineCache = inject(OfflineCacheService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -58,7 +88,15 @@ export class DriverTasksComponent implements OnInit {
   readonly activeTab = signal<'active' | 'history'>('active');
   readonly tasks = signal<DriverTaskItem[]>([]);
   readonly historyTasks = signal<DriverTaskItem[]>([]);
-  readonly isLoading = signal<boolean>(true);
+  private readonly activeLoading = signal(true);
+  private readonly historyLoading = signal(false);
+  readonly isLoading = computed(() =>
+    this.activeTab() === 'active' ? this.activeLoading() : this.historyLoading(),
+  );
+  private activeLoadGeneration = 0;
+  private historyLoadGeneration = 0;
+  private activeRequest?: Subscription;
+  private historyRequest?: Subscription;
   readonly isUsingCache = signal<boolean>(false);
 
   // Server-side pagination for active view
@@ -80,10 +118,20 @@ export class DriverTasksComponent implements OnInit {
     this.realtime.invalidation$
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        filter((msg) => msg.kind.startsWith('task.') || msg.kind.startsWith('dispatch.')),
+        filter(
+          (msg) =>
+            msg.kind === 'realtime.reconnected' ||
+            msg.kind.startsWith('task.') ||
+            msg.kind.startsWith('dispatch.'),
+        ),
       )
-      .subscribe(() => {
-        void this.loadTasks();
+      .subscribe((msg) => {
+        if (msg.kind === 'realtime.reconnected') {
+          this.loadActiveTasks(this.activePage());
+          void this.loadHistory(this.historyPage());
+        } else {
+          void this.loadTasks();
+        }
       });
   }
 
@@ -101,46 +149,62 @@ export class DriverTasksComponent implements OnInit {
       void this.loadHistory(this.historyPage());
       return;
     }
+    this.loadActiveTasks(page);
+  }
 
-    this.isLoading.set(true);
+  private loadActiveTasks(page: number): void {
+    const generation = ++this.activeLoadGeneration;
+    this.activeRequest?.unsubscribe();
+    this.activeLoading.set(true);
     this.activePage.set(page);
+    let serverSucceeded = false;
+    const isCurrent = () => !this.destroyRef.destroyed && generation === this.activeLoadGeneration;
 
     // Try loading from offline cache asynchronously as fallback (page 1)
     if (page === 1) {
-      void this.offlineCache.getDriverTasks<DriverTaskItem>().then((cached) => {
-        if (this.isLoading() && cached && cached.length > 0) {
-          this.tasks.set(cached);
-          this.activeTotalCount.set(cached.length);
-          this.activeTotalPages.set(1);
-          this.isUsingCache.set(true);
-        }
-      });
+      void this.offlineCache
+        .getDriverTasks<DriverTaskItem>()
+        .then((cached) => {
+          if (isCurrent() && !serverSucceeded && cached !== null) {
+            this.tasks.set(cached);
+            this.activeTotalCount.set(cached.length);
+            this.activeTotalPages.set(1);
+            this.isUsingCache.set(true);
+          }
+        })
+        .catch(() => {
+          // Cache is optional; a successful current HTTP response remains authoritative.
+        });
     }
 
     if (this.offlineQueue.isOnline()) {
-      this.http
+      this.activeRequest = this.http
         .get<PaginatedResult<DriverTaskItem>>(
           `/api/dispatch/my-tasks?activeOnly=true&page=${page}&pageSize=${this.activePageSize}`,
         )
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (data) => {
+            if (!isCurrent()) return;
+            serverSucceeded = true;
             this.tasks.set(data.items || []);
             this.activeTotalCount.set(data.totalCount || 0);
             this.activeTotalPages.set(data.totalPages || 1);
             this.isUsingCache.set(false);
-            this.isLoading.set(false);
+            this.activeLoading.set(false);
             if (page === 1) {
               void this.offlineCache.cacheDriverTasks(data.items || []);
             }
           },
           error: () => {
+            if (!isCurrent()) return;
             // If request fails (e.g. backend offline), keep cached tasks
-            this.isLoading.set(false);
+            this.activeLoading.set(false);
             this.isUsingCache.set(true);
           },
         });
     } else {
-      this.isLoading.set(false);
+      this.activeLoading.set(false);
     }
   }
 
@@ -157,27 +221,33 @@ export class DriverTasksComponent implements OnInit {
   }
 
   async loadHistory(page = 1): Promise<void> {
-    this.isLoading.set(true);
+    const generation = ++this.historyLoadGeneration;
+    this.historyRequest?.unsubscribe();
+    this.historyLoading.set(true);
     this.historyPage.set(page);
+    const isCurrent = () => !this.destroyRef.destroyed && generation === this.historyLoadGeneration;
 
     if (this.offlineQueue.isOnline()) {
-      this.http
+      this.historyRequest = this.http
         .get<PaginatedResult<DriverTaskItem>>(
           `/api/dispatch/my-tasks?activeOnly=false&page=${page}&pageSize=${this.historyPageSize}`,
         )
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (data) => {
+            if (!isCurrent()) return;
             this.historyTasks.set(data.items || []);
             this.historyTotalCount.set(data.totalCount || 0);
             this.historyTotalPages.set(data.totalPages || 1);
-            this.isLoading.set(false);
+            this.historyLoading.set(false);
           },
           error: () => {
-            this.isLoading.set(false);
+            if (!isCurrent()) return;
+            this.historyLoading.set(false);
           },
         });
     } else {
-      this.isLoading.set(false);
+      this.historyLoading.set(false);
     }
   }
 
@@ -193,10 +263,51 @@ export class DriverTasksComponent implements OnInit {
     }
   }
 
+  openDetails(task: DriverTaskItem): void {
+    this.selectedTaskId.set(task.id);
+    this.taskDialog.nativeElement.showModal();
+    this.loadDetails();
+  }
+
+  loadDetails(): void {
+    const id = this.selectedTaskId();
+    if (!id) return;
+    this.detailRequest?.unsubscribe();
+    this.taskDetail.set(null);
+    this.detailError.set(null);
+    this.detailLoading.set(true);
+    this.detailRequest = this.http
+      .get<DriverTaskDetail>(`/api/dispatch/tasks/${encodeURIComponent(id)}`)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detail) => {
+          this.taskDetail.set(detail);
+          this.detailLoading.set(false);
+        },
+        error: (error: unknown) => {
+          this.detailError.set(this.userErrors.format(error));
+          this.detailLoading.set(false);
+        },
+      });
+  }
+
+  closeDetails(): void {
+    this.detailRequest?.unsubscribe();
+    this.selectedTaskId.set(null);
+    this.taskDetail.set(null);
+    this.detailError.set(null);
+    this.detailLoading.set(false);
+    if (this.taskDialog.nativeElement.open) this.taskDialog.nativeElement.close();
+  }
+
   async updateTaskStatus(
     task: DriverTaskItem,
     nextStatus: 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'COMPLETED',
   ): Promise<void> {
+    // An older cache/read must not undo this newly queued optimistic update.
+    ++this.activeLoadGeneration;
+    this.activeRequest?.unsubscribe();
+    this.activeLoading.set(false);
     if (nextStatus === 'COMPLETED') {
       this.tasks.update((list) => list.filter((t) => t.id !== task.id));
       this.activeTotalCount.update((count) => Math.max(0, count - 1));

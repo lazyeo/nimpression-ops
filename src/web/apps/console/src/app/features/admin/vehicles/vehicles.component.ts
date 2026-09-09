@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,6 +37,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   selector: 'nim-vehicles',
   standalone: true,
   imports: [
+    BusinessLabelPipe,
     CommonModule,
     FormsModule,
     I18nPipe,
@@ -47,6 +50,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehiclesComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly vehiclesService = inject(VehiclesService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -194,7 +198,7 @@ export class VehiclesComponent implements OnInit {
           this.state.set('forbidden');
         } else {
           this.state.set('error');
-          this.errorMessage.set(err.error?.message || err.message || 'Error loading vehicles');
+          this.errorMessage.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -305,11 +309,9 @@ export class VehiclesComponent implements OnInit {
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
           if (err.status === 409) {
-            this.formError.set('Vehicle registration plate already exists.');
+            this.formError.set(this.userFacingErrors.format(err));
           } else {
-            this.formError.set(
-              err.error?.message || err.error?.detail || err.message || 'Failed to add vehicle',
-            );
+            this.formError.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -354,7 +356,7 @@ export class VehiclesComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to update vehicle');
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -397,11 +399,9 @@ export class VehiclesComponent implements OnInit {
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
           if (err.status === 409) {
-            this.formError.set('Vehicle already has an active driver assignment. Release first.');
+            this.formError.set(this.userFacingErrors.format(err));
           } else {
-            this.formError.set(
-              err.error?.message || err.error?.detail || 'Failed to assign vehicle',
-            );
+            this.formError.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -419,7 +419,7 @@ export class VehiclesComponent implements OnInit {
         this.vehiclesService.releaseAssignment(asg.id).subscribe({
           next: () => this.loadVehicles(),
           error: (err: HttpErrorResponse) => {
-            alert(err.error?.message || 'Failed to release assignment');
+            alert(this.userFacingErrors.format(err));
           },
         });
       },
@@ -456,7 +456,7 @@ export class VehiclesComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
-        this.formError.set(err.error?.message || err.error?.detail || 'Failed to record service');
+        this.formError.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -498,9 +498,7 @@ export class VehiclesComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(
-            err.error?.message || err.error?.detail || 'Failed to record odometer reading',
-          );
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }

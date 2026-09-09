@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -21,6 +22,7 @@ import { CreateNewsPostRequest, NewsAudience } from '../../models/news.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewsCreateDialogComponent {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly fb = inject(FormBuilder);
   private readonly newsService = inject(NewsService);
 
@@ -61,7 +63,7 @@ export class NewsCreateDialogComponent {
       },
       error: (err) => {
         this.submitting.set(false);
-        const detail = err.error?.detail || err.error?.message || err.message || 'NEWS.CREATE_FAILED';
+        const detail = this.userFacingErrors.format(err);
         this.errorMessage.set(detail);
       },
     });

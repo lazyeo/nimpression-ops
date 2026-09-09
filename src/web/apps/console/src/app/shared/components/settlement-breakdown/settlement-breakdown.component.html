@@ -1,0 +1,106 @@
+<section class="settlement-breakdown">
+  <h3>{{ 'SETTLEMENT.BREAKDOWN' | i18n }}</h3>
+  <p>
+    {{
+      (settlement().request.workerType === 'Employee'
+        ? 'SETTLEMENT.EMPLOYEE'
+        : 'SETTLEMENT.CONTRACTOR'
+      ) | i18n
+    }}
+    · {{ 'SETTLEMENT.SCHEDULED_PAY_DATE' | i18n }}:
+    {{ settlement().request.payDate | localeDate: 'short' }}
+  </p>
+  <dl>
+    <div>
+      <dt>{{ 'SETTLEMENT.BASE_GROSS' | i18n }}</dt>
+      <dd>{{ settlement().calculation.baseGross | localeCurrency: currency() }}</dd>
+    </div>
+    @if (settlement().request.workerType === 'Employee') {
+      <div>
+        <dt>{{ 'SETTLEMENT.HOLIDAY_MODE' | i18n }}</dt>
+        <dd class="holiday-mode-value">
+          {{
+            (settlement().request.employee?.holidayPay?.mode === 'PayAsYouGoEightPercent'
+              ? 'SETTLEMENT.PAYG'
+              : 'SETTLEMENT.ACCRUAL'
+            ) | i18n
+          }}
+        </dd>
+      </div>
+      @if (settlement().request.employee?.holidayPay?.mode === 'PayAsYouGoEightPercent') {
+        <div>
+          <dt>{{ 'SETTLEMENT.HOLIDAY_PAY' | i18n }}</dt>
+          <dd>{{ settlement().calculation.holidayPay | localeCurrency: currency() }}</dd>
+        </div>
+      }
+      <div>
+        <dt>{{ 'SETTLEMENT.TAXABLE_GROSS' | i18n }}</dt>
+        <dd>{{ settlement().calculation.taxableGross | localeCurrency: currency() }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'SETTLEMENT.PAYE' | i18n }}</dt>
+        <dd>{{ settlement().calculation.paye | localeCurrency: currency() }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'SETTLEMENT.STUDENT_LOAN' | i18n }}</dt>
+        <dd>{{ settlement().calculation.studentLoan | localeCurrency: currency() }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'SETTLEMENT.EMPLOYEE_KS' | i18n }}</dt>
+        <dd>{{ settlement().calculation.employeeKiwiSaver | localeCurrency: currency() }}</dd>
+      </div>
+    } @else {
+      <div>
+        <dt>{{ 'SETTLEMENT.WITHHOLDING' | i18n }}</dt>
+        <dd>{{ settlement().calculation.contractorWithholding | localeCurrency: currency() }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'SETTLEMENT.GST' | i18n }}</dt>
+        <dd>{{ settlement().calculation.gst | localeCurrency: currency() }}</dd>
+      </div>
+    }
+    <div>
+      <dt>{{ 'SETTLEMENT.NET_PAY' | i18n }}</dt>
+      <dd>{{ settlement().calculation.netPay | localeCurrency: currency() }}</dd>
+    </div>
+  </dl>
+  @if (settlement().request.workerType === 'Employee') {
+    @if (settlement().request.employee?.holidayPay?.mode === 'OrdinaryAccrual') {
+      <p>{{ 'SETTLEMENT.ACCRUAL_NOTE' | i18n }}</p>
+    }
+    <details>
+      <summary>{{ 'SETTLEMENT.PAYE_COMPONENTS' | i18n }}</summary>
+      <p>{{ 'SETTLEMENT.PAYE_NOTE' | i18n }}</p>
+      <dl>
+        <div>
+          <dt>{{ 'SETTLEMENT.INCOME_TAX' | i18n }}</dt>
+          <dd>{{ settlement().calculation.incomeTax | localeCurrency: currency() }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'SETTLEMENT.ACC' | i18n }}</dt>
+          <dd>{{ settlement().calculation.accEarnersLevy | localeCurrency: currency() }}</dd>
+        </div>
+      </dl>
+    </details>
+    <details>
+      <summary>{{ 'SETTLEMENT.EMPLOYER_CONTRIBUTIONS' | i18n }}</summary>
+      <p>{{ 'SETTLEMENT.EMPLOYER_NOTE' | i18n }}</p>
+      <dl>
+        <div>
+          <dt>{{ 'SETTLEMENT.EMPLOYER_KS_GROSS' | i18n }}</dt>
+          <dd>
+            {{ settlement().calculation.employerKiwiSaverGross | localeCurrency: currency() }}
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'SETTLEMENT.ESCT' | i18n }}</dt>
+          <dd>{{ settlement().calculation.esct | localeCurrency: currency() }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'SETTLEMENT.EMPLOYER_KS_NET' | i18n }}</dt>
+          <dd>{{ settlement().calculation.employerKiwiSaverNet | localeCurrency: currency() }}</dd>
+        </div>
+      </dl>
+    </details>
+  }
+</section>

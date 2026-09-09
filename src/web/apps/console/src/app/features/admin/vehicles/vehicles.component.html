@@ -722,7 +722,7 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'VEHICLES.FIELD_STATUS' | i18n }}</span>
-                <span class="detail-val">{{ selectedVehicleDetail()!.status }}</span>
+                <span class="detail-val">{{ selectedVehicleDetail()!.status | businessLabel: 'vehicleStatus' }}</span>
               </div>
             </div>
 
@@ -829,7 +829,7 @@
                           <strong>{{ reading.readingKm }} {{ 'COMMON.UNITS.KM' | i18n }}</strong>
                         </td>
                         <td [attr.data-label]="'VEHICLES.FIELD_DRIVER' | i18n">{{ reading.driverName || '-' }}</td>
-                        <td [attr.data-label]="'VEHICLES.FIELD_SOURCE' | i18n">{{ reading.source }}</td>
+                        <td [attr.data-label]="'VEHICLES.FIELD_SOURCE' | i18n">{{ reading.source | businessLabel: 'readingSource' }}</td>
                       </tr>
                     }
                   </tbody>

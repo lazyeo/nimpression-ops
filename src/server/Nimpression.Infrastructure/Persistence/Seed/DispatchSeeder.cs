@@ -15,8 +15,10 @@ public static class DispatchSeeder
         List<Driver> drivers,
         List<Vehicle> vehicles,
         List<User> users,
-        int randomSeed = SeedConstants.DefaultSeed)
+        int randomSeed = SeedConstants.DefaultSeed,
+        DateTimeOffset? asOf = null)
     {
+        var cutoff = asOf ?? SeedConstants.ReferenceNow;
         var rng = new Random(randomSeed);
         var tasks = new List<JobTask>();
         var dispatcher = users.First(u => u.Role == UserRole.Dispatcher);
@@ -67,17 +69,21 @@ public static class DispatchSeeder
                     dispatcher.Id,
                     $"Scheduled dispatch run for {area.Name}",
                     (TaskPriority)rng.Next(1, 4),
-                    plannedDistance,
-                    driver.Id,
-                    vehicle.Id);
+                    plannedDistance);
+
+                if (scheduledTime > cutoff)
+                {
+                    tasks.Add(task);
+                    continue;
+                }
 
                 // 状态分配：过去日期的任务大部分为 Completed，小部分 Cancelled；最近 1-2 天有 InProgress/Assigned/Draft
                 if (dayOffset > 2)
                 {
                     if (rng.Next(100) < 6) // 6% Cancelled
                     {
-                        task.Assign(driver.Id, vehicle.Id, scheduledTime);
-                        task.Cancel("Customer cancelled delivery slot", scheduledTime.AddMinutes(30));
+                        task.Assign(driver.Id, vehicle.Id, scheduledTime, scheduledTime);
+                        if (scheduledTime.AddMinutes(30) <= cutoff) task.Cancel("Customer cancelled delivery slot", scheduledTime.AddMinutes(30));
                     }
                     else // Completed
                     {
@@ -85,38 +91,39 @@ public static class DispatchSeeder
                         var actualKm = new Kilometres(plannedDistance.Value + (decimal)rng.Next(-5, 10));
                         var endOdo = startOdo + actualKm;
 
-                        task.Assign(driver.Id, vehicle.Id, scheduledTime);
-                        task.Acknowledge(scheduledTime.AddMinutes(5));
-                        task.Start(scheduledTime.AddMinutes(15), startOdo);
-                        task.Complete(scheduledTime.AddMinutes(rng.Next(90, 240)), actualKm, endOdo);
+                        task.Assign(driver.Id, vehicle.Id, scheduledTime, scheduledTime);
+                        if (scheduledTime.AddMinutes(5) <= cutoff) task.Acknowledge(scheduledTime.AddMinutes(5));
+                        if (scheduledTime.AddMinutes(15) <= cutoff) task.Start(scheduledTime.AddMinutes(15), startOdo);
+                        var completedAt = scheduledTime.AddMinutes(rng.Next(90, 240));
+                        if (completedAt <= cutoff) task.Complete(completedAt, actualKm, endOdo);
                     }
                 }
                 else if (dayOffset == 2)
                 {
                     var startOdo = new Kilometres(80000m);
                     var actualKm = plannedDistance;
-                    task.Assign(driver.Id, vehicle.Id, scheduledTime);
-                    task.Acknowledge(scheduledTime.AddMinutes(5));
-                    task.Start(scheduledTime.AddMinutes(15), startOdo);
-                    task.Complete(scheduledTime.AddHours(2), actualKm, startOdo + actualKm);
+                    task.Assign(driver.Id, vehicle.Id, scheduledTime, scheduledTime);
+                    if (scheduledTime.AddMinutes(5) <= cutoff) task.Acknowledge(scheduledTime.AddMinutes(5));
+                    if (scheduledTime.AddMinutes(15) <= cutoff) task.Start(scheduledTime.AddMinutes(15), startOdo);
+                    if (scheduledTime.AddHours(2) <= cutoff) task.Complete(scheduledTime.AddHours(2), actualKm, startOdo + actualKm);
                 }
                 else if (dayOffset == 1)
                 {
-                    task.Assign(driver.Id, vehicle.Id, scheduledTime);
-                    task.Acknowledge(scheduledTime.AddMinutes(5));
-                    task.Start(scheduledTime.AddMinutes(10), new Kilometres(95000m));
+                    task.Assign(driver.Id, vehicle.Id, scheduledTime, scheduledTime);
+                    if (scheduledTime.AddMinutes(5) <= cutoff) task.Acknowledge(scheduledTime.AddMinutes(5));
+                    if (scheduledTime.AddMinutes(10) <= cutoff) task.Start(scheduledTime.AddMinutes(10), new Kilometres(95000m));
                 }
                 else // Today (Day 0)
                 {
                     var roll = rng.Next(100);
                     if (roll < 40)
                     {
-                        task.Assign(driver.Id, vehicle.Id, scheduledTime);
+                        task.Assign(driver.Id, vehicle.Id, scheduledTime, scheduledTime);
                     }
                     else if (roll < 70)
                     {
-                        task.Assign(driver.Id, vehicle.Id, scheduledTime);
-                        task.Acknowledge(scheduledTime.AddMinutes(5));
+                        task.Assign(driver.Id, vehicle.Id, scheduledTime, scheduledTime);
+                        if (scheduledTime.AddMinutes(5) <= cutoff) task.Acknowledge(scheduledTime.AddMinutes(5));
                     }
                     // else Draft
                 }

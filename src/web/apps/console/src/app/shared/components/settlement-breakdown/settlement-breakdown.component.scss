@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+.settlement-breakdown {
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+}
+dl {
+  margin: 0.5rem 0;
+}
+dl > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .4rem 1rem;
+  padding-block: 0.4rem;
+}
+dt {
+  flex: 1 1 8rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+dd {
+  margin: 0;
+  flex: 0 0 auto;
+  max-width: 100%;
+  margin-inline-start: auto;
+  white-space: nowrap;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+summary {
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+  cursor: pointer;
+}
+p {
+  font-size: 0.875rem;
+}
+
+.holiday-mode-value {
+  flex: 1 1 12rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

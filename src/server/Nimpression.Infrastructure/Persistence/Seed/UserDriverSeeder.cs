@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Nimpression.Domain.Entities.Driver;
 using Nimpression.Domain.Entities.Identity;
 using Nimpression.Domain.Enums;
@@ -86,9 +87,9 @@ public static class UserDriverSeeder
                 new Money(p.Item6),
                 new Money(p.Item7),
                 new Money(p.Item8),
-                $"ENC(phone_+6421{100000 + i})",
-                $"ENC(addr_{10 + i}_Queen_Street_Auckland)",
-                $"ENC(emg_+64219999{i:D2})",
+                $"ENC(+6421{100000 + i})",
+                $"ENC({10 + i} Queen Street, Auckland)",
+                $"ENC(Emergency contact: +64219999{i:D2})",
                 p.Item9,
                 DriverStatus.Active);
             drivers.Add(driver);
@@ -96,4 +97,57 @@ public static class UserDriverSeeder
 
         return (users, drivers);
     }
+
+    /// <summary>
+    /// Explicit maintenance only: repair exact legacy demo placeholders without changing edited fields.
+    /// Returns the number of corrected fields, without exposing contact data in command output.
+    /// </summary>
+    public static async Task<int> RepairLegacyContactsAsync(AppDbContext context, CancellationToken cancellationToken = default)
+    {
+        if (context.ChangeTracker.HasChanges())
+        {
+            throw new InvalidOperationException("Contact repair requires a context without pending changes.");
+        }
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        var correctedFields = 0;
+        for (var i = 0; i < 10; i++)
+        {
+            var driverId = new Guid($"30000000-0000-0000-0000-{i + 1:D12}");
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"Drivers\" WHERE \"Id\" = {driverId} FOR UPDATE", cancellationToken);
+            var driver = await context.Drivers.SingleOrDefaultAsync(driver => driver.Id == driverId, cancellationToken);
+            if (driver is null)
+            {
+                continue;
+            }
+
+            // Refresh any pretracked entity while the row lock protects a concurrent profile edit.
+            await context.Entry(driver).ReloadAsync(cancellationToken);
+            var phone = driver.PhoneEnc;
+            var address = driver.AddressEnc;
+            var emergencyContact = driver.EmergencyContactEnc;
+            if (phone == $"ENC(phone_+6421{100000 + i})")
+            {
+                phone = $"ENC(+6421{100000 + i})";
+                correctedFields++;
+            }
+            if (address == $"ENC(addr_{10 + i}_Queen_Street_Auckland)")
+            {
+                address = $"ENC({10 + i} Queen Street, Auckland)";
+                correctedFields++;
+            }
+            if (emergencyContact == $"ENC(emg_+64219999{i:D2})")
+            {
+                emergencyContact = $"ENC(Emergency contact: +64219999{i:D2})";
+                correctedFields++;
+            }
+            driver.UpdateEncryptedContactInfo(phone, address, emergencyContact);
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return correctedFields;
+    }
+
 }

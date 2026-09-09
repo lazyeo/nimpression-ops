@@ -48,7 +48,7 @@ public sealed class VoidPayPeriodCommandHandler(
             return Error.Unprocessable("reason_required", "Reason for voiding pay period is mandatory.");
         }
 
-        var payPeriod = await payrollRepository.GetPayPeriodByIdAsync(request.PayPeriodId, cancellationToken);
+        var payPeriod = await payrollRepository.GetPayPeriodForUpdateAsync(request.PayPeriodId, cancellationToken);
         if (payPeriod is null)
         {
             return Error.NotFound("pay_period_not_found", $"Pay period with ID '{request.PayPeriodId}' was not found.");

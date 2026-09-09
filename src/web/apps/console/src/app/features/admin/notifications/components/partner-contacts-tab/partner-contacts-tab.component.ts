@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -26,6 +27,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PartnerContactsTabComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly notificationService = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
 
@@ -84,7 +86,7 @@ export class PartnerContactsTabComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.message || 'NOTIFICATIONS.LOAD_PARTNERS_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -150,7 +152,7 @@ export class PartnerContactsTabComponent implements OnInit {
           },
           error: (err) => {
             this.dialogSubmitting.set(false);
-            const detail = err.error?.detail || err.error?.message || err.message || 'NOTIFICATIONS.SAVE_PARTNER_FAILED';
+            const detail = this.userFacingErrors.format(err);
             this.dialogError.set(detail);
           },
         });
@@ -170,7 +172,7 @@ export class PartnerContactsTabComponent implements OnInit {
           },
           error: (err) => {
             this.dialogSubmitting.set(false);
-            const detail = err.error?.detail || err.error?.message || err.message || 'NOTIFICATIONS.SAVE_PARTNER_FAILED';
+            const detail = this.userFacingErrors.format(err);
             this.dialogError.set(detail);
           },
         });
@@ -214,7 +216,7 @@ export class PartnerContactsTabComponent implements OnInit {
       },
       error: (err) => {
         this.deleting.set(false);
-        this.error.set(err.message || 'NOTIFICATIONS.DELETE_PARTNER_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }

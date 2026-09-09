@@ -135,7 +135,7 @@ describe('EmailLogsTabComponent (Outbox Delivery Monitor & Manual Resend)', () =
     expect(component.logs().length).toBe(2);
   });
 
-  it('opens log detail modal with error traceback and triggers manual resend', () => {
+  it('shows a safe delivery error summary and triggers manual resend', () => {
     fixture.detectChanges();
     const req = httpMock.expectOne((r) => r.url === '/api/notifications/logs');
     req.flush({
@@ -153,6 +153,9 @@ describe('EmailLogsTabComponent (Outbox Delivery Monitor & Manual Resend)', () =
 
     expect(component.selectedLog()?.id).toBe('log-failed');
     expect(component.selectedLog()?.lastError).toContain('Relay Access Denied');
+    const summary = (fixture.nativeElement as HTMLElement).querySelector('.error-trace-body')?.textContent;
+    expect(summary).toContain('(OPS-UNKNOWN)');
+    expect(summary).not.toMatch(/Connection refused|Relay Access Denied|554/);
 
     // Trigger resend
     component.resendEmail('log-failed');

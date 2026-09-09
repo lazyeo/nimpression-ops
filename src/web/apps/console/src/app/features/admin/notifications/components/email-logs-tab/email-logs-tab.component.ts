@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -17,12 +19,13 @@ import { EmailLogDto, EmailLogFilter, PagedResult } from '../../models/notificat
 @Component({
   selector: 'nim-email-logs-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent],
+  imports: [BusinessLabelPipe, CommonModule, FormsModule, I18nPipe, LocaleDatePipe, IconComponent],
   templateUrl: './email-logs-tab.component.html',
   styleUrls: ['./email-logs-tab.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmailLogsTabComponent implements OnInit {
+  readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly notificationService = inject(NotificationService);
 
   readonly loading = signal(true);
@@ -79,7 +82,7 @@ export class EmailLogsTabComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.message || 'NOTIFICATIONS.LOGS_LOAD_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -118,7 +121,7 @@ export class EmailLogsTabComponent implements OnInit {
       },
       error: (err) => {
         this.resendingId.set(null);
-        this.error.set(err.message || 'NOTIFICATIONS.RESEND_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }

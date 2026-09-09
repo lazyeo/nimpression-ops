@@ -17,6 +17,28 @@ namespace Nimpression.Infrastructure.Persistence.Repositories;
 /// </summary>
 public sealed class PayrollRepository(AppDbContext dbContext) : IPayrollRepository
 {
+    public async Task<PayPeriod?> GetPayPeriodForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        RequireMutationTransaction();
+        return await dbContext.PayPeriods
+            .FromSqlInterpolated($"SELECT * FROM \"PayPeriods\" WHERE \"Id\" = {id} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<PayPeriod?> GetPayPeriodForPayslipForUpdateAsync(Guid payslipId, CancellationToken cancellationToken = default)
+    {
+        RequireMutationTransaction();
+        return await dbContext.PayPeriods
+            .FromSqlInterpolated($"SELECT * FROM \"PayPeriods\" WHERE \"Id\" = (SELECT \"PayPeriodId\" FROM \"Payslips\" WHERE \"Id\" = {payslipId}) FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    private void RequireMutationTransaction()
+    {
+        if (dbContext.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Payroll mutation locks require an active transaction.");
+    }
+
     public async Task<PayPeriod?> GetPayPeriodByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await dbContext.PayPeriods

@@ -44,6 +44,11 @@ public sealed class VehicleRepository(AppDbContext context) : IVehicleRepository
                 EF.Functions.ILike(v.Model, pattern));
         }
 
+        if (filter.ServiceDueOnly == true)
+        {
+            query = query.Where(v => v.OdometerKm >= v.LastServiceOdometerKm + v.ServiceIntervalKm);
+        }
+
         var total = await query.CountAsync(cancellationToken);
 
         var items = await (from v in query

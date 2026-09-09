@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -41,6 +42,7 @@ import { NewsDetailModalComponent } from './components/news-detail-modal/news-de
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewsComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   readonly authService = inject(AuthService);
   private readonly newsService = inject(NewsService);
 
@@ -102,7 +104,7 @@ export class NewsComponent implements OnInit {
         if (err.status === 403) {
           this.isForbidden.set(true);
         } else {
-          this.error.set(err.message || 'NEWS.LOAD_FAILED');
+          this.error.set(this.userFacingErrors.format(err));
         }
       },
     });

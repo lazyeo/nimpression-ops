@@ -1,3 +1,5 @@
+import zhDictionary from '../../../../assets/i18n/zh-CN.json';
+import enDictionary from '../../../../assets/i18n/en-NZ.json';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -158,6 +160,10 @@ describe('DispatchComponent', () => {
       ],
     }).compileComponents();
 
+    TestBed.inject(I18nService).setDictionary('en-NZ', enDictionary);
+    TestBed.inject(I18nService).setDictionary('zh-CN', zhDictionary);
+    TestBed.inject(I18nService).currentLang.set('en-NZ');
+
     fixture = TestBed.createComponent(DispatchComponent);
     component = fixture.componentInstance;
   });
@@ -219,7 +225,8 @@ describe('DispatchComponent', () => {
     fixture.detectChanges();
 
     expect(component.state()).toBe('error');
-    expect(component.errorMessage()).toContain('Database connection failed');
+    expect(component.errorMessage()).toBe('The service is temporarily unavailable. Try again later. (OPS-SERVICE)');
+    expect(component.errorMessage()).not.toContain('Database connection failed');
 
     const compiled = fixture.nativeElement as HTMLElement;
     const retryBtn = compiled.querySelector('.state-card button') as HTMLButtonElement;
@@ -283,7 +290,7 @@ describe('DispatchComponent', () => {
     component.createForm.plannedDistanceKm = 10;
 
     dispatchServiceMock.createTask.mockReturnValue(
-      throwError(() => ({
+      throwError(() => new HttpErrorResponse({
         status: 400,
         error: {
           type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
@@ -297,7 +304,8 @@ describe('DispatchComponent', () => {
     );
 
     component.submitCreateTask();
-    expect(component.formError()).toBe('Planned distance must be greater than zero.');
+    expect(component.formError()).toBe('Some information is missing or invalid. Check your entries and try again. (OPS-400)');
+    expect(component.formError()).not.toContain('PlannedDistanceKm');
   });
 
   it('fetches full task details and renders cancellation reason and timestamp in details modal (BUG-16)', () => {
@@ -467,7 +475,7 @@ describe('DispatchComponent', () => {
 
       const actionButtons = Array.from(rowActions?.querySelectorAll('button.action-btn') || []);
       expect(actionButtons.length).toBeGreaterThan(0);
-      expect(actionButtons.map((b) => b.textContent?.trim())).toContain('DISPATCH.ACTION_VIEW');
+      expect(actionButtons.map((b) => b.textContent?.trim())).toContain('View Details');
     });
   });
 });

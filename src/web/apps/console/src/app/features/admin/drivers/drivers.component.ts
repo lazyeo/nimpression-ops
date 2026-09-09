@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,6 +37,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   selector: 'nim-drivers',
   standalone: true,
   imports: [
+    BusinessLabelPipe,
     CommonModule,
     FormsModule,
     I18nPipe,
@@ -48,6 +51,7 @@ export type ViewState = 'loading' | 'success' | 'empty' | 'error' | 'forbidden';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DriversComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly driversService = inject(DriversService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -197,7 +201,7 @@ export class DriversComponent implements OnInit {
           this.state.set('forbidden');
         } else {
           this.state.set('error');
-          this.errorMessage.set(err.error?.message || err.message || 'Error loading drivers');
+          this.errorMessage.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -337,9 +341,7 @@ export class DriversComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(
-            err.error?.message || err.error?.detail || err.message || 'Failed to create driver',
-          );
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -369,7 +371,7 @@ export class DriversComponent implements OnInit {
         this.isEditModalOpen.set(true);
       },
       error: (err: HttpErrorResponse) => {
-        alert(err.error?.message || 'Failed to load driver details for editing');
+        alert(this.userFacingErrors.format(err));
       },
     });
   }
@@ -411,9 +413,7 @@ export class DriversComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(
-            err.error?.message || err.error?.detail || err.message || 'Failed to update driver',
-          );
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -476,9 +476,9 @@ export class DriversComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         if (err.status === 415) {
-          this.formError.set('Invalid image format detected by magic byte scanner (415).');
+          this.formError.set(this.userFacingErrors.format(err));
         } else {
-          this.formError.set(err.error?.message || err.error?.detail || 'Failed to upload avatar');
+          this.formError.set(this.userFacingErrors.format(err));
         }
       },
     });
@@ -513,9 +513,7 @@ export class DriversComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
-          this.formError.set(
-            err.error?.message || err.error?.detail || 'Failed to deactivate driver',
-          );
+          this.formError.set(this.userFacingErrors.format(err));
         },
       });
   }
@@ -527,7 +525,7 @@ export class DriversComponent implements OnInit {
         this.isDetailsModalOpen.set(true);
       },
       error: (err: HttpErrorResponse) => {
-        alert(err.error?.message || 'Failed to load driver profile');
+        alert(this.userFacingErrors.format(err));
       },
     });
   }

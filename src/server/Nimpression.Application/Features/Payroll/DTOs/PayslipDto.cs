@@ -32,8 +32,15 @@ public sealed record PayslipDto(
     IReadOnlyList<PayslipShiftDetailDto> ShiftDetails,
     IReadOnlyList<PayslipTripDetailDto> TripDetails,
     IReadOnlyList<PayslipFineDto> Fines,
-    string FinesLegalNotice)
+    string FinesLegalNotice,
+    PayslipSettlementSnapshot? Settlement = null)
 {
+    public decimal? NetPay => Settlement?.Calculation.NetPay;
+    public decimal? Deductions => Settlement is null ? null :
+        Settlement.Calculation.Paye + Settlement.Calculation.StudentLoan +
+        Settlement.Calculation.EmployeeKiwiSaver + Settlement.Calculation.ContractorWithholding;
+    public string SettlementStatus => Settlement is null ? "NotCalculated" : "Calculated";
+
     public const string DefaultFinesLegalNotice =
         "Under the Wages Protection Act 1983, employer deductions from pay are unlawful without prior written consent. Fines are tracked separately and not deducted from payroll.";
 
@@ -77,6 +84,7 @@ public sealed record PayslipDto(
             ShiftDetails: shiftDetails ?? [],
             TripDetails: tripDetails ?? [],
             Fines: fines ?? [],
-            FinesLegalNotice: DefaultFinesLegalNotice);
+            FinesLegalNotice: DefaultFinesLegalNotice,
+            Settlement: payslip.Settlement);
     }
 }

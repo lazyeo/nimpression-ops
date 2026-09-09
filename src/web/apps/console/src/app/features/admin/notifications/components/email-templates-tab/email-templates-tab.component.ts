@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../../../core/errors/user-facing-error.service';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -21,12 +23,13 @@ import {
 @Component({
   selector: 'nim-email-templates-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, I18nPipe, IconComponent],
+  imports: [BusinessLabelPipe, CommonModule, FormsModule, ReactiveFormsModule, I18nPipe, IconComponent],
   templateUrl: './email-templates-tab.component.html',
   styleUrls: ['./email-templates-tab.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmailTemplatesTabComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
@@ -76,7 +79,7 @@ export class EmailTemplatesTabComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.message || 'NOTIFICATIONS.TEMPLATES_LOAD_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
       },
     });
   }
@@ -153,7 +156,7 @@ export class EmailTemplatesTabComponent implements OnInit {
           },
           error: (err) => {
             this.dialogSubmitting.set(false);
-            const detail = err.error?.detail || err.error?.message || err.message || 'NOTIFICATIONS.SAVE_TEMPLATE_FAILED';
+            const detail = this.userFacingErrors.format(err);
             this.dialogError.set(detail);
           },
         });
@@ -175,7 +178,7 @@ export class EmailTemplatesTabComponent implements OnInit {
           },
           error: (err) => {
             this.dialogSubmitting.set(false);
-            const detail = err.error?.detail || err.error?.message || err.message || 'NOTIFICATIONS.SAVE_TEMPLATE_FAILED';
+            const detail = this.userFacingErrors.format(err);
             this.dialogError.set(detail);
           },
         });

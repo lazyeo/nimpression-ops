@@ -15,8 +15,6 @@ namespace Nimpression.Domain.Services;
 /// </summary>
 public static class PayrollCalculatorV2
 {
-    public static readonly Money DefaultMinimumHourlyWage = new(23.15m, Money.DefaultCurrency);
-
     /// <summary>
     /// 根据司机、薪期、班次、任务与假期集合计算双口径薪资并产出工资单实体与明细行。
     /// </summary>
@@ -36,7 +34,7 @@ public static class PayrollCalculatorV2
 
         var holidays = publicHolidays ?? new HashSet<DateOnly>();
         var currency = driver.HourlyRate.Currency;
-        var minWage = minimumHourlyWage ?? new Money(DefaultMinimumHourlyWage.Amount, currency);
+        var minWage = NzAdultMinimumWage.ForPeriod(payPeriod.StartsOn, payPeriod.EndsOn, minimumHourlyWage?.Amount);
         var calcAt = calculatedAt ?? DateTimeOffset.UtcNow;
 
         // 1. 工时口径计算

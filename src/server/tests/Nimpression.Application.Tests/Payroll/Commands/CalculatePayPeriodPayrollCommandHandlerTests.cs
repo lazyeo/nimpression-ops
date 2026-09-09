@@ -144,4 +144,43 @@ public sealed class CalculatePayPeriodPayrollCommandHandlerTests
         Assert.Equal(ErrorKind.Forbidden, result.Error!.Kind);
         Assert.Equal("forbidden", result.Error.Code);
     }
+
+    [Theory]
+    [InlineData(2025, 4, 10, 188)]
+    [InlineData(2026, 8, 17, 191.60)]
+    public async Task CalculatePayroll_DefaultFloorUsesWorkPeriodNotCalculationDate(int year, int month, int day, decimal expected)
+    {
+        var start = new DateOnly(year, month, day);
+        var period = new PayPeriod(Guid.NewGuid(), start, start.AddDays(13));
+        _repository.PayPeriods[period.Id] = period;
+        var driver = CreateDriver(hourly: 10m, perTrip: 0, perKm: 0);
+        _repository.Drivers[driver.Id] = driver;
+        var clockIn = new DateTimeOffset(year, month, day, 8, 0, 0, TimeSpan.FromHours(13));
+        var shift = new ShiftEntry(Guid.NewGuid(), driver.Id, clockIn);
+        shift.ClockOut(clockIn.AddHours(8));
+        _repository.Shifts.Add(shift);
+        var handler = new CalculatePayPeriodPayrollCommandHandler(_repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
+
+        var result = await handler.Handle(new(period.Id), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expected, Assert.Single(result.Value).GrossPay);
+    }
+
+    [Theory]
+    [InlineData(2026, 8, 17, true)]
+    [InlineData(2026, 3, 30, false)]
+    public async Task CalculatePayroll_UnsafeFloorFailsBeforePersisting(int year, int month, int day, bool useBelowStatutoryFloor)
+    {
+        var start = new DateOnly(year, month, day);
+        var period = new PayPeriod(Guid.NewGuid(), start, start.AddDays(13));
+        _repository.PayPeriods[period.Id] = period;
+        var handler = new CalculatePayPeriodPayrollCommandHandler(_repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
+
+        var result = await handler.Handle(new(period.Id, MinimumHourlyWage: useBelowStatutoryFloor ? 23.15m : null), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("minimum_wage_configuration_invalid", result.Error!.Code);
+        Assert.Empty(_repository.Payslips);
+    }
 }

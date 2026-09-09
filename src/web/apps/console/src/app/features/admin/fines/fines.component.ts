@@ -1,3 +1,5 @@
+import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -31,6 +33,7 @@ import { toScreamingSnake } from '../../../core/utils/case.utils';
   selector: 'nim-admin-fines',
   standalone: true,
   imports: [
+    BusinessLabelPipe,
     CommonModule,
     FormsModule,
     I18nPipe,
@@ -44,6 +47,7 @@ import { toScreamingSnake } from '../../../core/utils/case.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinesComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly finesService = inject(FinesService);
   readonly toScreamingSnake = toScreamingSnake;
 
@@ -141,7 +145,7 @@ export class FinesComponent implements OnInit {
             this.isForbidden.set(true);
           } else {
             this.hasError.set(true);
-            this.errorMessage.set(err.message || 'Failed to load traffic fines.');
+            this.errorMessage.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -253,13 +257,7 @@ export class FinesComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmittingFine.set(false);
-        const detail =
-          err.error?.detail ||
-          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
-          err.error?.message ||
-          err.error?.title ||
-          err.message ||
-          'Failed to submit fine.';
+        const detail = this.userFacingErrors.format(err);
         this.submitError.set(detail);
       },
     });
@@ -272,13 +270,7 @@ export class FinesComponent implements OnInit {
         this.loadFines();
       },
       error: (err) => {
-        const detail =
-          err.error?.detail ||
-          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
-          err.error?.message ||
-          err.error?.title ||
-          err.message ||
-          'Failed to start review.';
+        const detail = this.userFacingErrors.format(err);
         alert(detail);
       },
     });
@@ -332,13 +324,7 @@ export class FinesComponent implements OnInit {
       },
       error: (err) => {
         this.isReviewSubmitting.set(false);
-        const detail =
-          err.error?.detail ||
-          (err.error?.errors ? Object.values(err.error.errors).flat().join('; ') : null) ||
-          err.error?.message ||
-          err.error?.title ||
-          err.message ||
-          'Failed to submit review.';
+        const detail = this.userFacingErrors.format(err);
         this.reviewError.set(detail);
       },
     });

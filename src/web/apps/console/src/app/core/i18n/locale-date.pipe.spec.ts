@@ -18,7 +18,7 @@ describe('LocaleDatePipe', () => {
   });
 
   it('formats short, medium, and datetime presets', () => {
-    const date = new Date(2026, 8, 7, 17, 59, 0);
+    const date = new Date('2026-09-07T17:59:00+12:00');
 
     const shortVal = pipe.transform(date, 'short', 'en-NZ');
     expect(shortVal).toContain('2026');

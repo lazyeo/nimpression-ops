@@ -11,7 +11,7 @@
       <div class="header-left">
         <nim-icon name="audit" [size]="22" class="title-icon" />
         <h2 id="audit-diff-title" class="modal-title">
-          {{ 'AUDIT.DIFF_TITLE' | i18n }}: {{ event().entityType }} ({{ event().entityId }})
+          {{ 'AUDIT.DIFF_TITLE' | i18n }}: {{ event().entityType | businessLabel: 'auditEntity' }} ({{ event().entityId }})
         </h2>
       </div>
       <button
@@ -37,7 +37,7 @@
             [class.action-delete]="event().action.toLowerCase().includes('delete') || event().action.toLowerCase().includes('remove')"
             [class.action-update]="event().action.toLowerCase().includes('update') || event().action.toLowerCase().includes('edit')"
           >
-            {{ event().action }}
+            {{ event().action | businessLabel: 'auditAction' }}
           </span>
         </div>
 
@@ -49,7 +49,7 @@
         <div class="meta-item">
           <span class="meta-label">{{ 'AUDIT.COL_ACTOR_ROLE' | i18n }}</span>
           <span class="badge-role">
-            {{ event().actorRole ? ('ROLES.' + (event().actorRole === 1 || event().actorRole === 'Admin' ? 'ADMIN' : event().actorRole === 2 || event().actorRole === 'Dispatcher' ? 'DISPATCHER' : 'DRIVER') | i18n) : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
+            {{ event().actorRole ? (event().actorRole | businessLabel: 'actorRole') : ('AUDIT.SYSTEM_ACTOR' | i18n) }}
           </span>
         </div>
 
@@ -147,7 +147,7 @@
                       [class.row-unchanged]="item.changeType === 'unchanged'"
                     >
                       <td class="cell-field" [attr.data-label]="'AUDIT.COL_FIELD' | i18n">
-                        <code>{{ item.key }}</code>
+                        <code>{{ item.key | businessLabel: 'auditField':$index }}</code>
                       </td>
                       <td [attr.data-label]="'AUDIT.COL_CHANGE_TYPE' | i18n">
                         @switch (item.changeType) {

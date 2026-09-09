@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -41,6 +42,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IncidentsComponent implements OnInit {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly incidentsService = inject(IncidentsService);
 
   readonly isLoading = signal<boolean>(false);
@@ -130,7 +132,7 @@ export class IncidentsComponent implements OnInit {
             this.isForbidden.set(true);
           } else {
             this.hasError.set(true);
-            this.errorMessage.set(err.message || 'Failed to load incidents.');
+            this.errorMessage.set(this.userFacingErrors.format(err));
           }
         },
       });
@@ -240,7 +242,7 @@ export class IncidentsComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmittingReport.set(false);
-        this.reportError.set(err.error?.message || err.message || 'Failed to submit incident report.');
+        this.reportError.set(this.userFacingErrors.format(err));
       },
     });
   }

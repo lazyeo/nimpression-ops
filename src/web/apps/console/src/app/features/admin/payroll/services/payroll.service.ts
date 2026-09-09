@@ -1,3 +1,4 @@
+import type { SettlementRequest } from '../../../../core/payroll/settlement.models';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -59,6 +60,10 @@ export class PayrollService {
 
   getPayPeriodPayslips(periodId: string): Observable<PayslipDto[]> {
     return this.http.get<PayslipDto[]>(`${this.baseUrl}/periods/${periodId}/payslips`);
+  }
+
+  calculateSettlement(id: string, request: SettlementRequest): Observable<PayslipDto> {
+    return this.http.post<PayslipDto>(`${this.baseUrl}/payslips/${id}/settlement`, request);
   }
 
   getPayslipById(id: string): Observable<PayslipDto> {

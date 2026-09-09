@@ -12,8 +12,10 @@ public static class TimesheetSeeder
         List<Driver> drivers,
         List<Vehicle> vehicles,
         List<User> users,
-        int randomSeed = SeedConstants.DefaultSeed)
+        int randomSeed = SeedConstants.DefaultSeed,
+        DateTimeOffset? asOf = null)
     {
+        var cutoff = asOf ?? SeedConstants.ReferenceNow;
         var rng = new Random(randomSeed);
         var shifts = new List<ShiftEntry>();
         var adminUser = users.First(u => u.Role == UserRole.Admin);
@@ -71,6 +73,15 @@ public static class TimesheetSeeder
                     }
                 }
 
+                if (clockInTime > cutoff)
+                {
+                    continue;
+                }
+                if (clockOutTime > cutoff)
+                {
+                    clockOutTime = null;
+                }
+
                 var shift = new ShiftEntry(
                     shiftId,
                     driver.Id,
@@ -89,7 +100,7 @@ public static class TimesheetSeeder
                         isNightShift ? "Overnight freight logistics shift" : "Standard day route");
 
                     // 部分班次包含管理员审计更正记录
-                    if (shiftIdCounter % 25 == 0)
+                    if (shiftIdCounter % 25 == 0 && clockOutTime.Value.AddHours(1) <= cutoff)
                     {
                         shift.AdminCorrect(
                             clockInTime.AddMinutes(-15),
@@ -111,7 +122,10 @@ public static class TimesheetSeeder
         var dstClockOut = new DateTimeOffset(2026, 4, 5, 6, 0, 0, TimeSpan.FromHours(12));
         var dstShift = new ShiftEntry(dstShiftId, drivers[0].Id, dstClockIn, -36.8485m, 174.7633m, vehicles[0].Id);
         dstShift.ClockOut(dstClockOut, -36.8485m, 174.7633m, 60, "DST transition night shift");
-        shifts.Add(dstShift);
+        if (dstClockOut <= cutoff)
+        {
+            shifts.Add(dstShift);
+        }
 
         return shifts;
     }

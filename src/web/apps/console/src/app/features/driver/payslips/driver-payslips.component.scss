@@ -31,7 +31,10 @@
   align-items: center;
   justify-content: center;
   font-size: var(--font-size-lg);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 
   &:hover {
     background-color: var(--color-gray-700);
@@ -147,6 +150,13 @@
   }
 }
 
+.calculation-note {
+  margin: 0;
+  color: var(--color-gray-300);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
 .breakdown-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -178,4 +188,6 @@
   }
 }
 
-.page-title-row .page-title { color: var(--color-gray-100); }
+.page-title-row .page-title {
+  color: var(--color-gray-100);
+}

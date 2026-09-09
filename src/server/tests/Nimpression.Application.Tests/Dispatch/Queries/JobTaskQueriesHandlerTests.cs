@@ -1,4 +1,6 @@
 using FluentAssertions;
+using NSubstitute;
+using Nimpression.Application.Common.Abstractions;
 using Nimpression.Application.Features.Dispatch.DTOs;
 using Nimpression.Application.Features.Dispatch.Queries.CheckAreaEligibility;
 using Nimpression.Application.Features.Dispatch.Queries.GetJobTaskById;
@@ -104,7 +106,11 @@ public sealed class JobTaskQueriesHandlerTests
         var task = new JobTask(Guid.NewGuid(), "TSK-DETAIL-01", "Detail Run", Guid.NewGuid(), _dateTimeProvider.UtcNow, Guid.NewGuid(), "Description here");
         _repo.Tasks[task.Id] = task;
 
-        var handler = new GetJobTaskByIdQueryHandler(_repo);
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.IsAuthenticated.Returns(true);
+        currentUser.UserId.Returns(Guid.NewGuid());
+        currentUser.Role.Returns(UserRole.Dispatcher);
+        var handler = new GetJobTaskByIdQueryHandler(_repo, currentUser);
 
         // Act
         var result = await handler.Handle(new GetJobTaskByIdQuery(task.Id), CancellationToken.None);

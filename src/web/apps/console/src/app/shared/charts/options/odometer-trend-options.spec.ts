@@ -129,7 +129,7 @@ describe('OdometerTrendOptions Pure Function (F14.3)', () => {
       { seriesName: 'XYZ789', value: ['2026-08-20', 29000], color: '#E69F00' },
     ]);
 
-    expect(formatted).toContain('2026-08-20 Mileage Record');
+    expect(formatted).toContain('20/08/2026 Mileage Record');
     expect(formatted).toContain('50,200 km');
     expect(formatted).toContain('(Due for Service)');
   });

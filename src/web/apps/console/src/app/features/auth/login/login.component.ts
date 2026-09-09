@@ -1,3 +1,4 @@
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -24,6 +25,7 @@ import { LanguageSwitchComponent } from '../../../shared/components/language-swi
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly i18n = inject(I18nService);
@@ -71,11 +73,11 @@ export class LoginComponent {
           const retryAfter = err?.headers?.get('Retry-After');
           const seconds = retryAfter ? parseInt(retryAfter, 10) : 60;
           this.rateLimitSeconds.set(seconds);
-          this.errorMessage.set(this.i18n.translate('AUTH.RATE_LIMIT_EXCEEDED', { seconds }));
+          this.errorMessage.set(`${this.i18n.translate('AUTH.RATE_LIMIT_EXCEEDED', { seconds })} (OPS-429)`);
         } else if (err?.status === 401) {
-          this.errorMessage.set(this.i18n.translate('AUTH.INVALID_CREDENTIALS'));
+          this.errorMessage.set(`${this.i18n.translate('AUTH.INVALID_CREDENTIALS')} (OPS-401)`);
         } else {
-          this.errorMessage.set(err?.error?.detail || this.i18n.translate('COMMON.ERROR'));
+          this.errorMessage.set(this.userFacingErrors.format(err));
         }
       },
     });

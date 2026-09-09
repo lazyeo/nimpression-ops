@@ -792,11 +792,11 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.TABLE_PRIORITY' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.priority }}</span>
+                <span class="detail-val">{{ selectedTask()!.priority | businessLabel: 'priority' }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ 'DISPATCH.TABLE_STATUS' | i18n }}</span>
-                <span class="detail-val">{{ selectedTask()!.status }}</span>
+                <span class="detail-val">{{ selectedTask()!.status | businessLabel: 'taskStatus' }}</span>
               </div>
             </div>
 

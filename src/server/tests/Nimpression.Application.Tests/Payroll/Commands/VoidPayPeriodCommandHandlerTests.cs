@@ -1,3 +1,4 @@
+using Nimpression.Application.Features.Payroll.Commands.CalculatePayslipSettlement;
 using Nimpression.Application.Common.Results;
 using Nimpression.Application.Features.Payroll.Commands.CalculatePayPeriodPayroll;
 using Nimpression.Application.Features.Payroll.Commands.FinalisePayPeriod;
@@ -55,6 +56,12 @@ public sealed class VoidPayPeriodCommandHandlerTests
         var calcHandler = new CalculatePayPeriodPayrollCommandHandler(
             _repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
         await calcHandler.Handle(new CalculatePayPeriodPayrollCommand(period.Id), CancellationToken.None);
+
+        var settlementHandler = new CalculatePayslipSettlementCommandHandler(
+            _repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);
+        var settlementResult = await settlementHandler.Handle(new CalculatePayslipSettlementCommand(
+            _repository.Payslips.Values.Single().Id, CalculatePayslipSettlementCommandHandlerTests.EmployeeSettings()), CancellationToken.None);
+        Assert.True(settlementResult.IsSuccess);
 
         var finaliseHandler = new FinalisePayPeriodCommandHandler(
             _repository, _unitOfWork, _currentUser, _auditSink, _dateTimeProvider);

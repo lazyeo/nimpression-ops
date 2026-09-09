@@ -1,3 +1,7 @@
+using System.Text.Json;
+using Npgsql;
+using Nimpression.Infrastructure.Persistence.Repositories;
+using Nimpression.Domain.Services.Payroll;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -248,7 +252,7 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         var calcReq = new CalculatePayrollRequest(
             DriverId: _driver1Id,
             PublicHolidays: [new DateOnly(2026, 8, 18)],
-            MinimumHourlyWage: 23.15m);
+            MinimumHourlyWage: 23.95m);
 
         var calcResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/calculate", calcReq);
         calcResp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -314,6 +318,8 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         var calcResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/calculate", new CalculatePayrollRequest(DriverId: _driver1Id));
         calcResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
+        await SettlePeriodAsync(periodId);
+
         // 4. Finalise
         var finaliseResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
         finaliseResp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -371,7 +377,9 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
 
         // Calculate & Finalise for Driver 2
         await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/calculate", new CalculatePayrollRequest(DriverId: _driver2Id));
-        await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
+        await SettlePeriodAsync(periodId);
+        var finaliseResponse = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
+        finaliseResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Get Driver 2's payslip ID
         var listResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Get, $"/api/payroll/periods/{periodId}/payslips");
@@ -406,7 +414,9 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         }
 
         await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/calculate", new CalculatePayrollRequest(DriverId: _driver1Id));
-        await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
+        await SettlePeriodAsync(periodId);
+        var finaliseResponse = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
+        finaliseResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var listResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Get, $"/api/payroll/periods/{periodId}/payslips");
         var list = await listResp.Content.ReadFromJsonAsync<List<PayslipDto>>();
@@ -420,6 +430,24 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         var payslip = await resp.Content.ReadFromJsonAsync<PayslipDto>();
         payslip!.Id.Should().Be(driver1PayslipId);
         payslip.DriverId.Should().Be(_driver1Id);
+        payslip.Settlement!.Calculation.Paye.Should().Be(29.40m);
+        payslip.Settlement.Calculation.AccEarnersLevy.Should().Be(4.20m);
+
+        var driverListResponse = await SendAuthorizedAsync(_driver1Token, HttpMethod.Get, "/api/payroll/my-payslips");
+        driverListResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var driverList = JsonDocument.Parse(await driverListResponse.Content.ReadAsStringAsync());
+        var driverSlip = driverList.RootElement.EnumerateArray().Single(item => item.GetProperty("id").GetGuid() == driver1PayslipId);
+        driverSlip.GetProperty("deductionCalculationStatus").GetString().Should().Be("Calculated");
+        driverSlip.GetProperty("grossPay").GetDecimal().Should().Be(240m);
+        driverSlip.GetProperty("netPay").GetDecimal().Should().Be(210.60m);
+        driverSlip.GetProperty("deductions").GetDecimal().Should().Be(29.40m);
+        driverSlip.GetProperty("payDate").ValueKind.Should().Be(JsonValueKind.Null);
+        var settlementJson = driverSlip.GetProperty("settlement");
+        settlementJson.GetProperty("calculation").GetProperty("paye").GetDecimal().Should().Be(29.40m);
+        settlementJson.GetProperty("calculation").GetProperty("accEarnersLevy").GetDecimal().Should().Be(4.20m);
+        settlementJson.GetProperty("request").GetProperty("payDate").GetString().Should().Be("2026-11-01");
+        settlementJson.GetProperty("rulesVersion").GetString().Should().Be(PayrollSettlementCalculator.RulesVersion);
+
     }
 
     #endregion
@@ -476,7 +504,9 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         }
 
         await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/calculate", new CalculatePayrollRequest(DriverId: _driver1Id));
-        await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
+        await SettlePeriodAsync(periodId);
+        var finaliseResponse = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{periodId}/finalise");
+        finaliseResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var listResp = await SendAuthorizedAsync(_adminToken, HttpMethod.Get, $"/api/payroll/periods/{periodId}/payslips");
         var list = await listResp.Content.ReadFromJsonAsync<List<PayslipDto>>();
@@ -504,6 +534,147 @@ public sealed class PayrollIntegrationTests : IAsyncLifetime, IDisposable
         var jwtGenerator = _factory.Services.GetRequiredService<IJwtTokenGenerator>();
         var (token, _) = jwtGenerator.GenerateAccessToken(userId, email, role.ToString(), displayName);
         return token;
+    }
+
+    [Fact]
+    public async Task PeriodMutationLock_ExcludesConcurrentWriter_AndClosedPeriodCannotGainNewPayslip()
+    {
+        var timestamp = new DateTimeOffset(2026, 9, 4, 0, 0, 0, TimeSpan.Zero);
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        var slip = new Payslip(Guid.NewGuid(), period.Id, _driver1Id, new WorkHours(8m), WorkHours.Zero, WorkHours.Zero,
+            new Money(30m), new Money(240m), 0, Kilometres.Zero, Money.Zero(), Money.Zero(), Money.Zero(),
+            PayBasis.Hourly, new Money(240m), false, timestamp);
+        var settings = SettlementSettings(240m);
+        slip.SetSettlement(new PayslipSettlementSnapshot(settings, PayrollSettlementCalculator.Calculate(settings).Calculation!,
+            PayrollSettlementCalculator.RulesVersion, timestamp));
+        await using (var setup = _fixture.CreateDbContext())
+        {
+            setup.PayPeriods.Add(period);
+            setup.Payslips.Add(slip);
+            await setup.SaveChangesAsync();
+        }
+
+        var locked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var probed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task FinaliseWithLockAsync()
+        {
+            await using var context = _fixture.CreateDbContext();
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            try
+            {
+                var repository = new PayrollRepository(context);
+                var row = await repository.GetPayPeriodForUpdateAsync(period.Id);
+                locked.TrySetResult();
+                await probed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                var existing = await context.Payslips.SingleAsync(item => item.Id == slip.Id);
+                existing.Finalise(timestamp);
+                row!.Finalise(timestamp);
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            finally { locked.TrySetResult(); }
+        }
+        async Task ProbeConcurrentWriterAsync()
+        {
+            await locked.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await using var context = _fixture.CreateDbContext();
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            try
+            {
+                // NOWAIT proves a conflicting database row lock exists, without timing assertions.
+                var takeLock = async () => await context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT 1 FROM \"PayPeriods\" WHERE \"Id\" = {period.Id} FOR UPDATE NOWAIT");
+                var error = await takeLock.Should().ThrowAsync<PostgresException>();
+                error.Which.SqlState.Should().Be(PostgresErrorCodes.LockNotAvailable);
+            }
+            finally { probed.TrySetResult(); }
+        }
+        await Task.WhenAll(FinaliseWithLockAsync(), ProbeConcurrentWriterAsync());
+
+        var addAnotherDriver = await SendAuthorizedAsync(_adminToken, HttpMethod.Post,
+            $"/api/payroll/periods/{period.Id}/calculate", new CalculatePayrollRequest(DriverId: _driver2Id));
+        addAnotherDriver.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        await using var verify = _fixture.CreateDbContext();
+        (await verify.Payslips.CountAsync(item => item.PayPeriodId == period.Id)).Should().Be(1);
+        (await verify.PayPeriods.SingleAsync(item => item.Id == period.Id)).Status.Should().Be(PayPeriodStatus.Finalised);
+    }
+
+    private static SettlementRequest SettlementSettings(decimal gross = 0) => new(
+        new DateOnly(2026, 11, 1), SettlementPayFrequency.Fortnightly, gross, SettlementWorkerType.Employee,
+        new EmployeeSettlementProfile("M", new(0m, false, false), new(0m, false, false, null, false),
+            new(HolidayPayMode.OrdinaryAccrual, false, false)), null);
+
+    private async Task SettlePeriodAsync(Guid periodId)
+    {
+        var response = await SendAuthorizedAsync(_adminToken, HttpMethod.Get, $"/api/payroll/periods/{periodId}/payslips");
+        var slips = await response.Content.ReadFromJsonAsync<List<PayslipDto>>();
+        foreach (var slip in slips!)
+        {
+            var settlement = await SendAuthorizedAsync(_adminToken, HttpMethod.Post,
+                $"/api/payroll/payslips/{slip.Id}/settlement", SettlementSettings());
+            settlement.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+    }
+
+    [Fact]
+    public async Task Settlement_PersistsSnapshot_RejectsDriverMutation_AndProtectsConcurrentFinalisation()
+    {
+        var timestamp = new DateTimeOffset(2026, 9, 4, 0, 0, 0, TimeSpan.Zero);
+        var period = new PayPeriod(Guid.NewGuid(), new DateOnly(2026, 8, 17), new DateOnly(2026, 8, 30));
+        var slip = new Payslip(Guid.NewGuid(), period.Id, _driver1Id, new WorkHours(8m), WorkHours.Zero, WorkHours.Zero,
+            new Money(30m), new Money(240m), 0, Kilometres.Zero, Money.Zero(), Money.Zero(), Money.Zero(),
+            PayBasis.Hourly, new Money(240m), false, timestamp);
+        await using (var setup = _fixture.CreateDbContext())
+        {
+            setup.PayPeriods.Add(period);
+            setup.Payslips.Add(slip);
+            await setup.SaveChangesAsync();
+        }
+
+        var forbidden = await SendAuthorizedAsync(_driver2Token, HttpMethod.Post,
+            $"/api/payroll/payslips/{slip.Id}/settlement", SettlementSettings());
+        forbidden.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var missing = await SendAuthorizedAsync(_adminToken, HttpMethod.Post, $"/api/payroll/periods/{period.Id}/finalise");
+        missing.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+
+        var response = await SendAuthorizedAsync(_adminToken, HttpMethod.Post,
+            $"/api/payroll/payslips/{slip.Id}/settlement", SettlementSettings(999999m));
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await response.Content.ReadFromJsonAsync<PayslipDto>();
+        dto!.Settlement!.Request.GrossEarnings.Should().Be(240m);
+        dto.NetPay.Should().Be(210.60m);
+
+        await using var finalising = _fixture.CreateDbContext();
+        await using var editing = _fixture.CreateDbContext();
+        var toFinalise = await finalising.Payslips.SingleAsync(item => item.Id == slip.Id);
+        var toEdit = await editing.Payslips.SingleAsync(item => item.Id == slip.Id);
+        toFinalise.Settlement.Should().NotBeNull();
+        toFinalise.Settlement!.Request.GrossEarnings.Should().Be(240m);
+        var original = toFinalise.Settlement;
+        toFinalise.Finalise(timestamp);
+        var updated = toEdit.Settlement! with { CalculatedAt = timestamp.AddMinutes(1) };
+        toEdit.SetSettlement(updated);
+
+        static async Task<bool> TrySaveAsync(AppDbContext context)
+        {
+            try { await context.SaveChangesAsync(); return true; }
+            catch (DbUpdateConcurrencyException) { return false; }
+        }
+        var outcomes = await Task.WhenAll(TrySaveAsync(finalising), TrySaveAsync(editing));
+        outcomes.Should().ContainSingle(success => success);
+        outcomes.Should().ContainSingle(success => !success);
+        await using var verify = _fixture.CreateDbContext();
+        var saved = await verify.Payslips.AsNoTracking().SingleAsync(item => item.Id == slip.Id);
+        if (outcomes[0])
+        {
+            saved.FinalisedAt.Should().NotBeNull();
+            saved.Settlement.Should().BeEquivalentTo(original);
+        }
+        else
+        {
+            saved.FinalisedAt.Should().BeNull();
+            saved.Settlement.Should().BeEquivalentTo(updated);
+        }
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(string token, HttpMethod method, string url, object? body = null)

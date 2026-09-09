@@ -1,3 +1,6 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import zhDictionary from '../../../../assets/i18n/zh-CN.json';
+import enDictionary from '../../../../assets/i18n/en-NZ.json';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -91,6 +94,10 @@ describe('FinesComponent', () => {
         { provide: FinesService, useValue: finesService },
       ],
     }).compileComponents();
+
+    TestBed.inject(I18nService).setDictionary('en-NZ', enDictionary);
+    TestBed.inject(I18nService).setDictionary('zh-CN', zhDictionary);
+    TestBed.inject(I18nService).currentLang.set('en-NZ');
 
     fixture = TestBed.createComponent(FinesComponent);
     component = fixture.componentInstance;
@@ -188,7 +195,7 @@ describe('FinesComponent', () => {
     component.newReason = 'Speeding';
 
     finesService.submitFine.mockReturnValue(
-      throwError(() => ({
+      throwError(() => new HttpErrorResponse({
         status: 400,
         error: {
           type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
@@ -201,7 +208,7 @@ describe('FinesComponent', () => {
 
     component.submitFine();
     expect(component.submitError()).toBe(
-      'DriverId is mandatory for management fine submission.',
+      'Select a driver before continuing. (DRIVER-001)',
     );
   });
 

@@ -12,6 +12,10 @@ namespace Nimpression.Application.Features.Payroll.Abstractions;
 /// </summary>
 public interface IPayrollRepository
 {
+    Task<PayPeriod?> GetPayPeriodForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<PayPeriod?> GetPayPeriodForPayslipForUpdateAsync(Guid payslipId, CancellationToken cancellationToken = default);
+
     Task<PayPeriod?> GetPayPeriodByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<PagedResult<PayPeriodDto>> GetPayPeriodsListAsync(PayPeriodFilter filter, CancellationToken cancellationToken = default);

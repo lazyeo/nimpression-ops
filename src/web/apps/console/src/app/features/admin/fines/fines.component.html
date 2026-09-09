@@ -400,7 +400,7 @@
                   <label class="review-title">{{ 'FINES.REVIEW_INFO_TITLE' | i18n }}</label>
                   <p>
                     <strong>{{ 'FINES.COL_STATUS' | i18n }}:</strong>
-                    {{ activeFineDetail()?.status }}
+                    {{ activeFineDetail()?.status | businessLabel: 'fineStatus' }}
                   </p>
                   @if (activeFineDetail()?.reviewerName) {
                     <p>

@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Nimpression.Domain.Services.Payroll;
+using Nimpression.Application.Features.Payroll.Commands.CalculatePayslipSettlement;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nimpression.Api.Common;
@@ -105,8 +108,16 @@ public sealed class PayrollEndpoints : IEndpointModule
             CancellationToken ct) =>
         {
             var command = new FinalisePayPeriodCommand(id);
-            var result = await sender.Send(command, ct);
-            return result.ToHttpResult(StatusCodes.Status200OK);
+            try
+            {
+                var result = await sender.Send(command, ct);
+                return result.ToHttpResult(StatusCodes.Status200OK);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Results.Problem(statusCode: StatusCodes.Status409Conflict, title: "payroll_settlement_conflict",
+                    detail: "This payslip changed while you were working. Refresh and review it before continuing.");
+            }
         })
         .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("FinalisePayPeriod")
@@ -181,18 +192,7 @@ public sealed class PayrollEndpoints : IEndpointModule
                 return result.ToHttpResult();
             }
 
-            var items = result.Value.Items.Select(p => new
-            {
-                id = p.Id,
-                payPeriod = $"{p.PeriodStartsOn:yyyy-MM-dd} ~ {p.PeriodEndsOn:yyyy-MM-dd}",
-                payDate = p.PaidAt,
-                grossPay = p.GrossPay,
-                netPay = p.GrossPay,
-                deductions = 0.0m,
-                totalHours = p.OrdinaryHours + p.OvertimeHours + p.HolidayHours,
-                hourlyRate = p.HourlyRateSnapshot > 0 ? p.HourlyRateSnapshot : 35.0m,
-                currency = p.Currency ?? "NZD"
-            }).ToList();
+            var items = result.Value.Items.Select(DriverPayslipDto.FromPayslip).ToList();
 
             return Results.Ok(items);
         })
@@ -223,6 +223,26 @@ public sealed class PayrollEndpoints : IEndpointModule
         .RequireAuthorization(AuthorizationPolicies.AdminOnly)
         .WithName("GetDriverPayslips")
         .WithSummary("管理端查询指定司机的工资单历史");
+
+        group.MapPost("/payslips/{id:guid}/settlement", async (
+            Guid id,
+            [FromBody] SettlementRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                var result = await sender.Send(new CalculatePayslipSettlementCommand(id, request), ct);
+                return result.ToHttpResult();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Results.Problem(statusCode: StatusCodes.Status409Conflict, title: "payroll_settlement_conflict",
+                    detail: "This payslip changed while you were working. Refresh and review it before continuing.");
+            }
+        })
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly)
+        .WithName("CalculatePayslipSettlement");
 
         // F7.10 / F7.11 / F7.12: 按 ID 查询工资单详情（含双套明细、班次追溯、任务追溯与罚单独立分区展示）
         // 司机查他人 403（不是 404）

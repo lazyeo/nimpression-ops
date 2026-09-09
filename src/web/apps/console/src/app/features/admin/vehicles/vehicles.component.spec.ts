@@ -1,3 +1,5 @@
+import zhDictionary from '../../../../assets/i18n/zh-CN.json';
+import enDictionary from '../../../../assets/i18n/en-NZ.json';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -142,8 +144,45 @@ describe('VehiclesComponent', () => {
       },
     });
 
+    TestBed.inject(I18nService).setDictionary('en-NZ', enDictionary);
+    TestBed.inject(I18nService).setDictionary('zh-CN', zhDictionary);
+    TestBed.inject(I18nService).currentLang.set('en-NZ');
+
     fixture = TestBed.createComponent(VehiclesComponent);
     component = fixture.componentInstance;
+  });
+
+  it.each([
+    ['en-NZ', 400, 'Some information is missing or invalid. Check your entries and try again. (OPS-400)'],
+    ['en-NZ', 500, 'The service is temporarily unavailable. Try again later. (OPS-SERVICE)'],
+    ['zh-CN', 400, '部分信息缺失或不正确，请检查填写内容后重试。 (OPS-400)'],
+    ['zh-CN', 500, '服务暂时不可用，请稍后再试。 (OPS-SERVICE)'],
+  ] as const)('renders a safe %s error for status %s', (language, status, expected) => {
+    TestBed.inject(I18nService).currentLang.set(language);
+    vehiclesServiceMock.getVehicles.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status,
+      url: 'https://internal.invalid/api/vehicles',
+      error: { detail: 'SQL connection failed at https://internal.invalid/api/vehicles', message: 'private stack trace' },
+    })));
+    fixture.detectChanges();
+
+    expect(component.errorMessage()).toBe(expected);
+    const message = (fixture.nativeElement as HTMLElement).querySelector('.state-desc')?.textContent;
+    expect(message).toContain(expected);
+    expect(message).not.toMatch(/internal\.invalid|SQL|private stack|ERRORS\./);
+  });
+
+  it.each([
+    ['en-NZ', 'Driver Assignment'],
+    ['zh-CN', '司机分配'],
+  ] as const)('renders the assignment heading in %s', (language, heading) => {
+    TestBed.inject(I18nService).currentLang.set(language);
+    fixture.detectChanges();
+    component.openDetailsModal(mockVehicles[0]);
+    fixture.detectChanges();
+    const content = (fixture.nativeElement as HTMLElement).textContent;
+    expect(content).toContain(heading);
+    expect(content).not.toContain('VEHICLES.SECTION_ASSIGNMENT');
   });
 
   it('should render vehicles list with rego and maintenance status in success state', () => {
@@ -253,13 +292,14 @@ describe('VehiclesComponent', () => {
     const conflictError = new HttpErrorResponse({
       status: 409,
       statusText: 'Conflict',
-      error: { message: 'Rego already exists' },
+      error: { title: 'vehicle_rego_conflict', detail: 'database index violated at https://internal.invalid/api/vehicles' },
     });
     vehiclesServiceMock.createVehicle.mockReturnValue(throwError(() => conflictError));
 
     component.submitCreateVehicle();
 
-    expect(component.formError()).toContain('already exists');
+    expect(component.formError()).toBe('This registration plate is already in use. Check the plate or the existing vehicle. (VEHICLE-002)');
+    expect(component.formError()).not.toContain('internal.invalid');
     expect(component.isCreateModalOpen()).toBe(true);
   });
 

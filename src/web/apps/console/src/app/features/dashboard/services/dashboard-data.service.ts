@@ -1,3 +1,5 @@
+import { formatNzDate } from '../../../core/i18n/nz-date';
+import { UserFacingErrorService } from '../../../core/errors/user-facing-error.service';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { forkJoin, catchError, of } from 'rxjs';
 import { ApiClientService } from '../../../core/api/api-client.service';
@@ -75,6 +77,7 @@ export function detectAppTheme(): ChartThemeConfig {
   providedIn: 'root',
 })
 export class DashboardDataService {
+  private readonly userFacingErrors = inject(UserFacingErrorService);
   private readonly api = inject(ApiClientService);
   private readonly i18n = inject(I18nService);
 
@@ -331,26 +334,10 @@ export class DashboardDataService {
 
     // Fetch vehicles, tasks, timesheets, fines, pay periods concurrently
     forkJoin({
-      vehiclesRes: this.api.getVehicles({ pageSize: 100 }).pipe(
-        catchError((err) => {
-          throw new Error(`Failed to load vehicles: ${err.message || err.statusText}`);
-        }),
-      ),
-      tasksRes: this.api.getJobTasks({ pageSize: 1000 }).pipe(
-        catchError((err) => {
-          throw new Error(`Failed to load tasks: ${err.message || err.statusText}`);
-        }),
-      ),
-      timesheetsRes: this.api.getTimesheets({ pageSize: 1000 }).pipe(
-        catchError((err) => {
-          throw new Error(`Failed to load timesheets: ${err.message || err.statusText}`);
-        }),
-      ),
-      finesRes: this.api.getFines({ pageSize: 500 }).pipe(
-        catchError((err) => {
-          throw new Error(`Failed to load fines: ${err.message || err.statusText}`);
-        }),
-      ),
+      vehiclesRes: this.api.getVehicles({ pageSize: 100 }),
+      tasksRes: this.api.getJobTasks({ pageSize: 1000 }),
+      timesheetsRes: this.api.getTimesheets({ pageSize: 1000 }),
+      finesRes: this.api.getFines({ pageSize: 500 }),
       periodsRes: this.api.getPayPeriods({ pageSize: 10 }).pipe(
         catchError(() => of({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 })),
       ),
@@ -391,7 +378,7 @@ export class DashboardDataService {
               this.loading.set(false);
             },
             error: (err) => {
-              this.error.set(err.message || 'DASHBOARD.ERRORS.LOAD_FAILED');
+              this.error.set(this.userFacingErrors.format(err));
               this.loading.set(false);
             },
           });
@@ -408,7 +395,7 @@ export class DashboardDataService {
         }
       },
       error: (err) => {
-        this.error.set(err.message || 'DASHBOARD.ERRORS.NETWORK_FAILED');
+        this.error.set(this.userFacingErrors.format(err));
         this.loading.set(false);
       },
     });
@@ -460,10 +447,10 @@ export class DashboardDataService {
     this.payrollComparison.set(payrollData);
 
     if (currentPeriod) {
-      this.currentPeriodLabel.set(`${currentPeriod.startsOn} ~ ${currentPeriod.endsOn}`);
+      this.currentPeriodLabel.set(`${formatNzDate(currentPeriod.startsOn)} ~ ${formatNzDate(currentPeriod.endsOn)}`);
     }
     if (previousPeriod) {
-      this.previousPeriodLabel.set(`${previousPeriod.startsOn} ~ ${previousPeriod.endsOn}`);
+      this.previousPeriodLabel.set(`${formatNzDate(previousPeriod.startsOn)} ~ ${formatNzDate(previousPeriod.endsOn)}`);
     }
 
     if (typeof performance !== 'undefined' && performance.mark && performance.measure) {

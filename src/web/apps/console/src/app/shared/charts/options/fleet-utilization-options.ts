@@ -1,3 +1,4 @@
+import { formatNzDate } from '../../../core/i18n/nz-date';
 import { EChartsOption } from 'echarts';
 import { ChartThemeConfig, SEMANTIC_COLORS, LIGHT_THEME } from '../theme/chart-theme';
 
@@ -63,7 +64,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
   }
 
   const dates = data.map((d) => {
-    return d.date.length >= 10 ? d.date.substring(5) : d.date;
+    return d.date;
   });
 
   const isDesktopDense = !isMobile && data.length > 8;
@@ -98,7 +99,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
         if (!items || items.length === 0) return '';
         const idx = items[0].dataIndex;
         const item = data[idx];
-        const dateStr = item?.date || items[0].name;
+        const dateStr = formatNzDate(item?.date || items[0].name);
         const total = (item?.inTransit ?? 0) + (item?.idle ?? 0) + (item?.maintenance ?? 0);
         const utilRate = total > 0 ? (((item?.inTransit ?? 0) / total) * 100).toFixed(1) : '0.0';
 
@@ -145,6 +146,7 @@ export function buildFleetUtilizationOptions(params: FleetUtilizationOptionsPara
         },
       },
       axisLabel: {
+        formatter: (value: string) => formatNzDate(value),
         color: theme.textSecondaryColor,
         fontSize: isMobile ? 10 : 12,
         interval: isMobile

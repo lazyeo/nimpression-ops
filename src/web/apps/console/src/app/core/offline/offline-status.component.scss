@@ -31,7 +31,8 @@
     color: var(--badge-success-text);
     border-color: var(--badge-success-border);
   }
-  &.badge-syncing {
+  &.badge-syncing,
+  &.badge-pending {
     background: var(--badge-info-bg);
     color: var(--badge-info-text);
     border-color: var(--badge-info-border);
@@ -41,7 +42,8 @@
       border-top-color: transparent;
     }
   }
-  &.badge-reconnecting {
+  &.badge-reconnecting,
+  &.badge-attention {
     background: var(--badge-warning-bg);
     color: var(--badge-warning-text);
     border-color: var(--badge-warning-border);
@@ -133,6 +135,9 @@
   width: 100%;
   max-width: 640px;
   max-height: 85vh;
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-xl);
@@ -191,6 +196,8 @@
 .modal-body {
   padding: var(--space-20);
   overflow-y: auto;
+  min-height: 0;
+  min-width: 0;
   flex: 1;
 }
 
@@ -211,9 +218,10 @@
   overflow-x: auto;
 }
 
-.queue-table {
+.offline-queue-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: var(--font-size-sm);
 
   th,
@@ -222,6 +230,8 @@
     text-align: left;
     border-bottom: 1px solid var(--border-subtle);
     line-height: var(--line-height-tight);
+    vertical-align: top;
+    overflow-wrap: anywhere;
   }
 
   th {
@@ -230,49 +240,25 @@
     font-weight: var(--font-weight-semibold);
   }
 
-  .col-url {
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   tr.row-failed {
     background: var(--color-warning-subtle);
   }
 }
 
-.method-tag {
-  display: inline-block;
-  padding: 1px var(--space-6);
-  border-radius: var(--radius-sm);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-tight);
-
-  &.tag-post {
-    background: var(--badge-info-bg);
-    color: var(--badge-info-text);
-  }
-  &.tag-put {
-    background: var(--badge-warning-bg);
-    color: var(--badge-warning-text);
-  }
-  &.tag-patch {
-    background: var(--badge-purple-bg);
-    color: var(--badge-purple-text);
-  }
-  &.tag-delete {
-    background: var(--badge-danger-bg);
-    color: var(--badge-danger-text);
-  }
+.operation-name {
+  font-weight: var(--font-weight-semibold);
 }
 
-.item-desc {
-  display: block;
+.item-outcome {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.error-code {
+  color: var(--text-secondary);
   font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  margin-top: var(--space-2);
 }
 
 .status-pill {
@@ -306,7 +292,7 @@
   display: block;
   color: var(--color-danger);
   font-size: var(--font-size-xs);
-  max-width: 180px;
+  overflow-wrap: anywhere;
 }
 
 .btn-retry,
@@ -411,3 +397,80 @@
   }
 }
 
+@media (max-width: 767px) {
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: var(--space-12);
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+  }
+
+  .table-wrapper {
+    overflow: visible;
+  }
+
+  .offline-queue-table {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: grid;
+      gap: var(--space-12);
+    }
+
+    tr {
+      display: block;
+      min-width: 0;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: var(--space-12);
+    }
+
+    td {
+      display: grid;
+      grid-template-columns: minmax(0, 0.65fr) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--space-8);
+      min-width: 0;
+      padding: var(--space-8) 0;
+
+      &::before {
+        content: attr(data-label);
+        color: var(--text-secondary);
+        font-size: var(--font-size-xs);
+        overflow-wrap: anywhere;
+      }
+    }
+
+    .actions-cell {
+      grid-template-columns: minmax(0, 1fr);
+      border-bottom: 0;
+      padding-bottom: 0;
+
+      &::before {
+        display: none;
+      }
+
+      &:empty {
+        display: none;
+      }
+    }
+  }
+
+  .btn-retry,
+  .btn-remove,
+  .btn-retry-all,
+  .btn-cancel {
+    min-height: 44px;
+    height: auto;
+    padding: var(--space-8) var(--space-12);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

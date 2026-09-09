@@ -39,7 +39,7 @@ public sealed class FinalisePayPeriodCommandHandler(
             return Error.Forbidden("forbidden", "Only system administrators can finalise pay periods.");
         }
 
-        var payPeriod = await payrollRepository.GetPayPeriodByIdAsync(request.PayPeriodId, cancellationToken);
+        var payPeriod = await payrollRepository.GetPayPeriodForUpdateAsync(request.PayPeriodId, cancellationToken);
         if (payPeriod is null)
         {
             return Error.NotFound("pay_period_not_found", $"Pay period with ID '{request.PayPeriodId}' was not found.");
@@ -87,6 +87,11 @@ public sealed class FinalisePayPeriodCommandHandler(
                     }
                 }
             }
+        }
+
+        if (payslips.Any(payslip => !payslip.FinalisedAt.HasValue && payslip.Settlement is null))
+        {
+            return Error.Unprocessable("payroll_settlement_required", "Calculate tax and deductions for every payslip before finalising this period.");
         }
 
         var finalisedAt = dateTimeProvider?.UtcNow ?? DateTimeOffset.UtcNow;
