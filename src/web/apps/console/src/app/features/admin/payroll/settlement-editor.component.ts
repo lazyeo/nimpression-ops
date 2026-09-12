@@ -1,6 +1,12 @@
+import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TaxProfileService } from '../../tax-settings/tax-profile.service';
+import { TaxProfile } from '../../../core/payroll/tax-profile.models';
+import { LocaleDatePipe } from '../../../core/i18n/locale-date.pipe';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnChanges,
   input,
   output,
@@ -23,7 +29,7 @@ import { PayrollService } from './services/payroll.service';
 @Component({
   selector: 'nim-settlement-editor',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, LocaleDatePipe],
   templateUrl: './settlement-editor.component.html',
   styleUrl: './settlement-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +39,71 @@ export class SettlementEditorComponent implements OnChanges {
   readonly saved = output<PayslipDto>();
   private readonly payroll = inject(PayrollService);
   private readonly errors = inject(UserFacingErrorService);
+  private readonly taxProfiles = inject(TaxProfileService);
+  private readonly destroyRef = inject(DestroyRef);
+  private profileLookup?: Subscription;
+  readonly approvedProfile = signal<TaxProfile | null>(null);
+  readonly profileState = signal<'idle' | 'loading' | 'found' | 'none' | 'error'>('idle');
+  private profilePayDate = '';
+  lookupProfile(): void {
+    this.profileLookup?.unsubscribe();
+    this.approvedProfile.set(null);
+    this.profilePayDate = '';
+    this.profileState.set('idle');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.payDate) || this.payslip().finalisedAt) return;
+    const payDate = this.payDate;
+    this.profileState.set('loading');
+    this.error.set('');
+    this.profileLookup = this.taxProfiles
+      .forPayslip(this.payslip().id, payDate)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (profile) => {
+          this.profilePayDate = payDate;
+          this.approvedProfile.set(profile);
+          this.profileState.set(profile ? 'found' : 'none');
+        },
+        error: (error) => {
+          this.profileState.set('error');
+          this.error.set(this.errors.format(error));
+        },
+      });
+  }
+  canUseApproved(): boolean {
+    const profile = this.approvedProfile();
+    return (
+      !!profile &&
+      profile.status === 'Approved' &&
+      this.profileState() === 'found' &&
+      this.payDate === this.profilePayDate &&
+      !!this.frequency &&
+      !this.payslip().finalisedAt &&
+      !this.saving()
+    );
+  }
+  calculateApproved(): void {
+    const profile = this.approvedProfile();
+    if (!profile || !this.canUseApproved() || !this.frequency) return;
+    this.saving.set(true);
+    this.error.set('');
+    this.taxProfiles
+      .calculate(this.payslip().id, {
+        payDate: this.payDate,
+        frequency: this.frequency,
+        profileId: profile.id,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (slip) => {
+          this.saving.set(false);
+          this.saved.emit(slip);
+        },
+        error: (error) => {
+          this.saving.set(false);
+          this.error.set(this.errors.format(error));
+        },
+      });
+  }
   readonly saving = signal(false);
   readonly error = signal('');
   payDate = '';
@@ -82,6 +153,10 @@ export class SettlementEditorComponent implements OnChanges {
   readonly esctRates = [10.5, 17.5, 30, 33, 39];
 
   ngOnChanges(): void {
+    this.profileLookup?.unsubscribe();
+    this.approvedProfile.set(null);
+    this.profileState.set('idle');
+    this.profilePayDate = '';
     const request = this.payslip().settlement?.request;
     if (!request) return;
     this.payDate = request.payDate;
@@ -214,15 +289,18 @@ export class SettlementEditorComponent implements OnChanges {
       return;
     this.saving.set(true);
     this.error.set('');
-    this.payroll.calculateSettlement(this.payslip().id, request).subscribe({
-      next: (slip) => {
-        this.saving.set(false);
-        this.saved.emit(slip);
-      },
-      error: (error: unknown) => {
-        this.saving.set(false);
-        this.error.set(this.errors.format(error));
-      },
-    });
+    this.payroll
+      .calculateSettlement(this.payslip().id, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (slip) => {
+          this.saving.set(false);
+          this.saved.emit(slip);
+        },
+        error: (error: unknown) => {
+          this.saving.set(false);
+          this.error.set(this.errors.format(error));
+        },
+      });
   }
 }

@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { SettlementEditorComponent } from './settlement-editor.component';
 import { SettlementBreakdownComponent } from '../../../shared/components/settlement-breakdown/settlement-breakdown.component';
 import { BusinessLabelPipe } from '../../../core/i18n/business-label.pipe';
@@ -33,6 +34,7 @@ import { toScreamingSnake } from '../../../core/utils/case.utils';
   selector: 'nim-admin-payroll',
   standalone: true,
   imports: [
+    RouterLink,
     SettlementEditorComponent,
     SettlementBreakdownComponent,
     BusinessLabelPipe,

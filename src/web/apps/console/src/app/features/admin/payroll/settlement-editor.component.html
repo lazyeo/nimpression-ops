@@ -4,7 +4,7 @@
   <div class="fields">
     <label
       ><span>{{ 'SETTLEMENT.PAY_DATE' | i18n }}</span
-      ><input type="date" [(ngModel)]="payDate"
+      ><input type="date" [(ngModel)]="payDate" (ngModelChange)="lookupProfile()"
     /></label>
     <label
       ><span>{{ 'SETTLEMENT.FREQUENCY' | i18n }}</span
@@ -14,7 +14,49 @@
           <option [ngValue]="frequency.value">{{ frequency.label | i18n }}</option>
         }
       </select></label
-    ><label
+    >
+  </div>
+  <section class="approved-profile">
+    <h4>{{ 'TAX_PROFILE.APPROVED_SETTINGS' | i18n }}</h4>
+    <p>{{ 'TAX_PROFILE.APPROVED_HELP' | i18n }}</p>
+    <button
+      type="button"
+      class="action-btn btn-secondary"
+      [disabled]="!payDate || profileState() === 'loading' || saving()"
+      (click)="lookupProfile()"
+    >
+      {{ 'TAX_PROFILE.CHECK_PROFILE' | i18n }}
+    </button>
+    @if (profileState() === 'loading') {
+      <p role="status">{{ 'COMMON.LOADING' | i18n }}</p>
+    }
+    @if (profileState() === 'none') {
+      <p>{{ 'TAX_PROFILE.NO_APPROVED_PROFILE' | i18n }}</p>
+    }
+    @if (approvedProfile(); as profile) {
+      <p>
+        {{
+          (profile.declaration.workerType === 'Employee'
+            ? 'SETTLEMENT.EMPLOYEE'
+            : 'SETTLEMENT.CONTRACTOR'
+          ) | i18n
+        }}
+        · {{ 'TAX_PROFILE.EFFECTIVE_FROM' | i18n }}:
+        {{ profile.effectiveFrom | localeDate: 'short' }}
+      </p>
+      <button
+        type="button"
+        class="action-btn btn-primary"
+        [disabled]="!canUseApproved()"
+        (click)="calculateApproved()"
+      >
+        {{ 'TAX_PROFILE.USE_APPROVED' | i18n }}
+      </button>
+    }
+  </section>
+  <h4>{{ 'TAX_PROFILE.MANUAL_SETTINGS' | i18n }}</h4>
+  <div class="fields">
+    <label
       ><span>{{ 'SETTLEMENT.WORKER_TYPE' | i18n }}</span
       ><select [(ngModel)]="workerType">
         <option [ngValue]="''">{{ 'SETTLEMENT.SELECT' | i18n }}</option>

@@ -6,6 +6,26 @@ import { resolveUserFacingError, resolveUserFacingErrorCode } from './user-facin
 const privateDetail = 'https://internal.example/api/private?token=secret SQL stack at Handler:42';
 
 describe('user-facing error boundary', () => {
+  it.each([
+    ['tax_profile_confirmation_required', 'TAX-001', 'TAX_CONFIRMATION_REQUIRED'],
+    ['tax_profile_effective_date_invalid', 'TAX-002', 'TAX_EFFECTIVE_DATE_INVALID'],
+    ['tax_profile_declaration_required', 'TAX-003', 'TAX_DECLARATION_REQUIRED'],
+    ['tax_profile_pending_exists', 'TAX-004', 'TAX_PENDING_EXISTS'],
+    ['tax_profile_not_pending', 'TAX-005', 'TAX_NOT_PENDING'],
+    ['tax_profile_effective_date_conflict', 'TAX-006', 'TAX_EFFECTIVE_DATE_CONFLICT'],
+    ['tax_profile_not_found', 'TAX-007', 'TAX_NOT_FOUND'],
+    ['tax_profile_status_invalid', 'TAX-008', 'TAX_STATUS_INVALID'],
+    ['tax_profile_stale_selection', 'TAX-009', 'TAX_SELECTION_CHANGED'],
+    ['tax_profile_conflict', 'TAX-010', 'TAX_SAVE_CONFLICT'],
+  ])('maps tax settings error %s without exposing response data', (title, code, key) => {
+    const safe = resolveUserFacingError(new HttpErrorResponse({
+      status: 409, error: { title, detail: privateDetail }, url: privateDetail,
+    }));
+    expect(safe).toEqual({ code, titleKey: 'ERRORS.TITLE', messageKey: `ERRORS.${key}` });
+    expect(JSON.stringify(safe)).not.toContain(privateDetail);
+    expect(resolveUserFacingErrorCode(code)).toEqual(safe);
+  });
+
   it('maps the actual task transition code without assuming that the task was cancelled', () => {
     const safe = resolveUserFacingError(
       new HttpErrorResponse({

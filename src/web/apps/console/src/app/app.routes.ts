@@ -75,6 +75,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'tax-settings',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'], review: true },
+        loadComponent: () => import('./features/tax-settings/tax-settings.component').then(m => m.TaxSettingsComponent),
+      },
+      {
         path: 'payroll',
         canActivate: [roleGuard],
         data: { roles: ['Admin'], labelKey: 'NAV.PAYROLL', icon: 'payroll' },
@@ -151,6 +157,11 @@ export const routes: Routes = [
           import('./features/driver/payslips/driver-payslips.component').then(
             (m) => m.DriverPayslipsComponent,
           ),
+      },
+      {
+        path: 'tax-settings',
+        data: { review: false },
+        loadComponent: () => import('./features/tax-settings/tax-settings.component').then(m => m.TaxSettingsComponent),
       },
       {
         path: 'profile',

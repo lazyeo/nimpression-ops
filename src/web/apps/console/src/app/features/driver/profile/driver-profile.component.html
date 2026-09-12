@@ -3,6 +3,8 @@
     <h2 class="page-title">{{ 'DRIVER.PROFILE_TITLE' | i18n }}</h2>
   </div>
 
+  <a class="tax-settings-link" routerLink="/driver/tax-settings">{{ 'TAX_PROFILE.TITLE' | i18n }}</a>
+
   @if (saveSuccess()) {
     <div class="alert-success">
       <nim-icon name="check-circle" [size]="16" />

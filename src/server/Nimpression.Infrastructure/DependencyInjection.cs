@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<Nimpression.Application.Features.Areas.Abstractions.IAreaRepository, Nimpression.Infrastructure.Persistence.Repositories.AreaRepository>();
         services.AddScoped<Nimpression.Application.Features.Dispatch.Abstractions.IJobTaskRepository, Nimpression.Infrastructure.Persistence.Repositories.JobTaskRepository>();
         services.AddScoped<Nimpression.Application.Features.Dispatch.Abstractions.IIdempotencyService, Nimpression.Infrastructure.Idempotency.IdempotencyService>();
+        services.AddScoped<Nimpression.Application.Features.Payroll.TaxProfiles.ITaxProfileRepository, Nimpression.Infrastructure.Persistence.Repositories.TaxProfileRepository>();
         services.AddScoped<Nimpression.Application.Features.Payroll.Abstractions.IPayrollRepository, Nimpression.Infrastructure.Persistence.Repositories.PayrollRepository>();
         services.AddScoped<Nimpression.Application.Features.Fines.Abstractions.IFineRepository, Nimpression.Infrastructure.Persistence.Repositories.FineRepository>();
         services.AddScoped<Nimpression.Application.Features.Incidents.Abstractions.IIncidentRepository, Nimpression.Infrastructure.Persistence.Repositories.IncidentRepository>();

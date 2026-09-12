@@ -1,0 +1,359 @@
+<main class="tax-settings-page">
+  <header>
+    <div>
+      <h1>{{ (review ? 'TAX_PROFILE.REVIEW_TITLE' : 'TAX_PROFILE.TITLE') | i18n }}</h1>
+      <p>{{ (review ? 'TAX_PROFILE.REVIEW_HELP' : 'TAX_PROFILE.HELP') | i18n }}</p>
+    </div>
+    <a class="action-link" [routerLink]="review ? '/admin/payroll' : '/driver/profile'">{{
+      'COMMON.BACK' | i18n
+    }}</a>
+  </header>
+  @if (error()) {
+    <p role="alert" class="error">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p role="status" class="success">{{ 'TAX_PROFILE.SAVED' | i18n }}</p>
+  }
+  @if (loading()) {
+    <p role="status">{{ 'COMMON.LOADING' | i18n }}</p>
+  }
+  @if (!review) {
+    @if (pending().length) {
+      <section class="card">
+        <h2>{{ 'TAX_PROFILE.PENDING_TITLE' | i18n }}</h2>
+        <p>{{ 'TAX_PROFILE.PENDING_HELP' | i18n }}</p>
+        @for (profile of pending(); track profile.id) {
+          <p>
+            {{ 'TAX_PROFILE.EFFECTIVE_FROM' | i18n }}:
+            {{ profile.effectiveFrom | localeDate: 'short' }}
+          </p>
+          <nim-tax-declaration [profile]="profile" />
+          <button
+            type="button"
+            class="action-btn btn-secondary"
+            [disabled]="busy() || loading()"
+            (click)="withdraw(profile)"
+          >
+            {{ 'TAX_PROFILE.WITHDRAW' | i18n }}
+          </button>
+        }
+      </section>
+    } @else if (loaded()) {
+      <section class="card">
+        <h2>{{ 'TAX_PROFILE.NEW_REQUEST' | i18n }}</h2>
+        <p>{{ 'TAX_PROFILE.DATE_HELP' | i18n }}</p>
+        <fieldset [disabled]="busy()">
+          <div class="fields">
+            <label
+              ><span>{{ 'TAX_PROFILE.EFFECTIVE_FROM' | i18n }}</span
+              ><input type="date" [(ngModel)]="effectiveFrom" [min]="minDate" [max]="maxDate"
+            /></label>
+            <label
+              ><span>{{ 'SETTLEMENT.WORKER_TYPE' | i18n }}</span
+              ><select [(ngModel)]="workerType">
+                <option [ngValue]="''">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                <option value="Employee">{{ 'SETTLEMENT.EMPLOYEE' | i18n }}</option>
+                <option value="Contractor">{{ 'SETTLEMENT.CONTRACTOR' | i18n }}</option>
+              </select></label
+            >
+          </div>
+          @if (workerType === 'Employee') {
+            <div class="fields">
+              <label
+                ><span>{{ 'SETTLEMENT.TAX_CODE' | i18n }}</span
+                ><select [(ngModel)]="taxCode">
+                  <option [ngValue]="''">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                  @for (code of taxCodes; track code) {
+                    <option [ngValue]="code">{{ code }}</option>
+                  }
+                </select></label
+              >
+              <label
+                ><span>{{ 'SETTLEMENT.EMPLOYEE_REQUIRED' | i18n }}</span
+                ><select [(ngModel)]="employeeRequired">
+                  <option [ngValue]="null">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                  <option [ngValue]="true">{{ 'SETTLEMENT.YES' | i18n }}</option>
+                  <option [ngValue]="false">{{ 'SETTLEMENT.NO' | i18n }}</option>
+                </select></label
+              >
+              @if (employeeRequired === true) {
+                <label
+                  ><span>{{ 'SETTLEMENT.EMPLOYEE_RATE' | i18n }}</span
+                  ><select [(ngModel)]="employeeRate">
+                    <option [ngValue]="null">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                    @for (rate of employeeRates; track rate) {
+                      <option [ngValue]="rate">{{ rate }}%</option>
+                    }
+                  </select></label
+                >
+              }
+            </div>
+            @if (employeeRequired === true && employeeRate === 3) {
+              <label class="confirmation"
+                ><input type="checkbox" [(ngModel)]="employeeReduction" /><span>{{
+                  'SETTLEMENT.EMPLOYEE_REDUCTION' | i18n
+                }}</span></label
+              >
+            }
+          }
+          @if (workerType === 'Contractor') {
+            <div class="fields">
+              <label
+                ><span>{{ 'SETTLEMENT.WITHHOLDING_RATE' | i18n }}</span
+                ><input type="number" min="0" max="100" step="0.1" [(ngModel)]="withholdingRate"
+              /></label>
+              <label
+                ><span>{{ 'SETTLEMENT.GST_RATE' | i18n }}</span
+                ><select [(ngModel)]="gstRate">
+                  <option [ngValue]="null">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                  <option [ngValue]="0">0%</option>
+                  <option [ngValue]="15">15%</option>
+                </select></label
+              >
+            </div>
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="withholdingVerified" /><span>{{
+                'SETTLEMENT.WITHHOLDING_VERIFIED' | i18n
+              }}</span></label
+            >
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="exemptionVerified" /><span>{{
+                'SETTLEMENT.EXEMPTION_VERIFIED' | i18n
+              }}</span></label
+            >
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="gstVerified" /><span>{{
+                'SETTLEMENT.GST_VERIFIED' | i18n
+              }}</span></label
+            >
+          }
+          <label class="confirmation"
+            ><input type="checkbox" [(ngModel)]="confirmed" /><span>{{
+              'TAX_PROFILE.DECLARATION_CONFIRMED' | i18n
+            }}</span></label
+          >
+          <p class="help">{{ 'TAX_PROFILE.ONLINE_HELP' | i18n }}</p>
+          <button
+            type="button"
+            class="action-btn btn-primary"
+            [disabled]="!submission() || busy()"
+            (click)="submit()"
+          >
+            {{ 'TAX_PROFILE.SUBMIT' | i18n }}
+          </button>
+        </fieldset>
+      </section>
+    }
+  }
+  @if (selected(); as profile) {
+    <section class="card review-card">
+      <h2>{{ 'TAX_PROFILE.REVIEW_REQUEST' | i18n }}</h2>
+      <p>
+        {{ profile.driverName }}
+        @if (profile.employeeNo) {
+          ({{ profile.employeeNo }})
+        }
+      </p>
+      <p>
+        {{ 'TAX_PROFILE.REQUESTED_DATE' | i18n }}: {{ profile.effectiveFrom | localeDate: 'short' }}
+      </p>
+      <nim-tax-declaration [profile]="profile" />
+      <p>{{ 'TAX_PROFILE.PERSONAL_READONLY' | i18n }}</p>
+      <p>{{ 'TAX_PROFILE.APPROVAL_DATE_HELP' | i18n }}</p>
+      <fieldset [disabled]="busy()">
+        <div class="fields">
+          <label
+            ><span>{{ 'TAX_PROFILE.EFFECTIVE_FROM' | i18n }}</span
+            ><input type="date" [(ngModel)]="approvalDate" [min]="approvalMinDate" [max]="maxDate"
+          /></label>
+        </div>
+        @if (profile.declaration.workerType === 'Employee') {
+          <div class="fields">
+            <label
+              ><span>{{ 'SETTLEMENT.EMPLOYER_REQUIRED' | i18n }}</span
+              ><select [(ngModel)]="employerRequired">
+                <option [ngValue]="null">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                <option [ngValue]="true">{{ 'SETTLEMENT.YES' | i18n }}</option>
+                <option [ngValue]="false">{{ 'SETTLEMENT.NO' | i18n }}</option>
+              </select></label
+            >
+            <label
+              ><span>{{ 'SETTLEMENT.EMPLOYER_RATE' | i18n }}</span
+              ><input type="number" min="0" max="100" step="0.1" [(ngModel)]="employerRate"
+            /></label>
+            <label
+              ><span>{{ 'SETTLEMENT.HOLIDAY_MODE' | i18n }}</span
+              ><select [(ngModel)]="holidayMode">
+                <option [ngValue]="''">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                <option value="OrdinaryAccrual">{{ 'SETTLEMENT.ACCRUAL' | i18n }}</option>
+                <option value="PayAsYouGoEightPercent">{{ 'SETTLEMENT.PAYG' | i18n }}</option>
+              </select></label
+            >
+          </div>
+          @if (employerRequired === true && employerRate !== null && employerRate < 3.5) {
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="employerReduction" /><span>{{
+                'SETTLEMENT.EMPLOYER_REDUCTION' | i18n
+              }}</span></label
+            >
+          }
+          @if (employerRate !== null && employerRate > 0) {
+            <div class="fields">
+              <label
+                ><span>{{ 'SETTLEMENT.ESCT_RATE' | i18n }}</span
+                ><select [(ngModel)]="esctRate">
+                  <option [ngValue]="null">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                  @for (rate of esctRates; track rate) {
+                    <option [ngValue]="rate">{{ rate }}%</option>
+                  }
+                </select></label
+              >
+            </div>
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="esctVerified" /><span>{{
+                'SETTLEMENT.ESCT_VERIFIED' | i18n
+              }}</span></label
+            >
+          }
+          @if (holidayMode === 'PayAsYouGoEightPercent') {
+            <div class="fields">
+              <label
+                ><span>{{ 'SETTLEMENT.ELIGIBILITY' | i18n }}</span
+                ><select [(ngModel)]="holidayEligibility">
+                  <option [ngValue]="''">{{ 'SETTLEMENT.SELECT' | i18n }}</option>
+                  <option value="GenuineFixedTermUnderTwelveMonths">
+                    {{ 'SETTLEMENT.FIXED_TERM' | i18n }}
+                  </option>
+                  <option value="IrregularWorkPrecludesAnnualHolidays">
+                    {{ 'SETTLEMENT.IRREGULAR' | i18n }}
+                  </option>
+                </select></label
+              >
+            </div>
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="eligibilityConfirmed" /><span>{{
+                'SETTLEMENT.ELIGIBILITY_CONFIRMED' | i18n
+              }}</span></label
+            >
+            <label class="confirmation"
+              ><input type="checkbox" [(ngModel)]="writtenAgreement" /><span>{{
+                'SETTLEMENT.WRITTEN_AGREEMENT' | i18n
+              }}</span></label
+            >
+          }
+        }
+        <label class="confirmation"
+          ><input type="checkbox" [(ngModel)]="approvalConfirmed" /><span>{{
+            'TAX_PROFILE.REVIEW_CONFIRMED' | i18n
+          }}</span></label
+        >
+        <div class="actions">
+          <button
+            type="button"
+            class="action-btn btn-primary"
+            [disabled]="!approval() || busy()"
+            (click)="approve()"
+          >
+            {{ 'TAX_PROFILE.APPROVE' | i18n }}</button
+          ><button
+            type="button"
+            class="action-btn btn-danger"
+            [disabled]="busy()"
+            (click)="reject()"
+          >
+            {{ 'TAX_PROFILE.REJECT' | i18n }}</button
+          ><button
+            type="button"
+            class="action-btn btn-secondary"
+            [disabled]="busy()"
+            (click)="selected.set(null)"
+          >
+            {{ 'COMMON.CLOSE' | i18n }}
+          </button>
+        </div>
+      </fieldset>
+    </section>
+  }
+  <section class="card">
+    <div class="history-header">
+      <h2>{{ 'TAX_PROFILE.HISTORY' | i18n }}</h2>
+      <label
+        ><span>{{ 'TAX_PROFILE.FILTER_STATUS' | i18n }}</span
+        ><select [(ngModel)]="status" (ngModelChange)="load(1)" [disabled]="busy()">
+          <option value="">{{ 'COMMON.ALL' | i18n }}</option>
+          @for (state of statuses; track state.value) {
+            <option [ngValue]="state.value">{{ state.label | i18n }}</option>
+          }
+        </select></label
+      ><button
+        type="button"
+        class="action-btn btn-secondary"
+        [disabled]="loading() || busy()"
+        (click)="load()"
+      >
+        {{ 'COMMON.REFRESH' | i18n }}
+      </button>
+    </div>
+    @if (!records().length && loaded()) {
+      <p>{{ 'COMMON.NO_DATA' | i18n }}</p>
+    }
+    @for (profile of records(); track profile.id) {
+      <article class="history-record">
+        <header>
+          <strong>
+            @if (review) {
+              {{ profile.driverName }}
+              @if (profile.employeeNo) {
+                ({{ profile.employeeNo }})
+              }
+            } @else {
+              {{ 'TAX_PROFILE.REQUEST' | i18n }}
+            }</strong
+          ><span class="status">{{ statusKey(profile.status) | i18n }}</span>
+        </header>
+        <p>
+          {{ 'TAX_PROFILE.EFFECTIVE_FROM' | i18n }}:
+          {{ profile.effectiveFrom | localeDate: 'short' }}
+        </p>
+        <p>
+          {{ 'TAX_PROFILE.SUBMITTED_AT' | i18n }}: {{ profile.submittedAt | localeDate: 'short' }}
+          @if (profile.reviewedAt) {
+            · {{ 'TAX_PROFILE.REVIEWED_AT' | i18n }}: {{ profile.reviewedAt | localeDate: 'short' }}
+          }
+        </p>
+        <details>
+          <summary>{{ 'TAX_PROFILE.VIEW_SETTINGS' | i18n }}</summary>
+          <nim-tax-declaration [profile]="profile" />
+        </details>
+        @if (review && profile.status === 'Pending') {
+          <button
+            type="button"
+            class="action-btn btn-primary"
+            [disabled]="busy() || loading()"
+            (click)="startReview(profile)"
+          >
+            {{ 'TAX_PROFILE.REVIEW' | i18n }}
+          </button>
+        }
+      </article>
+    }
+    <nav class="actions" [attr.aria-label]="'TAX_PROFILE.HISTORY' | i18n">
+      <button
+        type="button"
+        class="action-btn btn-secondary"
+        [disabled]="page <= 1 || loading() || busy()"
+        (click)="load(page - 1)"
+      >
+        {{ 'TAX_PROFILE.PREVIOUS' | i18n }}</button
+      ><span>{{ page }}</span
+      ><button
+        type="button"
+        class="action-btn btn-secondary"
+        [disabled]="page * 20 >= total() || loading() || busy()"
+        (click)="load(page + 1)"
+      >
+        {{ 'TAX_PROFILE.NEXT' | i18n }}
+      </button>
+    </nav>
+  </section>
+</main>

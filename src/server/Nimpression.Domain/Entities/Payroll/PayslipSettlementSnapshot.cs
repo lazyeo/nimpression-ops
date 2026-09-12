@@ -8,4 +8,4 @@ public sealed record PayslipSettlementSnapshot(
     SettlementCalculation Calculation,
     string RulesVersion,
     DateTimeOffset CalculatedAt,
-    bool IsDemo = false);
+    bool IsDemo = false, Guid? TaxProfileId = null);

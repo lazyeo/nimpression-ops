@@ -1,0 +1,88 @@
+<dl>
+  <div>
+    <dt>{{ 'SETTLEMENT.WORKER_TYPE' | i18n }}</dt>
+    <dd>
+      {{
+        (profile().declaration.workerType === 'Employee'
+          ? 'SETTLEMENT.EMPLOYEE'
+          : 'SETTLEMENT.CONTRACTOR'
+        ) | i18n
+      }}
+    </dd>
+  </div>
+  @if (profile().declaration.employee; as employee) {
+    <div>
+      <dt>{{ 'SETTLEMENT.TAX_CODE' | i18n }}</dt>
+      <dd>{{ employee.taxCode }}</dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.EMPLOYEE_REQUIRED' | i18n }}</dt>
+      <dd>
+        {{
+          (employee.kiwiSaverEmployee.contributionsRequired ? 'SETTLEMENT.YES' : 'SETTLEMENT.NO')
+            | i18n
+        }}
+      </dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.EMPLOYEE_RATE' | i18n }}</dt>
+      <dd>{{ employee.kiwiSaverEmployee.rate * 100 | localeNumber: 0 : 2 }}%</dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.EMPLOYEE_REDUCTION' | i18n }}</dt>
+      <dd>
+        {{
+          (employee.kiwiSaverEmployee.temporaryReductionApproved
+            ? 'SETTLEMENT.YES'
+            : 'SETTLEMENT.NO'
+          ) | i18n
+        }}
+      </dd>
+    </div>
+  }
+  @if (profile().declaration.contractor; as contractor) {
+    <div>
+      <dt>{{ 'SETTLEMENT.WITHHOLDING_RATE' | i18n }}</dt>
+      <dd>{{ contractor.withholdingRate * 100 | localeNumber: 0 : 2 }}%</dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.WITHHOLDING_VERIFIED' | i18n }}</dt>
+      <dd>{{ (contractor.withholdingVerified ? 'SETTLEMENT.YES' : 'SETTLEMENT.NO') | i18n }}</dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.EXEMPTION_VERIFIED' | i18n }}</dt>
+      <dd>{{ (contractor.exemptionVerified ? 'SETTLEMENT.YES' : 'SETTLEMENT.NO') | i18n }}</dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.GST_RATE' | i18n }}</dt>
+      <dd>{{ contractor.gstRate * 100 | localeNumber: 0 : 2 }}%</dd>
+    </div>
+    <div>
+      <dt>{{ 'SETTLEMENT.GST_VERIFIED' | i18n }}</dt>
+      <dd>{{ (contractor.gstTreatmentVerified ? 'SETTLEMENT.YES' : 'SETTLEMENT.NO') | i18n }}</dd>
+    </div>
+  }
+  @if (profile().approvedEmployee; as approved) {
+    <div>
+      <dt>{{ 'SETTLEMENT.EMPLOYER_RATE' | i18n }}</dt>
+      <dd>{{ approved.kiwiSaverEmployer.rate * 100 | localeNumber: 0 : 2 }}%</dd>
+    </div>
+    @if (approved.kiwiSaverEmployer.esctRate !== null) {
+      <div>
+        <dt>{{ 'SETTLEMENT.ESCT_RATE' | i18n }}</dt>
+        <dd>{{ approved.kiwiSaverEmployer.esctRate! * 100 | localeNumber: 0 : 2 }}%</dd>
+      </div>
+    }
+    <div>
+      <dt>{{ 'SETTLEMENT.HOLIDAY_MODE' | i18n }}</dt>
+      <dd>
+        {{
+          (approved.holidayPay.mode === 'OrdinaryAccrual'
+            ? 'SETTLEMENT.ACCRUAL'
+            : 'SETTLEMENT.PAYG'
+          ) | i18n
+        }}
+      </dd>
+    </div>
+  }
+</dl>

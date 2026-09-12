@@ -95,6 +95,18 @@ public static class PayrollSettlementCalculator
         _ => 520m - (annual - 66000m) * 0.13m
     };
 
+    /// <summary>Validates a personal declaration without inventing employer settings or calculating pay.</summary>
+    public static IReadOnlyList<SettlementValidationIssue> ValidateDeclaration(
+        DateOnly effectiveFrom, SettlementWorkerType? workerType, string? taxCode,
+        KiwiSaverEmployeeConfiguration? employeeKiwiSaver, bool hasEmployee,
+        ContractorSettlementProfile? contractor)
+    {
+        var employee = hasEmployee ? new EmployeeSettlementProfile(taxCode, employeeKiwiSaver, null, null) : null;
+        return Validate(new SettlementRequest(effectiveFrom, SettlementPayFrequency.Weekly, 0, workerType, employee, contractor))
+            .Where(issue => !issue.Field.StartsWith("Employee.KiwiSaverEmployer", StringComparison.Ordinal)
+                && !issue.Field.StartsWith("Employee.HolidayPay", StringComparison.Ordinal)).ToList();
+    }
+
     private static List<SettlementValidationIssue> Validate(SettlementRequest request)
     {
         var issues = new List<SettlementValidationIssue>();

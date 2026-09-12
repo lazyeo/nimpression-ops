@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Nimpression.Domain.Exceptions;
 using Nimpression.Domain.Services;
 using Nimpression.Domain.ValueObjects;
@@ -13,7 +14,7 @@ using Nimpression.Domain.Services.Payroll;
 
 namespace Nimpression.Application.Features.Payroll.Commands.CalculatePayslipSettlement;
 
-public sealed record CalculatePayslipSettlementCommand(Guid PayslipId, SettlementRequest Settings)
+public sealed record CalculatePayslipSettlementCommand(Guid PayslipId, [property: JsonIgnore] SettlementRequest Settings, Guid? TaxProfileId = null)
     : IRequest<Result<PayslipDto>>, ICommandMarker, IAuditableCommand
 {
     public string AuditEntityType => "Payslip";
@@ -89,7 +90,7 @@ public sealed class CalculatePayslipSettlementCommandHandler(
             return Error.Unprocessable(issue.Code, issue.Message);
         }
 
-        payslip.SetSettlement(new PayslipSettlementSnapshot(settings, result.Calculation!, PayrollSettlementCalculator.RulesVersion, dateTimeProvider.UtcNow));
+        payslip.SetSettlement(new PayslipSettlementSnapshot(settings, result.Calculation!, PayrollSettlementCalculator.RulesVersion, dateTimeProvider.UtcNow, TaxProfileId: request.TaxProfileId));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await auditSink.RecordAsync("Payslip", payslip.Id, "CalculatePayslipSettlement", null,
             $"{{\"rulesVersion\":\"{PayrollSettlementCalculator.RulesVersion}\"}}", cancellationToken);

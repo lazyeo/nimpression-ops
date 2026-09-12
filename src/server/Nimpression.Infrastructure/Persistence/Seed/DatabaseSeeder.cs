@@ -103,6 +103,7 @@ public static class DatabaseSeeder
         context.EmailLogs.RemoveRange(context.EmailLogs);
         context.EmailTemplates.RemoveRange(context.EmailTemplates);
         context.RefreshTokens.RemoveRange(context.RefreshTokens);
+        context.DriverTaxProfiles.RemoveRange(context.DriverTaxProfiles);
         context.Drivers.RemoveRange(context.Drivers);
         context.DataSubjectRequests.RemoveRange(context.DataSubjectRequests);
         context.OutboxMessages.RemoveRange(context.OutboxMessages);

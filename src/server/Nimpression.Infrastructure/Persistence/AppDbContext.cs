@@ -39,6 +39,7 @@ public class AppDbContext : DbContext
     public DbSet<IncidentReport> IncidentReports => Set<IncidentReport>();
     public DbSet<ShiftEntry> ShiftEntries => Set<ShiftEntry>();
     public DbSet<PayPeriod> PayPeriods => Set<PayPeriod>();
+    public DbSet<DriverTaxProfile> DriverTaxProfiles => Set<DriverTaxProfile>();
     public DbSet<Payslip> Payslips => Set<Payslip>();
     public DbSet<PayslipLine> PayslipLines => Set<PayslipLine>();
     public DbSet<NewsPost> NewsPosts => Set<NewsPost>();

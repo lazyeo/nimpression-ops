@@ -13,6 +13,16 @@ function presentation(code: string, message: string): UserFacingError {
 // ResultExtensions emits the machine code in ProblemDetails.title. Match only
 // exact, known codes; never display server titles, details, URLs or validation text.
 const businessErrors = new Map<string, UserFacingError>([
+  ['tax_profile_confirmation_required', presentation('TAX-001', 'TAX_CONFIRMATION_REQUIRED')],
+  ['tax_profile_effective_date_invalid', presentation('TAX-002', 'TAX_EFFECTIVE_DATE_INVALID')],
+  ['tax_profile_declaration_required', presentation('TAX-003', 'TAX_DECLARATION_REQUIRED')],
+  ['tax_profile_pending_exists', presentation('TAX-004', 'TAX_PENDING_EXISTS')],
+  ['tax_profile_not_pending', presentation('TAX-005', 'TAX_NOT_PENDING')],
+  ['tax_profile_effective_date_conflict', presentation('TAX-006', 'TAX_EFFECTIVE_DATE_CONFLICT')],
+  ['tax_profile_not_found', presentation('TAX-007', 'TAX_NOT_FOUND')],
+  ['tax_profile_status_invalid', presentation('TAX-008', 'TAX_STATUS_INVALID')],
+  ['tax_profile_stale_selection', presentation('TAX-009', 'TAX_SELECTION_CHANGED')],
+  ['tax_profile_conflict', presentation('TAX-010', 'TAX_SAVE_CONFLICT')],
   ['missing_employer_reduction_declaration', presentation('PAYROLL-008', 'PAYROLL_EMPLOYER_REQUIRED')],
   ['payroll_minimum_rules_unsupported', presentation('PAYROLL-016', 'PAYROLL_MINIMUM_UNSUPPORTED')],
   ['payroll_settings_required', presentation('PAYROLL-001', 'PAYROLL_PROFILE_REQUIRED')],

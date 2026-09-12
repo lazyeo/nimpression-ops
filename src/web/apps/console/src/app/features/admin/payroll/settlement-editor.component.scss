@@ -57,3 +57,11 @@ button {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.approved-profile {
+  margin-block: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}

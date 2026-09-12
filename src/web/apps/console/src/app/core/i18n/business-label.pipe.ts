@@ -76,6 +76,11 @@ const LABELS: Record<string, Record<string, string>> = {
     fine_accepted_notice: 'BUSINESS_LABELS.TEMPLATE_FINE_ACCEPTED_NOTICE',
   },
   auditAction: {
+    submittaxprofile: 'BUSINESS_LABELS.AUDITACTION_SUBMIT_TAX_PROFILE',
+    approvetaxprofile: 'BUSINESS_LABELS.AUDITACTION_APPROVE_TAX_PROFILE',
+    rejecttaxprofile: 'BUSINESS_LABELS.AUDITACTION_REJECT_TAX_PROFILE',
+    withdrawtaxprofile: 'BUSINESS_LABELS.AUDITACTION_WITHDRAW_TAX_PROFILE',
+    calculatepayslipsettlement: 'BUSINESS_LABELS.AUDITACTION_CALCULATE_PAYSLIP_SETTLEMENT',
     create: 'AUDIT.ACTION_CREATE',
     update: 'AUDIT.ACTION_UPDATE',
     delete: 'AUDIT.ACTION_DELETE',
@@ -141,6 +146,8 @@ const LABELS: Record<string, Record<string, string>> = {
     'partnercontact.deleted': 'BUSINESS_LABELS.AUDITACTION_PARTNER_CONTACT_DELETED',
   },
   auditEntity: {
+    drivertaxprofile: 'BUSINESS_LABELS.AUDITENTITY_TAX_PROFILE',
+    payslip: 'BUSINESS_LABELS.AUDITENTITY_PAYSLIP',
     timesheet: 'AUDIT.ENTITY_TIMESHEET',
     area: 'BUSINESS_LABELS.AUDITENTITY_AREA',
     areaassignment: 'BUSINESS_LABELS.AUDITENTITY_AREA_ASSIGNMENT',

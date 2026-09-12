@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -16,7 +17,7 @@ describe('DriverProfileComponent (Language switcher & profile)', () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [DriverProfileComponent],
-      providers: [AuthService, I18nService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]),AuthService, I18nService, provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     authService = TestBed.inject(AuthService);

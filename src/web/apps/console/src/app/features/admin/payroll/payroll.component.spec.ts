@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -127,7 +128,7 @@ describe('PayrollComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [PayrollComponent],
-      providers: [
+      providers: [provideRouter([]),
         I18nService,
         FormatService,
         provideHttpClient(),

@@ -142,6 +142,79 @@ describe('SettlementEditorComponent', () => {
     req.flush({ id: 'slip-1', settlementStatus: 'Calculated' });
   });
 
+  it('looks up the applicable profile without applying it and cancels stale date lookups', () => {
+    const { component: c, http } = setup();
+    c.payDate = '2026-09-15';
+    c.frequency = 'Weekly';
+    c.lookupProfile();
+    const old = http.expectOne(
+      (req) =>
+        req.url === '/api/payroll/payslips/slip-1/tax-profile' &&
+        req.params.get('payDate') === '2026-09-15',
+    );
+    c.payDate = '2026-09-22';
+    c.lookupProfile();
+    expect(old.cancelled).toBe(true);
+    expect(c.canUseApproved()).toBe(false);
+    const current = http.expectOne(
+      (req) =>
+        req.url === '/api/payroll/payslips/slip-1/tax-profile' &&
+        req.params.get('payDate') === '2026-09-22',
+    );
+    current.flush({
+      id: 'approved-2',
+      status: 'Approved',
+      effectiveFrom: '2026-09-20',
+      declaration: { workerType: 'Employee' },
+    });
+    expect(c.canUseApproved()).toBe(true);
+    expect(c.taxCode).toBe('');
+    expect(c.employeeRequired).toBeNull();
+    http.expectNone((req) => req.method === 'POST');
+    c.calculateApproved();
+    const post = http.expectOne('/api/payroll/payslips/slip-1/settlement-from-profile');
+    expect(post.request.body).toEqual({
+      payDate: '2026-09-22',
+      frequency: 'Weekly',
+      profileId: 'approved-2',
+    });
+    post.flush({ id: 'slip-1' });
+  });
+
+  it('invalidates a selected profile after date changes and never applies to finalised snapshots', () => {
+    const { component: c, fixture, http } = setup();
+    c.payDate = '2026-09-15';
+    c.frequency = 'Weekly';
+    c.lookupProfile();
+    http
+      .expectOne((req) => req.url.endsWith('/tax-profile'))
+      .flush({ id: 'approved-1', status: 'Approved' });
+    c.payDate = '2026-09-16';
+    expect(c.canUseApproved()).toBe(false);
+    c.calculateApproved();
+    http.expectNone((req) => req.method === 'POST');
+    c.lookupProfile();
+    http.expectOne((req) => req.url.endsWith('/tax-profile')).flush(null);
+    expect(c.profileState()).toBe('none');
+    fixture.componentRef.setInput('payslip', {
+      id: 'slip-1',
+      currency: 'NZD',
+      finalisedAt: '2026-09-16T00:00:00Z',
+    });
+    c.lookupProfile();
+    c.calculateApproved();
+    http.expectNone((req) => req.url.endsWith('/tax-profile') || req.method === 'POST');
+  });
+
+  it('cancels approved-profile lookup on navigation', () => {
+    const { component: c, fixture, http } = setup();
+    c.payDate = '2026-09-15';
+    c.lookupProfile();
+    const req = http.expectOne((request) => request.url.endsWith('/tax-profile'));
+    fixture.destroy();
+    expect(req.cancelled).toBe(true);
+  });
+
   it.each(['en', 'zh'] as const)('renders localized business instructions in %s', (lang) => {
     const { fixture } = setup(lang);
     fixture.detectChanges();

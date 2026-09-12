@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,6 +36,7 @@ export interface DriverProfileDto {
   selector: 'nim-driver-profile',
   standalone: true,
   imports: [
+    RouterLink,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
